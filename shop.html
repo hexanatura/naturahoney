@@ -13,55 +13,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Firebase SDK -->
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-      authDomain: "hexahoney-96aed.firebaseapp.com",
-      projectId: "hexahoney-96aed",
-      storageBucket: "hexahoney-96aed.firebasestorage.app",
-      messagingSenderId: "700458850837",
-      appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-      measurementId: "G-MQGKK9709H"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    // Make Firebase available globally
-    window.firebase = {
-      app,
-      analytics,
-      db,
-      auth,
-      firestore: {
-        collection,
-        getDocs,
-        addDoc,
-        doc,
-        getDoc,
-        updateDoc,
-        deleteDoc
-      },
-      authFunctions: {
-        createUserWithEmailAndPassword,
-        signInWithEmailAndPassword,
-        onAuthStateChanged,
-        signOut
-      }
-    };
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  
   <style>
-    /* Previous styles remain unchanged */
     * {
       margin: 0;
       padding: 0;
@@ -521,7 +477,7 @@
 }
 
 .add-to-cart-btn {
-  background: #5f2b27;
+  background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -530,13 +486,73 @@
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s ease;
   flex-grow: 1;
   margin-right: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(95, 43, 39, 0.3);
 }
 
 .add-to-cart-btn:hover {
-  background: #7a3731;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(95, 43, 39, 0.4);
+  background: linear-gradient(135deg, #7a3731 0%, #8a3c35 100%);
+}
+
+.add-to-cart-btn:active {
+  transform: translateY(-1px);
+}
+
+@keyframes addToCartPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(95, 43, 39, 0.3);
+  }
+  50% {
+    transform: scale(0.95);
+    box-shadow: 0 6px 20px rgba(95, 43, 39, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(95, 43, 39, 0.3);
+  }
+}
+
+.add-to-cart-btn.adding {
+  animation: addToCartPulse 0.4s ease;
+}
+
+@keyframes cartBounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
+  80% {
+    transform: translateY(-2px);
+  }
+}
+
+.cart-icon-bounce {
+  animation: cartBounce 0.6s ease;
+}
+
+@keyframes badgePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.badge-pulse {
+  animation: badgePulse 0.4s ease;
 }
 
 .wishlist-btn {
@@ -556,22 +572,6 @@
 .wishlist-btn:hover {
   background: #FFD700;
   color: #5f2b27;
-}
-
-/* Overlay for modals */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 9997;
-  display: none;
-}
-
-.overlay.active {
-  display: block;
 }
 
 /* Hover Overlay */
@@ -655,6 +655,13 @@
   
   .product-price {
     font-size: 18px;
+  }
+  
+  .product-buttons {
+    flex-direction: row !important;
+  }
+  .product-buttons button {
+    width: auto !important;
   }
 }
 
@@ -1010,7 +1017,7 @@
   }
 }
 
-/* Header and Footer Styles */
+/* Header Styles */
 .notification-bar {
   background: #e7d90f;
   color: #fff;
@@ -1115,22 +1122,649 @@ nav {
   display: flex;
   align-items: center;
   margin-left: auto;
+  gap: 15px;
 }
 .icon {
-  margin-left: 25px;
-  font-size: 24px;
+  font-size: 20px;
   color: #333;
   transition: color 0.3s;
   cursor: pointer;
+  position: relative;
 }
 .icon:hover {
   color: #5f2b27;
 }
 
-.content-wrapper {
-  margin-top: 165px;
+.user-dropdown {
+  position: relative;
 }
 
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 100;
+  display: none;
+  overflow: hidden;
+  margin-top: 10px;
+  border: 1px solid #f0f0f0;
+  animation: dropdownFadeIn 0.3s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-menu.active {
+  display: block;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  text-decoration: none;
+  color: #333;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #f8f8f8;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
+  color: white;
+  transform: translateX(5px);
+}
+
+.dropdown-item i {
+  margin-right: 12px;
+  width: 20px;
+  text-align: center;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.dropdown-item:hover i {
+  transform: scale(1.2);
+}
+
+.user-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.user-icon-wrapper:hover {
+  background: rgba(95, 43, 39, 0.1);
+}
+
+.user-icon-wrapper.logged-in {
+  background: #5f2b27;
+  color: white;
+}
+
+.user-icon-wrapper.logged-in:hover {
+  background: #7a3731;
+  transform: scale(1.1);
+}
+
+.user-icon-wrapper .fa-user {
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.user-icon-wrapper:hover .fa-user {
+  transform: scale(1.1);
+}
+
+.user-notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #FFD700;
+  color: #333;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 2px solid white;
+}
+
+/* Cart Sidebar */
+.cart-sidebar {
+  position: fixed;
+  top: 0;
+  right: -450px;
+  width: 450px;
+  height: 100vh;
+  background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.cart-sidebar.active {
+  right: 0;
+}
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 30px;
+  background: #5f2b27;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.cart-header h2 {
+  font-family: 'Unbounded', sans-serif;
+  color: white;
+  font-weight: 700;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cart-header h2 i {
+  font-size: 1.5rem;
+}
+.close-cart {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  transition: transform 0.3s;
+}
+.close-cart:hover {
+  transform: scale(1.1);
+}
+.cart-content {
+  flex: 1;
+  padding: 25px 30px;
+  display: flex;
+  flex-direction: column;
+}
+.cart-items {
+  margin-bottom: 20px;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+.cart-items::-webkit-scrollbar {
+  width: 6px;
+}
+.cart-items::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.cart-items::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+.cart-items::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+.cart-item {
+  display: flex;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.cart-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+.cart-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #FFD700;
+}
+.cart-item img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 15px;
+}
+.cart-item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.cart-item-title {
+  font-weight: 700;
+  margin-bottom: 5px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.1rem;
+  color: #333;
+}
+.cart-item-price {
+  color: #5f2b27;
+  font-weight: 700;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cart-item-quantity {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 20px;
+  padding: 5px;
+}
+.quantity-btn {
+  background: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+.quantity-btn:hover {
+  background: #5f2b27;
+  color: white;
+}
+.quantity-input {
+  width: 40px;
+  text-align: center;
+  margin: 0 5px;
+  border: none;
+  background: transparent;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.delete-item {
+  background: none;
+  border: none;
+  color: #777;
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 0.3s;
+  padding: 5px;
+  border-radius: 50%;
+}
+.delete-item:hover {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+}
+.cart-summary {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 2px dashed #e0e0e0;
+}
+.cart-subtotal, .cart-shipping, .cart-total {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-family: 'Unbounded', sans-serif;
+}
+.cart-subtotal, .cart-shipping {
+  font-size: 1rem;
+  color: #666;
+}
+.cart-total {
+  font-weight: 700;
+  font-size: 1.4rem;
+  margin: 15px 0;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  color: #5f2b27;
+}
+.checkout-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Unbounded', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(95, 43, 39, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.checkout-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(95, 43, 39, 0.4);
+}
+.checkout-btn:active {
+  transform: translateY(-1px);
+}
+.empty-cart {
+  text-align: center;
+  padding: 60px 20px;
+  color: #777;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+.empty-cart i {
+  font-size: 70px;
+  margin-bottom: 20px;
+  color: #e0e0e0;
+}
+.empty-cart h3 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #5f2b27;
+}
+.empty-cart p {
+  margin-bottom: 25px;
+  max-width: 300px;
+}
+.continue-shopping {
+  padding: 12px 25px;
+  background: #5f2b27;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Unbounded', sans-serif;
+}
+.continue-shopping:hover {
+  background: #7a3731;
+  transform: translateY(-2px);
+}
+
+/* Likes Sidebar */
+.likes-sidebar {
+  position: fixed;
+  top: 0;
+  left: -450px;
+  width: 450px;
+  height: 100vh;
+  background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.likes-sidebar.active {
+  left: 0;
+}
+.likes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 30px;
+  background: #5f2b27;
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.likes-header h2 {
+  font-family: 'Unbounded', sans-serif;
+  color: white;
+  font-weight: 700;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.likes-header h2 i {
+  font-size: 1.5rem;
+}
+.close-likes {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  transition: transform 0.3s;
+}
+.close-likes:hover {
+  transform: scale(1.1);
+}
+.likes-content {
+  flex: 1;
+  padding: 25px 30px;
+}
+.likes-items {
+  margin-bottom: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+.likes-items::-webkit-scrollbar {
+  width: 6px;
+}
+.likes-items::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.likes-items::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+.likes-items::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+.like-item {
+  display: flex;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.like-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+.like-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #FFD700;
+}
+.like-item img {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 15px;
+}
+.like-item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.like-item-title {
+  font-weight: 700;
+  margin-bottom: 5px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.1rem;
+  color: #333;
+}
+.like-item-price {
+  color: #5f2b27;
+  font-weight: 700;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+.like-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.add-to-cart-btn {
+  background: #5f2b27;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex-grow: 1;
+  margin-right: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.add-to-cart-btn:hover {
+  background: #7a3731;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(95, 43, 39, 0.3);
+}
+
+.icon .badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #5f2b27;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 2px solid white;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  font-family: 'Unbounded', sans-serif;
+}
+
+.icon .badge.hidden {
+  display: none;
+}
+.remove-like {
+  background: none;
+  border: none;
+  color: #777;
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 0.3s;
+  padding: 5px;
+  border-radius: 50%;
+}
+.remove-like:hover {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+}
+.empty-likes {
+  text-align: center;
+  padding: 60px 20px;
+  color: #777;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+.empty-likes i {
+  font-size: 70px;
+  margin-bottom: 20px;
+  color: #e0e0e0;
+}
+.empty-likes h3 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #5f2b27;
+}
+.empty-likes p {
+  margin-bottom: 25px;
+  max-width: 300px;
+}
+.browse-products {
+  padding: 12px 25px;
+  background: #5f2b27;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Unbounded', sans-serif;
+}
+.browse-products:hover {
+  background: #7a3731;
+  transform: translateY(-2px);
+}
+
+/* Footer Styles */
 footer {
   background:#556b2f; 
   color:white; 
@@ -1306,150 +1940,184 @@ footer a:hover {
   color:rgba(255,255,255,0.8);
 }
 
-/* Additional header styles */
-.user-dropdown {
-  position: relative;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
+/* Login Modal */
+.login-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: white;
+  padding: 30px;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  min-width: 200px;
-  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  width: 400px;
+  max-width: 90%;
   display: none;
-  overflow: hidden;
-  margin-top: 10px;
-  border: 1px solid #f0f0f0;
-  animation: dropdownFadeIn 0.3s ease;
 }
-
-@keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dropdown-menu.active {
+.login-modal.active {
   display: block;
 }
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  padding: 15px 20px;
-  text-decoration: none;
-  color: #333;
-  transition: all 0.3s ease;
-  border-bottom: 1px solid #f8f8f8;
-  font-family: 'Unbounded', sans-serif;
-  font-weight: 500;
-  font-size: 15px;
-}
-
-.dropdown-item:last-child {
-  border-bottom: none;
-}
-
-.dropdown-item:hover {
-  background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
-  color: white;
-  transform: translateX(5px);
-}
-
-.dropdown-item i {
-  margin-right: 12px;
-  width: 20px;
+.login-header {
   text-align: center;
-  font-size: 16px;
-  transition: transform 0.3s ease;
-}
-
-.dropdown-item:hover i {
-  transform: scale(1.2);
-}
-
-.user-icon-wrapper {
+  margin-bottom: 25px;
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  cursor: pointer;
 }
-
-.user-icon-wrapper:hover {
-  background: rgba(95, 43, 39, 0.1);
+.login-header img {
+  height: 70px;
+  margin-bottom: 20px;
+  order: -1;
 }
-
-.user-icon-wrapper.logged-in {
-  background: #5f2b27;
-  color: white;
-}
-
-.user-icon-wrapper.logged-in:hover {
-  background: #7a3731;
-  transform: scale(1.1);
-}
-
-.user-icon-wrapper .fa-user {
-  font-size: 18px;
-  transition: all 0.3s ease;
-}
-
-.user-icon-wrapper:hover .fa-user {
-  transform: scale(1.1);
-}
-
-.user-notification-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #FFD700;
-  color: #333;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  border: 2px solid white;
-}
-
-.icon .badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: linear-gradient(135deg, #FFD700, #FFA500);
+.login-header h2 {
+  font-family: 'Unbounded', sans-serif;
   color: #5f2b27;
-  border-radius: 50%;
-  width: 22px;
-  height: 22px;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin-bottom: 8px;
   font-weight: 700;
-  border: 2px solid white;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  font-size: 1.8rem;
+  order: 1;
+}
+.login-header p {
+  color: #666;
+  margin-bottom: 0;
+  order: 2;
+}
+.back-btn {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #777;
+  display: none;
+}
+.back-btn.active {
+  display: block;
+}
+.close-login {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #777;
+}
+.login-form {
+  display: none;
+}
+.signup-form {
+  display: none;
+}
+.forgot-form {
+  display: none;
+}
+.login-form.active, .signup-form.active, .forgot-form.active {
+  display: block;
+}
+.login-form input, .signup-form input, .forgot-form input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
   font-family: 'Unbounded', sans-serif;
 }
+.login-btn, .signup-btn, .reset-btn {
+  width: 100%;
+  padding: 15px;
+  background: #5f2b27;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-bottom: 12px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+.login-btn:hover, .signup-btn:hover, .reset-btn:hover {
+  background: #7a3731;
+}
+.google-login {
+  width: 100%;
+  padding: 15px;
+  background: white;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+.google-login:hover {
+  background: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.login-footer {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 15px;
+}
+.login-footer a {
+  color: #5f2b27;
+  text-decoration: none;
+  margin: 0 5px;
+  font-weight: 600;
+}
+.login-footer a:hover {
+  text-decoration: underline;
+}
 
-.icon .badge.hidden {
-  display: none;
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.terms-checkbox input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.terms-checkbox label {
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  margin: 0;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 400;
+  color: #333;
+}
+
+.terms-checkbox a {
+  color: #5f2b27;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.terms-checkbox a:hover {
+  color: #7a3731;
 }
   </style>
 </head>
@@ -1457,7 +2125,7 @@ footer a:hover {
   <!-- Notification Bar -->
   <div class="notification-bar" id="notificationBar"><p>Free shipping on all orders over ₹599! Limited time offer.</p></div>
 
-  <!-- Navigation -->
+  <!-- Header Navigation -->
   <nav id="navBar">
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
@@ -1496,7 +2164,7 @@ footer a:hover {
   </nav>
 
   <!-- Content Wrapper -->
-  <div class="content-wrapper">
+  <div class="content-wrapper" style="margin-top: 165px;">
     <!-- Shop Header with Banner Effect -->
     <div class="shop-header">
       <div class="rectangle-banner" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50px; pointer-events: none; z-index: 1;" aria-hidden="true">
@@ -1665,7 +2333,7 @@ footer a:hover {
     <!-- Products Grid View -->
     <div class="products-grid" id="productsGrid">
       <!-- Product 1 -->
-      <div class="product-card" data-category="crystal" data-price="249" data-rating="4.5" data-weight="1kg">
+      <div class="product-card" data-category="crystal" data-price="249" data-rating="4.5" data-weight="1kg" data-id="1">
         <div class="product-image-container">
           <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022" alt="Glass jar of Natura Honey Crystal Pack with golden honey inside and wooden honey dipper" />
           <div class="product-weight">1Kg</div>
@@ -1673,7 +2341,7 @@ footer a:hover {
         </div>
         <div class="product-details">
           <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹420.00</div>
+          <div class="product-price">₹249</div>
           <div class="product-rating">
             <div class="rating-stars">
               <i class="fas fa-star"></i>
@@ -1694,7 +2362,7 @@ footer a:hover {
       </div>
       
       <!-- Product 2 -->
-      <div class="product-card" data-category="crystal" data-price="449" data-rating="5" data-weight="500g">
+      <div class="product-card" data-category="crystal" data-price="449" data-rating="5" data-weight="500g" data-id="2">
         <div class="product-image-container">
           <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026" alt="Glass jar of Natura Honey Crystal Pack with honeycomb pattern label and honey dripping" />
           <div class="product-weight">500g</div>
@@ -1702,7 +2370,7 @@ footer a:hover {
         </div>
         <div class="product-details">
           <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹230.00</div>
+          <div class="product-price">₹449</div>
           <div class="product-rating">
             <div class="rating-stars">
               <i class="fas fa-star"></i>
@@ -1723,7 +2391,7 @@ footer a:hover {
       </div>
       
       <!-- Product 3 -->
-      <div class="product-card" data-category="crystal" data-price="149" data-rating="4" data-weight="100g">
+      <div class="product-card" data-category="crystal" data-price="149" data-rating="4" data-weight="100g" data-id="3">
         <div class="product-image-container">
           <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115" alt="Close-up of Natura Honey Crystal Pack glass jar with honey and wooden spoon" />
           <div class="product-weight">100g</div>
@@ -1731,7 +2399,7 @@ footer a:hover {
         </div>
         <div class="product-details">
           <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹115.00</div>
+          <div class="product-price">₹149</div>
           <div class="product-rating">
             <div class="rating-stars">
               <i class="fas fa-star"></i>
@@ -1752,7 +2420,7 @@ footer a:hover {
       </div>
       
       <!-- Product 4 -->
-      <div class="product-card" data-category="crystal" data-price="349" data-rating="5" data-weight="50g">
+      <div class="product-card" data-category="crystal" data-price="349" data-rating="5" data-weight="50g" data-id="4">
         <div class="product-image-container">
           <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864" alt="Premium Crystal Pack honey in decorative glass jar with golden lid" />
           <div class="product-weight">50g</div>
@@ -1760,7 +2428,7 @@ footer a:hover {
         </div>
         <div class="product-details">
           <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹65.00</div>
+          <div class="product-price">₹349</div>
           <div class="product-rating">
             <div class="rating-stars">
               <i class="fas fa-star"></i>
@@ -1781,7 +2449,7 @@ footer a:hover {
       </div>
 
       <!-- Product 5 -->
-      <div class="product-card" data-category="premium" data-price="199" data-rating="4.5" data-weight="1kg">
+      <div class="product-card" data-category="premium" data-price="199" data-rating="4.5" data-weight="1kg" data-id="5">
         <div class="product-image-container">
           <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894" alt="Premium Pet Natura Honey product in glass jar with honey and pet-friendly label" />
           <div class="product-weight">1Kg</div>
@@ -1789,7 +2457,7 @@ footer a:hover {
         </div>
         <div class="product-details">
           <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹370.00</div>
+          <div class="product-price">₹199</div>
           <div class="product-rating">
             <div class="rating-stars">
               <i class="fas fa-star"></i>
@@ -1810,7 +2478,7 @@ footer a:hover {
       </div>
       
       <!-- Product 6 -->
-      <div class="product-card" data-category="premium" data-price="329" data-rating="4" data-weight="500g">
+      <div class="product-card" data-category="premium" data-price="329" data-rating="4" data-weight="500g" data-id="6">
         <div class="product-image-container">
           <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908" alt="Premium Pet Natura Honey product with honeycomb background and pet icon" />
           <div class="product-weight">500g</div>
@@ -1818,7 +2486,7 @@ footer a:hover {
         </div>
         <div class="product-details">
           <h3 class="product-title">Natura Agmark Honey - Premium Pet</h3>
-          <div class="product-price">₹200.00</div>
+          <div class="product-price">₹329</div>
           <div class="product-rating">
             <div class="rating-stars">
               <i class="fas fa-star"></i>
@@ -1884,6 +2552,104 @@ footer a:hover {
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Likes Sidebar -->
+  <div class="likes-sidebar" id="likesSidebar">
+    <div class="likes-header">
+      <h2><i class="fas fa-heart"></i> Your Favorites</h2>
+      <button class="close-likes" id="closeLikes">&times;</button>
+    </div>
+    <div class="likes-content">
+      <div class="likes-items" id="likesItems">
+      </div>
+      <div class="empty-likes" id="emptyLikes">
+        <i class="far fa-heart"></i>
+        <h3>No favorites yet</h3>
+        <p>Start adding products you love to your favorites list</p>
+        <button class="browse-products" id="browseProducts">Browse Products</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h2><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+      <button class="close-cart" id="closeCart">&times;</button>
+    </div>
+    <div class="cart-content">
+      <div class="cart-items" id="cartItems">
+      </div>
+      <div class="empty-cart" id="emptyCart">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>Your cart is empty</h3>
+        <p>Add some delicious honey products to get started</p>
+        <button class="continue-shopping" id="continueShopping">Continue Shopping</button>
+      </div>
+      <div class="cart-summary" id="cartSummary">
+        <div class="cart-subtotal">
+          <span>Subtotal:</span>
+          <span>₹0</span>
+        </div>
+        <div class="cart-shipping">
+          <span>Shipping:</span>
+          <span>Calculated at checkout</span>
+        </div>
+        <div class="cart-total">
+          <span>Total:</span>
+          <span>₹0</span>
+        </div>
+        <button class="checkout-btn" id="checkoutBtn">
+          <i class="fas fa-lock"></i> Proceed to Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Login Modal -->
+  <div class="login-modal" id="loginModal">
+    <button class="close-login" id="closeLogin">&times;</button>
+    <div class="login-header">
+      <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+      <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Natura Honey Logo">
+      <h2 id="modalTitle">Welcome Back</h2>
+      <p id="modalSubtitle">Sign in to your account</p>
+    </div>
+    
+    <form class="login-form" id="loginForm">
+      <input type="email" placeholder="Email Address" required>
+      <input type="password" placeholder="Password" required>
+      <button type="button" class="login-btn" id="loginBtn">Login</button>
+      <button type="button" class="google-login" id="googleLoginBtn">
+        <i class="fab fa-google"></i> Sign in with Google
+      </button>
+    </form>
+    
+    <form class="signup-form" id="signupForm">
+      <input type="text" placeholder="Full Name" required>
+      <input type="email" placeholder="Email Address" required>
+      <input type="password" placeholder="Password" required>
+      <input type="password" placeholder="Confirm Password" required>
+      <div class="terms-checkbox">
+        <input type="checkbox" id="termsCheckbox" required>
+        <label for="termsCheckbox">I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Privacy Policy</a></label>
+      </div>
+      <button type="button" class="signup-btn" id="signupBtn">Create Account</button>
+    </form>
+    
+    <form class="forgot-form" id="forgotForm">
+      <input type="email" placeholder="Email Address" required>
+      <button type="button" class="reset-btn" id="resetBtn">Reset Password</button>
+    </form>
+    
+    <div class="login-footer" id="loginFooter">
+      <a href="#" id="forgotPassword">Forgot Password?</a> | 
+      <a href="#" id="signUp">Sign Up</a>
     </div>
   </div>
 
@@ -1955,135 +2721,1060 @@ footer a:hover {
   </footer>
 
   <script>
-    // Firebase Integration
-    // Wait for Firebase to load
-    document.addEventListener('DOMContentLoaded', function() {
-      // Check if Firebase is loaded
-      if (typeof firebase !== 'undefined') {
-        console.log('Firebase loaded successfully');
-        
-        // Example: Save user cart data to Firebase
-        function saveCartToFirebase(cartData) {
-          if (firebase.auth().currentUser) {
-            const userId = firebase.auth().currentUser.uid;
-            const userCartRef = firebase.firestore().collection('userCarts').doc(userId);
-            
-            userCartRef.set({
-              cart: cartData,
-              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-              console.log('Cart saved to Firebase');
-            })
-            .catch((error) => {
-              console.error('Error saving cart to Firebase:', error);
-            });
-          }
-        }
-        
-        // Example: Load user cart data from Firebase
-        function loadCartFromFirebase() {
-          if (firebase.auth().currentUser) {
-            const userId = firebase.auth().currentUser.uid;
-            const userCartRef = firebase.firestore().collection('userCarts').doc(userId);
-            
-            userCartRef.get()
-            .then((doc) => {
-              if (doc.exists) {
-                const cartData = doc.data().cart;
-                console.log('Cart loaded from Firebase:', cartData);
-                // Update UI with cart data
-              }
-            })
-            .catch((error) => {
-              console.error('Error loading cart from Firebase:', error);
-            });
-          }
-        }
-        
-        // Example: Save wishlist to Firebase
-        function saveWishlistToFirebase(wishlistData) {
-          if (firebase.auth().currentUser) {
-            const userId = firebase.auth().currentUser.uid;
-            const userWishlistRef = firebase.firestore().collection('userWishlists').doc(userId);
-            
-            userWishlistRef.set({
-              wishlist: wishlistData,
-              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-              console.log('Wishlist saved to Firebase');
-            })
-            .catch((error) => {
-              console.error('Error saving wishlist to Firebase:', error);
-            });
-          }
-        }
-        
-        // Example: Load wishlist from Firebase
-        function loadWishlistFromFirebase() {
-          if (firebase.auth().currentUser) {
-            const userId = firebase.auth().currentUser.uid;
-            const userWishlistRef = firebase.firestore().collection('userWishlists').doc(userId);
-            
-            userWishlistRef.get()
-            .then((doc) => {
-              if (doc.exists) {
-                const wishlistData = doc.data().wishlist;
-                console.log('Wishlist loaded from Firebase:', wishlistData);
-                // Update UI with wishlist data
-              }
-            })
-            .catch((error) => {
-              console.error('Error loading wishlist from Firebase:', error);
-            });
-          }
-        }
-        
-        // Example: Save product views to Firebase
-        function saveProductView(productId) {
-          const productViewRef = firebase.firestore().collection('productViews').doc();
-          
-          productViewRef.set({
-            productId: productId,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            userAgent: navigator.userAgent
-          })
-          .then(() => {
-            console.log('Product view saved to Firebase');
-          })
-          .catch((error) => {
-            console.error('Error saving product view to Firebase:', error);
-          });
-        }
-        
-        // Example: Track when a product is viewed
-        document.querySelectorAll('.product-card').forEach(card => {
-          card.addEventListener('click', function() {
-            const productId = this.querySelector('.product-title').textContent;
-            saveProductView(productId);
-          });
-        });
-        
-        // Example: Authentication state observer
-        firebase.auth().onAuthStateChanged((user) => {
-          if (user) {
-            // User is signed in
-            console.log('User is signed in:', user.uid);
-            // Load user-specific data from Firebase
-            loadCartFromFirebase();
-            loadWishlistFromFirebase();
-          } else {
-            // User is signed out
-            console.log('User is signed out');
-            // You might want to save data to localStorage temporarily
-            // and sync when user signs in
-          }
-        });
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+      authDomain: "hexahoney-96aed.firebaseapp.com",
+      projectId: "hexahoney-96aed",
+      storageBucket: "hexahoney-96aed.firebasestorage.app",
+      messagingSenderId: "700458850837",
+      appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+      measurementId: "G-MQGKK9709H"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM Elements
+    const notificationBar = document.getElementById('notificationBar');
+    const navBar = document.getElementById('navBar');
+    const likeIcon = document.getElementById('likeIcon');
+    const likeCount = document.getElementById('likeCount');
+    const cartIcon = document.getElementById('cartIcon');
+    const cartCount = document.getElementById('cartCount');
+    const whatsappIcon = document.getElementById('whatsappIcon');
+    const userIcon = document.getElementById('userIcon');
+    const userDropdown = document.getElementById('userDropdown');
+    const profileLink = document.getElementById('profileLink');
+    const logoutLink = document.getElementById('logoutLink');
+    
+    // Quick View Modal Elements
+    const quickViewModal = document.getElementById('quickViewModal');
+    const quickViewClose = document.getElementById('quickViewClose');
+    const quickViewImage = document.getElementById('quickViewImage');
+    const quickViewTitle = document.getElementById('quickViewTitle');
+    const quickViewPrice = document.getElementById('quickViewPrice');
+    const quickViewRating = document.getElementById('quickViewRating');
+    const quickViewWeight = document.getElementById('quickViewWeight');
+    const quickViewAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
+    const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
+    
+    // Likes Sidebar Elements
+    const likesSidebar = document.getElementById('likesSidebar');
+    const closeLikes = document.getElementById('closeLikes');
+    const likesItems = document.getElementById('likesItems');
+    const emptyLikes = document.getElementById('emptyLikes');
+    const browseProducts = document.getElementById('browseProducts');
+    
+    // Cart Sidebar Elements
+    const cartSidebar = document.getElementById('cartSidebar');
+    const closeCart = document.getElementById('closeCart');
+    const cartItems = document.getElementById('cartItems');
+    const emptyCart = document.getElementById('emptyCart');
+    const cartSummary = document.getElementById('cartSummary');
+    const cartTotal = document.querySelector('.cart-total span:last-child');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const continueShopping = document.getElementById('continueShopping');
+    
+    // Overlay
+    const overlay = document.getElementById('overlay');
+    
+    // Login Modal Elements
+    const loginModal = document.getElementById('loginModal');
+    const closeLogin = document.getElementById('closeLogin');
+    const backBtn = document.getElementById('backBtn');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const forgotForm = document.getElementById('forgotForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const forgotPassword = document.getElementById('forgotPassword');
+    const signUp = document.getElementById('signUp');
+    const loginFooter = document.getElementById('loginFooter');
+    const termsCheckbox = document.getElementById('termsCheckbox');
+
+    // Product Elements
+    const productCards = document.querySelectorAll('.product-card');
+
+    // Product data
+    const products = [
+      { 
+        id: 1, 
+        name: "Natura Agmark Honey", 
+        price: 249, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022",
+        category: "crystal"
+      },
+      { 
+        id: 2, 
+        name: "Natura Agmark Honey", 
+        price: 449, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026",
+        category: "crystal"
+      },
+      { 
+        id: 3, 
+        name: "Natura Agmark Honey", 
+        price: 149, 
+        weight: "100g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115",
+        category: "crystal"
+      },
+      { 
+        id: 4, 
+        name: "Natura Agmark Honey", 
+        price: 349, 
+        weight: "50g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864",
+        category: "crystal"
+      },
+      { 
+        id: 5, 
+        name: "Natura Agmark Honey", 
+        price: 199, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894",
+        category: "premium"
+      },
+      { 
+        id: 6, 
+        name: "Natura Agmark Honey - Premium Pet", 
+        price: 329, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908",
+        category: "premium"
+      }
+    ];
+
+    // State variables
+    let currentUser = null;
+    let likedProducts = [];
+    let cartProducts = [];
+    let currentModalView = 'login';
+    let currentQuickViewProductId = null;
+
+    // Initialize Firebase Auth State Listener
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        currentUser = user;
+        updateUIForUser(user);
+        loadUserData(user.uid);
       } else {
-        console.error('Firebase not loaded');
+        currentUser = null;
+        updateUIForGuest();
       }
     });
+
+    // Update UI for logged in user
+    function updateUIForUser(user) {
+      userIcon.classList.add('logged-in');
+    }
+
+    // Update UI for guest
+    function updateUIForGuest() {
+      userIcon.classList.remove('logged-in');
+    }
+
+    // Load user data from Firestore
+    function loadUserData(userId) {
+      // Load liked products
+      db.collection('users').doc(userId).collection('likes').get()
+        .then((querySnapshot) => {
+          likedProducts = [];
+          querySnapshot.forEach((doc) => {
+            likedProducts.push(doc.data().productId);
+          });
+          updateLikeUI();
+        })
+        .catch((error) => {
+          console.error("Error loading liked products:", error);
+        });
+
+      // Load cart items
+      db.collection('users').doc(userId).collection('cart').get()
+        .then((querySnapshot) => {
+          cartProducts = [];
+          querySnapshot.forEach((doc) => {
+            cartProducts.push({
+              id: doc.data().productId,
+              quantity: doc.data().quantity
+            });
+          });
+          updateCartUI();
+        })
+        .catch((error) => {
+          console.error("Error loading cart items:", error);
+        });
+    }
+
+    // Like icon functionality
+    likeIcon.addEventListener('click', () => {
+      likesSidebar.classList.add('active');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+
+    // Close likes sidebar
+    closeLikes.addEventListener('click', () => {
+      likesSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Update likes UI
+    function updateLikeUI() {
+      if (likedProducts.length > 0) {
+        likeCount.textContent = likedProducts.length;
+        likeCount.classList.remove('hidden');
+      } else {
+        likeCount.classList.add('hidden');
+      }
+      
+      if (likedProducts.length === 0) {
+        emptyLikes.style.display = 'flex';
+        likesItems.innerHTML = '';
+      } else {
+        emptyLikes.style.display = 'none';
+        likesItems.innerHTML = '';
+        
+        likedProducts.forEach(productId => {
+          const product = products.find(p => p.id === productId);
+          if (product) {
+            const likeItem = document.createElement('div');
+            likeItem.className = 'like-item';
+            likeItem.innerHTML = `
+              <img src="${product.image}" alt="${product.name}">
+              <div class="like-item-details">
+                <div class="like-item-title">${product.name}</div>
+                <div class="like-item-price">₹${product.price}</div>
+                <div class="like-item-actions">
+                  <button class="add-to-cart-btn" data-id="${product.id}">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                  </button>
+                  <button class="remove-like" data-id="${product.id}">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+            likesItems.appendChild(likeItem);
+          }
+        });
+        
+        document.querySelectorAll('.remove-like').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            removeFromLikes(productId);
+          });
+        });
+        
+        document.querySelectorAll('.likes-items .add-to-cart-btn').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            addToCart(productId, 1);
+          });
+        });
+      }
+    }
+
+    // Add to likes
+    function addToLikes(productId) {
+      if (!likedProducts.includes(productId)) {
+        likedProducts.push(productId);
+        
+        // Save to Firestore if user is logged in
+        if (currentUser) {
+          db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).set({
+            productId: productId,
+            addedAt: firebase.firestore.FieldValue.serverTimestamp()
+          })
+          .catch((error) => {
+            console.error("Error adding to likes:", error);
+          });
+        } else {
+          // Save to localStorage for guest users
+          localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+        }
+        
+        updateLikeUI();
+        
+        const heartIcon = likeIcon.querySelector('i');
+        heartIcon.classList.remove('far');
+        heartIcon.classList.add('fas');
+        heartIcon.style.color = '#ff4d4d';
+        
+        // Update product card wishlist button if exists
+        const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+        if (productCard) {
+          const wishlistBtn = productCard.querySelector('.wishlist-btn');
+          wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+          wishlistBtn.style.background = '#ff4d4d';
+          wishlistBtn.style.color = 'white';
+        }
+      }
+    }
+
+    // Remove from likes
+    function removeFromLikes(productId) {
+      likedProducts = likedProducts.filter(id => id !== productId);
+      
+      // Remove from Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).delete()
+        .catch((error) => {
+          console.error("Error removing from likes:", error);
+        });
+      } else {
+        // Update localStorage for guest users
+        localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+      }
+      
+      updateLikeUI();
+      
+      const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+      if (productCard) {
+        const wishlistBtn = productCard.querySelector('.wishlist-btn');
+        wishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+        wishlistBtn.style.background = '#f1f1f1';
+        wishlistBtn.style.color = '#333';
+      }
+      
+      if (likedProducts.length === 0) {
+        const heartIcon = likeIcon.querySelector('i');
+        heartIcon.classList.remove('fas');
+        heartIcon.classList.add('far');
+        heartIcon.style.color = '';
+      }
+    }
+
+    // Cart functionality
+    cartIcon.addEventListener('click', () => {
+      cartSidebar.classList.add('active');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+
+    // Close cart sidebar
+    closeCart.addEventListener('click', () => {
+      cartSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Update cart UI
+    function updateCartUI() {
+      const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
+      
+      if (totalItems > 0) {
+        cartCount.textContent = totalItems;
+        cartCount.classList.remove('hidden');
+      } else {
+        cartCount.classList.add('hidden');
+      }
+      
+      if (cartProducts.length === 0) {
+        emptyCart.style.display = 'flex';
+        cartItems.innerHTML = '';
+        cartSummary.style.display = 'none';
+      } else {
+        emptyCart.style.display = 'none';
+        cartItems.innerHTML = '';
+        cartSummary.style.display = 'block';
+        
+        let subtotal = 0;
+        
+        cartProducts.forEach(item => {
+          const product = products.find(p => p.id === item.id);
+          if (product) {
+            const itemTotal = product.price * item.quantity;
+            subtotal += itemTotal;
+            
+            const cartItem = document.createElement('div');
+            cartItem.className = 'cart-item';
+            cartItem.innerHTML = `
+              <img src="${product.image}" alt="${product.name}">
+              <div class="cart-item-details">
+                <div class="cart-item-title">${product.name}</div>
+                <div class="cart-item-price">₹${product.price}</div>
+                <div class="cart-item-controls">
+                  <div class="cart-item-quantity">
+                    <button class="quantity-btn minus" data-id="${product.id}">-</button>
+                    <input type="text" class="quantity-input" value="${item.quantity}" data-id="${product.id}">
+                    <button class="quantity-btn plus" data-id="${product.id}">+</button>
+                  </div>
+                  <button class="delete-item" data-id="${product.id}">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+            cartItems.appendChild(cartItem);
+          }
+        });
+        
+        document.querySelector('.cart-subtotal span:last-child').textContent = `₹${subtotal}`;
+        cartTotal.textContent = `₹${subtotal}`;
+        
+        document.querySelectorAll('.quantity-btn.minus').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            updateCartQuantity(productId, -1);
+          });
+        });
+        
+        document.querySelectorAll('.quantity-btn.plus').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            updateCartQuantity(productId, 1);
+          });
+        });
+        
+        document.querySelectorAll('.delete-item').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            removeFromCart(productId);
+          });
+        });
+        
+        document.querySelectorAll('.quantity-input').forEach(input => {
+          input.addEventListener('change', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            const newQuantity = parseInt(e.currentTarget.value) || 1;
+            setCartQuantity(productId, newQuantity);
+          });
+        });
+      }
+    }
+
+    // Enhanced Add to cart function with effects
+    function addToCart(productId, quantity = 1) {
+      const existingItem = cartProducts.find(item => item.id === productId);
+      
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        cartProducts.push({ id: productId, quantity });
+      }
+      
+      // Save to Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).set({
+          productId: productId,
+          quantity: existingItem ? existingItem.quantity : quantity,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .catch((error) => {
+          console.error("Error adding to cart:", error);
+        });
+      } else {
+        // Save to localStorage for guest users
+        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+      }
+      
+      updateCartUI();
+      
+      addCartVisualFeedback();
+    }
+
+    // Visual feedback for adding to cart
+    function addCartVisualFeedback() {
+      cartIcon.classList.add('cart-icon-bounce');
+      cartCount.classList.add('badge-pulse');
+      
+      setTimeout(() => {
+        cartIcon.classList.remove('cart-icon-bounce');
+        cartCount.classList.remove('badge-pulse');
+      }, 600);
+    }
+
+    // Update cart quantity
+    function updateCartQuantity(productId, change) {
+      const item = cartProducts.find(item => item.id === productId);
+      
+      if (item) {
+        item.quantity += change;
+        
+        if (item.quantity <= 0) {
+          removeFromCart(productId);
+        } else {
+          // Update Firestore if user is logged in
+          if (currentUser) {
+            db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
+              quantity: item.quantity,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .catch((error) => {
+              console.error("Error updating cart:", error);
+            });
+          } else {
+            // Update localStorage for guest users
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+          }
+          
+          updateCartUI();
+        }
+      }
+    }
+
+    // Set cart quantity
+    function setCartQuantity(productId, quantity) {
+      const item = cartProducts.find(item => item.id === productId);
+      
+      if (item) {
+        if (quantity <= 0) {
+          removeFromCart(productId);
+        } else {
+          item.quantity = quantity;
+          
+          // Update Firestore if user is logged in
+          if (currentUser) {
+            db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
+              quantity: quantity,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .catch((error) => {
+              console.error("Error updating cart:", error);
+            });
+          } else {
+            // Update localStorage for guest users
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+          }
+          
+          updateCartUI();
+        }
+      }
+    }
+
+    // Remove from cart
+    function removeFromCart(productId) {
+      cartProducts = cartProducts.filter(item => item.id !== productId);
+      
+      // Remove from Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).delete()
+        .catch((error) => {
+          console.error("Error removing from cart:", error);
+        });
+      } else {
+        // Update localStorage for guest users
+        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+      }
+      
+      updateCartUI();
+    }
+
+    // WhatsApp functionality
+    whatsappIcon.addEventListener('click', () => {
+      const phoneNumber = "919876543210";
+      const message = "Hello, I'm interested in your honey products!";
+      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    });
+
+    // User dropdown functionality
+    userIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentUser) {
+        userDropdown.classList.toggle('active');
+      } else {
+        showLoginView();
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      userDropdown.classList.remove('active');
+    });
+
+    // Profile link functionality
+    profileLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      userDropdown.classList.remove('active');
+      if (currentUser) {
+        // Redirect to profile page or show profile modal
+        alert('Profile page would open here');
+      } else {
+        showLoginView();
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+
+    // Logout functionality
+    logoutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      auth.signOut().then(() => {
+        alert('You have been logged out successfully!');
+      }).catch((error) => {
+        console.error("Error signing out:", error);
+      });
+    });
+
+    // Close login modal
+    closeLogin.addEventListener('click', () => {
+      loginModal.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Back button functionality
+    backBtn.addEventListener('click', () => {
+      showLoginView();
+    });
+
+    // Overlay click to close modals
+    overlay.addEventListener('click', () => {
+      likesSidebar.classList.remove('active');
+      cartSidebar.classList.remove('active');
+      loginModal.classList.remove('active');
+      quickViewModal.style.display = 'none';
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Quick View Modal Functionality
+    quickViewClose.addEventListener('click', closeQuickView);
+    quickViewModal.addEventListener('click', (e) => {
+      if (e.target === quickViewModal) {
+        closeQuickView();
+      }
+    });
+
+    function closeQuickView() {
+      quickViewModal.style.display = 'none';
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Quick View Add to Cart functionality
+    quickViewAddToCartBtn.addEventListener('click', function() {
+      if (currentQuickViewProductId) {
+        // Add visual feedback
+        this.classList.add('adding');
+        
+        // Add to cart
+        addToCart(currentQuickViewProductId, 1);
+        
+        // Remove adding class after animation
+        setTimeout(() => {
+          this.classList.remove('adding');
+        }, 400);
+      }
+    });
+
+    // Quick View Wishlist functionality
+    quickViewWishlistBtn.addEventListener('click', function() {
+      if (currentQuickViewProductId) {
+        if (likedProducts.includes(currentQuickViewProductId)) {
+          removeFromLikes(currentQuickViewProductId);
+          this.innerHTML = '<i class="far fa-heart"></i>';
+          this.style.background = '#f1f1f1';
+          this.style.color = '#333';
+        } else {
+          addToLikes(currentQuickViewProductId);
+          this.innerHTML = '<i class="fas fa-heart"></i>';
+          this.style.background = '#ff4d4d';
+          this.style.color = 'white';
+        }
+      }
+    });
+
+    // Show login view
+    function showLoginView() {
+      currentModalView = 'login';
+      loginForm.classList.add('active');
+      signupForm.classList.remove('active');
+      forgotForm.classList.remove('active');
+      backBtn.classList.remove('active');
+      modalTitle.textContent = 'Welcome Back';
+      modalSubtitle.textContent = 'Sign in to your account';
+      loginFooter.style.display = 'block';
+    }
+
+    // Show signup view
+    function showSignupView() {
+      currentModalView = 'signup';
+      loginForm.classList.remove('active');
+      signupForm.classList.add('active');
+      forgotForm.classList.remove('active');
+      backBtn.classList.add('active');
+      modalTitle.textContent = 'Create Account';
+      modalSubtitle.textContent = 'Join Natura Honey today';
+      loginFooter.style.display = 'none';
+    }
+
+    // Show forgot password view
+    function showForgotView() {
+      currentModalView = 'forgot';
+      loginForm.classList.remove('active');
+      signupForm.classList.remove('active');
+      forgotForm.classList.add('active');
+      backBtn.classList.add('active');
+      modalTitle.textContent = 'Reset Password';
+      modalSubtitle.textContent = 'Enter your email to reset your password';
+      loginFooter.style.display = 'none';
+    }
+
+    // Login functionality
+    loginBtn.addEventListener('click', () => {
+      const email = loginForm.querySelector('input[type="email"]').value;
+      const password = loginForm.querySelector('input[type="password"]').value;
+      
+      if (!email || !password) {
+        alert('Please fill in all fields');
+        return;
+      }
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          alert('Login successful!');
+        })
+        .catch((error) => {
+          console.error("Error signing in:", error);
+          alert('Error signing in: ' + error.message);
+        });
+    });
+
+    // Signup functionality
+    signupBtn.addEventListener('click', () => {
+      const name = signupForm.querySelector('input[type="text"]').value;
+      const email = signupForm.querySelector('input[type="email"]').value;
+      const password = signupForm.querySelectorAll('input[type="password"]')[0].value;
+      const confirmPassword = signupForm.querySelectorAll('input[type="password"]')[1].value;
+      
+      if (!name || !email || !password || !confirmPassword) {
+        alert('Please fill in all fields');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+      
+      if (!termsCheckbox.checked) {
+        alert('Please agree to the Terms & Conditions and Privacy Policy');
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          
+          // Update profile with display name
+          return user.updateProfile({
+            displayName: name
+          }).then(() => {
+            // Send email verification
+            return user.sendEmailVerification();
+          }).then(() => {
+            // Create user document in Firestore
+            return db.collection('users').doc(user.uid).set({
+              displayName: name,
+              email: email,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+        })
+        .then(() => {
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          alert('Account created successfully! Please check your email for verification.');
+        })
+        .catch((error) => {
+          console.error("Error creating account:", error);
+          alert('Error creating account: ' + error.message);
+        });
+    });
+
+    // Reset password functionality
+    resetBtn.addEventListener('click', () => {
+      const email = forgotForm.querySelector('input[type="email"]').value;
+      
+      if (!email) {
+        alert('Please enter your email address');
+        return;
+      }
+      
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          alert('Password reset link sent to your email!');
+        })
+        .catch((error) => {
+          console.error("Error sending reset email:", error);
+          alert('Error sending reset email: ' + error.message);
+        });
+    });
+
+    // Google login
+    googleLoginBtn.addEventListener('click', () => {
+      // Check if we're in a supported environment
+      if (window.location.protocol !== 'https:' && window.location.protocol !== 'http:' && !window.location.hostname.includes('localhost')) {
+        alert('Google login is not supported in this environment. Please use email/password login instead.');
+        return;
+      }
+      
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        
+        auth.signInWithPopup(provider)
+          .then((result) => {
+            const user = result.user;
+            
+            // Check if user exists in Firestore, if not create document
+            return db.collection('users').doc(user.uid).get().then((doc) => {
+              if (!doc.exists) {
+                return db.collection('users').doc(user.uid).set({
+                  displayName: user.displayName,
+                  email: user.email,
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              }
+            });
+          })
+          .then(() => {
+            loginModal.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            alert('Google login successful!');
+          })
+          .catch((error) => {
+            console.error("Error with Google login:", error);
+            if (error.code === 'auth/operation-not-supported-in-this-environment') {
+              alert('Google login is not supported in this environment. Please use email/password login instead.');
+            } else {
+              alert('Error with Google login: ' + error.message);
+            }
+          });
+      } catch (error) {
+        console.error("Error with Google login:", error);
+        alert('Google login is not available in this environment. Please use email/password login instead.');
+      }
+    });
+
+    // Forgot password link
+    forgotPassword.addEventListener('click', (e) => {
+      e.preventDefault();
+      showForgotView();
+    });
+
+    // Sign up link
+    signUp.addEventListener('click', (e) => {
+      e.preventDefault();
+      showSignupView();
+    });
+
+    // Checkout button
+    checkoutBtn.addEventListener('click', () => {
+      if (cartProducts.length === 0) {
+        alert('Your cart is empty!');
+        return;
+      }
+      
+      // Create order
+      const order = {
+        items: cartProducts,
+        total: cartProducts.reduce((total, item) => {
+          const product = products.find(p => p.id === item.id);
+          return total + (product ? product.price * item.quantity : 0);
+        }, 0),
+        status: 'placed',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      // If user is logged in, save to Firestore
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('orders').add(order)
+          .then((docRef) => {
+            // Clear cart
+            cartProducts.forEach(item => {
+              db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).delete()
+              .catch((error) => {
+                console.error("Error clearing cart:", error);
+              });
+            });
+            
+            cartProducts = [];
+            updateCartUI();
+            
+            alert('Order placed successfully! Order ID: ' + docRef.id.substring(0, 8));
+            cartSidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+          })
+          .catch((error) => {
+            console.error("Error creating order:", error);
+            alert('Error placing order. Please try again.');
+          });
+      } else {
+        // For guest users, just show success message
+        cartProducts = [];
+        updateCartUI();
+        
+        alert('Order placed successfully! Thank you for your purchase.');
+        cartSidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+      }
+    });
+
+    // Continue shopping button
+    continueShopping.addEventListener('click', () => {
+      cartSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Browse products button
+    browseProducts.addEventListener('click', () => {
+      likesSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Initialize product cards with data-id attributes and event listeners
+    function initializeProductCards() {
+      productCards.forEach((card, index) => {
+        const productId = parseInt(card.getAttribute('data-id'));
+        
+        const addToCartBtn = card.querySelector('.add-to-cart-btn');
+        
+        addToCartBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          addToCartBtn.classList.add('adding');
+          
+          addToCart(productId, 1);
+          
+          setTimeout(() => {
+            addToCartBtn.classList.remove('adding');
+          }, 400);
+        });
+        
+        const wishlistBtn = card.querySelector('.wishlist-btn');
+        wishlistBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (likedProducts.includes(productId)) {
+            removeFromLikes(productId);
+          } else {
+            addToLikes(productId);
+            wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+            wishlistBtn.style.background = '#ff4d4d';
+            wishlistBtn.style.color = 'white';
+          }
+        });
+        
+        if (likedProducts.includes(productId)) {
+          wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+          wishlistBtn.style.background = '#ff4d4d';
+          wishlistBtn.style.color = 'white';
+        }
+        
+        // Quick view functionality
+        card.addEventListener('click', (e) => {
+          if (!e.target.closest('.add-to-cart-btn') && !e.target.closest('.wishlist-btn')) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+              quickViewImage.src = product.image;
+              quickViewImage.alt = product.name;
+              quickViewTitle.textContent = product.name;
+              quickViewPrice.textContent = `₹${product.price}`;
+              quickViewWeight.textContent = product.weight;
+              
+              // Get rating from the product card
+              const ratingStars = card.querySelector('.rating-stars').innerHTML;
+              const ratingCount = card.querySelector('.rating-count').textContent;
+              
+              quickViewRating.innerHTML = `
+                <div class="rating-stars">
+                  ${ratingStars}
+                </div>
+                <span class="rating-count">${ratingCount}</span>
+              `;
+              
+              // Set current product ID for quick view
+              currentQuickViewProductId = productId;
+              
+              // Update quick view wishlist button state
+              if (likedProducts.includes(productId)) {
+                quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                quickViewWishlistBtn.style.background = '#ff4d4d';
+                quickViewWishlistBtn.style.color = 'white';
+              } else {
+                quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+                quickViewWishlistBtn.style.background = '#f1f1f1';
+                quickViewWishlistBtn.style.color = '#333';
+              }
+              
+              quickViewModal.style.display = 'flex';
+              overlay.classList.add('active');
+              document.body.style.overflow = 'hidden';
+            }
+          }
+        });
+      });
+    }
+
+    // Load guest data from localStorage
+    function loadGuestData() {
+      // Load liked products
+      const guestLikes = localStorage.getItem('guestLikes');
+      if (guestLikes) {
+        likedProducts = JSON.parse(guestLikes);
+        updateLikeUI();
+      }
+      
+      // Load cart items
+      const guestCart = localStorage.getItem('guestCart');
+      if (guestCart) {
+        cartProducts = JSON.parse(guestCart);
+        updateCartUI();
+      }
+    }
+
+    // Hide notification bar on scroll down
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > 5) {
+        if (!notificationBar.classList.contains('hidden')) {
+          notificationBar.classList.add('hidden');
+          navBar.style.top = '0';
+          document.querySelector('.content-wrapper').style.marginTop = '130px';
+        }
+      } else {
+        if (notificationBar.classList.contains('hidden')) {
+          notificationBar.classList.remove('hidden');
+          navBar.style.top = '40px';
+          document.querySelector('.content-wrapper').style.marginTop = '165px';
+        }
+      }
+      lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    }, { passive: true });
 
     // Filter sidebar functionality
     const filterToggle = document.getElementById('filterToggle');
@@ -2091,9 +3782,6 @@ footer a:hover {
     const closeFilter = document.getElementById('closeFilter');
     const applyFilters = document.getElementById('applyFilters');
     const clearFilters = document.getElementById('clearFilters');
-    const overlay = document.createElement('div');
-    overlay.className = 'overlay';
-    document.body.appendChild(overlay);
     
     filterToggle.addEventListener('click', () => {
       filterSidebar.classList.add('active');
@@ -2102,7 +3790,6 @@ footer a:hover {
     });
     
     closeFilter.addEventListener('click', closeFilterSidebar);
-    overlay.addEventListener('click', closeFilterSidebar);
     
     function closeFilterSidebar() {
       filterSidebar.classList.remove('active');
@@ -2131,60 +3818,6 @@ footer a:hover {
       });
     });
     
-    // Quick view functionality
-    const quickViewModal = document.getElementById('quickViewModal');
-    const quickViewClose = document.getElementById('quickViewClose');
-    const quickViewImage = document.getElementById('quickViewImage');
-    const quickViewTitle = document.getElementById('quickViewTitle');
-    const quickViewPrice = document.getElementById('quickViewPrice');
-    const quickViewRating = document.getElementById('quickViewRating');
-    const quickViewWeight = document.getElementById('quickViewWeight');
-    const productCards = document.querySelectorAll('.product-card');
-    
-    productCards.forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('add-to-cart-btn') && 
-            !e.target.classList.contains('wishlist-btn') &&
-            e.target.tagName !== 'BUTTON' &&
-            e.target.tagName !== 'I') {
-          const image = card.querySelector('img').src;
-          const title = card.querySelector('.product-title').textContent;
-          const price = card.querySelector('.product-price').textContent;
-          const rating = card.querySelector('.rating-stars').innerHTML;
-          const weight = card.querySelector('.product-weight').textContent;
-          const ratingCount = card.querySelector('.rating-count').textContent;
-          
-          quickViewImage.src = image;
-          quickViewImage.alt = title;
-          quickViewTitle.textContent = title;
-          quickViewPrice.textContent = price;
-          quickViewWeight.textContent = weight;
-          
-          quickViewRating.innerHTML = `
-            <div class="rating-stars">
-              ${rating}
-            </div>
-            <span class="rating-count">${ratingCount}</span>
-          `;
-          
-          quickViewModal.style.display = 'flex';
-          document.body.style.overflow = 'hidden';
-        }
-      });
-    });
-    
-    quickViewClose.addEventListener('click', closeQuickView);
-    quickViewModal.addEventListener('click', (e) => {
-      if (e.target === quickViewModal) {
-        closeQuickView();
-      }
-    });
-    
-    function closeQuickView() {
-      quickViewModal.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-    
     // Sort functionality
     const sortSelect = document.getElementById('sortSelect');
     sortSelect.addEventListener('change', sortProducts);
@@ -2199,8 +3832,6 @@ footer a:hover {
             return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
           case 'price-high':
             return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
-          case 'name':
-            return a.querySelector('.product-title').textContent.localeCompare(b.querySelector('.product-title').textContent);
           case 'rating':
             return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
           case 'newest':
@@ -2308,72 +3939,9 @@ footer a:hover {
       });
     });
 
-    // Header functionality
-    const notificationBar = document.getElementById('notificationBar');
-    const navBar = document.getElementById('navBar');
-    const likeIcon = document.getElementById('likeIcon');
-    const cartIcon = document.getElementById('cartIcon');
-    const whatsappIcon = document.getElementById('whatsappIcon');
-    const userIcon = document.getElementById('userIcon');
-    const userDropdown = document.getElementById('userDropdown');
-    const profileLink = document.getElementById('profileLink');
-    const logoutLink = document.getElementById('logoutLink');
-
-    // Hide notification bar on scroll down
-    let lastScrollTop = 0;
-    window.addEventListener('scroll', () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      if (scrollTop > 5) {
-        if (!notificationBar.classList.contains('hidden')) {
-          notificationBar.classList.add('hidden');
-          navBar.style.top = '0';
-          document.querySelector('.content-wrapper').style.marginTop = '130px';
-        }
-      } else {
-        if (notificationBar.classList.contains('hidden')) {
-          notificationBar.classList.remove('hidden');
-          navBar.style.top = '40px';
-          document.querySelector('.content-wrapper').style.marginTop = '165px';
-        }
-      }
-      lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-    }, { passive: true });
-
-    // User dropdown functionality
-    userIcon.addEventListener('click', (e) => {
-      e.stopPropagation();
-      userDropdown.classList.toggle('active');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', () => {
-      userDropdown.classList.remove('active');
-    });
-
-    // WhatsApp functionality
-    whatsappIcon.addEventListener('click', () => {
-      const phoneNumber = "919876543210";
-      const message = "Hello, I'm interested in your honey products!";
-      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-      window.open(url, '_blank');
-    });
-
-    // Profile link functionality
-    profileLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      userDropdown.classList.remove('active');
-      // Add profile page navigation logic here
-      alert('Profile page would open here');
-    });
-
-    // Logout functionality
-    logoutLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      // Add logout logic here
-      alert('Logout functionality would be implemented here');
-    });
+    // Initialize everything
+    initializeProductCards();
+    loadGuestData();
   </script>
 </body>
 </html>
