@@ -1,4 +1,5 @@
-  // Firebase Configuration
+  <script>
+// Firebase Configuration
   const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
     authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -1869,3 +1870,4 @@ function initializeProductCards() {
   
   // Initialize with appropriate view
   checkMobileDevice();
+  </script>
