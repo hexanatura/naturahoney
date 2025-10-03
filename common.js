@@ -1,17 +1,137 @@
     // Firebase Configuration
-    const firebaseConfig = {
-      authDomain: "hexahoney-96aed.firebaseapp.com",
-      projectId: "hexahoney-96aed",
-      storageBucket: "hexahoney-96aed.firebasestorage.app",
-      messagingSenderId: "700458850837",
-      appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-      measurementId: "G-MQGKK9709H"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc", // This was missing
+  authDomain: "hexahoney-96aed.firebaseapp.com",
+  projectId: "hexahoney-96aed",
+  storageBucket: "hexahoney-96aed.firebasestorage.app",
+  messagingSenderId: "700458850837",
+  appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+  measurementId: "G-MQGKK9709H"
+};
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+// Add these missing DOM element references to common.js
+const quickViewModal = document.getElementById('quickViewModal');
+const quickViewClose = document.getElementById('quickViewClose');
+const quickViewImage = document.getElementById('quickViewImage');
+const quickViewTitle = document.getElementById('quickViewTitle');
+const quickViewPrice = document.getElementById('quickViewPrice');
+const quickViewRating = document.getElementById('quickViewRating');
+const quickViewWeight = document.getElementById('quickViewWeight');
+const quickViewAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
+const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
+
+// Review elements
+const reviewsContainer = document.getElementById('reviewsContainer');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const carouselDots = document.getElementById('carouselDots');
+const addReviewBtn = document.getElementById('addReviewBtn');
+const reviewModal = document.getElementById('reviewModal');
+const cancelReview = document.getElementById('cancelReview');
+const submitReview = document.getElementById('submitReview');
+const reviewProduct = document.getElementById('reviewProduct');
+
+// Quick View Modal Functionality - ADD THESE
+quickViewClose.addEventListener('click', closeQuickView);
+quickViewModal.addEventListener('click', (e) => {
+  if (e.target === quickViewModal) {
+    closeQuickView();
+  }
+});
+
+function closeQuickView() {
+  quickViewModal.style.display = 'none';
+  overlay.classList.remove('active');
+  document.body.style.overflow = 'auto';
+}
+
+// Quick View Add to Cart functionality
+quickViewAddToCartBtn.addEventListener('click', function() {
+  if (currentQuickViewProductId) {
+    this.classList.add('adding');
+    addToCart(currentQuickViewProductId, 1);
+    setTimeout(() => {
+      this.classList.remove('adding');
+    }, 400);
+  }
+});
+
+// Quick View Wishlist functionality
+quickViewWishlistBtn.addEventListener('click', function() {
+  if (currentQuickViewProductId) {
+    if (likedProducts.includes(currentQuickViewProductId)) {
+      removeFromLikes(currentQuickViewProductId);
+      this.innerHTML = '<i class="far fa-heart"></i>';
+      this.style.background = '#f1f1f1';
+      this.style.color = '#333';
+    } else {
+      addToLikes(currentQuickViewProductId);
+      this.innerHTML = '<i class="fas fa-heart"></i>';
+      this.style.background = '#ff4d4d';
+      this.style.color = 'white';
+    }
+  }
+});
+
+// Profile Page Initialization - ADD THIS
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize profile functionality
+  if (profileCloseBtn) {
+    profileCloseBtn.addEventListener('click', () => {
+      hideProfilePage();
+    });
+  }
+
+  if (editProfileBtn) {
+    editProfileBtn.addEventListener('click', function() {
+      editProfileModal.style.display = 'flex';
+    });
+  }
+  
+  if (closeEditProfileModal) {
+    closeEditProfileModal.addEventListener('click', function() {
+      editProfileModal.style.display = 'none';
+    });
+  }
+  
+  if (cancelEditProfile) {
+    cancelEditProfile.addEventListener('click', function() {
+      editProfileModal.style.display = 'none';
+    });
+  }
+  
+  if (saveProfileBtn) {
+    saveProfileBtn.addEventListener('click', function() {
+      const newName = document.getElementById('edit-name').value;
+      if (newName.trim() === '') {
+        alert('Please enter a valid name');
+        return;
+      }
+      
+      currentUser.updateProfile({
+        displayName: newName
+      }).then(() => {
+        return db.collection('users').doc(currentUser.uid).set({
+          displayName: newName,
+          email: currentUser.email,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }).then(() => {
+        alert('Profile updated successfully!');
+        editProfileModal.style.display = 'none';
+        updateUIForUser(currentUser);
+      }).catch((error) => {
+        console.error("Error updating profile:", error);
+        alert('Error updating profile. Please try again.');
+      });
+    });
+  }
+});
 
     // DOM Elements
     const notificationBar = document.getElementById('notificationBar');
@@ -473,17 +593,32 @@
       });
     });
 
-    // Show Profile Page
-    function showProfilePage() {
-      mainContent.style.display = 'none';
+  // Show Profile Page - FIXED VERSION
+function showProfilePage() {
+  if (currentUser) {
+    if (mainContent) mainContent.style.display = 'none';
+    if (profilePage) {
       profilePage.classList.add('active');
+      profilePage.style.display = 'block';
     }
+    document.body.style.overflow = 'hidden';
+  } else {
+    showLoginView();
+    if (loginModal) loginModal.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
 
-    // Hide Profile Page
-    function hideProfilePage() {
-      mainContent.style.display = 'block';
-      profilePage.classList.remove('active');
-    }
+// Hide Profile Page - FIXED VERSION
+function hideProfilePage() {
+  if (mainContent) mainContent.style.display = 'block';
+  if (profilePage) {
+    profilePage.classList.remove('active');
+    profilePage.style.display = 'none';
+  }
+  document.body.style.overflow = 'auto';
+}
 
     // Profile Close Button
     profileCloseBtn.addEventListener('click', () => {
