@@ -1,4 +1,9 @@
-  // DOM Elements
+  // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM Elements
     const reviewsContainer = document.getElementById('reviewsContainer');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
