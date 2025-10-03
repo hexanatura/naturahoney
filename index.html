@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <div id="common-head"></div>
+</head>
+<body>
+  <div id="common-header"></div>
+  
+  <!-- Your unique index page content -->
+  <div class="content-wrapper" id="mainContent">
+    <!-- ALL YOUR INDEX-SPECIFIC CONTENT GOES HERE -->
+    <div class="banner-wrapper">
+      <div class="rectangle-banner" aria-label="Scrolling banner with repeated text Natura Honey on honeycomb background">
+        <div class="banner-row slide-right" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <div class="banner-row slide-left" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <div class="banner-row slide-right" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <div class="banner-row slide-left" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <div class="banner-row slide-right" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+      </div>
+    </div>
+
+    <div class="circle-images" role="list" aria-label="Product categories with circular images">
+      <div class="circle-item" role="listitem">
+        <img src="https://ik.imagekit.io/hexaanatura/sweetner.png?updatedAt=1757008552752" alt="Close-up image of natural sweetener honey dripping from a wooden honey dipper into a glass jar" />
+        <div class="circle-title">Natural Sweetner</div>
+      </div>
+      <div class="circle-item" role="listitem">
+        <img src="https://ik.imagekit.io/hexaanatura/skin%20and%20hair%20care.png?updatedAt=1757008441145" alt="Honey-based skin and hair care products arranged with flowers and honeycombs on a wooden surface" />
+        <div class="circle-title">Skin & Hair Care</div>
+      </div>
+      <div class="circle-item" role="listitem">
+        <img src="https://ik.imagekit.io/hexaanatura/Antioxidant.png" alt="Honey jar with antioxidant-rich honey surrounded by fresh berries and herbs on rustic table" />
+        <div class="circle-title">Antioxidant</div>
+      </div>
+      <div class="circle-item" role="listitem">
+        <img src="https://ik.imagekit.io/hexaanatura/sleep%20aid.png?updatedAt=1757008266335" alt="Calming honey sleep aid product with lavender flowers and a nighttime setting" />
+        <div class="circle-title">Sleeping Aid</div>
+      </div>
+    </div>
+
+    <div class="banner-wrapper" style="margin-top:80px;">
+      <div class="rectangle-banner" aria-label="Scrolling banner with repeated text Natura Honey and overlapping honey jar image">
+        <div class="banner-row slide-right" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <div class="banner-row slide-left" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <div class="banner-row slide-right" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <div class="banner-row slide-left" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <div class="banner-row slide-right" aria-hidden="true">NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY NATURA HONEY</div>
+        <img src="https://ik.imagekit.io/hexaanatura/SEC3%20(1).jpg" alt="Large artistic honey jar with honeycomb pattern overlay blending into background" class="second-banner-image" />
+      </div>
+    </div>
+
+    <!-- Quick View Modal -->
+    <div class="quick-view-modal" id="quickViewModal">
+      <div class="quick-view-content">
+        <button class="quick-view-close" id="quickViewClose">
+          <i class="fas fa-times"></i>
+        </button>
+        <div class="quick-view-body">
+          <div class="quick-view-image">
+            <img src="" alt="" id="quickViewImage">
+          </div>
+          <div class="quick-view-details">
+            <h2 class="quick-view-title" id="quickViewTitle"></h2>
+            <div class="quick-view-price" id="quickViewPrice"></div>
+            <div class="quick-view-rating" id="quickViewRating"></div>
+            <div class="quick-view-weight" id="quickViewWeight"></div>
+            <p class="quick-view-description">
+              Our pure, natural honey is carefully sourced from pesticide-free environments. 
+              This product is 100% pure with no additives or preservatives. Perfect as a natural sweetener, 
+              for skin care, or as a delicious addition to your favorite recipes.
+            </p>
+            <div class="quick-view-actions">
+              <button class="quick-view-add-to-cart">Add to Cart</button>
+              <button class="quick-view-wishlist">
+                <i class="far fa-heart"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="products-section" style="position: relative; overflow: hidden;">
+      <div class="rectangle-banner" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50px; pointer-events: none; z-index: 1;" aria-hidden="true">
+        <div class="banner-row slide-right" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+        <div class="banner-row slide-left" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+        <div class="banner-row slide-right" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+        <div class="banner-row slide-left" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+        <div class="banner-row slide-right" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+        <div class="banner-row slide-left" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+        <div class="banner-row slide-right" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+        <div class="banner-row slide-left" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+        <div class="banner-row slide-left" style="font-size:150px;">NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS NATURA ESSENTIALS</div>
+      </div>
+
+      <div class="title-bg"></div>
+      <h2>Our Products</h2>
+
+      <div class="category-buttons" style="position: relative; z-index: 2;">
+        <div class="category-btn active" data-category="crystal" role="button" tabindex="0" aria-pressed="true">Crystal Pack</div>
+        <div class="category-btn" data-category="premium" role="button" tabindex="0" aria-pressed="false">Premium Pet</div>
+      </div>
+
+      <div class="product-scroll-container">
+        <div class="product-row" id="productRow" style="position: relative; z-index: 2;">
+          <div class="product-card" data-category="crystal" role="group" aria-label="Crystal Pack product 1">
+            <div class="product-image-container">
+              <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022" alt="Glass jar of Natura Honey Crystal Pack with golden honey inside and wooden honey dipper" />
+              <div class="overlay">Click to View</div>
+            </div>
+            <div class="product-details">
+              <h3 class="product-title">Natura Agmark Honey</h3>
+              <div class="product-weight">1Kg</div>
+              <div class="product-price">₹249</div>
+              <div class="product-rating">
+                <div class="rating-stars">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star-half-alt"></i>
+                </div>
+                <span class="rating-count">(128)</span>
+              </div>
+              <div class="product-actions">
+                <button class="add-to-cart-btn">Add to Cart</button>
+                <button class="wishlist-btn">
+                  <i class="far fa-heart"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="product-card" data-category="crystal" role="group" aria-label="Crystal Pack product 2">
+            <div class="product-image-container">
+              <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026" alt="Glass jar of Natura Honey Crystal Pack with honeycomb pattern label and honey dripping" />
+              <div class="overlay">Click to View</div>
+            </div>
+            <div class="product-details">
+              <h3 class="product-title">Natura Agmark Honey</h3>
+              <div class="product-weight">500g</div>
+              <div class="product-price">₹449</div>
+              <div class="product-rating">
+                <div class="rating-stars">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                </div>
+                <span class="rating-count">(95)</span>
+              </div>
+              <div class="product-actions">
+                <button class="add-to-cart-btn">Add to Cart</button>
+                <button class="wishlist-btn">
+                  <i class="far fa-heart"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="product-card" data-category="crystal" role="group" aria-label="Crystal Pack product 3">
+            <div class="product-image-container">
+              <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115" alt="Close-up of Natura Honey Crystal Pack glass jar with honey and wooden spoon" />
+              <div class="overlay">Click to View</div>
+            </div>
+            <div class="product-details">
+              <h3 class="product-title">Natura Agmark Honey</h3>
+              <div class="product-weight">100g</div>
+              <div class="product-price">₹149</div>
+              <div class="product-rating">
+                <div class="rating-stars">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="far fa-star"></i>
+                </div>
+                <span class="rating-count">(67)</span>
+              </div>
+              <div class="product-actions">
+                <button class="add-to-cart-btn">Add to Cart</button>
+                <button class="wishlist-btn">
+                  <i class="far fa-heart"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="product-card" data-category="crystal" role="group" aria-label="Crystal Pack product 4">
+            <div class="product-image-container">
+              <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864" alt="Premium Crystal Pack honey in decorative glass jar with golden lid" />
+              <div class="overlay">Click to View</div>
+            </div>
+            <div class="product-details">
+              <h3 class="product-title">Natura Agmark Honey</h3>
+              <div class="product-weight">50g</div>
+              <div class="product-price">₹349</div>
+              <div class="product-rating">
+                <div class="rating-stars">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                </div>
+                <span class="rating-count">(42)</span>
+              </div>
+              <div class="product-actions">
+                <button class="add-to-cart-btn">Add to Cart</button>
+                <button class="wishlist-btn">
+                  <i class="far fa-heart"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-card" data-category="premium" role="group" aria-label="Premium Pet product 1" style="display: none;">
+            <div class="product-image-container">
+              <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894" alt="Premium Pet Natura Honey product in glass jar with honey and pet-friendly label" />
+              <div class="overlay">Click to View</div>
+            </div>
+            <div class="product-details">
+              <h3 class="product-title">Natura Agmark Honey</h3>
+              <div class="product-weight">1Kg</div>
+              <div class="product-price">₹199</div>
+              <div class="product-rating">
+                <div class="rating-stars">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star-half-alt"></i>
+                </div>
+                <span class="rating-count">(56)</span>
+              </div>
+              <div class="product-actions">
+                <button class="add-to-cart-btn">Add to Cart</button>
+                <button class="wishlist-btn">
+                  <i class="far fa-heart"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="product-card" data-category="premium" role="group" aria-label="Premium Pet product 2" style="display: none;">
+            <div class="product-image-container">
+              <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908" alt="Premium Pet Natura Honey product with honeycomb background and pet icon" />
+              <div class="overlay">Click to View</div>
+            </div>
+            <div class="product-details">
+              <h3 class="product-title">Natura Agmark Honey</h3>
+              <div class="product-weight">500g</div>
+              <div class="product-price">₹329</div>
+              <div class="product-rating">
+                <div class="rating-stars">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="far fa-star"></i>
+                </div>
+                <span class="rating-count">(38)</span>
+              </div>
+              <div class="product-actions">
+                <button class="add-to-cart-btn">Add to Cart</button>
+                <button class="wishlist-btn">
+                  <i class="far fa-heart"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a href="all-products.html" class="view-all" style="position: relative; z-index: 2;">View All</a>
+    </div>
+    
+    <div class="customers-section">
+      <h2 class="customers-title">Happy Customers</h2>
+      
+      <div class="reviews-carousel">
+        <div class="reviews-container" id="reviewsContainer">
+          <!-- Reviews will be dynamically loaded from Firebase -->
+        </div>
+        
+        <div class="carousel-controls">
+          <button class="carousel-btn" id="prevBtn">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          
+          <div class="carousel-dots" id="carouselDots">
+          </div>
+          
+          <button class="carousel-btn" id="nextBtn">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      
+      <button class="add-review-btn" id="addReviewBtn">
+        <i class="fas fa-plus"></i> Add Your Review
+      </button>
+    </div>
+    
+    <div class="review-modal" id="reviewModal">
+      <div class="review-form">
+        <h3 class="form-title">Share Your Experience</h3>
+        
+        <div class="form-group">
+          <label for="reviewProduct">Select Product</label>
+          <select id="reviewProduct">
+            <option value="">Select a product you've purchased</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Your Rating</label>
+          <div class="star-rating">
+            <input type="radio" id="star5" name="rating" value="5">
+            <label for="star5"><i class="fas fa-star"></i></label>
+            <input type="radio" id="star4" name="rating" value="4">
+            <label for="star4"><i class="fas fa-star"></i></label>
+            <input type="radio" id="star3" name="rating" value="3">
+            <label for="star3"><i class="fas fa-star"></i></label>
+            <input type="radio" id="star2" name="rating" value="2">
+            <label for="star2"><i class="fas fa-star"></i></label>
+            <input type="radio" id="star1" name="rating" value="1">
+            <label for="star1"><i class="fas fa-star"></i></label>
+            </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="userReview">Your Review</label>
+          <textarea id="userReview" placeholder="Share your experience with our products"></textarea>
+        </div>
+        
+        <div class="form-buttons">
+          <button type="button" class="cancel-btn" id="cancelReview">Cancel</button>
+          <button type="button" class="submit-btn" id="submitReview">Submit Review</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="our-team-section">
+      <hr style="width:50px; border:2px solid #556b2f; margin:0 auto 15px;">
+      
+      <h2 style="font-family:'Oswald', sans-serif; font-weight:500; font-size:70px; color:#556b2f; margin-bottom:5px;">
+        Our Team
+      </h2>
+      
+      <p style="font-family:'Shadows Into Light', cursive; font-size:23px; color:#783f04; margin-bottom:30px;">
+        SINCE 1993
+      </p>
+      
+      <p style="max-width:900px; margin:0 auto; font-family:'Quicksand', sans-serif; font-size:24px; line-height:1.7; color:#333;">
+        Hexa Apiarium Pvt. Ltd. has been dedicated to delivering the pureest honey straight from nature's bounty. 
+        Our Natura Agmark Honey embodies the essence of purity and tradition, harvested from pristine, pesticide-free environments. 
+        Each drop is a testament to our unwavering commitment to quality and authenticity, offering you a rich, golden elixir that's as natural as it gets. 
+        Savor the genuine taste of Natura Agmark Honey and experience the sweetness of nature perfected over decades.
+      </p>
+      
+      <hr style="width:50px; border:2px solid #556b2f; margin:20px auto 0;">
+    </div>
+  </div>
+
+  <div id="common-footer"></div>
+
+  <!-- Index-specific JavaScript -->
+  <script>
+    // Load common components
+    async function loadCommonComponents() {
+      try {
+        // Load common head
+        const headResponse = await fetch('common-head.html');
+        const headData = await headResponse.text();
+        document.getElementById('common-head').innerHTML = headData;
+        
+        // Load common header
+        const headerResponse = await fetch('common-header.html');
+        const headerData = await headerResponse.text();
+        document.getElementById('common-header').innerHTML = headerData;
+        
+        // Load common footer
+        const footerResponse = await fetch('common-footer.html');
+        const footerData = await footerResponse.text();
+        document.getElementById('common-footer').innerHTML = footerData;
+        
+        // Wait a bit for the DOM to be ready, then initialize
+        setTimeout(() => {
+          // Initialize index-specific functionality
+          initializeIndexPage();
+        }, 100);
+        
+      } catch (error) {
+        console.error('Error loading common components:', error);
+      }
+    }
+
+    // Initialize index-specific functionality
+    function initializeIndexPage() {
+      // ... ALL YOUR INDEX-SPECIFIC JAVASCRIPT FROM YOUR ORIGINAL index.html ...
+      // This includes:
+      // - Product quick view
+      // - Category filtering
+      // - Reviews carousel
+      // - Banner rotation
+      // - Product card interactions
+      
+      // Quick View Modal Elements
+      const quickViewModal = document.getElementById('quickViewModal');
+      const quickViewClose = document.getElementById('quickViewClose');
+      const quickViewImage = document.getElementById('quickViewImage');
+      const quickViewTitle = document.getElementById('quickViewTitle');
+      const quickViewPrice = document.getElementById('quickViewPrice');
+      const quickViewRating = document.getElementById('quickViewRating');
+      const quickViewWeight = document.getElementById('quickViewWeight');
+      const quickViewAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
+      const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
+
+      // Product Elements
+      const productCards = document.querySelectorAll('.product-card');
+
+      // Reviews Elements
+      const reviewsContainer = document.getElementById('reviewsContainer');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const carouselDots = document.getElementById('carouselDots');
+      const addReviewBtn = document.getElementById('addReviewBtn');
+      const reviewModal = document.getElementById('reviewModal');
+      const cancelReview = document.getElementById('cancelReview');
+      const submitReview = document.getElementById('submitReview');
+      const reviewProduct = document.getElementById('reviewProduct');
+
+      // State variables for index page
+      let currentCarouselIndex = 0;
+      let approvedReviews = [];
+      let currentQuickViewProductId = null;
+
+      // Banner rotating images functionality
+      const bannerWrapper = document.querySelector(".banner-wrapper");
+      const rotatingImage = document.createElement("img");
+      rotatingImage.className = "banner-overlay-outside";
+      bannerWrapper.appendChild(rotatingImage);
+
+      const imagesConfig = [
+        {
+          src: "https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(9)%20(1).png?updatedAt=1756992468273",
+          top: "-15px",
+          width: "260px",
+          alt: "Artistic honey jar with honeycomb pattern and golden glow"
+        },
+        {
+          src: "https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(2).png?updatedAt=1756995663739",
+          top: "-50px",
+          width: "390px",
+          alt: "Honey dipper dripping golden honey with honeycomb background"
+        },
+        {
+          src: "https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(4).png?updatedAt=1756995663681",
+          top: "-60px",
+          width: "490px",
+          alt: "Close-up of honeycomb cells filled with golden honey"
+        },
+        {
+          src: "https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(3).png?updatedAt=1756995663635",
+          top: "-40px",
+          width: "400px",
+          alt: "Honey jar with honeycomb and floral decoration"
+        }
+      ];
+
+      let index = 0;
+      function showImage(i) {
+        const config = imagesConfig[i];
+        rotatingImage.style.opacity = 0;
+        setTimeout(() => {
+          rotatingImage.src = config.src;
+          rotatingImage.alt = config.alt;
+          rotatingImage.style.top = config.top;
+          rotatingImage.style.width = config.width;
+          rotatingImage.style.opacity = 1;
+        }, 800);
+      }
+      showImage(index);
+      setInterval(() => {
+        index = (index + 1) % imagesConfig.length;
+        showImage(index);
+      }, 4000);
+
+      // Category Filter Functionality
+      const categoryBtns = document.querySelectorAll(".category-btn");
+      const productRow = document.getElementById("productRow");
+      
+      function centerProducts(category) {
+        const visibleProducts = document.querySelectorAll(`.product-card[data-category="${category}"]`);
+        if (visibleProducts.length <= 2) {
+          productRow.classList.add('centered');
+        } else {
+          productRow.classList.remove('centered');
+        }
+      }
+      
+      productCards.forEach(card => {
+        if (card.dataset.category === "premium") {
+          card.style.display = "none";
+        }
+      });
+      centerProducts("crystal");
+      
+      categoryBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          categoryBtns.forEach((b) => {
+            b.classList.remove("active");
+            b.setAttribute("aria-pressed", "false");
+          });
+          btn.classList.add("active");
+          btn.setAttribute("aria-pressed", "true");
+          const category = btn.dataset.category;
+          productCards.forEach((card) => {
+            card.style.display = card.dataset.category === category ? "flex" : "none";
+          });
+          centerProducts(category);
+        });
+        btn.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            btn.click();
+          }
+        });
+      });
+
+      // ... CONTINUE WITH ALL YOUR OTHER INDEX-SPECIFIC JAVASCRIPT ...
+    }
+
+    // Start loading everything when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      loadCommonComponents();
+    });
+  </script>
+</body>
+</html>
