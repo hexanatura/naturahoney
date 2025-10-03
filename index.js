@@ -1,4 +1,3 @@
-  <script>
 // Firebase Configuration
   const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
@@ -1870,4 +1869,3 @@ function initializeProductCards() {
   
   // Initialize with appropriate view
   checkMobileDevice();
-  </script>
