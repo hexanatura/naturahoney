@@ -1,237 +1,216 @@
+    // Firebase Configuration
+    const firebaseConfig = {
+      authDomain: "hexahoney-96aed.firebaseapp.com",
+      projectId: "hexahoney-96aed",
+      storageBucket: "hexahoney-96aed.firebasestorage.app",
+      messagingSenderId: "700458850837",
+      appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+      measurementId: "G-MQGKK9709H"
+    };
 
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-  authDomain: "hexahoney-96aed.firebaseapp.com",
-  projectId: "hexahoney-96aed",
-  storageBucket: "hexahoney-96aed.firebasestorage.app",
-  messagingSenderId: "700458850837",
-  appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-  measurementId: "G-MQGKK9709H"
-};
-
-// Initialize Firebase (will be re-initialized if already initialized)
-try {
-  if (!firebase.apps.length) {
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
-  }
-} catch (e) {
-  console.log("Firebase already initialized");
-}
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-// Common state variables
-let currentUser = null;
-let likedProducts = [];
-let cartProducts = [];
-let userOrders = [];
-let currentModalView = 'login';
-
-// Common product data
-const products = [
-  { 
-    id: 1, 
-    name: "Natura Agmark Honey", 
-    price: 249, 
-    weight: "1Kg",
-    image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022",
-    category: "crystal"
-  },
-  { 
-    id: 2, 
-    name: "Natura Agmark Honey", 
-    price: 449, 
-    weight: "500g",
-    image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026",
-    category: "crystal"
-  },
-  { 
-    id: 3, 
-    name: "Natura Agmark Honey", 
-    price: 149, 
-    weight: "100g",
-    image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115",
-    category: "crystal"
-  },
-  { 
-    id: 4, 
-    name: "Natura Agmark Honey", 
-    price: 349, 
-    weight: "50g",
-    image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864",
-    category: "crystal"
-  },
-  { 
-    id: 5, 
-    name: "Natura Agmark Honey", 
-    price: 199, 
-    weight: "1Kg",
-    image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894",
-    category: "premium"
-  },
-  { 
-    id: 6, 
-    name: "Natura Agmark Honey", 
-    price: 329, 
-    weight: "500g",
-    image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908",
-    category: "premium"
-  }
-];
-
-// Initialize common functionality
-function initializeCommonFunctionality() {
-  console.log("Initializing common functionality...");
-  
-  // DOM Elements
-  const notificationBar = document.getElementById('notificationBar');
-  const navBar = document.getElementById('navBar');
-  const likeIcon = document.getElementById('likeIcon');
-  const likeCount = document.getElementById('likeCount');
-  const cartIcon = document.getElementById('cartIcon');
-  const cartCount = document.getElementById('cartCount');
-  const whatsappIcon = document.getElementById('whatsappIcon');
-  const userIcon = document.getElementById('userIcon');
-  const userDropdown = document.getElementById('userDropdown');
-  const profileLink = document.getElementById('profileLink');
-  const logoutLink = document.getElementById('logoutLink');
-  
-  // Layout Switcher Elements
-  const desktopViewBtn = document.getElementById('desktopView');
-  const mobileViewBtn = document.getElementById('mobileView');
-  const body = document.body;
-  
-  const likesSidebar = document.getElementById('likesSidebar');
-  const closeLikes = document.getElementById('closeLikes');
-  const likesItems = document.getElementById('likesItems');
-  const emptyLikes = document.getElementById('emptyLikes');
-  const browseProducts = document.getElementById('browseProducts');
-  
-  const cartSidebar = document.getElementById('cartSidebar');
-  const closeCart = document.getElementById('closeCart');
-  const cartItems = document.getElementById('cartItems');
-  const emptyCart = document.getElementById('emptyCart');
-  const cartSummary = document.getElementById('cartSummary');
-  const cartTotal = document.querySelector('.cart-total span:last-child');
-  const checkoutBtn = document.getElementById('checkoutBtn');
-  const continueShopping = document.getElementById('continueShopping');
-  
-  const overlay = document.getElementById('overlay');
-  const loginModal = document.getElementById('loginModal');
-  const closeLogin = document.getElementById('closeLogin');
-  const backBtn = document.getElementById('backBtn');
-  const modalTitle = document.getElementById('modalTitle');
-  const modalSubtitle = document.getElementById('modalSubtitle');
-  
-  const loginForm = document.getElementById('loginForm');
-  const signupForm = document.getElementById('signupForm');
-  const forgotForm = document.getElementById('forgotForm');
-  const loginBtn = document.getElementById('loginBtn');
-  const signupBtn = document.getElementById('signupBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const googleLoginBtn = document.getElementById('googleLoginBtn');
-  const forgotPassword = document.getElementById('forgotPassword');
-  const signUp = document.getElementById('signUp');
-  const loginFooter = document.getElementById('loginFooter');
-  const termsCheckbox = document.getElementById('termsCheckbox');
-
-  // Profile Page Elements
-  const mainContent = document.getElementById('mainContent');
-  const profilePage = document.getElementById('profilePage');
-  const profileCloseBtn = document.getElementById('profileCloseBtn');
-  const editProfileBtn = document.getElementById('edit-profile-btn');
-  const editProfileModal = document.getElementById('edit-profile-modal');
-  const closeEditProfileModal = document.getElementById('close-edit-profile-modal');
-  const cancelEditProfile = document.getElementById('cancel-edit-profile');
-  const saveProfileBtn = document.getElementById('save-profile-btn');
-  const addAddressBtn = document.getElementById('add-address-btn');
-  const addAddressForm = document.getElementById('add-address-form');
-  const cancelNewAddress = document.getElementById('cancel-new-address');
-  const saveNewAddress = document.getElementById('save-new-address');
-  const addressesContainer = document.getElementById('addresses-container');
-  const ordersContainer = document.getElementById('orders-container');
-
-  // Initialize Firebase Auth State Listener
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      currentUser = user;
-      updateUIForUser(user);
-      loadUserData(user.uid);
-    } else {
-      currentUser = null;
-      updateUIForGuest();
-    }
-  });
-
-  // Update UI for logged in user
-  function updateUIForUser(user) {
-    if (userIcon) userIcon.classList.add('logged-in');
+    // DOM Elements
+    const notificationBar = document.getElementById('notificationBar');
+    const navBar = document.getElementById('navBar');
+    const likeIcon = document.getElementById('likeIcon');
+    const likeCount = document.getElementById('likeCount');
+    const cartIcon = document.getElementById('cartIcon');
+    const cartCount = document.getElementById('cartCount');
+    const whatsappIcon = document.getElementById('whatsappIcon');
+    const userIcon = document.getElementById('userIcon');
+    const userDropdown = document.getElementById('userDropdown');
+    const profileLink = document.getElementById('profileLink');
+    const logoutLink = document.getElementById('logoutLink');
     
-    // Update profile info
-    if (document.getElementById('user-name')) {
+    // Layout Switcher Elements
+    const desktopViewBtn = document.getElementById('desktopView');
+    const mobileViewBtn = document.getElementById('mobileView');
+    const body = document.body;
+    
+    const likesSidebar = document.getElementById('likesSidebar');
+    const closeLikes = document.getElementById('closeLikes');
+    const likesItems = document.getElementById('likesItems');
+    const emptyLikes = document.getElementById('emptyLikes');
+    const browseProducts = document.getElementById('browseProducts');
+    
+    const cartSidebar = document.getElementById('cartSidebar');
+    const closeCart = document.getElementById('closeCart');
+    const cartItems = document.getElementById('cartItems');
+    const emptyCart = document.getElementById('emptyCart');
+    const cartSummary = document.getElementById('cartSummary');
+    const cartTotal = document.querySelector('.cart-total span:last-child');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const continueShopping = document.getElementById('continueShopping');
+    
+    const overlay = document.getElementById('overlay');
+    const loginModal = document.getElementById('loginModal');
+    const closeLogin = document.getElementById('closeLogin');
+    const backBtn = document.getElementById('backBtn');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const forgotForm = document.getElementById('forgotForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const forgotPassword = document.getElementById('forgotPassword');
+    const signUp = document.getElementById('signUp');
+    const loginFooter = document.getElementById('loginFooter');
+    const termsCheckbox = document.getElementById('termsCheckbox');
+
+    // Profile Page Elements
+    const mainContent = document.getElementById('mainContent');
+    const profilePage = document.getElementById('profilePage');
+    const profileCloseBtn = document.getElementById('profileCloseBtn');
+    const editProfileBtn = document.getElementById('edit-profile-btn');
+    const editProfileModal = document.getElementById('edit-profile-modal');
+    const closeEditProfileModal = document.getElementById('close-edit-profile-modal');
+    const cancelEditProfile = document.getElementById('cancel-edit-profile');
+    const saveProfileBtn = document.getElementById('save-profile-btn');
+    const addAddressBtn = document.getElementById('add-address-btn');
+    const addAddressForm = document.getElementById('add-address-form');
+    const cancelNewAddress = document.getElementById('cancel-new-address');
+    const saveNewAddress = document.getElementById('save-new-address');
+    const addressesContainer = document.getElementById('addresses-container');
+    const ordersContainer = document.getElementById('orders-container');
+
+    // State variables
+    let currentUser = null;
+    let likedProducts = [];
+    let cartProducts = [];
+    let userOrders = [];
+    let currentModalView = 'login';
+    // Product data
+    const products = [
+      { 
+        id: 1, 
+        name: "Natura Agmark Honey", 
+        price: 249, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022",
+        category: "crystal"
+      },
+      { 
+        id: 2, 
+        name: "Natura Agmark Honey", 
+        price: 449, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026",
+        category: "crystal"
+      },
+      { 
+        id: 3, 
+        name: "Natura Agmark Honey", 
+        price: 149, 
+        weight: "100g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115",
+        category: "crystal"
+      },
+      { 
+        id: 4, 
+        name: "Natura Agmark Honey", 
+        price: 349, 
+        weight: "50g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864",
+        category: "crystal"
+      },
+      { 
+        id: 5, 
+        name: "Natura Agmark Honey", 
+        price: 199, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894",
+        category: "premium"
+      },
+      { 
+        id: 6, 
+        name: "Natura Agmark Honey", 
+        price: 329, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908",
+        category: "premium"
+      }
+    ];
+
+    // Initialize Firebase Auth State Listener
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        currentUser = user;
+        updateUIForUser(user);
+        loadUserData(user.uid);
+      } else {
+        currentUser = null;
+        updateUIForGuest();
+      }
+    });
+
+    // Update UI for logged in user
+    function updateUIForUser(user) {
+      userIcon.classList.add('logged-in');
+      
+      // Update profile info
       document.getElementById('user-name').textContent = user.displayName || 'User';
       document.getElementById('user-email').textContent = user.email;
       document.getElementById('edit-name').value = user.displayName || '';
       document.getElementById('edit-email').value = user.email;
-    }
-    
-    // Show profile link
-    if (profileLink) profileLink.style.display = 'block';
-    
-    // Update member since date
-    const memberSince = user.metadata.creationTime;
-    if (document.getElementById('member-since')) {
+      
+      // Show profile link
+      profileLink.style.display = 'block';
+      
+      // Update member since date
+      const memberSince = user.metadata.creationTime;
       document.getElementById('member-since').textContent = new Date(memberSince).toLocaleDateString();
     }
-  }
 
-  // Update UI for guest
-  function updateUIForGuest() {
-    if (userIcon) userIcon.classList.remove('logged-in');
-    if (profileLink) profileLink.style.display = 'block';
-    
-    // Reset profile info
-    if (document.getElementById('user-name')) {
+    // Update UI for guest
+    function updateUIForGuest() {
+      userIcon.classList.remove('logged-in');
+      profileLink.style.display = 'block';
+      
+      // Reset profile info
       document.getElementById('user-name').textContent = 'User Name';
       document.getElementById('user-email').textContent = 'user@example.com';
     }
-  }
 
-  // Load user data from Firestore
-  function loadUserData(userId) {
-    // Load liked products
-    db.collection('users').doc(userId).collection('likes').get()
-      .then((querySnapshot) => {
-        likedProducts = [];
-        querySnapshot.forEach((doc) => {
-          likedProducts.push(doc.data().productId);
-        });
-        updateLikeUI();
-      })
-      .catch((error) => {
-        console.error("Error loading liked products:", error);
-      });
-
-    // Load cart items
-    db.collection('users').doc(userId).collection('cart').get()
-      .then((querySnapshot) => {
-        cartProducts = [];
-        querySnapshot.forEach((doc) => {
-          cartProducts.push({
-            id: doc.data().productId,
-            quantity: doc.data().quantity
+    // Load user data from Firestore
+    function loadUserData(userId) {
+      // Load liked products
+      db.collection('users').doc(userId).collection('likes').get()
+        .then((querySnapshot) => {
+          likedProducts = [];
+          querySnapshot.forEach((doc) => {
+            likedProducts.push(doc.data().productId);
           });
+          updateLikeUI();
+        })
+        .catch((error) => {
+          console.error("Error loading liked products:", error);
         });
-        updateCartUI();
-      })
-      .catch((error) => {
-        console.error("Error loading cart items:", error);
-      });
 
-    // Load addresses
-    if (addressesContainer) {
+      // Load cart items
+      db.collection('users').doc(userId).collection('cart').get()
+        .then((querySnapshot) => {
+          cartProducts = [];
+          querySnapshot.forEach((doc) => {
+            cartProducts.push({
+              id: doc.data().productId,
+              quantity: doc.data().quantity
+            });
+          });
+          updateCartUI();
+        })
+        .catch((error) => {
+          console.error("Error loading cart items:", error);
+        });
+
+      // Load addresses
       db.collection('users').doc(userId).collection('addresses').get()
         .then((querySnapshot) => {
           addressesContainer.innerHTML = '';
@@ -243,10 +222,8 @@ function initializeCommonFunctionality() {
         .catch((error) => {
           console.error("Error loading addresses:", error);
         });
-    }
 
-    // Load orders
-    if (ordersContainer) {
+      // Load orders
       db.collection('users').doc(userId).collection('orders').get()
         .then((querySnapshot) => {
           ordersContainer.innerHTML = '';
@@ -262,264 +239,230 @@ function initializeCommonFunctionality() {
           console.error("Error loading orders:", error);
         });
     }
-  }
 
-  // Display address in profile
-  function displayAddress(addressId, address) {
-    const addressCard = document.createElement('div');
-    addressCard.className = 'address-card';
-    addressCard.innerHTML = `
-      <h3>
-        ${address.label} Address
-        <span style="font-size: 14px; color: #777;">Pincode: ${address.pincode}</span>
-      </h3>
-      <p>${address.name}<br>${address.address.replace(/\n/g, '<br>')}<br>Phone: ${address.phone}</p>
-      <div class="address-actions">
-        <button class="btn btn-sm edit-address-btn" data-id="${addressId}">
-          <i class="fas fa-edit"></i> Edit
-        </button>
-        <button class="btn btn-sm btn-danger delete-address-btn" data-id="${addressId}">
-          <i class="fas fa-trash"></i> Delete
-        </button>
-      </div>
-      <div class="address-form edit-address-form" id="edit-address-form-${addressId}">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="edit-label-${addressId}">Address Label</label>
-            <input type="text" id="edit-label-${addressId}" value="${address.label}">
-          </div>
-          <div class="form-group">
-            <label for="edit-pincode-${addressId}">Pincode</label>
-            <input type="text" id="edit-pincode-${addressId}" value="${address.pincode}">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="edit-name-${addressId}">Full Name</label>
-          <input type="text" id="edit-name-${addressId}" value="${address.name}">
-        </div>
-        <div class="form-group">
-          <label for="edit-address-${addressId}">Address</label>
-          <textarea id="edit-address-${addressId}">${address.address}</textarea>
-        </div>
-        <div class="form-group">
-          <label for="edit-phone-${addressId}">Phone</label>
-          <input type="text" id="edit-phone-${addressId}" value="${address.phone}">
-        </div>
-        <div class="form-actions">
-          <button class="btn save-edit-address-btn" data-id="${addressId}">
-            <i class="fas fa-save"></i> Save
+    // Display address in profile
+    function displayAddress(addressId, address) {
+      const addressCard = document.createElement('div');
+      addressCard.className = 'address-card';
+      addressCard.innerHTML = `
+        <h3>
+          ${address.label} Address
+          <span style="font-size: 14px; color: #777;">Pincode: ${address.pincode}</span>
+        </h3>
+        <p>${address.name}<br>${address.address.replace(/\n/g, '<br>')}<br>Phone: ${address.phone}</p>
+        <div class="address-actions">
+          <button class="btn btn-sm edit-address-btn" data-id="${addressId}">
+            <i class="fas fa-edit"></i> Edit
           </button>
-          <button class="btn btn-outline cancel-edit-address-btn" data-id="${addressId}">
-            <i class="fas fa-times"></i> Cancel
+          <button class="btn btn-sm btn-danger delete-address-btn" data-id="${addressId}">
+            <i class="fas fa-trash"></i> Delete
           </button>
         </div>
-      </div>
-    `;
-    if (addressesContainer) {
+        <div class="address-form edit-address-form" id="edit-address-form-${addressId}">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-label-${addressId}">Address Label</label>
+              <input type="text" id="edit-label-${addressId}" value="${address.label}">
+            </div>
+            <div class="form-group">
+              <label for="edit-pincode-${addressId}">Pincode</label>
+              <input type="text" id="edit-pincode-${addressId}" value="${address.pincode}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-name-${addressId}">Full Name</label>
+            <input type="text" id="edit-name-${addressId}" value="${address.name}">
+          </div>
+          <div class="form-group">
+            <label for="edit-address-${addressId}">Address</label>
+            <textarea id="edit-address-${addressId}">${address.address}</textarea>
+          </div>
+          <div class="form-group">
+            <label for="edit-phone-${addressId}">Phone</label>
+            <input type="text" id="edit-phone-${addressId}" value="${address.phone}">
+          </div>
+          <div class="form-actions">
+            <button class="btn save-edit-address-btn" data-id="${addressId}">
+              <i class="fas fa-save"></i> Save
+            </button>
+            <button class="btn btn-outline cancel-edit-address-btn" data-id="${addressId}">
+              <i class="fas fa-times"></i> Cancel
+            </button>
+          </div>
+        </div>
+      `;
       addressesContainer.appendChild(addressCard);
+      
+      // Add event listeners
+      document.querySelector(`.edit-address-btn[data-id="${addressId}"]`).addEventListener('click', function() {
+        document.getElementById(`edit-address-form-${addressId}`).style.display = 'block';
+      });
+      
+      document.querySelector(`.delete-address-btn[data-id="${addressId}"]`).addEventListener('click', function() {
+        if (confirm('Are you sure you want to delete this address?')) {
+          deleteAddress(addressId);
+        }
+      });
+      
+      document.querySelector(`.save-edit-address-btn[data-id="${addressId}"]`).addEventListener('click', function() {
+        saveEditedAddress(addressId);
+      });
+      
+      document.querySelector(`.cancel-edit-address-btn[data-id="${addressId}"]`).addEventListener('click', function() {
+        document.getElementById(`edit-address-form-${addressId}`).style.display = 'none';
+      });
     }
-    
-    // Add event listeners
-    setTimeout(() => {
-      const editBtn = document.querySelector(`.edit-address-btn[data-id="${addressId}"]`);
-      const deleteBtn = document.querySelector(`.delete-address-btn[data-id="${addressId}"]`);
-      const saveBtn = document.querySelector(`.save-edit-address-btn[data-id="${addressId}"]`);
-      const cancelBtn = document.querySelector(`.cancel-edit-address-btn[data-id="${addressId}"]`);
-      
-      if (editBtn) {
-        editBtn.addEventListener('click', function() {
-          document.getElementById(`edit-address-form-${addressId}`).style.display = 'block';
-        });
-      }
-      
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', function() {
-          if (confirm('Are you sure you want to delete this address?')) {
-            deleteAddress(addressId);
-          }
-        });
-      }
-      
-      if (saveBtn) {
-        saveBtn.addEventListener('click', function() {
-          saveEditedAddress(addressId);
-        });
-      }
-      
-      if (cancelBtn) {
-        cancelBtn.addEventListener('click', function() {
-          document.getElementById(`edit-address-form-${addressId}`).style.display = 'none';
-        });
-      }
-    }, 100);
-  }
 
-  // Display order in profile
-  function displayOrder(order) {
-    const orderCard = document.createElement('div');
-    orderCard.className = 'order-card';
-    
-    let orderItemsHTML = '';
-    order.items.forEach(item => {
-      const product = products.find(p => p.id === item.productId);
-      if (product) {
-        orderItemsHTML += `
-          <div class="order-items">
-            <div class="order-item-img">
-              <i class="fas fa-jar"></i>
+    // Display order in profile
+    function displayOrder(order) {
+      const orderCard = document.createElement('div');
+      orderCard.className = 'order-card';
+      
+      let orderItemsHTML = '';
+      order.items.forEach(item => {
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
+          orderItemsHTML += `
+            <div class="order-items">
+              <div class="order-item-img">
+                <i class="fas fa-jar"></i>
+              </div>
+              <div class="order-item-info">
+                <div class="order-item-name">${product.name} - ${product.weight}</div>
+                <div class="order-item-qty">Quantity: ${item.quantity}</div>
+              </div>
             </div>
-            <div class="order-item-info">
-              <div class="order-item-name">${product.name} - ${product.weight}</div>
-              <div class="order-item-qty">Quantity: ${item.quantity}</div>
-            </div>
+          `;
+        }
+      });
+      
+      orderCard.innerHTML = `
+        <div class="order-header">
+          <div>
+            <span class="order-id">Order #${order.id.substring(0, 8)}</span>
+            <span class="order-date">Placed on ${new Date(order.createdAt).toLocaleDateString()}</span>
           </div>
-        `;
-      }
-    });
-    
-    orderCard.innerHTML = `
-      <div class="order-header">
-        <div>
-          <span class="order-id">Order #${order.id.substring(0, 8)}</span>
-          <span class="order-date">Placed on ${new Date(order.createdAt).toLocaleDateString()}</span>
+          <span class="order-status status-${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
         </div>
-        <span class="order-status status-${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
-      </div>
-      ${orderItemsHTML}
-      <div class="order-total">Total: ₹${order.total}</div>
-      <div class="order-actions">
-        <button class="btn btn-outline track-order-btn" data-id="${order.id}">
-          <i class="fas fa-truck"></i> Track Order
-        </button>
-        <button class="btn reorder-btn" data-id="${order.id}">
-          <i class="fas fa-redo"></i> Reorder
-        </button>
-      </div>
-    `;
-    
-    if (ordersContainer) {
+        ${orderItemsHTML}
+        <div class="order-total">Total: ₹${order.total}</div>
+        <div class="order-actions">
+          <button class="btn btn-outline track-order-btn" data-id="${order.id}">
+            <i class="fas fa-truck"></i> Track Order
+          </button>
+          <button class="btn reorder-btn" data-id="${order.id}">
+            <i class="fas fa-redo"></i> Reorder
+          </button>
+        </div>
+      `;
+      
       ordersContainer.appendChild(orderCard);
+      
+      // Add event listeners
+      orderCard.querySelector('.track-order-btn').addEventListener('click', function() {
+        alert(`Tracking order #${order.id.substring(0, 8)}`);
+      });
+      
+      orderCard.querySelector('.reorder-btn').addEventListener('click', function() {
+        reorderItems(order.items);
+      });
+    }
+
+    // Reorder items
+    function reorderItems(items) {
+      items.forEach(item => {
+        addToCart(item.productId, item.quantity);
+      });
+      alert('Items added to cart!');
+    }
+
+    // Layout Switcher Functionality
+    function setDesktopView() {
+      body.classList.remove('mobile-view');
+      desktopViewBtn.classList.add('active');
+      mobileViewBtn.classList.remove('active');
+      document.body.style.transform = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.left = '';
+      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.35, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes');
     }
     
-    // Add event listeners
-    setTimeout(() => {
-      const trackBtn = orderCard.querySelector('.track-order-btn');
-      const reorderBtn = orderCard.querySelector('.reorder-btn');
-      
-      if (trackBtn) {
-        trackBtn.addEventListener('click', function() {
-          alert(`Tracking order #${order.id.substring(0, 8)}`);
-        });
-      }
-      
-      if (reorderBtn) {
-        reorderBtn.addEventListener('click', function() {
-          reorderItems(order.items);
-        });
-      }
-    }, 100);
-  }
-
-  // Reorder items
-  function reorderItems(items) {
-    items.forEach(item => {
-      addToCart(item.productId, item.quantity);
-    });
-    alert('Items added to cart!');
-  }
-
-  // Layout Switcher Functionality
-  function setDesktopView() {
-    body.classList.remove('mobile-view');
-    if (desktopViewBtn) desktopViewBtn.classList.add('active');
-    if (mobileViewBtn) mobileViewBtn.classList.remove('active');
-    document.body.style.transform = '';
-    document.body.style.width = '';
-    document.body.style.height = '';
-    document.body.style.left = '';
-    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.35, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes');
-  }
-  
-  function setMobileView() {
-    body.classList.add('mobile-view');
-    if (mobileViewBtn) mobileViewBtn.classList.add('active');
-    if (desktopViewBtn) desktopViewBtn.classList.remove('active');
-    document.body.style.transform = 'scale(0.55)';
-    document.body.style.transformOrigin = 'top center';
-    document.body.style.width = '181.82%';
-    document.body.style.height = '181.82%';
-    document.body.style.left = '-40.91%';
-    document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.35, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes');
-  }
-  
-  // Check if mobile device and set appropriate view
-  function checkMobileDevice() {
-    if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      setMobileView();
-    } else {
-      setDesktopView();
+    function setMobileView() {
+      body.classList.add('mobile-view');
+      mobileViewBtn.classList.add('active');
+      desktopViewBtn.classList.remove('active');
+      document.body.style.transform = 'scale(0.55)';
+      document.body.style.transformOrigin = 'top center';
+      document.body.style.width = '181.82%';
+      document.body.style.height = '181.82%';
+      document.body.style.left = '-40.91%';
+      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.35, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes');
     }
-  }
-
-  // Hide notification bar on scroll down
-  let lastScrollTop = 0;
-  window.addEventListener('scroll', () => {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    if (scrollTop > 5) {
-      if (notificationBar && !notificationBar.classList.contains('hidden')) {
-        notificationBar.classList.add('hidden');
-        if (navBar) navBar.style.top = '0';
-        document.querySelector('.content-wrapper').style.marginTop = '130px';
-      }
-    } else {
-      if (notificationBar && notificationBar.classList.contains('hidden')) {
-        notificationBar.classList.remove('hidden');
-        if (navBar) navBar.style.top = '40px';
-        document.querySelector('.content-wrapper').style.marginTop = '165px';
+    
+    // Check if mobile device and set appropriate view
+    function checkMobileDevice() {
+      if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        setMobileView();
+      } else {
+        setDesktopView();
       }
     }
-    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-  }, { passive: true });
 
-  // User dropdown functionality
-  if (userIcon) {
+    // Hide notification bar on scroll down
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > 5) {
+        if (!notificationBar.classList.contains('hidden')) {
+          notificationBar.classList.add('hidden');
+          navBar.style.top = '0';
+          document.querySelector('.content-wrapper').style.marginTop = '130px';
+        }
+      } else {
+        if (notificationBar.classList.contains('hidden')) {
+          notificationBar.classList.remove('hidden');
+          navBar.style.top = '40px';
+          document.querySelector('.content-wrapper').style.marginTop = '165px';
+        }
+      }
+      lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    }, { passive: true });
+
+    // User dropdown functionality
     userIcon.addEventListener('click', (e) => {
       e.stopPropagation();
       if (currentUser) {
         userDropdown.classList.toggle('active');
       } else {
         showLoginView();
-        if (loginModal) loginModal.classList.add('active');
-        if (overlay) overlay.classList.add('active');
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
       }
     });
-  }
 
-  // Close dropdown when clicking outside
-  document.addEventListener('click', () => {
-    if (userDropdown) userDropdown.classList.remove('active');
-  });
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      userDropdown.classList.remove('active');
+    });
 
-  // Profile link functionality
-  if (profileLink) {
+    // Profile link functionality
     profileLink.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (userDropdown) userDropdown.classList.remove('active');
+      userDropdown.classList.remove('active');
       if (currentUser) {
         showProfilePage();
       } else {
         showLoginView();
-        if (loginModal) loginModal.classList.add('active');
-        if (overlay) overlay.classList.add('active');
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
       }
     });
-  }
 
-  // Logout functionality
-  if (logoutLink) {
+    // Logout functionality
     logoutLink.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -529,47 +472,37 @@ function initializeCommonFunctionality() {
         console.error("Error signing out:", error);
       });
     });
-  }
 
-  // Show Profile Page
-  function showProfilePage() {
-    if (mainContent) mainContent.style.display = 'none';
-    if (profilePage) profilePage.classList.add('active');
-  }
+    // Show Profile Page
+    function showProfilePage() {
+      mainContent.style.display = 'none';
+      profilePage.classList.add('active');
+    }
 
-  // Hide Profile Page
-  function hideProfilePage() {
-    if (mainContent) mainContent.style.display = 'block';
-    if (profilePage) profilePage.classList.remove('active');
-  }
+    // Hide Profile Page
+    function hideProfilePage() {
+      mainContent.style.display = 'block';
+      profilePage.classList.remove('active');
+    }
 
-  // Profile Close Button
-  if (profileCloseBtn) {
+    // Profile Close Button
     profileCloseBtn.addEventListener('click', () => {
       hideProfilePage();
     });
-  }
 
-  // Profile Functions
-  if (editProfileBtn) {
+    // Profile Functions
     editProfileBtn.addEventListener('click', function() {
-      if (editProfileModal) editProfileModal.style.display = 'flex';
+      editProfileModal.style.display = 'flex';
     });
-  }
-  
-  if (closeEditProfileModal) {
+    
     closeEditProfileModal.addEventListener('click', function() {
-      if (editProfileModal) editProfileModal.style.display = 'none';
+      editProfileModal.style.display = 'none';
     });
-  }
-  
-  if (cancelEditProfile) {
+    
     cancelEditProfile.addEventListener('click', function() {
-      if (editProfileModal) editProfileModal.style.display = 'none';
+      editProfileModal.style.display = 'none';
     });
-  }
-  
-  if (saveProfileBtn) {
+    
     saveProfileBtn.addEventListener('click', function() {
       const newName = document.getElementById('edit-name').value;
       if (newName.trim() === '') {
@@ -588,34 +521,28 @@ function initializeCommonFunctionality() {
         }, { merge: true });
       }).then(() => {
         alert('Profile updated successfully!');
-        if (editProfileModal) editProfileModal.style.display = 'none';
+        editProfileModal.style.display = 'none';
         updateUIForUser(currentUser);
       }).catch((error) => {
         console.error("Error updating profile:", error);
         alert('Error updating profile. Please try again.');
       });
     });
-  }
-  
-  // Address Functions
-  if (addAddressBtn) {
+    
+    // Address Functions
     addAddressBtn.addEventListener('click', function() {
-      if (addAddressForm) addAddressForm.style.display = 'block';
+      addAddressForm.style.display = 'block';
     });
-  }
-  
-  if (cancelNewAddress) {
+    
     cancelNewAddress.addEventListener('click', function() {
-      if (addAddressForm) addAddressForm.style.display = 'none';
+      addAddressForm.style.display = 'none';
       document.getElementById('new-label').value = '';
       document.getElementById('new-name').value = '';
       document.getElementById('new-address').value = '';
       document.getElementById('new-phone').value = '';
       document.getElementById('new-pincode').value = '';
     });
-  }
-  
-  if (saveNewAddress) {
+    
     saveNewAddress.addEventListener('click', function() {
       const label = document.getElementById('new-label').value.trim();
       const name = document.getElementById('new-name').value.trim();
@@ -640,7 +567,7 @@ function initializeCommonFunctionality() {
       db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
         .then((docRef) => {
           displayAddress(docRef.id, newAddress);
-          if (addAddressForm) addAddressForm.style.display = 'none';
+          addAddressForm.style.display = 'none';
           document.getElementById('new-label').value = '';
           document.getElementById('new-name').value = '';
           document.getElementById('new-address').value = '';
@@ -653,86 +580,78 @@ function initializeCommonFunctionality() {
           alert('Error adding address. Please try again.');
         });
     });
-  }
-  
-  function saveEditedAddress(addressId) {
-    const label = document.getElementById(`edit-label-${addressId}`).value.trim();
-    const name = document.getElementById(`edit-name-${addressId}`).value.trim();
-    const address = document.getElementById(`edit-address-${addressId}`).value.trim();
-    const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
-    const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
     
-    if (!label || !name || !address || !phone || !pincode) {
-      alert('Please fill in all fields');
-      return;
+    function saveEditedAddress(addressId) {
+      const label = document.getElementById(`edit-label-${addressId}`).value.trim();
+      const name = document.getElementById(`edit-name-${addressId}`).value.trim();
+      const address = document.getElementById(`edit-address-${addressId}`).value.trim();
+      const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
+      const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
+      
+      if (!label || !name || !address || !phone || !pincode) {
+        alert('Please fill in all fields');
+        return;
+      }
+      
+      const updatedAddress = {
+        label: label,
+        name: name,
+        address: address,
+        phone: phone,
+        pincode: pincode,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
+        .then(() => {
+          // Refresh addresses
+          addressesContainer.innerHTML = '';
+          loadUserData(currentUser.uid);
+          alert('Address updated successfully!');
+        })
+        .catch((error) => {
+          console.error("Error updating address:", error);
+          alert('Error updating address. Please try again.');
+        });
     }
     
-    const updatedAddress = {
-      label: label,
-      name: name,
-      address: address,
-      phone: phone,
-      pincode: pincode,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
-      .then(() => {
-        // Refresh addresses
-        if (addressesContainer) addressesContainer.innerHTML = '';
-        loadUserData(currentUser.uid);
-        alert('Address updated successfully!');
-      })
-      .catch((error) => {
-        console.error("Error updating address:", error);
-        alert('Error updating address. Please try again.');
-      });
-  }
-  
-  function deleteAddress(addressId) {
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
-      .then(() => {
-        // Refresh addresses
-        if (addressesContainer) addressesContainer.innerHTML = '';
-        loadUserData(currentUser.uid);
-        alert('Address deleted successfully!');
-      })
-      .catch((error) => {
-        console.error("Error deleting address:", error);
-        alert('Error deleting address. Please try again.');
-      });
-  }
+    function deleteAddress(addressId) {
+      db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
+        .then(() => {
+          // Refresh addresses
+          addressesContainer.innerHTML = '';
+          loadUserData(currentUser.uid);
+          alert('Address deleted successfully!');
+        })
+        .catch((error) => {
+          console.error("Error deleting address:", error);
+          alert('Error deleting address. Please try again.');
+        });
+    }
 
-  // Like icon functionality
-  if (likeIcon) {
+    // Like icon functionality
     likeIcon.addEventListener('click', () => {
-      if (likesSidebar) likesSidebar.classList.add('active');
-      if (overlay) overlay.classList.add('active');
+      likesSidebar.classList.add('active');
+      overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
     });
-  }
 
-  // Close likes sidebar
-  if (closeLikes) {
+    // Close likes sidebar
     closeLikes.addEventListener('click', () => {
-      if (likesSidebar) likesSidebar.classList.remove('active');
-      if (overlay) overlay.classList.remove('active');
+      likesSidebar.classList.remove('active');
+      overlay.classList.remove('active');
       document.body.style.overflow = 'auto';
     });
-  }
 
-  // Update likes UI
-  function updateLikeUI() {
-    if (likedProducts.length > 0) {
-      if (likeCount) {
+    // Update likes UI
+    function updateLikeUI() {
+      if (likedProducts.length > 0) {
         likeCount.textContent = likedProducts.length;
         likeCount.classList.remove('hidden');
+      } else {
+        likeCount.classList.add('hidden');
       }
-    } else {
-      if (likeCount) likeCount.classList.add('hidden');
-    }
-    
-    if (likesItems && emptyLikes) {
+      
       if (likedProducts.length === 0) {
         emptyLikes.style.display = 'flex';
         likesItems.innerHTML = '';
@@ -764,113 +683,100 @@ function initializeCommonFunctionality() {
           }
         });
         
-        // Add event listeners for dynamically created elements
-        setTimeout(() => {
-          document.querySelectorAll('.remove-like').forEach(button => {
-            button.addEventListener('click', (e) => {
-              const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-              removeFromLikes(productId);
-            });
+        document.querySelectorAll('.remove-like').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            removeFromLikes(productId);
           });
-          
-          document.querySelectorAll('.likes-items .add-to-cart-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-              const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-              addToCart(productId, 1);
-            });
+        });
+        
+        document.querySelectorAll('.likes-items .add-to-cart-btn').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            addToCart(productId, 1);
           });
-        }, 100);
+        });
       }
     }
-  }
 
-  // Add to likes
-  function addToLikes(productId) {
-    if (!likedProducts.includes(productId)) {
-      likedProducts.push(productId);
-      
-      // Save to Firestore if user is logged in
-      if (currentUser) {
-        db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).set({
-          productId: productId,
-          addedAt: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .catch((error) => {
-          console.error("Error adding to likes:", error);
-        });
-      } else {
-        // Save to localStorage for guest users
-        localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
-      }
-      
-      updateLikeUI();
-      
-      if (likeIcon) {
+    // Add to likes
+    function addToLikes(productId) {
+      if (!likedProducts.includes(productId)) {
+        likedProducts.push(productId);
+        
+        // Save to Firestore if user is logged in
+        if (currentUser) {
+          db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).set({
+            productId: productId,
+            addedAt: firebase.firestore.FieldValue.serverTimestamp()
+          })
+          .catch((error) => {
+            console.error("Error adding to likes:", error);
+          });
+        } else {
+          // Save to localStorage for guest users
+          localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+        }
+        
+        updateLikeUI();
+        
         const heartIcon = likeIcon.querySelector('i');
         heartIcon.classList.remove('far');
         heartIcon.classList.add('fas');
         heartIcon.style.color = '#ff4d4d';
       }
     }
-  }
 
-  // Remove from likes
-  function removeFromLikes(productId) {
-    likedProducts = likedProducts.filter(id => id !== productId);
-    
-    // Remove from Firestore if user is logged in
-    if (currentUser) {
-      db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).delete()
-      .catch((error) => {
-        console.error("Error removing from likes:", error);
-      });
-    } else {
-      // Update localStorage for guest users
-      localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+    // Remove from likes
+    function removeFromLikes(productId) {
+      likedProducts = likedProducts.filter(id => id !== productId);
+      
+      // Remove from Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).delete()
+        .catch((error) => {
+          console.error("Error removing from likes:", error);
+        });
+      } else {
+        // Update localStorage for guest users
+        localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+      }
+      
+      updateLikeUI();
+      
+      if (likedProducts.length === 0) {
+        const heartIcon = likeIcon.querySelector('i');
+        heartIcon.classList.remove('fas');
+        heartIcon.classList.add('far');
+        heartIcon.style.color = '';
+      }
     }
-    
-    updateLikeUI();
-    
-    if (likedProducts.length === 0 && likeIcon) {
-      const heartIcon = likeIcon.querySelector('i');
-      heartIcon.classList.remove('fas');
-      heartIcon.classList.add('far');
-      heartIcon.style.color = '';
-    }
-  }
 
-  // Cart functionality
-  if (cartIcon) {
+    // Cart functionality
     cartIcon.addEventListener('click', () => {
-      if (cartSidebar) cartSidebar.classList.add('active');
-      if (overlay) overlay.classList.add('active');
+      cartSidebar.classList.add('active');
+      overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
     });
-  }
 
-  // Close cart sidebar
-  if (closeCart) {
+    // Close cart sidebar
     closeCart.addEventListener('click', () => {
-      if (cartSidebar) cartSidebar.classList.remove('active');
-      if (overlay) overlay.classList.remove('active');
+      cartSidebar.classList.remove('active');
+      overlay.classList.remove('active');
       document.body.style.overflow = 'auto';
     });
-  }
 
-  // Update cart UI
-  function updateCartUI() {
-    const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
-    
-    if (totalItems > 0) {
-      if (cartCount) {
+    // Update cart UI
+    function updateCartUI() {
+      const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
+      
+      if (totalItems > 0) {
         cartCount.textContent = totalItems;
         cartCount.classList.remove('hidden');
+      } else {
+        cartCount.classList.add('hidden');
       }
-    } else {
-      if (cartCount) cartCount.classList.add('hidden');
-    }
-    
-    if (cartItems && emptyCart && cartSummary) {
+      
       if (cartProducts.length === 0) {
         emptyCart.style.display = 'flex';
         cartItems.innerHTML = '';
@@ -912,237 +818,222 @@ function initializeCommonFunctionality() {
         });
         
         document.querySelector('.cart-subtotal span:last-child').textContent = `₹${subtotal}`;
-        if (cartTotal) cartTotal.textContent = `₹${subtotal}`;
+        cartTotal.textContent = `₹${subtotal}`;
         
-        // Add event listeners for dynamically created elements
-        setTimeout(() => {
-          document.querySelectorAll('.quantity-btn.minus').forEach(button => {
-            button.addEventListener('click', (e) => {
-              const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-              updateCartQuantity(productId, -1);
-            });
+        document.querySelectorAll('.quantity-btn.minus').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            updateCartQuantity(productId, -1);
           });
-          
-          document.querySelectorAll('.quantity-btn.plus').forEach(button => {
-            button.addEventListener('click', (e) => {
-              const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-              updateCartQuantity(productId, 1);
-            });
+        });
+        
+        document.querySelectorAll('.quantity-btn.plus').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            updateCartQuantity(productId, 1);
           });
-          
-          document.querySelectorAll('.delete-item').forEach(button => {
-            button.addEventListener('click', (e) => {
-              const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-              removeFromCart(productId);
-            });
+        });
+        
+        document.querySelectorAll('.delete-item').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            removeFromCart(productId);
           });
-          
-          document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('change', (e) => {
-              const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-              const newQuantity = parseInt(e.currentTarget.value) || 1;
-              setCartQuantity(productId, newQuantity);
-            });
+        });
+        
+        document.querySelectorAll('.quantity-input').forEach(input => {
+          input.addEventListener('change', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            const newQuantity = parseInt(e.currentTarget.value) || 1;
+            setCartQuantity(productId, newQuantity);
           });
-        }, 100);
+        });
       }
     }
-  }
 
-  // Enhanced Add to cart function with effects
-  function addToCart(productId, quantity = 1) {
-    const existingItem = cartProducts.find(item => item.id === productId);
-    
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      cartProducts.push({ id: productId, quantity });
+    // Enhanced Add to cart function with effects
+    function addToCart(productId, quantity = 1) {
+      const existingItem = cartProducts.find(item => item.id === productId);
+      
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        cartProducts.push({ id: productId, quantity });
+      }
+      
+      // Save to Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).set({
+          productId: productId,
+          quantity: existingItem ? existingItem.quantity : quantity,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .catch((error) => {
+          console.error("Error adding to cart:", error);
+        });
+      } else {
+        // Save to localStorage for guest users
+        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+      }
+      
+      updateCartUI();
+      
+      addCartVisualFeedback();
     }
-    
-    // Save to Firestore if user is logged in
-    if (currentUser) {
-      db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).set({
-        productId: productId,
-        quantity: existingItem ? existingItem.quantity : quantity,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .catch((error) => {
-        console.error("Error adding to cart:", error);
-      });
-    } else {
-      // Save to localStorage for guest users
-      localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-    }
-    
-    updateCartUI();
-    
-    addCartVisualFeedback();
-  }
 
-  // Visual feedback for adding to cart
-  function addCartVisualFeedback() {
-    if (cartIcon) {
+    // Visual feedback for adding to cart
+    function addCartVisualFeedback() {
       cartIcon.classList.add('cart-icon-bounce');
-      if (cartCount) cartCount.classList.add('badge-pulse');
+      cartCount.classList.add('badge-pulse');
       
       setTimeout(() => {
         cartIcon.classList.remove('cart-icon-bounce');
-        if (cartCount) cartCount.classList.remove('badge-pulse');
+        cartCount.classList.remove('badge-pulse');
       }, 600);
     }
-  }
 
-  // Update cart quantity
-  function updateCartQuantity(productId, change) {
-    const item = cartProducts.find(item => item.id === productId);
-    
-    if (item) {
-      item.quantity += change;
+    // Update cart quantity
+    function updateCartQuantity(productId, change) {
+      const item = cartProducts.find(item => item.id === productId);
       
-      if (item.quantity <= 0) {
-        removeFromCart(productId);
-      } else {
-        // Update Firestore if user is logged in
-        if (currentUser) {
-          db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
-            quantity: item.quantity,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          })
-          .catch((error) => {
-            console.error("Error updating cart:", error);
-          });
-        } else {
-          // Update localStorage for guest users
-          localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-        }
+      if (item) {
+        item.quantity += change;
         
-        updateCartUI();
+        if (item.quantity <= 0) {
+          removeFromCart(productId);
+        } else {
+          // Update Firestore if user is logged in
+          if (currentUser) {
+            db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
+              quantity: item.quantity,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .catch((error) => {
+              console.error("Error updating cart:", error);
+            });
+          } else {
+            // Update localStorage for guest users
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+          }
+          
+          updateCartUI();
+        }
       }
     }
-  }
 
-  // Set cart quantity
-  function setCartQuantity(productId, quantity) {
-    const item = cartProducts.find(item => item.id === productId);
-    
-    if (item) {
-      if (quantity <= 0) {
-        removeFromCart(productId);
-      } else {
-        item.quantity = quantity;
-        
-        // Update Firestore if user is logged in
-        if (currentUser) {
-          db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
-            quantity: quantity,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          })
-          .catch((error) => {
-            console.error("Error updating cart:", error);
-          });
+    // Set cart quantity
+    function setCartQuantity(productId, quantity) {
+      const item = cartProducts.find(item => item.id === productId);
+      
+      if (item) {
+        if (quantity <= 0) {
+          removeFromCart(productId);
         } else {
-          // Update localStorage for guest users
-          localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+          item.quantity = quantity;
+          
+          // Update Firestore if user is logged in
+          if (currentUser) {
+            db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
+              quantity: quantity,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .catch((error) => {
+              console.error("Error updating cart:", error);
+            });
+          } else {
+            // Update localStorage for guest users
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+          }
+          
+          updateCartUI();
         }
-        
-        updateCartUI();
       }
     }
-  }
 
-  // Remove from cart
-  function removeFromCart(productId) {
-    cartProducts = cartProducts.filter(item => item.id !== productId);
-    
-    // Remove from Firestore if user is logged in
-    if (currentUser) {
-      db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).delete()
-      .catch((error) => {
-        console.error("Error removing from cart:", error);
-      });
-    } else {
-      // Update localStorage for guest users
-      localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+    // Remove from cart
+    function removeFromCart(productId) {
+      cartProducts = cartProducts.filter(item => item.id !== productId);
+      
+      // Remove from Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).delete()
+        .catch((error) => {
+          console.error("Error removing from cart:", error);
+        });
+      } else {
+        // Update localStorage for guest users
+        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+      }
+      
+      updateCartUI();
     }
-    
-    updateCartUI();
-  }
 
-  // WhatsApp functionality
-  if (whatsappIcon) {
+    // WhatsApp functionality
     whatsappIcon.addEventListener('click', () => {
       const phoneNumber = "919876543210";
       const message = "Hello, I'm interested in your honey products!";
       const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
       window.open(url, '_blank');
     });
-  }
 
-  // Close login modal
-  if (closeLogin) {
+    // Close login modal
     closeLogin.addEventListener('click', () => {
-      if (loginModal) loginModal.classList.remove('active');
-      if (overlay) overlay.classList.remove('active');
-      document.body.style.overflow = 'auto';
-    });
-  }
-
-  // Back button functionality
-  if (backBtn) {
-    backBtn.addEventListener('click', () => {
-      showLoginView();
-    });
-  }
-
-  // Overlay click to close modals
-  if (overlay) {
-    overlay.addEventListener('click', () => {
-      if (likesSidebar) likesSidebar.classList.remove('active');
-      if (cartSidebar) cartSidebar.classList.remove('active');
-      if (loginModal) loginModal.classList.remove('active');
+      loginModal.classList.remove('active');
       overlay.classList.remove('active');
       document.body.style.overflow = 'auto';
     });
-  }
 
-  // Show login view
-  function showLoginView() {
-    currentModalView = 'login';
-    if (loginForm) loginForm.classList.add('active');
-    if (signupForm) signupForm.classList.remove('active');
-    if (forgotForm) forgotForm.classList.remove('active');
-    if (backBtn) backBtn.classList.remove('active');
-    if (modalTitle) modalTitle.textContent = 'Welcome Back';
-    if (modalSubtitle) modalSubtitle.textContent = 'Sign in to your account';
-    if (loginFooter) loginFooter.style.display = 'block';
-  }
+    // Back button functionality
+    backBtn.addEventListener('click', () => {
+      showLoginView();
+    });
 
-  // Show signup view
-  function showSignupView() {
-    currentModalView = 'signup';
-    if (loginForm) loginForm.classList.remove('active');
-    if (signupForm) signupForm.classList.add('active');
-    if (forgotForm) forgotForm.classList.remove('active');
-    if (backBtn) backBtn.classList.add('active');
-    if (modalTitle) modalTitle.textContent = 'Create Account';
-    if (modalSubtitle) modalSubtitle.textContent = 'Join Natura Honey today';
-    if (loginFooter) loginFooter.style.display = 'none';
-  }
+    // Overlay click to close modals
+    overlay.addEventListener('click', () => {
+      likesSidebar.classList.remove('active');
+      cartSidebar.classList.remove('active');
+      loginModal.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
 
-  // Show forgot password view
-  function showForgotView() {
-    currentModalView = 'forgot';
-    if (loginForm) loginForm.classList.remove('active');
-    if (signupForm) signupForm.classList.remove('active');
-    if (forgotForm) forgotForm.classList.add('active');
-    if (backBtn) backBtn.classList.add('active');
-    if (modalTitle) modalTitle.textContent = 'Reset Password';
-    if (modalSubtitle) modalSubtitle.textContent = 'Enter your email to reset your password';
-    if (loginFooter) loginFooter.style.display = 'none';
-  }
+    // Show login view
+    function showLoginView() {
+      currentModalView = 'login';
+      loginForm.classList.add('active');
+      signupForm.classList.remove('active');
+      forgotForm.classList.remove('active');
+      backBtn.classList.remove('active');
+      modalTitle.textContent = 'Welcome Back';
+      modalSubtitle.textContent = 'Sign in to your account';
+      loginFooter.style.display = 'block';
+    }
 
-  // Login functionality
-  if (loginBtn) {
+    // Show signup view
+    function showSignupView() {
+      currentModalView = 'signup';
+      loginForm.classList.remove('active');
+      signupForm.classList.add('active');
+      forgotForm.classList.remove('active');
+      backBtn.classList.add('active');
+      modalTitle.textContent = 'Create Account';
+      modalSubtitle.textContent = 'Join Natura Honey today';
+      loginFooter.style.display = 'none';
+    }
+
+    // Show forgot password view
+    function showForgotView() {
+      currentModalView = 'forgot';
+      loginForm.classList.remove('active');
+      signupForm.classList.remove('active');
+      forgotForm.classList.add('active');
+      backBtn.classList.add('active');
+      modalTitle.textContent = 'Reset Password';
+      modalSubtitle.textContent = 'Enter your email to reset your password';
+      loginFooter.style.display = 'none';
+    }
+
+    // Login functionality
     loginBtn.addEventListener('click', () => {
       const email = loginForm.querySelector('input[type="email"]').value;
       const password = loginForm.querySelector('input[type="password"]').value;
@@ -1154,8 +1045,8 @@ function initializeCommonFunctionality() {
       
       auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
-          if (loginModal) loginModal.classList.remove('active');
-          if (overlay) overlay.classList.remove('active');
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
           document.body.style.overflow = 'auto';
           alert('Login successful!');
         })
@@ -1164,10 +1055,8 @@ function initializeCommonFunctionality() {
           alert('Error signing in: ' + error.message);
         });
     });
-  }
 
-  // Signup functionality
-  if (signupBtn) {
+    // Signup functionality
     signupBtn.addEventListener('click', () => {
       const name = signupForm.querySelector('input[type="text"]').value;
       const email = signupForm.querySelector('input[type="email"]').value;
@@ -1184,7 +1073,7 @@ function initializeCommonFunctionality() {
         return;
       }
       
-      if (!termsCheckbox || !termsCheckbox.checked) {
+      if (!termsCheckbox.checked) {
         alert('Please agree to the Terms & Conditions and Privacy Policy');
         return;
       }
@@ -1209,8 +1098,8 @@ function initializeCommonFunctionality() {
           });
         })
         .then(() => {
-          if (loginModal) loginModal.classList.remove('active');
-          if (overlay) overlay.classList.remove('active');
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
           document.body.style.overflow = 'auto';
           alert('Account created successfully! Please check your email for verification.');
         })
@@ -1219,10 +1108,8 @@ function initializeCommonFunctionality() {
           alert('Error creating account: ' + error.message);
         });
     });
-  }
 
-  // Reset password functionality
-  if (resetBtn) {
+    // Reset password functionality
     resetBtn.addEventListener('click', () => {
       const email = forgotForm.querySelector('input[type="email"]').value;
       
@@ -1233,8 +1120,8 @@ function initializeCommonFunctionality() {
       
       auth.sendPasswordResetEmail(email)
         .then(() => {
-          if (loginModal) loginModal.classList.remove('active');
-          if (overlay) overlay.classList.remove('active');
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
           document.body.style.overflow = 'auto';
           alert('Password reset link sent to your email!');
         })
@@ -1243,10 +1130,8 @@ function initializeCommonFunctionality() {
           alert('Error sending reset email: ' + error.message);
         });
     });
-  }
 
-  // Google login - Fixed to handle the environment issue
-  if (googleLoginBtn) {
+    // Google login - Fixed to handle the environment issue
     googleLoginBtn.addEventListener('click', () => {
       // Check if we're in a supported environment
       if (window.location.protocol !== 'https:' && window.location.protocol !== 'http:' && !window.location.hostname.includes('localhost')) {
@@ -1273,8 +1158,8 @@ function initializeCommonFunctionality() {
             });
           })
           .then(() => {
-            if (loginModal) loginModal.classList.remove('active');
-            if (overlay) overlay.classList.remove('active');
+            loginModal.classList.remove('active');
+            overlay.classList.remove('active');
             document.body.style.overflow = 'auto';
             alert('Google login successful!');
           })
@@ -1291,26 +1176,20 @@ function initializeCommonFunctionality() {
         alert('Google login is not available in this environment. Please use email/password login instead.');
       }
     });
-  }
 
-  // Forgot password link
-  if (forgotPassword) {
+    // Forgot password link
     forgotPassword.addEventListener('click', (e) => {
       e.preventDefault();
       showForgotView();
     });
-  }
 
-  // Sign up link
-  if (signUp) {
+    // Sign up link
     signUp.addEventListener('click', (e) => {
       e.preventDefault();
       showSignupView();
     });
-  }
 
-  // Checkout button
-  if (checkoutBtn) {
+    // Checkout button
     checkoutBtn.addEventListener('click', () => {
       if (cartProducts.length === 0) {
         alert('Your cart is empty!');
@@ -1344,8 +1223,8 @@ function initializeCommonFunctionality() {
             updateCartUI();
             
             alert('Order placed successfully! Order ID: ' + docRef.id.substring(0, 8));
-            if (cartSidebar) cartSidebar.classList.remove('active');
-            if (overlay) overlay.classList.remove('active');
+            cartSidebar.classList.remove('active');
+            overlay.classList.remove('active');
             document.body.style.overflow = 'auto';
             
             // Reload user data to show new order
@@ -1361,67 +1240,49 @@ function initializeCommonFunctionality() {
         updateCartUI();
         
         alert('Order placed successfully! Thank you for your purchase.');
-        if (cartSidebar) cartSidebar.classList.remove('active');
-        if (overlay) overlay.classList.remove('active');
+        cartSidebar.classList.remove('active');
+        overlay.classList.remove('active');
         document.body.style.overflow = 'auto';
       }
     });
-  }
 
-  // Continue shopping button
-  if (continueShopping) {
+    // Continue shopping button
     continueShopping.addEventListener('click', () => {
-      if (cartSidebar) cartSidebar.classList.remove('active');
-      if (overlay) overlay.classList.remove('active');
+      cartSidebar.classList.remove('active');
+      overlay.classList.remove('active');
       document.body.style.overflow = 'auto';
     });
-  }
 
-  // Browse products button
-  if (browseProducts) {
+    // Browse products button
     browseProducts.addEventListener('click', () => {
-      if (likesSidebar) likesSidebar.classList.remove('active');
-      if (overlay) overlay.classList.remove('active');
+      likesSidebar.classList.remove('active');
+      overlay.classList.remove('active');
       document.body.style.overflow = 'auto';
     });
-  }
 
-  // Load guest data from localStorage
-  function loadGuestData() {
-    // Load liked products
-    const guestLikes = localStorage.getItem('guestLikes');
-    if (guestLikes) {
-      likedProducts = JSON.parse(guestLikes);
-      updateLikeUI();
+    // Load guest data from localStorage
+    function loadGuestData() {
+      // Load liked products
+      const guestLikes = localStorage.getItem('guestLikes');
+      if (guestLikes) {
+        likedProducts = JSON.parse(guestLikes);
+        updateLikeUI();
+      }
+      
+      // Load cart items
+      const guestCart = localStorage.getItem('guestCart');
+      if (guestCart) {
+        cartProducts = JSON.parse(guestCart);
+        updateCartUI();
+      }
     }
-    
-    // Load cart items
-    const guestCart = localStorage.getItem('guestCart');
-    if (guestCart) {
-      cartProducts = JSON.parse(guestCart);
-      updateCartUI();
-    }
-  }
 
-  // Set up layout switcher event listeners
-  if (desktopViewBtn) {
+    // Set up layout switcher event listeners
     desktopViewBtn.addEventListener('click', setDesktopView);
-  }
-  if (mobileViewBtn) {
     mobileViewBtn.addEventListener('click', setMobileView);
-  }
-  
-  // Initialize with appropriate view
-  checkMobileDevice();
-  
-  // Initialize everything
-  loadGuestData();
-}
-
-// Call the initialization when the script loads
-document.addEventListener('DOMContentLoaded', function() {
-  // Small delay to ensure all common elements are loaded
-  setTimeout(() => {
-    initializeCommonFunctionality();
-  }, 100);
-});
+    
+    // Initialize with appropriate view
+    checkMobileDevice();
+    
+    // Initialize everything
+    loadGuestData();
