@@ -1071,6 +1071,263 @@
   </style>
 </head>
 <body>
+   <!-- Layout Switcher -->
+  <div class="layout-switcher">
+    <div class="layout-btn active" id="desktopView">
+      <i class="fas fa-desktop"></i>
+    </div>
+    <div class="layout-btn" id="mobileView">
+      <i class="fas fa-mobile-alt"></i>
+    </div>
+  </div>
+
+  <!-- Notification Bar -->
+  <div class="notification-bar" id="notificationBar"><p>Free shipping on all orders over ₹599! Limited time offer.</p></div>
+
+  <!-- Navigation -->
+  <nav id="navBar">
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="#">Collections</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="logo">
+      <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Logo of Natura Honey brand with stylized text and honeycomb design" />
+    </div>
+    <div class="nav-icons">
+      <div class="icon" id="likeIcon">
+        <i class="far fa-heart" aria-label="Favorites"></i>
+        <span class="badge hidden" id="likeCount">0</span>
+      </div>
+      <div class="icon" id="cartIcon">
+        <i class="fas fa-shopping-cart" aria-label="Shopping cart"></i>
+        <span class="badge hidden" id="cartCount">0</span>
+      </div>
+      <div class="icon" id="whatsappIcon">
+        <i class="fab fa-whatsapp" aria-label="WhatsApp"></i>
+      </div>
+      <div class="icon user-dropdown" id="userIcon">
+        <i class="fas fa-user" aria-label="User account"></i>
+        <div class="dropdown-menu" id="userDropdown">
+          <a href="#" class="dropdown-item" id="profileLink">
+            <i class="fas fa-user-circle"></i> Profile
+          </a>
+          <a href="#" class="dropdown-item" id="logoutLink">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- Likes Sidebar -->
+  <div class="likes-sidebar" id="likesSidebar">
+    <div class="likes-header">
+      <h2><i class="fas fa-heart"></i> Your Favorites</h2>
+      <button class="close-likes" id="closeLikes">&times;</button>
+    </div>
+    <div class="likes-content">
+      <div class="likes-items" id="likesItems">
+      </div>
+      <div class="empty-likes" id="emptyLikes">
+        <i class="far fa-heart"></i>
+        <h3>No favorites yet</h3>
+        <p>Start adding products you love to your favorites list</p>
+        <button class="browse-products" id="browseProducts">Browse Products</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h2><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+      <button class="close-cart" id="closeCart">&times;</button>
+    </div>
+    <div class="cart-content">
+      <div class="cart-items" id="cartItems">
+      </div>
+      <div class="empty-cart" id="emptyCart">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>Your cart is empty</h3>
+        <p>Add some delicious honey products to get started</p>
+        <button class="continue-shopping" id="continueShopping">Continue Shopping</button>
+      </div>
+      <div class="cart-summary" id="cartSummary">
+        <div class="cart-subtotal">
+          <span>Subtotal:</span>
+          <span>₹0</span>
+        </div>
+        <div class="cart-shipping">
+          <span>Shipping:</span>
+          <span>Calculated at checkout</span>
+        </div>
+        <div class="cart-total">
+          <span>Total:</span>
+          <span>₹0</span>
+        </div>
+        <button class="checkout-btn" id="checkoutBtn">
+          <i class="fas fa-lock"></i> Proceed to Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Login Modal -->
+  <div class="login-modal" id="loginModal">
+    <button class="close-login" id="closeLogin">&times;</button>
+    <div class="login-header">
+      <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+      <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Natura Honey Logo">
+      <h2 id="modalTitle">Welcome Back</h2>
+      <p id="modalSubtitle">Sign in to your account</p>
+    </div>
+    
+    <form class="login-form" id="loginForm">
+      <input type="email" placeholder="Email Address" required>
+      <input type="password" placeholder="Password" required>
+      <button type="button" class="login-btn" id="loginBtn">Login</button>
+      <button type="button" class="google-login" id="googleLoginBtn">
+        <i class="fab fa-google"></i> Sign in with Google
+      </button>
+    </form>
+    
+    <form class="signup-form" id="signupForm">
+      <input type="text" placeholder="Full Name" required>
+      <input type="email" placeholder="Email Address" required>
+      <input type="password" placeholder="Password" required>
+      <input type="password" placeholder="Confirm Password" required>
+      <div class="terms-checkbox">
+        <input type="checkbox" id="termsCheckbox" required>
+        <label for="termsCheckbox">I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Privacy Policy</a></label>
+      </div>
+      <button type="button" class="signup-btn" id="signupBtn">Create Account</button>
+    </form>
+    
+    <form class="forgot-form" id="forgotForm">
+      <input type="email" placeholder="Email Address" required>
+      <button type="button" class="reset-btn" id="resetBtn">Reset Password</button>
+    </form>
+    
+    <div class="login-footer" id="loginFooter">
+      <a href="#" id="forgotPassword">Forgot Password?</a> | 
+      <a href="#" id="signUp">Sign Up</a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-wrapper" id="mainContent">
+    <!-- MAIN CONTENT GOES HERE -->
+  </div>
+
+  <!-- Profile Page -->
+  <div class="profile-page" id="profilePage">
+    <div class="profile-close-container">
+      <button class="profile-close-btn" id="profileCloseBtn">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="profile-info">
+        <h1 id="user-name">User Name</h1>
+        <p id="user-email">user@example.com</p>
+        <p>Member since: <span id="member-since">Loading...</span></p>
+      </div>
+      <div class="profile-actions">
+        <button class="btn" id="edit-profile-btn">
+          <i class="fas fa-edit"></i> Edit Profile
+        </button>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Saved Addresses</h2>
+      
+      <div id="addresses-container">
+      </div>
+      
+      <button class="btn btn-outline" id="add-address-btn">
+        <i class="fas fa-plus"></i> Add New Address
+      </button>
+      
+      <div class="address-form" id="add-address-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="new-label">Address Label (e.g., Home, Work)</label>
+            <input type="text" id="new-label" placeholder="Home">
+          </div>
+          <div class="form-group">
+            <label for="new-pincode">Pincode</label>
+            <input type="text" id="new-pincode" placeholder="Enter pincode">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="new-name">Full Name</label>
+          <input type="text" id="new-name" placeholder="Enter full name">
+        </div>
+        <div class="form-group">
+          <label for="new-address">Address</label>
+          <textarea id="new-address" placeholder="Enter full address"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="new-phone">Phone</label>
+          <input type="text" id="new-phone" placeholder="Enter phone number">
+        </div>
+        <div class="form-actions">
+          <button class="btn" id="save-new-address">
+            <i class="fas fa-save"></i> Save Address
+          </button>
+          <button class="btn btn-outline" id="cancel-new-address">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <h2 class="section-title"><i class="fas fa-shopping-bag"></i> Order History</h2>
+      
+      <div id="orders-container">
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal" id="edit-profile-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Profile</h3>
+        <button class="close-modal" id="close-edit-profile-modal">&times;</button>
+      </div>
+      <div class="form-group">
+        <label for="edit-name">Full Name</label>
+        <input type="text" id="edit-name">
+      </div>
+      <div class="form-group">
+        <label for="edit-email">Email Address</label>
+        <input type="email" id="edit-email" disabled>
+        <p style="font-size: 12px; color: #777; margin-top: 5px;">Email address cannot be changed</p>
+      </div>
+      <div class="form-actions">
+        <button class="btn" id="save-profile-btn">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+        <button class="btn btn-outline" id="cancel-edit-profile">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="content-wrapper" id="mainContent">
     <div class="banner-wrapper">
       <div class="rectangle-banner" aria-label="Scrolling banner with repeated text Natura Honey on honeycomb background">
