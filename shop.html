@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1200, initial-scale=0.5, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes" />
+  <title>Shop All Products - Natura Honey</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.cdnfonts.com/css/akira-expanded" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Shadow+Into+Light&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js";
+    import { getFirestore, collection, getDocs, addDoc, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+      authDomain: "hexahoney-96aed.firebaseapp.com",
+      projectId: "hexahoney-96aed",
+      storageBucket: "hexahoney-96aed.firebasestorage.app",
+      messagingSenderId: "700458850837",
+      appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+      measurementId: "G-MQGKK9709H"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Make Firebase available globally
+    window.firebase = {
+      app,
+      analytics,
+      db,
+      auth,
+      firestore: {
+        collection,
+        getDocs,
+        addDoc,
+        doc,
+        getDoc,
+        updateDoc,
+        deleteDoc
+      },
+      authFunctions: {
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        onAuthStateChanged,
+        signOut
+      }
+    };
+  </script>
+  <style>
+    /* Previous styles remain unchanged */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: white;
+      color: #333;
+      line-height: 1.6;
+      font-family: 'Unbounded', sans-serif;
+      scroll-padding-top: 120px;
+      transition: all 0.3s ease;
+      /* Prevent mobile scaling */
+      min-width: 1200px !important;
+      overflow-x: auto !important;
+    }
+   
+   /* Banner Wrapper */
+.banner-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0;
+}
+
+.rectangle-banner {
+  background: url('https://ik.imagekit.io/hexaanatura/Desktop%20-%201.jpg?updatedAt=1756993544883') center/cover no-repeat;
+  padding: 50px;
+  width: 95%;
+  max-width: 1800px;
+  border-radius: 132px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  height: 500px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.banner-row {
+  font-family: 'Akira Expanded', sans-serif;
+  font-weight: 900;
+  font-size: 150px;
+  color: white;
+  mix-blend-mode: soft-light;
+  white-space: nowrap;
+  display: inline-block;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  line-height: 0.75;
+  opacity: 0.9;
+}
+
+.slide-right {
+  animation: slideRight 60s linear infinite;
+}
+
+.slide-left {
+  animation: slideLeft 60s linear infinite;
+}
+
+@keyframes slideRight {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes slideLeft {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Shop Header */
+.shop-header {
+  background: url('https://ik.imagekit.io/hexaanatura/Desktop%20-%201.jpg?updatedAt=1756993544883') center/cover no-repeat;
+  padding: 80px 5%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 40px;
+  border-radius: 50px;
+}
+
+.shop-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  border-radius: 50px;
+}
+
+.shop-header h1 {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: 3.5rem;
+  color: #7a3731;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.shop-header p {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.2rem;
+  color: #7a3731;
+  max-width: 700px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Shop Controls */
+.shop-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5%;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.filter-toggle {
+  background: #5f2b27;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.3s;
+}
+
+.filter-toggle:hover {
+  background: #7a3731;
+}
+
+.sort-options {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.sort-options label {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.sort-options select {
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  font-family: 'Unbounded', sans-serif;
+  background: white;
+  cursor: pointer;
+}
+
+.view-options {
+  display: flex;
+  gap: 10px;
+}
+
+.view-option {
+  background: #f1f1f1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.view-option.active {
+  background: #5f2b27;
+  color: white;
+}
+
+.view-option:hover {
+  background: #ddd;
+}
+
+.view-option.active:hover {
+  background: #7a3731;
+}
+
+.results-count {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 14px;
+  color: #777;
+}
+
+/* Filter Sidebar */
+.filter-sidebar {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 300px;
+  height: 100%;
+  background: white;
+  z-index: 9998; /* Increased */
+  transition: left 0.3s ease;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  padding: 80px 20px 20px;
+  overflow-y: auto;
+}
+
+.filter-sidebar.active {
+  left: 0;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.filter-header h3 {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: 1.5rem;
+  color: #5f2b27;
+}
+
+.close-filter {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+
+.filter-group {
+  margin-bottom: 25px;
+}
+
+.filter-group h4 {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.filter-options {
+  list-style: none;
+}
+
+.filter-options li {
+  margin-bottom: 10px;
+}
+
+.filter-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 14px;
+}
+
+.filter-options input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #5f2b27;
+}
+
+.price-range {
+  margin-top: 10px;
+}
+
+.price-range-values {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 14px;
+}
+
+.apply-filters {
+  background: #5f2b27;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 20px;
+  transition: background 0.3s;
+}
+
+.apply-filters:hover {
+  background: #7a3731;
+}
+
+.clear-filters {
+  background: #f1f1f1;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+  transition: background 0.3s;
+}
+
+.clear-filters:hover {
+  background: #ddd;
+}
+
+
+/* Products Grid */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding: 0 5% 60px;
+  justify-items: center;
+}
+
+/* Product Card */
+.product-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 550px;
+  width: 100%;
+  max-width: 280px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  background: white;
+}
+
+.product-card:hover {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+  border-color: #FFD700;
+}
+
+.product-image-container {
+  height: 320px;
+  overflow: hidden;
+  position: relative;
+}
+
+.product-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 18px 18px 0 0;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+  transform: scale(1.1);
+}
+
+/* Product Details Section */
+.product-details {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+  position: relative;
+}
+
+.product-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.product-price {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #5f2b27;
+  margin-bottom: 10px;
+}
+
+/* Weight badge styling */
+.product-weight {
+  display: inline-block;
+  background: #FFD700;
+  color: #5f2b27;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 10px;
+  border: 1px solid #5f2b27;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 3;
+  transition: all 0.3s ease;
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rating-stars {
+  color: #FFD700;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.rating-count {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 13px;
+  color: #777;
+}
+
+.product-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.add-to-cart-btn {
+  background: #5f2b27;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.add-to-cart-btn:hover {
+  background: #7a3731;
+}
+
+.wishlist-btn {
+  background: #f1f1f1;
+  color: #333;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.wishlist-btn:hover {
+  background: #FFD700;
+  color: #5f2b27;
+}
+
+/* Overlay for modals */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9997;
+  display: none;
+}
+
+.overlay.active {
+  display: block;
+}
+
+/* Hover Overlay */
+.product-card .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 320px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 18px 18px 0 0;
+}
+
+.product-card:hover .overlay {
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+  }
+  
+  .product-card {
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+  }
+  
+  .product-card {
+    max-width: 320px;
+    height: 520px;
+  }
+  
+  .product-image-container {
+    height: 300px;
+  }
+  
+  .product-card .overlay {
+    height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 3% 60px;
+  }
+  
+  .product-card {
+    max-width: 350px;
+    height: 500px;
+  }
+  
+  .product-image-container {
+    height: 280px;
+  }
+  
+  .product-card .overlay {
+    height: 280px;
+  }
+  
+  .product-title {
+    font-size: 16px;
+  }
+  
+  .product-price {
+    font-size: 18px;
+  }
+}
+
+/* Products List View */
+.products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 5% 60px;
+}
+
+.product-list-item {
+  display: flex;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-list-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.list-image-container {
+  width: 250px;
+  height: 250px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.list-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.product-list-item:hover .list-image-container img {
+  transform: scale(1.1);
+}
+
+.list-details {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.list-title-price {
+  margin-bottom: 15px;
+}
+
+.list-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.list-price {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: #5f2b27;
+}
+
+.list-description {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.list-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.list-add-to-cart {
+  background: #5f2b27;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex-grow: 1;
+}
+
+.list-add-to-cart:hover {
+  background: #7a3731;
+}
+
+.list-wishlist {
+  background: #f1f1f1;
+  color: #333;
+  border: none;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.list-wishlist:hover {
+  background: #FFD700;
+  color: #5f2b27;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 30px 5% 60px;
+}
+
+.pagination-button {
+  background: #f1f1f1;
+  color: #333;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+}
+
+.pagination-button:hover {
+  background: #ddd;
+}
+
+.pagination-button.active {
+  background: #5f2b27;
+  color: white;
+}
+
+.pagination-button.active:hover {
+  background: #7a3731;
+}
+
+.pagination-ellipsis {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  color: #777;
+}
+
+/* Quick View Modal */
+.quick-view-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999; /* This is the key fix */
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.quick-view-content {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-view-close {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 15px;
+  color: #333;
+}
+
+.quick-view-body {
+  display: flex;
+  padding: 0 30px 30px;
+  gap: 30px;
+}
+
+.quick-view-image {
+  flex: 1;
+  max-width: 400px;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.quick-view-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.quick-view-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-view-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.quick-view-price {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #5f2b27;
+  margin-bottom: 15px;
+}
+
+.quick-view-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.quick-view-description {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 16px;
+  color: #777;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.quick-view-weight {
+  display: inline-block;
+  background: #FFD700;
+  color: #5f2b27;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border: 1px solid #5f2b27;
+}
+
+.quick-view-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: auto;
+}
+
+.quick-view-add-to-cart {
+  background: #5f2b27;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex-grow: 1;
+}
+
+.quick-view-add-to-cart:hover {
+  background: #7a3731;
+}
+
+.quick-view-wishlist {
+  background: #f1f1f1;
+  color: #333;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.quick-view-wishlist:hover {
+  background: #FFD700;
+  color: #5f2b27;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .product-card {
+    height: 550px !important;
+    width: 350px !important;
+  }
+  
+  .product-image-container {
+    height: 350px !important;
+  }
+  
+  .product-card .overlay {
+    height: 350px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-card {
+    height: 550px !important;
+    width: 350px !important;
+  }
+  
+  .product-image-container {
+    height: 350px !important;
+  }
+  
+  .product-card .overlay {
+    height: 350px !important;
+  }
+  
+  .product-title {
+    font-size: 18px !important;
+  }
+  
+  .product-price {
+    font-size: 20px !important;
+  }
+  
+  .product-buttons {
+    flex-direction: row !important;
+  }
+  .product-buttons button {
+    width: auto !important;
+  }
+}
+
+/* Header and Footer Styles */
+.notification-bar {
+  background: #e7d90f;
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  position: fixed;
+  top: 5px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  will-change: transform, opacity;
+}
+.notification-bar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+.notification-bar p {
+  position: relative;
+  z-index: 2;
+}
+.notification-bar.hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 5%;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 43px;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  font-family: 'Nirmala UI', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: top 0.3s ease;
+  flex-direction: row !important;
+}
+.logo {
+  position: absolute;
+  left: 50%;
+  top: 30px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 65;
+}
+.logo img {
+  height: 70px;
+  width: auto;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+.logo img:hover {
+  transform: scale(1.05);
+}
+.nav-links {
+  display: flex;
+  list-style: none;
+}
+.nav-links li {
+  margin: 0 15px;
+  position: relative;
+}
+.nav-links a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s;
+  padding: 5px 0;
+}
+.nav-links a:hover,
+.nav-links a:focus {
+  color: #5f2b27;
+  transform: scale(1.1);
+}
+.nav-links a.active {
+  color: #5f2b27;
+  border-bottom: 2px solid #ff4d4d;
+}
+
+.nav-icons {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+.icon {
+  margin-left: 25px;
+  font-size: 24px;
+  color: #333;
+  transition: color 0.3s;
+  cursor: pointer;
+}
+.icon:hover {
+  color: #5f2b27;
+}
+
+.content-wrapper {
+  margin-top: 165px;
+}
+
+footer {
+  background:#556b2f; 
+  color:white; 
+  padding:60px 5%; 
+  text-align:center; 
+  position:relative;
+  margin-top: 40px;
+}
+
+.footer-container {
+  max-width:1200px; 
+  margin:0 auto; 
+  display:flex; 
+  flex-wrap:wrap; 
+  justify-content:center; 
+  gap:40px;
+}
+
+.footer-column {
+  flex: 1;
+  min-width: 250px;
+  text-align: left;
+}
+
+footer h3 {
+  font-family:'Akira Expanded', sans-serif; 
+  font-size:24px; 
+  margin-bottom:20px;
+  color: white;
+}
+
+footer ul {
+  list-style:none; 
+  padding:0; 
+  font-family:'Unbounded', sans-serif; 
+  font-size:16px;
+}
+
+footer ul li {
+  margin-bottom: 12px;
+}
+
+footer a {
+  color:white; 
+  text-decoration:none; 
+  transition:color 0.3s;
+  display: inline-block;
+}
+
+footer a:hover {
+  color: #FFD700;
+  transform: translateX(5px);
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.contact-icon {
+  color: white;
+  font-size: 18px;
+  width: 20px;
+  margin-top: 2px;
+}
+
+.contact-text {
+  flex: 1;
+  font-family:'Unbounded', sans-serif; 
+  font-size:16px; 
+  line-height:1.5;
+}
+
+.footer-social {
+  margin-top: 20px;
+}
+
+.footer-social h4 {
+  font-family:'Unbounded', sans-serif; 
+  font-size:18px; 
+  margin-bottom:15px;
+  color: white;
+}
+
+.social-icons {
+  display:flex; 
+  gap:15px; 
+  font-size:20px;
+}
+
+.social-icons a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+
+.social-icons a:hover {
+  background: #FFD700;
+  color: #333;
+  transform: translateY(-3px);
+}
+
+.enquiries {
+  margin-top: 20px;
+}
+
+.enquiries h4 {
+  font-family:'Unbounded', sans-serif; 
+  font-size:18px; 
+  margin-bottom:15px;
+  color: #FFD700;
+}
+
+.enquiries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.enquiry-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+
+.enquiry-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+.enquiry-item i {
+  color: #FFD700;
+  font-size: 16px;
+}
+
+.enquiry-item a {
+  color: white;
+  text-decoration: none;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 15px;
+}
+
+.enquiry-item:hover a {
+  color: #FFD700;
+}
+
+.footer-bottom {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+}
+
+.footer-bottom p {
+  font-family:'Unbounded', sans-serif; 
+  font-size:14px; 
+  color:rgba(255,255,255,0.8);
+}
+
+/* Additional header styles */
+.user-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 100;
+  display: none;
+  overflow: hidden;
+  margin-top: 10px;
+  border: 1px solid #f0f0f0;
+  animation: dropdownFadeIn 0.3s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-menu.active {
+  display: block;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  text-decoration: none;
+  color: #333;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #f8f8f8;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
+  color: white;
+  transform: translateX(5px);
+}
+
+.dropdown-item i {
+  margin-right: 12px;
+  width: 20px;
+  text-align: center;
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.dropdown-item:hover i {
+  transform: scale(1.2);
+}
+
+.user-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.user-icon-wrapper:hover {
+  background: rgba(95, 43, 39, 0.1);
+}
+
+.user-icon-wrapper.logged-in {
+  background: #5f2b27;
+  color: white;
+}
+
+.user-icon-wrapper.logged-in:hover {
+  background: #7a3731;
+  transform: scale(1.1);
+}
+
+.user-icon-wrapper .fa-user {
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.user-icon-wrapper:hover .fa-user {
+  transform: scale(1.1);
+}
+
+.user-notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #FFD700;
+  color: #333;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 2px solid white;
+}
+
+.icon .badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #5f2b27;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border: 2px solid white;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  font-family: 'Unbounded', sans-serif;
+}
+
+.icon .badge.hidden {
+  display: none;
+}
+  </style>
+</head>
+<body>
+  <!-- Notification Bar -->
+  <div class="notification-bar" id="notificationBar"><p>Free shipping on all orders over ₹599! Limited time offer.</p></div>
+
+  <!-- Navigation -->
+  <nav id="navBar">
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="shop.html" class="active">Shop</a></li>
+      <li><a href="#">Collections</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="logo">
+      <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Logo of Natura Honey brand with stylized text and honeycomb design" />
+    </div>
+    <div class="nav-icons">
+      <div class="icon" id="likeIcon">
+        <i class="far fa-heart" aria-label="Favorites"></i>
+        <span class="badge hidden" id="likeCount">0</span>
+      </div>
+      <div class="icon" id="cartIcon">
+        <i class="fas fa-shopping-cart" aria-label="Shopping cart"></i>
+        <span class="badge hidden" id="cartCount">0</span>
+      </div>
+      <div class="icon" id="whatsappIcon">
+        <i class="fab fa-whatsapp" aria-label="WhatsApp"></i>
+      </div>
+      <div class="icon user-dropdown" id="userIcon">
+        <i class="fas fa-user" aria-label="User account"></i>
+        <div class="dropdown-menu" id="userDropdown">
+          <a href="#" class="dropdown-item" id="profileLink">
+            <i class="fas fa-user-circle"></i> Profile
+          </a>
+          <a href="#" class="dropdown-item" id="logoutLink">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content Wrapper -->
+  <div class="content-wrapper">
+    <!-- Shop Header with Banner Effect -->
+    <div class="shop-header">
+      <div class="rectangle-banner" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50px; pointer-events: none; z-index: 1;" aria-hidden="true">
+        <div class="banner-row slide-right" style="font-size:150px;">NATURA SHOP NATURA SHOP NATURA SHOP NATURA SHOP NATURA SHOP</div>
+        <div class="banner-row slide-left" style="font-size:150px;">NATURA SHOP NATURA SHOP NATURA SHOP NATURA SHOP NATURA SHOP</div>
+        <div class="banner-row slide-right" style="font-size:150px;">NATURA SHOP NATURA SHOP NATURA SHOP NATURA SHOP NATURA SHOP</div>
+        <div class="banner-row slide-left" style="font-size:150px;">NATURA SHOP NATURA SHOP NATURA SHOP NATURA SHOP NATURA SHOP</div>
+      </div>
+      
+      <h1>Our Shop</h1>
+      <p>Discover our complete collection of pure, natural honey products. From raw honey to specialty infusions, we have something for every honey lover.</p>
+    </div>
+    
+    <!-- Shop Controls -->
+    <div class="shop-controls">
+      <button class="filter-toggle" id="filterToggle">
+        <i class="fas fa-filter"></i> Filters
+      </button>
+      
+      <div class="sort-options">
+        <label for="sortSelect">Sort by:</label>
+        <select id="sortSelect">
+          <option value="featured">Featured</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="rating">Highest Rated</option>
+          <option value="newest">Newest First</option>
+        </select>
+      </div>
+      
+      <div class="view-options">
+        <button class="view-option active" data-view="grid" aria-label="Grid view">
+          <i class="fas fa-th"></i>
+        </button>
+      </div>
+      
+      <div class="results-count" id="resultsCount">Showing 6 of 6 products</div>
+    </div>
+    
+    <!-- Filter Sidebar -->
+    <div class="filter-sidebar" id="filterSidebar">
+      <div class="filter-header">
+        <h3>Filters</h3>
+        <button class="close-filter" id="closeFilter">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="filter-group">
+        <h4>Categories</h4>
+        <ul class="filter-options">
+          <li>
+            <label>
+              <input type="checkbox" name="category" value="crystal" checked> Crystal Pack
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="category" value="premium" checked> Premium Pet
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="category" value="raw"> Raw Honey
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="category" value="infused"> Infused Honey
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="category" value="creamed"> Creamed Honey
+            </label>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="filter-group">
+        <h4>Price Range</h4>
+        <input type="range" min="0" max="1000" value="1000" class="price-range" id="priceRange">
+        <div class="price-range-values">
+          <span>₹0</span>
+          <span>₹1000</span>
+        </div>
+      </div>
+      
+      <div class="filter-group">
+        <h4>Weight</h4>
+        <ul class="filter-options">
+          <li>
+            <label>
+              <input type="checkbox" name="weight" value="50g"> 50g
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="weight" value="100g"> 100g
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="weight" value="250g"> 250g
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="weight" value="500g"> 500g
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="weight" value="1kg"> 1Kg
+            </label>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="filter-group">
+        <h4>Rating</h4>
+        <ul class="filter-options">
+          <li>
+            <label>
+              <input type="checkbox" name="rating" value="5"> 
+              <span class="rating-stars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="rating" value="4"> 
+              <span class="rating-stars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="far fa-star"></i> & Up
+              </span>
+            </label>
+          </li>
+          <li>
+            <label>
+              <input type="checkbox" name="rating" value="3"> 
+              <span class="rating-stars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="far fa-star"></i>
+                <i class="far fa-star"></i> & Up
+              </span>
+            </label>
+          </li>
+        </ul>
+      </div>
+      
+      <button class="apply-filters" id="applyFilters">Apply Filters</button>
+      <button class="clear-filters" id="clearFilters">Clear All Filters</button>
+    </div>
+    
+    <!-- Products Grid View -->
+    <div class="products-grid" id="productsGrid">
+      <!-- Product 1 -->
+      <div class="product-card" data-category="crystal" data-price="249" data-rating="4.5" data-weight="1kg">
+        <div class="product-image-container">
+          <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022" alt="Glass jar of Natura Honey Crystal Pack with golden honey inside and wooden honey dipper" />
+          <div class="product-weight">1Kg</div>
+          <div class="overlay">Quick View</div>
+        </div>
+        <div class="product-details">
+          <h3 class="product-title">Natura Agmark Honey</h3>
+          <div class="product-price">₹420.00</div>
+          <div class="product-rating">
+            <div class="rating-stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star-half-alt"></i>
+            </div>
+            <span class="rating-count">(128)</span>
+          </div>
+          <div class="product-actions">
+            <button class="add-to-cart-btn">Add to Cart</button>
+            <button class="wishlist-btn">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 2 -->
+      <div class="product-card" data-category="crystal" data-price="449" data-rating="5" data-weight="500g">
+        <div class="product-image-container">
+          <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026" alt="Glass jar of Natura Honey Crystal Pack with honeycomb pattern label and honey dripping" />
+          <div class="product-weight">500g</div>
+          <div class="overlay">Quick View</div>
+        </div>
+        <div class="product-details">
+          <h3 class="product-title">Natura Agmark Honey</h3>
+          <div class="product-price">₹230.00</div>
+          <div class="product-rating">
+            <div class="rating-stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+            </div>
+            <span class="rating-count">(95)</span>
+          </div>
+          <div class="product-actions">
+            <button class="add-to-cart-btn">Add to Cart</button>
+            <button class="wishlist-btn">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 3 -->
+      <div class="product-card" data-category="crystal" data-price="149" data-rating="4" data-weight="100g">
+        <div class="product-image-container">
+          <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115" alt="Close-up of Natura Honey Crystal Pack glass jar with honey and wooden spoon" />
+          <div class="product-weight">100g</div>
+          <div class="overlay">Quick View</div>
+        </div>
+        <div class="product-details">
+          <h3 class="product-title">Natura Agmark Honey</h3>
+          <div class="product-price">₹115.00</div>
+          <div class="product-rating">
+            <div class="rating-stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="far fa-star"></i>
+            </div>
+            <span class="rating-count">(67)</span>
+          </div>
+          <div class="product-actions">
+            <button class="add-to-cart-btn">Add to Cart</button>
+            <button class="wishlist-btn">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 4 -->
+      <div class="product-card" data-category="crystal" data-price="349" data-rating="5" data-weight="50g">
+        <div class="product-image-container">
+          <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864" alt="Premium Crystal Pack honey in decorative glass jar with golden lid" />
+          <div class="product-weight">50g</div>
+          <div class="overlay">Quick View</div>
+        </div>
+        <div class="product-details">
+          <h3 class="product-title">Natura Agmark Honey</h3>
+          <div class="product-price">₹65.00</div>
+          <div class="product-rating">
+            <div class="rating-stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+            </div>
+            <span class="rating-count">(42)</span>
+          </div>
+          <div class="product-actions">
+            <button class="add-to-cart-btn">Add to Cart</button>
+            <button class="wishlist-btn">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product 5 -->
+      <div class="product-card" data-category="premium" data-price="199" data-rating="4.5" data-weight="1kg">
+        <div class="product-image-container">
+          <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894" alt="Premium Pet Natura Honey product in glass jar with honey and pet-friendly label" />
+          <div class="product-weight">1Kg</div>
+          <div class="overlay">Quick View</div>
+        </div>
+        <div class="product-details">
+          <h3 class="product-title">Natura Agmark Honey</h3>
+          <div class="product-price">₹370.00</div>
+          <div class="product-rating">
+            <div class="rating-stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star-half-alt"></i>
+            </div>
+            <span class="rating-count">(56)</span>
+          </div>
+          <div class="product-actions">
+            <button class="add-to-cart-btn">Add to Cart</button>
+            <button class="wishlist-btn">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Product 6 -->
+      <div class="product-card" data-category="premium" data-price="329" data-rating="4" data-weight="500g">
+        <div class="product-image-container">
+          <img src="https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908" alt="Premium Pet Natura Honey product with honeycomb background and pet icon" />
+          <div class="product-weight">500g</div>
+          <div class="overlay">Quick View</div>
+        </div>
+        <div class="product-details">
+          <h3 class="product-title">Natura Agmark Honey - Premium Pet</h3>
+          <div class="product-price">₹200.00</div>
+          <div class="product-rating">
+            <div class="rating-stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="far fa-star"></i>
+            </div>
+            <span class="rating-count">(38)</span>
+          </div>
+          <div class="product-actions">
+            <button class="add-to-cart-btn">Add to Cart</button>
+            <button class="wishlist-btn">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Products List View (Hidden by default) -->
+    <div class="products-list" id="productsList" style="display: none;">
+      <!-- Product items will be dynamically added here when switching to list view -->
+    </div>
+    
+    <!-- Pagination -->
+    <div class="pagination" id="pagination">
+      <button class="pagination-button" data-page="1">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="pagination-button active">1</button>
+      <button class="pagination-button" data-page="2">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Quick View Modal -->
+  <div class="quick-view-modal" id="quickViewModal">
+    <div class="quick-view-content">
+      <button class="quick-view-close" id="quickViewClose">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="quick-view-body">
+        <div class="quick-view-image">
+          <img src="" alt="" id="quickViewImage">
+        </div>
+        <div class="quick-view-details">
+          <h2 class="quick-view-title" id="quickViewTitle"></h2>
+          <div class="quick-view-price" id="quickViewPrice"></div>
+          <div class="quick-view-rating" id="quickViewRating"></div>
+          <div class="quick-view-weight" id="quickViewWeight"></div>
+          <p class="quick-view-description">
+            Our pure, natural honey is carefully sourced from pesticide-free environments. 
+            This product is 100% pure with no additives or preservatives. Perfect as a natural sweetener, 
+            for skin care, or as a delicious addition to your favorite recipes.
+          </p>
+          <div class="quick-view-actions">
+            <button class="quick-view-add-to-cart">Add to Cart</button>
+            <button class="quick-view-wishlist">
+              <i class="far fa-heart"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-column">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="#">Amazon Store</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Services</a></li>
+        </ul>
+        
+        <div class="footer-social">
+          <h4>Follow Us</h4>
+          <div class="social-icons">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h3>Contact Us</h3>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-phone contact-icon"></i>
+            <div class="contact-text">+91 98765 43210</div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-envelope contact-icon"></i>
+            <div class="contact-text">info@hexaanatura.com</div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt contact-icon"></i>
+            <div class="contact-text">Thalassery, Kannur, Kerala</div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-clock contact-icon"></i>
+            <div class="contact-text">Mon-Sat: 9:00 AM - 6:00 PM</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h3>Enquiries</h3>
+        
+        <div class="enquiries">
+          <div class="enquiries-list">
+            <div class="enquiry-item">
+              <i class="fas fa-boxes"></i>
+              <a href="mailto:bulkorders@hexaanatura.com">Bulk Orders</a>
+            </div>
+            <div class="enquiry-item">
+              <i class="fas fa-handshake"></i>
+              <a href="mailto:distributors@hexaanatura.com">Become Our Distributor</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Hexa Apiarium Pvt. Ltd. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Firebase Integration
+    // Wait for Firebase to load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if Firebase is loaded
+      if (typeof firebase !== 'undefined') {
+        console.log('Firebase loaded successfully');
+        
+        // Example: Save user cart data to Firebase
+        function saveCartToFirebase(cartData) {
+          if (firebase.auth().currentUser) {
+            const userId = firebase.auth().currentUser.uid;
+            const userCartRef = firebase.firestore().collection('userCarts').doc(userId);
+            
+            userCartRef.set({
+              cart: cartData,
+              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+              console.log('Cart saved to Firebase');
+            })
+            .catch((error) => {
+              console.error('Error saving cart to Firebase:', error);
+            });
+          }
+        }
+        
+        // Example: Load user cart data from Firebase
+        function loadCartFromFirebase() {
+          if (firebase.auth().currentUser) {
+            const userId = firebase.auth().currentUser.uid;
+            const userCartRef = firebase.firestore().collection('userCarts').doc(userId);
+            
+            userCartRef.get()
+            .then((doc) => {
+              if (doc.exists) {
+                const cartData = doc.data().cart;
+                console.log('Cart loaded from Firebase:', cartData);
+                // Update UI with cart data
+              }
+            })
+            .catch((error) => {
+              console.error('Error loading cart from Firebase:', error);
+            });
+          }
+        }
+        
+        // Example: Save wishlist to Firebase
+        function saveWishlistToFirebase(wishlistData) {
+          if (firebase.auth().currentUser) {
+            const userId = firebase.auth().currentUser.uid;
+            const userWishlistRef = firebase.firestore().collection('userWishlists').doc(userId);
+            
+            userWishlistRef.set({
+              wishlist: wishlistData,
+              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+              console.log('Wishlist saved to Firebase');
+            })
+            .catch((error) => {
+              console.error('Error saving wishlist to Firebase:', error);
+            });
+          }
+        }
+        
+        // Example: Load wishlist from Firebase
+        function loadWishlistFromFirebase() {
+          if (firebase.auth().currentUser) {
+            const userId = firebase.auth().currentUser.uid;
+            const userWishlistRef = firebase.firestore().collection('userWishlists').doc(userId);
+            
+            userWishlistRef.get()
+            .then((doc) => {
+              if (doc.exists) {
+                const wishlistData = doc.data().wishlist;
+                console.log('Wishlist loaded from Firebase:', wishlistData);
+                // Update UI with wishlist data
+              }
+            })
+            .catch((error) => {
+              console.error('Error loading wishlist from Firebase:', error);
+            });
+          }
+        }
+        
+        // Example: Save product views to Firebase
+        function saveProductView(productId) {
+          const productViewRef = firebase.firestore().collection('productViews').doc();
+          
+          productViewRef.set({
+            productId: productId,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            userAgent: navigator.userAgent
+          })
+          .then(() => {
+            console.log('Product view saved to Firebase');
+          })
+          .catch((error) => {
+            console.error('Error saving product view to Firebase:', error);
+          });
+        }
+        
+        // Example: Track when a product is viewed
+        document.querySelectorAll('.product-card').forEach(card => {
+          card.addEventListener('click', function() {
+            const productId = this.querySelector('.product-title').textContent;
+            saveProductView(productId);
+          });
+        });
+        
+        // Example: Authentication state observer
+        firebase.auth().onAuthStateChanged((user) => {
+          if (user) {
+            // User is signed in
+            console.log('User is signed in:', user.uid);
+            // Load user-specific data from Firebase
+            loadCartFromFirebase();
+            loadWishlistFromFirebase();
+          } else {
+            // User is signed out
+            console.log('User is signed out');
+            // You might want to save data to localStorage temporarily
+            // and sync when user signs in
+          }
+        });
+      } else {
+        console.error('Firebase not loaded');
+      }
+    });
+
+    // Filter sidebar functionality
+    const filterToggle = document.getElementById('filterToggle');
+    const filterSidebar = document.getElementById('filterSidebar');
+    const closeFilter = document.getElementById('closeFilter');
+    const applyFilters = document.getElementById('applyFilters');
+    const clearFilters = document.getElementById('clearFilters');
+    const overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    document.body.appendChild(overlay);
+    
+    filterToggle.addEventListener('click', () => {
+      filterSidebar.classList.add('active');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+    
+    closeFilter.addEventListener('click', closeFilterSidebar);
+    overlay.addEventListener('click', closeFilterSidebar);
+    
+    function closeFilterSidebar() {
+      filterSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    
+    // View options functionality
+    const viewOptions = document.querySelectorAll('.view-option');
+    const productsGrid = document.getElementById('productsGrid');
+    const productsList = document.getElementById('productsList');
+    
+    viewOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        viewOptions.forEach(opt => opt.classList.remove('active'));
+        option.classList.add('active');
+        
+        if (option.dataset.view === 'grid') {
+          productsGrid.style.display = 'grid';
+          productsList.style.display = 'none';
+        } else {
+          productsGrid.style.display = 'none';
+          productsList.style.display = 'flex';
+          // In a real implementation, you would populate the list view with products
+        }
+      });
+    });
+    
+    // Quick view functionality
+    const quickViewModal = document.getElementById('quickViewModal');
+    const quickViewClose = document.getElementById('quickViewClose');
+    const quickViewImage = document.getElementById('quickViewImage');
+    const quickViewTitle = document.getElementById('quickViewTitle');
+    const quickViewPrice = document.getElementById('quickViewPrice');
+    const quickViewRating = document.getElementById('quickViewRating');
+    const quickViewWeight = document.getElementById('quickViewWeight');
+    const productCards = document.querySelectorAll('.product-card');
+    
+    productCards.forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('add-to-cart-btn') && 
+            !e.target.classList.contains('wishlist-btn') &&
+            e.target.tagName !== 'BUTTON' &&
+            e.target.tagName !== 'I') {
+          const image = card.querySelector('img').src;
+          const title = card.querySelector('.product-title').textContent;
+          const price = card.querySelector('.product-price').textContent;
+          const rating = card.querySelector('.rating-stars').innerHTML;
+          const weight = card.querySelector('.product-weight').textContent;
+          const ratingCount = card.querySelector('.rating-count').textContent;
+          
+          quickViewImage.src = image;
+          quickViewImage.alt = title;
+          quickViewTitle.textContent = title;
+          quickViewPrice.textContent = price;
+          quickViewWeight.textContent = weight;
+          
+          quickViewRating.innerHTML = `
+            <div class="rating-stars">
+              ${rating}
+            </div>
+            <span class="rating-count">${ratingCount}</span>
+          `;
+          
+          quickViewModal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+        }
+      });
+    });
+    
+    quickViewClose.addEventListener('click', closeQuickView);
+    quickViewModal.addEventListener('click', (e) => {
+      if (e.target === quickViewModal) {
+        closeQuickView();
+      }
+    });
+    
+    function closeQuickView() {
+      quickViewModal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    
+    // Sort functionality
+    const sortSelect = document.getElementById('sortSelect');
+    sortSelect.addEventListener('change', sortProducts);
+    
+    function sortProducts() {
+      const sortValue = sortSelect.value;
+      const products = Array.from(document.querySelectorAll('.product-card'));
+      
+      products.sort((a, b) => {
+        switch(sortValue) {
+          case 'price-low':
+            return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+          case 'price-high':
+            return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+          case 'name':
+            return a.querySelector('.product-title').textContent.localeCompare(b.querySelector('.product-title').textContent);
+          case 'rating':
+            return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+          case 'newest':
+            // For demonstration, we'll sort by an arbitrary "newness" value
+            return Math.random() - 0.5;
+          default: // featured
+            return Math.random() - 0.5;
+        }
+      });
+      
+      // Reappend sorted products to grid
+      const productsGrid = document.getElementById('productsGrid');
+      products.forEach(product => {
+        productsGrid.appendChild(product);
+      });
+    }
+    
+    // Filter functionality
+    applyFilters.addEventListener('click', filterProducts);
+    clearFilters.addEventListener('click', clearAllFilters);
+    
+    function filterProducts() {
+      const categoryFilters = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(input => input.value);
+      const priceMax = document.getElementById('priceRange').value;
+      const weightFilters = Array.from(document.querySelectorAll('input[name="weight"]:checked')).map(input => input.value);
+      const ratingFilters = Array.from(document.querySelectorAll('input[name="rating"]:checked')).map(input => parseInt(input.value));
+      
+      const products = document.querySelectorAll('.product-card');
+      let visibleCount = 0;
+      
+      products.forEach(product => {
+        const productCategory = product.dataset.category;
+        const productPrice = parseFloat(product.dataset.price);
+        const productWeight = product.dataset.weight;
+        const productRating = parseFloat(product.dataset.rating);
+        
+        const categoryMatch = categoryFilters.length === 0 || categoryFilters.includes(productCategory);
+        const priceMatch = productPrice <= priceMax;
+        const weightMatch = weightFilters.length === 0 || weightFilters.includes(productWeight);
+        const ratingMatch = ratingFilters.length === 0 || ratingFilters.some(r => productRating >= r);
+        
+        if (categoryMatch && priceMatch && weightMatch && ratingMatch) {
+          product.style.display = 'flex';
+          visibleCount++;
+        } else {
+          product.style.display = 'none';
+        }
+      });
+      
+      document.getElementById('resultsCount').textContent = `Showing ${visibleCount} of ${products.length} products`;
+      closeFilterSidebar();
+    }
+    
+    function clearAllFilters() {
+      document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        input.checked = false;
+      });
+      
+      document.getElementById('priceRange').value = 1000;
+      
+      const products = document.querySelectorAll('.product-card');
+      products.forEach(product => {
+        product.style.display = 'flex';
+      });
+      
+      document.getElementById('resultsCount').textContent = `Showing ${products.length} of ${products.length} products`;
+    }
+    
+    // Pagination functionality
+    const paginationButtons = document.querySelectorAll('.pagination-button');
+    
+    paginationButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        if (button.dataset.page) {
+          // Navigate to previous or next page
+          const currentPage = document.querySelector('.pagination-button.active').textContent;
+          let newPage;
+          
+          if (button.dataset.page === '1') {
+            newPage = parseInt(currentPage) - 1;
+          } else {
+            newPage = parseInt(currentPage) + 1;
+          }
+          
+          if (newPage >= 1 && newPage <= 5) {
+            paginationButtons.forEach(btn => {
+              if (btn.textContent == newPage) {
+                btn.classList.add('active');
+              } else if (!btn.dataset.page) {
+                btn.classList.remove('active');
+              }
+            });
+            
+            // In a real implementation, you would load the products for the selected page
+            document.getElementById('resultsCount').textContent = `Showing page ${newPage} of 5`;
+          }
+        } else {
+          // Navigate to specific page
+          paginationButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          
+          // In a real implementation, you would load the products for the selected page
+          document.getElementById('resultsCount').textContent = `Showing page ${button.textContent} of 5`;
+        }
+      });
+    });
+
+    // Header functionality
+    const notificationBar = document.getElementById('notificationBar');
+    const navBar = document.getElementById('navBar');
+    const likeIcon = document.getElementById('likeIcon');
+    const cartIcon = document.getElementById('cartIcon');
+    const whatsappIcon = document.getElementById('whatsappIcon');
+    const userIcon = document.getElementById('userIcon');
+    const userDropdown = document.getElementById('userDropdown');
+    const profileLink = document.getElementById('profileLink');
+    const logoutLink = document.getElementById('logoutLink');
+
+    // Hide notification bar on scroll down
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > 5) {
+        if (!notificationBar.classList.contains('hidden')) {
+          notificationBar.classList.add('hidden');
+          navBar.style.top = '0';
+          document.querySelector('.content-wrapper').style.marginTop = '130px';
+        }
+      } else {
+        if (notificationBar.classList.contains('hidden')) {
+          notificationBar.classList.remove('hidden');
+          navBar.style.top = '40px';
+          document.querySelector('.content-wrapper').style.marginTop = '165px';
+        }
+      }
+      lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    }, { passive: true });
+
+    // User dropdown functionality
+    userIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      userDropdown.classList.toggle('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      userDropdown.classList.remove('active');
+    });
+
+    // WhatsApp functionality
+    whatsappIcon.addEventListener('click', () => {
+      const phoneNumber = "919876543210";
+      const message = "Hello, I'm interested in your honey products!";
+      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    });
+
+    // Profile link functionality
+    profileLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      userDropdown.classList.remove('active');
+      // Add profile page navigation logic here
+      alert('Profile page would open here');
+    });
+
+    // Logout functionality
+    logoutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Add logout logic here
+      alert('Logout functionality would be implemented here');
+    });
+  </script>
+</body>
+</html>
