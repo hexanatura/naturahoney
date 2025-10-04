@@ -3299,39 +3299,41 @@ height: 100%;
   </div>
 
   <!-- Cart Sidebar -->
-  <div class="cart-sidebar" id="cartSidebar">
-    <div class="cart-header">
-      <h2><i class="fas fa-shopping-cart"></i> Your Cart</h2>
-      <button class="close-cart" id="closeCart">&times;</button>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h2><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+    <button class="close-cart" id="closeCart">&times;</button>
+  </div>
+  <div class="cart-content">
+    <div class="cart-items" id="cartItems"></div>
+    <div class="empty-cart" id="emptyCart">
+      <i class="fas fa-shopping-cart"></i>
+      <h3>Your cart is empty</h3>
+      <p>Add some delicious honey products to get started</p>
+      <button class="continue-shopping" onclick="window.location.href='shop.html'">
+        Continue Shopping
+      </button>
     </div>
-    <div class="cart-content">
-      <div class="cart-items" id="cartItems">
+    <div class="cart-summary" id="cartSummary">
+      <div class="cart-subtotal">
+        <span>Subtotal:</span>
+        <span>₹0</span>
       </div>
-      <div class="empty-cart" id="emptyCart">
-        <i class="fas fa-shopping-cart"></i>
-        <h3>Your cart is empty</h3>
-        <p>Add some delicious honey products to get started</p>
-        <button class="continue-shopping" id="continueShopping">Continue Shopping</button>
+      <div class="cart-shipping">
+        <span>Shipping:</span>
+        <span>Calculated at checkout</span>
       </div>
-      <div class="cart-summary" id="cartSummary">
-        <div class="cart-subtotal">
-          <span>Subtotal:</span>
-          <span>₹0</span>
-        </div>
-        <div class="cart-shipping">
-          <span>Shipping:</span>
-          <span>Calculated at checkout</span>
-        </div>
-        <div class="cart-total">
-          <span>Total:</span>
-          <span>₹0</span>
-        </div>
-        <button class="checkout-btn" id="checkoutBtn">
-          <i class="fas fa-lock"></i> Proceed to Checkout
-        </button>
+      <div class="cart-total">
+        <span>Total:</span>
+        <span>₹0</span>
       </div>
+      <button class="checkout-btn" onclick="window.location.href='checkout.html'">
+        <i class="fas fa-lock"></i> Proceed to Checkout
+      </button>
     </div>
   </div>
+</div>
+
 
   <!-- Overlay -->
   <div class="overlay" id="overlay"></div>
@@ -4966,14 +4968,6 @@ height: 100%;
         updateCartUI();
       }   
     });
-
-      document.getElementById("continueShopping").addEventListener("click", function() {
-    window.location.href = "shop.html";
-  });
-
-  document.getElementById("checkoutBtn").addEventListener("click", function() {
-    window.location.href = "checkout.html";
-  });
 
     // Browse products button
     browseProducts.addEventListener('click', () => {
