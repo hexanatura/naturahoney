@@ -4964,18 +4964,17 @@ height: 100%;
         // For guest users, just show success message
         cartProducts = [];
         updateCartUI();
-      }
+      }   
+    });
 
-        document.getElementById("continueShopping").addEventListener("click", function() {
+      document.getElementById("continueShopping").addEventListener("click", function() {
     window.location.href = "shop.html";
   });
 
   document.getElementById("checkoutBtn").addEventListener("click", function() {
     window.location.href = "checkout.html";
   });
-      
-    });
-
+    
     // Continue shopping button
     continueShopping.addEventListener('click', () => {
       cartSidebar.classList.remove('active');
