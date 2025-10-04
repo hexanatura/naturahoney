@@ -4127,6 +4127,14 @@ height: 100%;
       }
     });
 
+    document.getElementById("continueShopping").addEventListener("click", function() {
+    window.location.href = "shop.html";
+  });
+
+  document.getElementById("checkoutBtn").addEventListener("click", function() {
+    window.location.href = "checkout.html";
+  });
+
     // Close dropdown when clicking outside
     document.addEventListener('click', () => {
       userDropdown.classList.remove('active');
