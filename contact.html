@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1200, initial-scale=0.5, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes" />
+  <title>Contact Us - Natura Honey</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.cdnfonts.com/css/akira-expanded" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Shadow+Into+Light&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: white;
+      color: #333;
+      line-height: 1.6;
+      font-family: 'Unbounded', sans-serif;
+      scroll-padding-top: 120px;
+      transition: all 0.3s ease;
+      min-width: 1200px !important;
+      overflow-x: auto !important;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        transform: scale(0.55);
+        transform-origin: top center;
+        width: 181.82%;
+        height: 181.82%;
+        overflow-x: auto;
+        position: relative;
+        left: -40.91%;
+      }
+      
+      html {
+        overflow-x: hidden;
+        height: 100%;
+      }
+      
+      .content-wrapper {
+        transform: scale(1);
+      }
+    }
+
+    /* Layout Switcher */
+    .layout-switcher {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 50px;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      border: 2px solid #5f2b27;
+    }
+    
+    .layout-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f1f1;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+    
+    .layout-btn.active {
+      background: #5f2b27;
+      color: white;
+      border-color: #FFD700;
+    }
+    
+    .layout-btn:hover {
+      transform: scale(1.1);
+    }
+
+    body.mobile-view {
+      font-size: inherit !important;
+      min-width: 1200px !important;
+    }
+    
+    /* Notification Bar */
+    .notification-bar {
+      background: #e7d90f;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 1px;
+      position: fixed;
+      top: 5px;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      will-change: transform, opacity;
+    }
+    .notification-bar::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1;
+    }
+    .notification-bar p {
+      position: relative;
+      z-index: 2;
+    }
+    .notification-bar.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Navigation */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 5%;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 43px;
+      left: 0;
+      right: 0;
+      z-index: 60;
+      font-family: 'Nirmala UI', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: top 0.3s ease;
+      flex-direction: row !important;
+    }
+    .logo {
+      position: absolute;
+      left: 50%;
+      top: 30px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 65;
+    }
+    .logo img {
+      height: 70px;
+      width: auto;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .logo img:hover {
+      transform: scale(1.05);
+    }
+    .nav-links {
+      display: flex;
+      list-style: none;
+    }
+    .nav-links li {
+      margin: 0 15px;
+      position: relative;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      padding: 5px 0;
+    }
+    .nav-links a:hover,
+    .nav-links a:focus {
+      color: #5f2b27;
+      transform: scale(1.1);
+    }
+    .nav-links a.active {
+      color: #5f2b27;
+      border-bottom: 2px solid #ff4d4d;
+    }
+
+    .nav-icons {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      gap: 35px;
+    }
+    .icon {
+      font-size: 20px;
+      color: #333;
+      transition: color 0.3s;
+      cursor: pointer;
+      position: relative;
+    }
+    .icon:hover {
+      color: #5f2b27;
+    }
+
+    .content-wrapper {
+      margin-top: 165px;
+    }
+
+.footer-column .contact-icon {
+  color: white !important;
+}
+
+.footer-column .enquiry-item i {
+  color: white !important;
+}
+
+.footer-column .enquiry-item:hover i {
+  color: #FFD700 !important;
+}
+
+.contact-details .contact-icon {
+  color: #5f2b27 !important;
+}
+
+.footer-column .contact-info {
+  gap: 8px !important; /* Reduced from 15px */
+}
+
+.footer-column .contact-item {
+  margin-bottom: 5px !important; /* Add this if not exists */
+}
+
+.footer-column .enquiries-list {
+  gap: 5px !important; /* Reduced from 10px */
+}
+
+/* Make all Follow Us icons in main content brown */
+.social-contact .social-icons a {
+  background: #5f2b27 !important;
+  color: white !important;
+}
+
+.social-contact .social-icons a:hover {
+  background: #7a3731 !important;
+  color: white !important;
+}
+    /* User Dropdown */
+    .user-dropdown {
+      position: relative;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      min-width: 200px;
+      z-index: 100;
+      display: none;
+      overflow: hidden;
+      margin-top: 10px;
+      border: 1px solid #f0f0f0;
+      animation: dropdownFadeIn 0.3s ease;
+    }
+
+    @keyframes dropdownFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .dropdown-menu.active {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      text-decoration: none;
+      color: #333;
+      transition: all 0.3s ease;
+      border-bottom: 1px solid #f8f8f8;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+      background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .dropdown-item i {
+      margin-right: 12px;
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .dropdown-item:hover i {
+      transform: scale(1.2);
+    }
+
+    .user-icon-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .user-icon-wrapper:hover {
+      background: rgba(95, 43, 39, 0.1);
+    }
+
+    .user-icon-wrapper.logged-in {
+      background: #5f2b27;
+      color: white;
+    }
+
+    .user-icon-wrapper.logged-in:hover {
+      background: #7a3731;
+      transform: scale(1.1);
+    }
+
+    .user-icon-wrapper .fa-user {
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+
+    .user-icon-wrapper:hover .fa-user {
+      transform: scale(1.1);
+    }
+
+    .user-notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #FFD700;
+      color: #333;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      border: 2px solid white;
+    }
+
+    .icon .badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      color: #5f2b27;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      border: 2px solid white;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+      font-family: 'Unbounded', sans-serif;
+    }
+
+    .icon .badge.hidden {
+      display: none;
+    }
+
+    /* Sidebars */
+    .cart-sidebar, .likes-sidebar {
+      position: fixed;
+      top: 0;
+      width: 450px;
+      height: 100vh;
+      background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+      box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      padding: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .cart-sidebar {
+      right: -450px;
+    }
+    
+    .likes-sidebar {
+      left: -450px;
+    }
+    
+    .cart-sidebar.active {
+      right: 0;
+    }
+    
+    .likes-sidebar.active {
+      left: 0;
+    }
+    
+    .cart-header, .likes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 25px 30px;
+      background: #5f2b27;
+      color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .cart-header h2, .likes-header h2 {
+      font-family: 'Unbounded', sans-serif;
+      color: white;
+      font-weight: 700;
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .cart-header h2 i, .likes-header h2 i {
+      font-size: 1.5rem;
+    }
+    
+    .close-cart, .close-likes {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: white;
+      transition: transform 0.3s;
+    }
+    
+    .close-cart:hover, .close-likes:hover {
+      transform: scale(1.1);
+    }
+    
+    .cart-content, .likes-content {
+      flex: 1;
+      padding: 25px 30px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .cart-items, .likes-items {
+      margin-bottom: 20px;
+      max-height: 55vh;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    
+    .cart-items::-webkit-scrollbar, .likes-items::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .cart-items::-webkit-scrollbar-track, .likes-items::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    
+    .cart-items::-webkit-scrollbar-thumb, .likes-items::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    
+    .cart-items::-webkit-scrollbar-thumb:hover, .likes-items::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    .cart-item, .like-item {
+      display: flex;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cart-item:hover, .like-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .cart-item::before, .like-item::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: #FFD700;
+    }
+    
+    .cart-item img, .like-item img {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 15px;
+    }
+    
+    .cart-item-details, .like-item-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .cart-item-title, .like-item-title {
+      font-weight: 700;
+      margin-bottom: 5px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.1rem;
+      color: #333;
+    }
+    
+    .cart-item-price, .like-item-price {
+      color: #5f2b27;
+      font-weight: 700;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+    
+    .cart-item-controls, .like-item-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .cart-item-quantity {
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 20px;
+      padding: 5px;
+    }
+    
+    .quantity-btn {
+      background: white;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 700;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+    }
+    
+    .quantity-btn:hover {
+      background: #5f2b27;
+      color: white;
+    }
+    
+    .quantity-input {
+      width: 40px;
+      text-align: center;
+      margin: 0 5px;
+      border: none;
+      background: transparent;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .delete-item, .remove-like {
+      background: none;
+      border: none;
+      color: #777;
+      cursor: pointer;
+      font-size: 18px;
+      transition: color 0.3s;
+      padding: 5px;
+      border-radius: 50%;
+    }
+    
+    .delete-item:hover, .remove-like:hover {
+      color: #ff4d4d;
+      background: rgba(255, 77, 77, 0.1);
+    }
+    
+    .cart-summary {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 2px dashed #e0e0e0;
+    }
+    
+    .cart-subtotal, .cart-shipping, .cart-total {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-family: 'Unbounded', sans-serif;
+    }
+    
+    .cart-subtotal, .cart-shipping {
+      font-size: 1rem;
+      color: #666;
+    }
+    
+    .cart-total {
+      font-weight: 700;
+      font-size: 1.4rem;
+      margin: 15px 0;
+      padding-top: 10px;
+      border-top: 1px solid #e0e0e0;
+      color: #5f2b27;
+    }
+    
+    .checkout-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Unbounded', sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 15px rgba(95, 43, 39, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .checkout-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(95, 43, 39, 0.4);
+    }
+    
+    .checkout-btn:active {
+      transform: translateY(-1px);
+    }
+    
+    .empty-cart, .empty-likes {
+      text-align: center;
+      padding: 60px 20px;
+      color: #777;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+    
+    .empty-cart i, .empty-likes i {
+      font-size: 70px;
+      margin-bottom: 20px;
+      color: #e0e0e0;
+    }
+    
+    .empty-cart h3, .empty-likes h3 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: #5f2b27;
+    }
+    
+    .empty-cart p, .empty-likes p {
+      margin-bottom: 25px;
+      max-width: 300px;
+    }
+    
+    .continue-shopping, .browse-products {
+      padding: 12px 25px;
+      background: #5f2b27;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Unbounded', sans-serif;
+    }
+    
+    .continue-shopping:hover, .browse-products:hover {
+      background: #7a3731;
+      transform: translateY(-2px);
+    }
+    
+    .add-to-cart-btn {
+      background: #5f2b27;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex-grow: 1;
+      margin-right: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .add-to-cart-btn:hover {
+      background: #7a3731;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(95, 43, 39, 0.3);
+    }
+
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+      backdrop-filter: blur(3px);
+    }
+    .overlay.active {
+      display: block;
+    }
+
+    /* Login Modal */
+    .login-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+      width: 400px;
+      max-width: 90%;
+      display: none;
+    }
+    .login-modal.active {
+      display: block;
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 25px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .login-header img {
+      height: 70px;
+      margin-bottom: 20px;
+      order: -1;
+    }
+    .login-header h2 {
+      font-family: 'Unbounded', sans-serif;
+      color: #5f2b27;
+      margin-bottom: 8px;
+      font-weight: 700;
+      font-size: 1.8rem;
+      order: 1;
+    }
+    .login-header p {
+      color: #666;
+      margin-bottom: 0;
+      order: 2;
+    }
+    .back-btn {
+      position: absolute;
+      top: 5px;
+      left: 0;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #777;
+      display: none;
+    }
+    .back-btn.active {
+      display: block;
+    }
+    .close-login {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #777;
+    }
+    .login-form, .signup-form, .forgot-form {
+      display: none;
+    }
+    .login-form.active, .signup-form.active, .forgot-form.active {
+      display: block;
+    }
+    .login-form input, .signup-form input, .forgot-form input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: 'Unbounded', sans-serif;
+    }
+    .login-btn, .signup-btn, .reset-btn {
+      width: 100%;
+      padding: 15px;
+      background: #5f2b27;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-bottom: 12px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+    .login-btn:hover, .signup-btn:hover, .reset-btn:hover {
+      background: #7a3731;
+    }
+    .google-login {
+      width: 100%;
+      padding: 15px;
+      background: white;
+      color: #333;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+    .google-login:hover {
+      background: #f5f5f5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .login-footer {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 15px;
+    }
+    .login-footer a {
+      color: #5f2b27;
+      text-decoration: none;
+      margin: 0 5px;
+      font-weight: 600;
+    }
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .terms-checkbox {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 15px;
+      gap: 10px;
+      padding: 8px 0;
+    }
+
+    .terms-checkbox input {
+      margin-top: 3px;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+    }
+
+    .terms-checkbox label {
+      font-size: 14px;
+      line-height: 1.5;
+      text-align: center;
+      margin: 0;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 400;
+      color: #333;
+    }
+
+    .terms-checkbox a {
+      color: #5f2b27;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+
+    .terms-checkbox a:hover {
+      color: #7a3731;
+    }
+
+    /* Banner Wrapper */
+    .banner-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 0;
+    }
+    
+    .rectangle-banner {
+      background: url('https://ik.imagekit.io/hexaanatura/Desktop%20-%201.jpg?updatedAt=1756993544883') center/cover no-repeat;
+      padding: 50px;
+      width: 95%;
+      max-width: 1800px;
+      border-radius: 132px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      height: 500px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+    }
+    .banner-row {
+      font-family: 'Akira Expanded', sans-serif;
+      font-weight: 900;
+      font-size: 150px;
+      color: white;
+      mix-blend-mode: soft-light;
+      white-space: nowrap;
+      display: inline-block;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      line-height: 0.75;
+      opacity: 0.9;
+    }
+    .slide-right {
+      animation: slideRight 60s linear infinite;
+    }
+    .slide-left {
+      animation: slideLeft 60s linear infinite;
+    }
+    @keyframes slideRight {
+      0% {
+        transform: translateX(-50%);
+      }
+      100% {
+        transform: translateX(0%);
+      }
+    }
+    @keyframes slideLeft {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Page Header with Banner Effect */
+    .page-header {
+      background: url('https://ik.imagekit.io/hexaanatura/Desktop%20-%201.jpg?updatedAt=1756993544883') center/cover no-repeat;
+      padding: 80px 5%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 40px;
+      border-radius: 50px;
+    }
+    
+    .page-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1;
+      border-radius: 50px;
+    }
+    
+    .page-header h1 {
+      font-family: 'Akira Expanded', sans-serif;
+      font-size: 3.5rem;
+      color:  #5f2b27;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .page-header p {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.2rem;
+      color:  #5f2b27;
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Contact Section */
+    .contact-section {
+      padding: 80px 5%;
+      max-width: 1400px;
+      margin: 0 auto 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+    }
+    
+    /* Contact Info */
+    .contact-info h2 {
+      font-family: 'Akira Expanded', sans-serif;
+      font-size: 40px;
+      color: #5f2b27;
+      margin-bottom: 30px;
+    }
+    
+    .contact-info p {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 18px;
+      line-height: 1.8;
+      margin-bottom: 30px;
+      color: #555;
+    }
+    
+    .contact-details {
+      margin-bottom: 40px;
+    }
+    
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 25px;
+    }
+    
+    .contact-icon {
+      font-size: 24px;
+      color: #5f2b27;
+      margin-right: 15px;
+      min-width: 30px;
+      text-align: center;
+    }
+    
+    .contact-text h3 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 20px;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    
+    .contact-text p {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 16px;
+      color: #666;
+      margin: 0;
+    }
+    
+    .social-contact {
+      margin-top: 40px;
+    }
+    
+    .social-contact h3 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 22px;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    .social-icons {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .social-icons a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      background: #5f2b27;
+      color: white;
+      border-radius: 50%;
+      font-size: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .social-icons a:hover {
+      background: #7a3731;
+      transform: translateY(-5px);
+    }
+    
+    /* Contact Form */
+    .contact-form {
+      background: #f8f3e6;
+      padding: 40px;
+      border-radius: 20px;
+    }
+    
+    .contact-form h2 {
+      font-family: 'Akira Expanded', sans-serif;
+      font-size: 32px;
+      color: #5f2b27;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #5f2b27;
+    }
+    
+    .form-group textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    
+    .submit-btn {
+      background: #5f2b27;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 25px;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+      width: 100%;
+    }
+    
+    .submit-btn:hover {
+      background: #7a3731;
+    }
+    
+    /* Map Section */
+    .map-section {
+      margin-top: 60px;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .map-section iframe {
+      width: 100%;
+      height: 400px;
+      border: none;
+    }
+
+    /* Footer */
+    footer {
+      background:#556b2f; 
+      color:white; 
+      padding:60px 5%; 
+      text-align:center; 
+      position:relative;
+      margin-top: 40px;
+    }
+
+    .footer-container {
+      max-width:1200px; 
+      margin:0 auto; 
+      display:flex; 
+      flex-wrap:wrap; 
+      justify-content:center; 
+      gap:40px;
+    }
+
+    .footer-column {
+      flex: 1;
+      min-width: 250px;
+      text-align: left;
+    }
+
+    footer h3 {
+      font-family:'Akira Expanded', sans-serif; 
+      font-size:24px; 
+      margin-bottom:20px;
+      color: white;
+    }
+
+    footer ul {
+      list-style:none; 
+      padding:0; 
+      font-family:'Unbounded', sans-serif; 
+      font-size:16px;
+    }
+
+    footer ul li {
+      margin-bottom: 12px;
+    }
+
+    footer a {
+      color:white; 
+      text-decoration:none; 
+      transition:color 0.3s;
+      display: inline-block;
+    }
+
+    footer a:hover {
+      color: #FFD700;
+      transform: translateX(5px);
+    }
+
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .contact-icon {
+      color: white;
+      font-size: 18px;
+      width: 20px;
+      margin-top: 2px;
+    }
+
+    .contact-text {
+      flex: 1;
+      font-family:'Unbounded', sans-serif; 
+      font-size:16px; 
+      line-height:1.5;
+    }
+
+    .footer-social {
+      margin-top: 20px;
+    }
+
+    .footer-social h4 {
+      font-family:'Unbounded', sans-serif; 
+      font-size:18px; 
+      margin-bottom:15px;
+      color: white;
+    }
+
+    .social-icons {
+      display:flex; 
+      gap:15px; 
+      font-size:20px;
+    }
+
+    .social-icons a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+
+    .social-icons a:hover {
+      background: #FFD700;
+      color: #333;
+      transform: translateY(-3px);
+    }
+
+    .enquiries {
+      margin-top: 20px;
+    }
+
+    .enquiries h4 {
+      font-family:'Unbounded', sans-serif; 
+      font-size:18px; 
+      margin-bottom:15px;
+      color: #FFD700;
+    }
+
+    .enquiries-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .enquiry-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 5px;
+      transition: all 0.3s;
+    }
+
+    .enquiry-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(5px);
+    }
+
+    .enquiry-item i {
+      color: #FFD700;
+      font-size: 16px;
+    }
+
+    .enquiry-item a {
+      color: white;
+      text-decoration: none;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 15px;
+    }
+
+    .enquiry-item:hover a {
+      color: #FFD700;
+    }
+
+    .footer-bottom {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      width: 100%;
+    }
+
+    .footer-bottom p {
+      font-family:'Unbounded', sans-serif; 
+      font-size:14px; 
+      color:rgba(255,255,255,0.8);
+    }
+  </style>
+</head>
+<body>
+  <!-- Layout Switcher -->
+  <div class="layout-switcher">
+    <div class="layout-btn active" id="desktopView">
+      <i class="fas fa-desktop"></i>
+    </div>
+    <div class="layout-btn" id="mobileView">
+      <i class="fas fa-mobile-alt"></i>
+    </div>
+  </div>
+
+  <!-- Notification Bar -->
+  <div class="notification-bar" id="notificationBar"><p>Free shipping on all orders over ₹599! Limited time offer.</p></div>
+
+  <!-- Navigation Bar -->
+  <nav id="navBar">
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="#">Collections</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+    </ul>
+    <div class="logo">
+      <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Logo of Natura Honey brand with stylized text and honeycomb design" />
+    </div>
+    <div class="nav-icons">
+      <div class="icon" id="likeIcon">
+        <i class="far fa-heart" aria-label="Favorites"></i>
+        <span class="badge hidden" id="likeCount">0</span>
+      </div>
+      <div class="icon" id="cartIcon">
+        <i class="fas fa-shopping-cart" aria-label="Shopping cart"></i>
+        <span class="badge hidden" id="cartCount">0</span>
+      </div>
+      <div class="icon" id="whatsappIcon">
+        <i class="fab fa-whatsapp" aria-label="WhatsApp"></i>
+      </div>
+      <div class="icon user-dropdown" id="userIcon">
+        <i class="fas fa-user" aria-label="User account"></i>
+        <div class="dropdown-menu" id="userDropdown">
+          <a href="#" class="dropdown-item" id="profileLink">
+            <i class="fas fa-user-circle"></i> Profile
+          </a>
+          <a href="#" class="dropdown-item" id="logoutLink">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Favorites Sidebar -->
+  <div class="likes-sidebar" id="likesSidebar">
+    <div class="likes-header">
+      <h2><i class="fas fa-heart"></i> Your Favorites</h2>
+      <button class="close-likes" id="closeLikes">&times;</button>
+    </div>
+    <div class="likes-content">
+      <div class="likes-items" id="likesItems">
+      </div>
+      <div class="empty-likes" id="emptyLikes">
+        <i class="far fa-heart"></i>
+        <h3>No favorites yet</h3>
+        <p>Start adding products you love to your favorites list</p>
+        <button class="browse-products" id="browseProducts">Browse Products</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h2><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+      <button class="close-cart" id="closeCart">&times;</button>
+    </div>
+    <div class="cart-content">
+      <div class="cart-items" id="cartItems">
+      </div>
+      <div class="empty-cart" id="emptyCart">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>Your cart is empty</h3>
+        <p>Add some delicious honey products to get started</p>
+        <button class="continue-shopping" id="continueShopping">Continue Shopping</button>
+      </div>
+      <div class="cart-summary" id="cartSummary">
+        <div class="cart-subtotal">
+          <span>Subtotal:</span>
+          <span>₹0</span>
+        </div>
+        <div class="cart-shipping">
+          <span>Shipping:</span>
+          <span>Calculated at checkout</span>
+        </div>
+        <div class="cart-total">
+          <span>Total:</span>
+          <span>₹0</span>
+        </div>
+        <button class="checkout-btn" id="checkoutBtn">
+          <i class="fas fa-lock"></i> Proceed to Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Login Modal -->
+  <div class="login-modal" id="loginModal">
+    <button class="close-login" id="closeLogin">&times;</button>
+    <div class="login-header">
+      <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+      <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Natura Honey Logo">
+      <h2 id="modalTitle">Welcome Back</h2>
+      <p id="modalSubtitle">Sign in to your account</p>
+    </div>
+    
+    <form class="login-form" id="loginForm">
+      <input type="email" placeholder="Email Address" required>
+      <input type="password" placeholder="Password" required>
+      <button type="button" class="login-btn" id="loginBtn">Login</button>
+      <button type="button" class="google-login" id="googleLoginBtn">
+        <i class="fab fa-google"></i> Sign in with Google
+      </button>
+    </form>
+    
+    <form class="signup-form" id="signupForm">
+      <input type="text" placeholder="Full Name" required>
+      <input type="email" placeholder="Email Address" required>
+      <input type="password" placeholder="Password" required>
+      <input type="password" placeholder="Confirm Password" required>
+      <div class="terms-checkbox">
+        <input type="checkbox" id="termsCheckbox" required>
+        <label for="termsCheckbox">I agree to the <a href="#" target="_blank">Terms & Conditions</a> and <a href="#" target="_blank">Privacy Policy</a></label>
+      </div>
+      <button type="button" class="signup-btn" id="signupBtn">Create Account</button>
+    </form>
+    
+    <form class="forgot-form" id="forgotForm">
+      <input type="email" placeholder="Email Address" required>
+      <button type="button" class="reset-btn" id="resetBtn">Reset Password</button>
+    </form>
+    
+    <div class="login-footer" id="loginFooter">
+      <a href="#" id="forgotPassword">Forgot Password?</a> | 
+      <a href="#" id="signUp">Sign Up</a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-wrapper" id="mainContent">
+    <!-- Page Header with Banner Effect -->
+    <div class="page-header">
+      <div class="rectangle-banner" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50px; pointer-events: none; z-index: 1;" aria-hidden="true">
+        <div class="banner-row slide-right" style="font-size:150px;">CONTACT US CONTACT US CONTACT US CONTACT US CONTACT US</div>
+        <div class="banner-row slide-left" style="font-size:150px;">CONTACT US CONTACT US CONTACT US CONTACT US CONTACT US</div>
+        <div class="banner-row slide-right" style="font-size:150px;">CONTACT US CONTACT US CONTACT US CONTACT US CONTACT US</div>
+        <div class="banner-row slide-left" style="font-size:150px;">CONTACT US CONTACT US CONTACT US CONTACT US CONTACT US</div>
+      </div>
+      
+      <h1>Contact Us</h1>
+      <p>We'd love to hear from you! Get in touch with us for any questions, feedback, or wholesale inquiries.</p>
+    </div>
+    
+    <!-- Contact Section -->
+    <section class="contact-section">
+      <div class="contact-info">
+        <h2>Get in Touch</h2>
+        <p>Have questions about our honey products or beekeeping practices? We're here to help. Reach out to us through any of the channels below, or fill out the form and we'll get back to you as soon as possible.</p>
+        
+        <div class="contact-details">
+          <div class="contact-item">
+            <div class="contact-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="contact-text">
+              <h3>Our Address</h3>
+              <p>Hexa Apiarium Pvt. Ltd.<br>
+                123 Honeycomb Lane, Thalassery<br>
+                Kannur, Kerala 670101</p>
+            </div>
+          </div>
+          
+          <div class="contact-item">
+            <div class="contact-icon">
+              <i class="fas fa-phone-alt"></i>
+            </div>
+            <div class="contact-text">
+              <h3>Phone Number</h3>
+              <p>+91 98765 43210<br>
+                +91 81234 56789</p>
+            </div>
+          </div>
+          
+          <div class="contact-item">
+            <div class="contact-icon">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <div class="contact-text">
+              <h3>Email Address</h3>
+              <p>info@hexaanatura.com<br>
+                orders@hexaanatura.com</p>
+            </div>
+          </div>
+          
+          <div class="contact-item">
+            <div class="contact-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="contact-text">
+              <h3>Business Hours</h3>
+              <p>Monday - Friday: 9:00 AM - 6:00 PM<br>
+                Saturday: 10:00 AM - 4:00 PM<br>
+                Sunday: Closed</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="social-contact">
+          <h3>Follow Us On Social Media</h3>
+          <div class="social-icons">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            <a href="#"><i class="fab fa-whatsapp"></i></a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="contact-form">
+        <h2>Send Us a Message</h2>
+        <form id="contactForm">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone">
+          </div>
+          
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <select id="subject" name="subject" required>
+              <option value="">Select a subject</option>
+              <option value="product-inquiry">Product Inquiry</option>
+              <option value="order-support">Order Support</option>
+              <option value="wholesale">Wholesale Information</option>
+              <option value="partnership">Partnership Opportunities</option>
+              <option value="feedback">Feedback</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" required></textarea>
+          </div>
+          
+          <button type="submit" class="submit-btn">Send Message</button>
+        </form>
+      </div>
+    </section>
+    
+    <!-- Map Section -->
+    <div class="map-section">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d62598.49711437814!2d75.46412361441484!3d11.74804643357993!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba422e5e5cc5d7d%3A0x6ce2f18c4b5b0c09!2sThalassery%2C%20Kerala!5e0!3m2!1sen!2sin!4v1736945678901!5m2!1sen!2sin" allowfullscreen="" loading="lazy"></iframe>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-column">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="#">Amazon Store</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Services</a></li>
+        </ul>
+        
+        <div class="footer-social">
+          <h4>Follow Us</h4>
+          <div class="social-icons">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h3>Contact Us</h3>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-phone contact-icon"></i>
+            <div class="contact-text">+91 98765 43210</div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-envelope contact-icon"></i>
+            <div class="contact-text">info@hexaanatura.com</div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt contact-icon"></i>
+            <div class="contact-text">Thalassery, Kannur, Kerala</div>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-clock contact-icon"></i>
+            <div class="contact-text">Mon-Sat: 9:00 AM - 6:00 PM</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-column">
+        <h3>Enquiries</h3>
+        
+        <div class="enquiries">
+          <div class="enquiries-list">
+            <div class="enquiry-item">
+              <i class="fas fa-boxes"></i>
+              <a href="mailto:bulkorders@hexaanatura.com">Bulk Orders</a>
+            </div>
+            <div class="enquiry-item">
+              <i class="fas fa-handshake"></i>
+              <a href="mailto:distributors@hexaanatura.com">Become Our Distributor</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Hexa Apiarium Pvt. Ltd. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+      authDomain: "hexahoney-96aed.firebaseapp.com",
+      projectId: "hexahoney-96aed",
+      storageBucket: "hexahoney-96aed.firebasestorage.app",
+      messagingSenderId: "700458850837",
+      appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+      measurementId: "G-MQGKK9709H"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM Elements
+    const notificationBar = document.getElementById('notificationBar');
+    const navBar = document.getElementById('navBar');
+    const likeIcon = document.getElementById('likeIcon');
+    const likeCount = document.getElementById('likeCount');
+    const cartIcon = document.getElementById('cartIcon');
+    const cartCount = document.getElementById('cartCount');
+    const whatsappIcon = document.getElementById('whatsappIcon');
+    const userIcon = document.getElementById('userIcon');
+    const userDropdown = document.getElementById('userDropdown');
+    const profileLink = document.getElementById('profileLink');
+    const logoutLink = document.getElementById('logoutLink');
+    
+    const likesSidebar = document.getElementById('likesSidebar');
+    const closeLikes = document.getElementById('closeLikes');
+    const likesItems = document.getElementById('likesItems');
+    const emptyLikes = document.getElementById('emptyLikes');
+    const browseProducts = document.getElementById('browseProducts');
+    
+    const cartSidebar = document.getElementById('cartSidebar');
+    const closeCart = document.getElementById('closeCart');
+    const cartItems = document.getElementById('cartItems');
+    const emptyCart = document.getElementById('emptyCart');
+    const cartSummary = document.getElementById('cartSummary');
+    const cartTotal = document.querySelector('.cart-total span:last-child');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const continueShopping = document.getElementById('continueShopping');
+    
+    const overlay = document.getElementById('overlay');
+    const loginModal = document.getElementById('loginModal');
+    const closeLogin = document.getElementById('closeLogin');
+    const backBtn = document.getElementById('backBtn');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const forgotForm = document.getElementById('forgotForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const forgotPassword = document.getElementById('forgotPassword');
+    const signUp = document.getElementById('signUp');
+    const loginFooter = document.getElementById('loginFooter');
+    const termsCheckbox = document.getElementById('termsCheckbox');
+
+    // Contact form
+    const contactForm = document.getElementById('contactForm');
+
+    // Layout Switcher Elements
+    const desktopViewBtn = document.getElementById('desktopView');
+    const mobileViewBtn = document.getElementById('mobileView');
+    const body = document.body;
+
+    // Product data (for cart and favorites)
+    const products = [
+      { 
+        id: 1, 
+        name: "Natura Agmark Honey", 
+        price: 249, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022",
+        category: "crystal"
+      },
+      { 
+        id: 2, 
+        name: "Natura Agmark Honey", 
+        price: 449, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026",
+        category: "crystal"
+      },
+      { 
+        id: 3, 
+        name: "Natura Agmark Honey", 
+        price: 149, 
+        weight: "100g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115",
+        category: "crystal"
+      },
+      { 
+        id: 4, 
+        name: "Natura Agmark Honey", 
+        price: 349, 
+        weight: "50g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864",
+        category: "crystal"
+      },
+      { 
+        id: 5, 
+        name: "Natura Agmark Honey", 
+        price: 199, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894",
+        category: "premium"
+      },
+      { 
+        id: 6, 
+        name: "Natura Agmark Honey", 
+        price: 329, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908",
+        category: "premium"
+      }
+    ];
+
+    // State variables
+    let currentUser = null;
+    let likedProducts = [];
+    let cartProducts = [];
+    let currentModalView = 'login';
+
+    // Initialize Firebase Auth State Listener
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        currentUser = user;
+        updateUIForUser(user);
+        loadUserData(user.uid);
+      } else {
+        currentUser = null;
+        updateUIForGuest();
+      }
+    });
+
+    // Update UI for logged in user
+    function updateUIForUser(user) {
+      userIcon.classList.add('logged-in');
+    }
+
+    // Update UI for guest
+    function updateUIForGuest() {
+      userIcon.classList.remove('logged-in');
+    }
+
+    // Load user data from Firestore
+    function loadUserData(userId) {
+      // Load liked products
+      db.collection('users').doc(userId).collection('likes').get()
+        .then((querySnapshot) => {
+          likedProducts = [];
+          querySnapshot.forEach((doc) => {
+            likedProducts.push(doc.data().productId);
+          });
+          updateLikeUI();
+        })
+        .catch((error) => {
+          console.error("Error loading liked products:", error);
+        });
+
+      // Load cart items
+      db.collection('users').doc(userId).collection('cart').get()
+        .then((querySnapshot) => {
+          cartProducts = [];
+          querySnapshot.forEach((doc) => {
+            cartProducts.push({
+              id: doc.data().productId,
+              quantity: doc.data().quantity
+            });
+          });
+          updateCartUI();
+        })
+        .catch((error) => {
+          console.error("Error loading cart items:", error);
+        });
+    }
+
+    // Layout Switcher Functionality
+    function setDesktopView() {
+      body.classList.remove('mobile-view');
+      desktopViewBtn.classList.add('active');
+      mobileViewBtn.classList.remove('active');
+      document.body.style.transform = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.left = '';
+      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1200, initial-scale=0.5, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes');
+    }
+    
+    function setMobileView() {
+      body.classList.add('mobile-view');
+      mobileViewBtn.classList.add('active');
+      desktopViewBtn.classList.remove('active');
+      document.body.style.transform = 'scale(0.55)';
+      document.body.style.transformOrigin = 'top center';
+      document.body.style.width = '181.82%';
+      document.body.style.height = '181.82%';
+      document.body.style.left = '-40.91%';
+      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1200, initial-scale=0.5, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes');
+    }
+    
+    // Check if mobile device and set appropriate view
+    function checkMobileDevice() {
+      if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        setMobileView();
+      } else {
+        setDesktopView();
+      }
+    }
+
+    // Hide notification bar on scroll down
+    let lastScrollTop = 0;
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollTop > 5) {
+        if (!notificationBar.classList.contains('hidden')) {
+          notificationBar.classList.add('hidden');
+          navBar.style.top = '0';
+          document.querySelector('.content-wrapper').style.marginTop = '130px';
+        }
+      } else {
+        if (notificationBar.classList.contains('hidden')) {
+          notificationBar.classList.remove('hidden');
+          navBar.style.top = '40px';
+          document.querySelector('.content-wrapper').style.marginTop = '165px';
+        }
+      }
+      lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+    }, { passive: true });
+
+    // User dropdown functionality
+    userIcon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentUser) {
+        userDropdown.classList.toggle('active');
+      } else {
+        showLoginView();
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      userDropdown.classList.remove('active');
+    });
+
+    // Profile link functionality
+    profileLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      userDropdown.classList.remove('active');
+      if (currentUser) {
+        // Redirect to profile page
+        window.location.href = 'profile.html';
+      } else {
+        showLoginView();
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+
+    // Logout functionality
+    logoutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      auth.signOut().then(() => {
+        alert('You have been logged out successfully!');
+      }).catch((error) => {
+        console.error("Error signing out:", error);
+      });
+    });
+
+    // Like icon functionality
+    likeIcon.addEventListener('click', () => {
+      likesSidebar.classList.add('active');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+
+    // Close likes sidebar
+    closeLikes.addEventListener('click', () => {
+      likesSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Update likes UI
+    function updateLikeUI() {
+      if (likedProducts.length > 0) {
+        likeCount.textContent = likedProducts.length;
+        likeCount.classList.remove('hidden');
+      } else {
+        likeCount.classList.add('hidden');
+      }
+      
+      if (likedProducts.length === 0) {
+        emptyLikes.style.display = 'flex';
+        likesItems.innerHTML = '';
+      } else {
+        emptyLikes.style.display = 'none';
+        likesItems.innerHTML = '';
+        
+        likedProducts.forEach(productId => {
+          const product = products.find(p => p.id === productId);
+          if (product) {
+            const likeItem = document.createElement('div');
+            likeItem.className = 'like-item';
+            likeItem.innerHTML = `
+              <img src="${product.image}" alt="${product.name}">
+              <div class="like-item-details">
+                <div class="like-item-title">${product.name}</div>
+                <div class="like-item-price">₹${product.price}</div>
+                <div class="like-item-actions">
+                  <button class="add-to-cart-btn" data-id="${product.id}">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                  </button>
+                  <button class="remove-like" data-id="${product.id}">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+            likesItems.appendChild(likeItem);
+          }
+        });
+        
+        document.querySelectorAll('.remove-like').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            removeFromLikes(productId);
+          });
+        });
+        
+        document.querySelectorAll('.likes-items .add-to-cart-btn').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            addToCart(productId, 1);
+          });
+        });
+      }
+    }
+
+    // Add to likes
+    function addToLikes(productId) {
+      if (!likedProducts.includes(productId)) {
+        likedProducts.push(productId);
+        
+        // Save to Firestore if user is logged in
+        if (currentUser) {
+          db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).set({
+            productId: productId,
+            addedAt: firebase.firestore.FieldValue.serverTimestamp()
+          })
+          .catch((error) => {
+            console.error("Error adding to likes:", error);
+          });
+        } else {
+          // Save to localStorage for guest users
+          localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+        }
+        
+        updateLikeUI();
+        
+        const heartIcon = likeIcon.querySelector('i');
+        heartIcon.classList.remove('far');
+        heartIcon.classList.add('fas');
+        heartIcon.style.color = '#ff4d4d';
+      }
+    }
+
+    // Remove from likes
+    function removeFromLikes(productId) {
+      likedProducts = likedProducts.filter(id => id !== productId);
+      
+      // Remove from Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).delete()
+        .catch((error) => {
+          console.error("Error removing from likes:", error);
+        });
+      } else {
+        // Update localStorage for guest users
+        localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+      }
+      
+      updateLikeUI();
+      
+      if (likedProducts.length === 0) {
+        const heartIcon = likeIcon.querySelector('i');
+        heartIcon.classList.remove('fas');
+        heartIcon.classList.add('far');
+        heartIcon.style.color = '';
+      }
+    }
+
+    // Cart functionality
+    cartIcon.addEventListener('click', () => {
+      cartSidebar.classList.add('active');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+
+    // Close cart sidebar
+    closeCart.addEventListener('click', () => {
+      cartSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Update cart UI
+    function updateCartUI() {
+      const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
+      
+      if (totalItems > 0) {
+        cartCount.textContent = totalItems;
+        cartCount.classList.remove('hidden');
+      } else {
+        cartCount.classList.add('hidden');
+      }
+      
+      if (cartProducts.length === 0) {
+        emptyCart.style.display = 'flex';
+        cartItems.innerHTML = '';
+        cartSummary.style.display = 'none';
+      } else {
+        emptyCart.style.display = 'none';
+        cartItems.innerHTML = '';
+        cartSummary.style.display = 'block';
+        
+        let subtotal = 0;
+        
+        cartProducts.forEach(item => {
+          const product = products.find(p => p.id === item.id);
+          if (product) {
+            const itemTotal = product.price * item.quantity;
+            subtotal += itemTotal;
+            
+            const cartItem = document.createElement('div');
+            cartItem.className = 'cart-item';
+            cartItem.innerHTML = `
+              <img src="${product.image}" alt="${product.name}">
+              <div class="cart-item-details">
+                <div class="cart-item-title">${product.name}</div>
+                <div class="cart-item-price">₹${product.price}</div>
+                <div class="cart-item-controls">
+                  <div class="cart-item-quantity">
+                    <button class="quantity-btn minus" data-id="${product.id}">-</button>
+                    <input type="text" class="quantity-input" value="${item.quantity}" data-id="${product.id}">
+                    <button class="quantity-btn plus" data-id="${product.id}">+</button>
+                  </div>
+                  <button class="delete-item" data-id="${product.id}">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+            cartItems.appendChild(cartItem);
+          }
+        });
+        
+        document.querySelector('.cart-subtotal span:last-child').textContent = `₹${subtotal}`;
+        cartTotal.textContent = `₹${subtotal}`;
+        
+        document.querySelectorAll('.quantity-btn.minus').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            updateCartQuantity(productId, -1);
+          });
+        });
+        
+        document.querySelectorAll('.quantity-btn.plus').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            updateCartQuantity(productId, 1);
+          });
+        });
+        
+        document.querySelectorAll('.delete-item').forEach(button => {
+          button.addEventListener('click', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            removeFromCart(productId);
+          });
+        });
+        
+        document.querySelectorAll('.quantity-input').forEach(input => {
+          input.addEventListener('change', (e) => {
+            const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+            const newQuantity = parseInt(e.currentTarget.value) || 1;
+            setCartQuantity(productId, newQuantity);
+          });
+        });
+      }
+    }
+
+    // Add to cart function
+    function addToCart(productId, quantity = 1) {
+      const existingItem = cartProducts.find(item => item.id === productId);
+      
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        cartProducts.push({ id: productId, quantity });
+      }
+      
+      // Save to Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).set({
+          productId: productId,
+          quantity: existingItem ? existingItem.quantity : quantity,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .catch((error) => {
+          console.error("Error adding to cart:", error);
+        });
+      } else {
+        // Save to localStorage for guest users
+        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+      }
+      
+      updateCartUI();
+      
+      addCartVisualFeedback();
+    }
+
+    // Visual feedback for adding to cart
+    function addCartVisualFeedback() {
+      cartIcon.classList.add('cart-icon-bounce');
+      cartCount.classList.add('badge-pulse');
+      
+      setTimeout(() => {
+        cartIcon.classList.remove('cart-icon-bounce');
+        cartCount.classList.remove('badge-pulse');
+      }, 600);
+    }
+
+    // Update cart quantity
+    function updateCartQuantity(productId, change) {
+      const item = cartProducts.find(item => item.id === productId);
+      
+      if (item) {
+        item.quantity += change;
+        
+        if (item.quantity <= 0) {
+          removeFromCart(productId);
+        } else {
+          // Update Firestore if user is logged in
+          if (currentUser) {
+            db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
+              quantity: item.quantity,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .catch((error) => {
+              console.error("Error updating cart:", error);
+            });
+          } else {
+            // Update localStorage for guest users
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+          }
+          
+          updateCartUI();
+        }
+      }
+    }
+
+    // Set cart quantity
+    function setCartQuantity(productId, quantity) {
+      const item = cartProducts.find(item => item.id === productId);
+      
+      if (item) {
+        if (quantity <= 0) {
+          removeFromCart(productId);
+        } else {
+          item.quantity = quantity;
+          
+          // Update Firestore if user is logged in
+          if (currentUser) {
+            db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
+              quantity: quantity,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .catch((error) => {
+              console.error("Error updating cart:", error);
+            });
+          } else {
+            // Update localStorage for guest users
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+          }
+          
+          updateCartUI();
+        }
+      }
+    }
+
+    // Remove from cart
+    function removeFromCart(productId) {
+      cartProducts = cartProducts.filter(item => item.id !== productId);
+      
+      // Remove from Firestore if user is logged in
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).delete()
+        .catch((error) => {
+          console.error("Error removing from cart:", error);
+        });
+      } else {
+        // Update localStorage for guest users
+        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+      }
+      
+      updateCartUI();
+    }
+
+    // WhatsApp functionality
+    whatsappIcon.addEventListener('click', () => {
+      const phoneNumber = "919876543210";
+      const message = "Hello, I'm interested in your honey products!";
+      const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    });
+
+    // Close login modal
+    closeLogin.addEventListener('click', () => {
+      loginModal.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Back button functionality
+    backBtn.addEventListener('click', () => {
+      showLoginView();
+    });
+
+    // Overlay click to close modals
+    overlay.addEventListener('click', () => {
+      likesSidebar.classList.remove('active');
+      cartSidebar.classList.remove('active');
+      loginModal.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Show login view
+    function showLoginView() {
+      currentModalView = 'login';
+      loginForm.classList.add('active');
+      signupForm.classList.remove('active');
+      forgotForm.classList.remove('active');
+      backBtn.classList.remove('active');
+      modalTitle.textContent = 'Welcome Back';
+      modalSubtitle.textContent = 'Sign in to your account';
+      loginFooter.style.display = 'block';
+    }
+
+    // Show signup view
+    function showSignupView() {
+      currentModalView = 'signup';
+      loginForm.classList.remove('active');
+      signupForm.classList.add('active');
+      forgotForm.classList.remove('active');
+      backBtn.classList.add('active');
+      modalTitle.textContent = 'Create Account';
+      modalSubtitle.textContent = 'Join Natura Honey today';
+      loginFooter.style.display = 'none';
+    }
+
+    // Show forgot password view
+    function showForgotView() {
+      currentModalView = 'forgot';
+      loginForm.classList.remove('active');
+      signupForm.classList.remove('active');
+      forgotForm.classList.add('active');
+      backBtn.classList.add('active');
+      modalTitle.textContent = 'Reset Password';
+      modalSubtitle.textContent = 'Enter your email to reset your password';
+      loginFooter.style.display = 'none';
+    }
+
+    // Login functionality
+    loginBtn.addEventListener('click', () => {
+      const email = loginForm.querySelector('input[type="email"]').value;
+      const password = loginForm.querySelector('input[type="password"]').value;
+      
+      if (!email || !password) {
+        alert('Please fill in all fields');
+        return;
+      }
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          alert('Login successful!');
+        })
+        .catch((error) => {
+          console.error("Error signing in:", error);
+          alert('Error signing in: ' + error.message);
+        });
+    });
+
+    // Signup functionality
+    signupBtn.addEventListener('click', () => {
+      const name = signupForm.querySelector('input[type="text"]').value;
+      const email = signupForm.querySelector('input[type="email"]').value;
+      const password = signupForm.querySelectorAll('input[type="password"]')[0].value;
+      const confirmPassword = signupForm.querySelectorAll('input[type="password"]')[1].value;
+      
+      if (!name || !email || !password || !confirmPassword) {
+        alert('Please fill in all fields');
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+      
+      if (!termsCheckbox.checked) {
+        alert('Please agree to the Terms & Conditions and Privacy Policy');
+        return;
+      }
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          
+          // Update profile with display name
+          return user.updateProfile({
+            displayName: name
+          }).then(() => {
+            // Send email verification
+            return user.sendEmailVerification();
+          }).then(() => {
+            // Create user document in Firestore
+            return db.collection('users').doc(user.uid).set({
+              displayName: name,
+              email: email,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+        })
+        .then(() => {
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          alert('Account created successfully! Please check your email for verification.');
+        })
+        .catch((error) => {
+          console.error("Error creating account:", error);
+          alert('Error creating account: ' + error.message);
+        });
+    });
+
+    // Reset password functionality
+    resetBtn.addEventListener('click', () => {
+      const email = forgotForm.querySelector('input[type="email"]').value;
+      
+      if (!email) {
+        alert('Please enter your email address');
+        return;
+      }
+      
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          loginModal.classList.remove('active');
+          overlay.classList.remove('active');
+          document.body.style.overflow = 'auto';
+          alert('Password reset link sent to your email!');
+        })
+        .catch((error) => {
+          console.error("Error sending reset email:", error);
+          alert('Error sending reset email: ' + error.message);
+        });
+    });
+
+    // Google login
+    googleLoginBtn.addEventListener('click', () => {
+      // Check if we're in a supported environment
+      if (window.location.protocol !== 'https:' && window.location.protocol !== 'http:' && !window.location.hostname.includes('localhost')) {
+        alert('Google login is not supported in this environment. Please use email/password login instead.');
+        return;
+      }
+      
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        
+        auth.signInWithPopup(provider)
+          .then((result) => {
+            const user = result.user;
+            
+            // Check if user exists in Firestore, if not create document
+            return db.collection('users').doc(user.uid).get().then((doc) => {
+              if (!doc.exists) {
+                return db.collection('users').doc(user.uid).set({
+                  displayName: user.displayName,
+                  email: user.email,
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+              }
+            });
+          })
+          .then(() => {
+            loginModal.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            alert('Google login successful!');
+          })
+          .catch((error) => {
+            console.error("Error with Google login:", error);
+            if (error.code === 'auth/operation-not-supported-in-this-environment') {
+              alert('Google login is not supported in this environment. Please use email/password login instead.');
+            } else {
+              alert('Error with Google login: ' + error.message);
+            }
+          });
+      } catch (error) {
+        console.error("Error with Google login:", error);
+        alert('Google login is not available in this environment. Please use email/password login instead.');
+      }
+    });
+
+    // Forgot password link
+    forgotPassword.addEventListener('click', (e) => {
+      e.preventDefault();
+      showForgotView();
+    });
+
+    // Sign up link
+    signUp.addEventListener('click', (e) => {
+      e.preventDefault();
+      showSignupView();
+    });
+
+    // Checkout button
+    checkoutBtn.addEventListener('click', () => {
+      if (cartProducts.length === 0) {
+        alert('Your cart is empty!');
+        return;
+      }
+      
+      // Create order
+      const order = {
+        items: cartProducts,
+        total: cartProducts.reduce((total, item) => {
+          const product = products.find(p => p.id === item.id);
+          return total + (product ? product.price * item.quantity : 0);
+        }, 0),
+        status: 'placed',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      // If user is logged in, save to Firestore
+      if (currentUser) {
+        db.collection('users').doc(currentUser.uid).collection('orders').add(order)
+          .then((docRef) => {
+            // Clear cart
+            cartProducts.forEach(item => {
+              db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).delete()
+              .catch((error) => {
+                console.error("Error clearing cart:", error);
+              });
+            });
+            
+            cartProducts = [];
+            updateCartUI();
+            
+            alert('Order placed successfully! Order ID: ' + docRef.id.substring(0, 8));
+            cartSidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+          })
+          .catch((error) => {
+            console.error("Error creating order:", error);
+            alert('Error placing order. Please try again.');
+          });
+      } else {
+        // For guest users, just show success message
+        cartProducts = [];
+        updateCartUI();
+        
+        alert('Order placed successfully! Thank you for your purchase.');
+        cartSidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+      }
+    });
+
+    // Continue shopping button
+    continueShopping.addEventListener('click', () => {
+      cartSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Browse products button
+    browseProducts.addEventListener('click', () => {
+      likesSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    });
+
+    // Contact form submission
+    contactForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Get form data
+      const formData = new FormData(this);
+      const name = formData.get('name');
+      const email = formData.get('email');
+      const phone = formData.get('phone');
+      const subject = formData.get('subject');
+      const message = formData.get('message');
+      
+      // Save to Firestore
+      db.collection('contactSubmissions').add({
+        name: name,
+        email: email,
+        phone: phone,
+        subject: subject,
+        message: message,
+        userId: currentUser ? currentUser.uid : 'guest',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        alert('Thank you for your message! We will get back to you soon.');
+        this.reset();
+      })
+      .catch((error) => {
+        console.error("Error submitting contact form:", error);
+        alert('Error submitting form. Please try again.');
+      });
+    });
+
+    // Load guest data from localStorage
+    function loadGuestData() {
+      // Load liked products
+      const guestLikes = localStorage.getItem('guestLikes');
+      if (guestLikes) {
+        likedProducts = JSON.parse(guestLikes);
+        updateLikeUI();
+      }
+      
+      // Load cart items
+      const guestCart = localStorage.getItem('guestCart');
+      if (guestCart) {
+        cartProducts = JSON.parse(guestCart);
+        updateCartUI();
+      }
+    }
+
+    // Initialize everything
+    loadGuestData();
+
+    // Set up layout switcher event listeners
+    desktopViewBtn.addEventListener('click', setDesktopView);
+    mobileViewBtn.addEventListener('click', setMobileView);
+    
+    // Initialize with appropriate view
+    checkMobileDevice();
+  </script>
+</body>
+</html>
