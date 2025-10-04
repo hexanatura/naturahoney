@@ -3310,9 +3310,7 @@ height: 100%;
       <i class="fas fa-shopping-cart"></i>
       <h3>Your cart is empty</h3>
       <p>Add some delicious honey products to get started</p>
-      <button class="continue-shopping" onclick="window.location.href='shop.html'">
-        Continue Shopping
-      </button>
+      <button class="continue-shopping" id="continueShopping">Continue Shopping</button>
     </div>
     <div class="cart-summary" id="cartSummary">
       <div class="cart-subtotal">
@@ -3327,13 +3325,12 @@ height: 100%;
         <span>Total:</span>
         <span>₹0</span>
       </div>
-      <button class="checkout-btn" onclick="window.location.href='checkout.html'">
+      <button class="checkout-btn" id="checkoutBtn">
         <i class="fas fa-lock"></i> Proceed to Checkout
       </button>
     </div>
   </div>
 </div>
-
 
   <!-- Overlay -->
   <div class="overlay" id="overlay"></div>
