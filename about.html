@@ -2,7 +2,7 @@
 <html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=1400, initial-scale=0.35, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
   <title>About Us - Natura Honey</title>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -31,28 +31,740 @@
       font-family: 'Unbounded', sans-serif;
       scroll-padding-top: 120px;
       transition: all 0.3s ease;
-      min-width: 1200px !important;
-      overflow-x: auto !important;
+      width: 100%;
+      overflow-x: hidden;
     }
 
-    @media (max-width: 768px) {
-      body {
-        transform: scale(0.55);
-        transform-origin: top center;
-        width: 181.82%;
-        height: 181.82%;
-        overflow-x: auto;
-        position: relative;
-        left: -40.91%;
-      }
-      
-      html {
-        overflow-x: hidden;
-        height: 100%;
-      }
-      
+/* Mobile First Styles */
+/* Mobile First Styles */
+@media (max-width: 767px) {
+  body {
+    font-size: 14px;
+  }
+  
+  nav {
+    padding: 12px 5% !important;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .mobile-menu-btn {
+    display: block !important;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+    margin-right: 10px;
+    order: 1;
+    flex-shrink: 0;
+    z-index: 101;
+    position: relative;
+  }
+  
+  .logo {
+    position: static !important;
+    transform: none !important;
+    order: 2;
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .logo img {
+    height: 35px !important;
+    margin: 0 auto;
+  }
+  
+  .nav-icons {
+    margin-left: 0 !important;
+    display: flex;
+    align-items: center;
+    gap: 8px !important;
+    order: 3;
+    flex-shrink: 0;
+  }
+  
+  .icon {
+    margin-left: 0 !important;
+    font-size: 18px;
+  }
+  
+  .nav-links {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    height: 100vh;
+    background: white;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 80px 25px 30px;
+    transition: left 0.3s ease;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    overflow-y: auto;
+  }
+  
+  .nav-links.active {
+    left: 0;
+  }
+  
+  .nav-links li {
+    margin: 0 0 15px 0;
+    width: 100%;
+  }
+  
+  .nav-links a {
+    font-size: 14px; /* Reduced from 16px */
+    padding: 10px 0;
+    display: block;
+    width: 100%;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .content-wrapper {
+    margin-top: 100px !important;
+  }
+  
+   .page-header {
+    padding: 30px 5% !important;
+    margin-bottom: 20px !important;
+    border-radius: 25px !important;
+    min-height: 200px !important;
+  }
+  
+  .page-header h1 {
+    font-size: 1.5rem !important;
+    margin-bottom: 10px !important;
+    line-height: 1.2;
+  }
+  
+  .page-header p {
+    font-size: 0.85rem !important;
+    line-height: 1.4;
+    max-width: 90%;
+  }
+  
+  .content-section {
+    padding: 20px 5% !important;
+    margin-bottom: 20px !important;
+    border-radius: 15px !important;
+  }
+  
+  .content-section h2 {
+    font-size: 1.3rem !important;
+    margin-bottom: 15px !important;
+    line-height: 1.2;
+  }
+  
+  .content-section p {
+    font-size: 0.9rem !important;
+    line-height: 1.5;
+    margin-bottom: 15px !important;
+  }
+  
+  .story-section {
+    flex-direction: column !important;
+    gap: 15px !important;
+    margin-top: 15px !important;
+  }
+  
+  .story-image {
+    margin-bottom: 10px;
+  }
+  
+  .values-grid, .team-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+    margin-top: 15px !important;
+  }
+  
+  .value-card {
+    padding: 20px 15px !important;
+  }
+  
+  .value-card i {
+    font-size: 1.8rem !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .value-card h3 {
+    font-size: 1.2rem !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .value-card p {
+    font-size: 0.9rem !important;
+    line-height: 1.4;
+  }
+  
+  .rectangle-banner {
+    height: 250px !important;
+    border-radius: 25px !important;
+  }
+  
+  .banner-row {
+    font-size: 65px !important;
+  }
+  
+  .team-member {
+    margin-bottom: 10px;
+  }
+  
+  .team-member-img {
+    height: 200px !important;
+  }
+  
+  .team-member-info {
+    padding: 15px !important;
+  }
+  
+  .team-member-info h3 {
+    font-size: 1.2rem !important;
+    margin-bottom: 5px !important;
+  }
+  
+  .team-member-info p {
+    font-size: 0.9rem !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .team-social {
+    gap: 10px !important;
+  }
+  
+  .team-social a {
+    font-size: 1rem !important;
+  }
+  
+  /* Reduce banner text size in team cards */
+  .team-banner-row {
+    font-size: 30px !important;
+  }
+  
+  .profile-page {
+    padding: 15px !important;
+  }
+  
+  .profile-header {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: 20px !important;
+  }
+  
+  .profile-avatar {
+    margin-right: 0 !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .profile-actions {
+    margin-left: 0 !important;
+    margin-top: 12px !important;
+  }
+  
+  .cart-sidebar, .likes-sidebar {
+    width: 100% !important;
+    height: 85vh !important;
+    top: auto !important;
+    bottom: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+  }
+  
+  .cart-sidebar {
+    right: -100% !important;
+  }
+  
+  .cart-sidebar.active {
+    right: 0 !important;
+  }
+  
+  .likes-sidebar {
+    left: -100% !important;
+  }
+  
+  .likes-sidebar.active {
+    left: 0 !important;
+  }
+  
+  .quick-view-content {
+    max-width: 95% !important;
+  }
+  
+  .quick-view-body {
+    flex-direction: column !important;
+    padding: 0 12px 12px !important;
+    gap: 15px;
+  }
+  
+  .quick-view-image {
+    max-width: 100% !important;
+  }
+  
+  .footer-container {
+    flex-direction: column;
+    gap: 25px;
+  }
+  
+  .footer-column {
+    min-width: 100%;
+    text-align: center;
+  }
+  
+  .contact-info {
+    align-items: left;
+  }
+  
+  /* Remove blur layer from menu */
+  .nav-links {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* Fix for cart button on mobile */
+  .add-to-cart-btn {
+    padding: 10px 15px !important;
+    font-size: 12px !important;
+    margin-right: 5px !important;
+  }
+  
+  .product-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .wishlist-btn {
+    width: 35px !important;
+    height: 35px !important;
+  }
+  
+  /* Mobile cart sidebar positioning */
+  .cart-header, .likes-header {
+    border-radius: 20px 20px 0 0 !important;
+  }
+  
+  .cart-content, .likes-content {
+    padding: 15px 20px !important;
+  }
+  
+  .cart-items, .likes-items {
+    max-height: 50vh !important;
+  }
+}
+/* Tablet Styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  body {
+    font-size: 15px;
+  }
+  
+  nav {
+    padding: 15px 5% !important;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .mobile-menu-btn {
+    display: block !important;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #333;
+    cursor: pointer;
+    margin-right: 12px;
+    order: 1;
+    flex-shrink: 0;
+    z-index: 101;
+    position: relative;
+  }
+  
+  .logo {
+    position: static !important;
+    transform: none !important;
+    order: 2;
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .logo img {
+    height: 45px !important;
+    margin: 0 auto;
+  }
+  
+  .nav-icons {
+    margin-left: 0 !important;
+    display: flex;
+    align-items: center;
+    gap: 12px !important;
+    order: 3;
+    flex-shrink: 0;
+  }
+  
+  .icon {
+    margin-left: 0 !important;
+    font-size: 20px;
+  }
+  
+  .nav-links {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100vh;
+    background: white;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 90px 30px 30px;
+    transition: left 0.3s ease;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    overflow-y: auto;
+  }
+  
+  .nav-links.active {
+    left: 0;
+  }
+  
+  .nav-links li {
+    margin: 0 0 18px 0;
+    width: 100%;
+  }
+  
+  .nav-links a {
+    font-size: 15px; /* Reduced from 17px */
+    padding: 11px 0;
+    display: block;
+    width: 100%;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .content-wrapper {
+    margin-top: 130px !important;
+  }
+  
+    .page-header {
+    padding: 40px 5% !important;
+    margin-bottom: 30px !important;
+    min-height: 250px !important;
+  }
+  
+  .page-header h1 {
+    font-size: 2rem !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .page-header p {
+    font-size: 1rem !important;
+    max-width: 80%;
+  }
+  
+  .content-section {
+    padding: 30px 5% !important;
+    margin-bottom: 30px !important;
+  }
+  
+  .content-section h2 {
+    font-size: 1.6rem !important;
+    margin-bottom: 20px !important;
+  }
+  
+  .content-section p {
+    font-size: 1rem !important;
+    line-height: 1.6;
+    margin-bottom: 18px !important;
+  }
+  
+  .story-section {
+    gap: 25px !important;
+    margin-top: 25px !important;
+  }
+  
+  .values-grid, .team-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+    margin-top: 25px !important;
+  }
+  
+  .value-card {
+    padding: 25px 20px !important;
+  }
+  
+  .value-card i {
+    font-size: 2rem !important;
+    margin-bottom: 18px !important;
+  }
+  
+  .value-card h3 {
+    font-size: 1.3rem !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .value-card p {
+    font-size: 0.95rem !important;
+    line-height: 1.5;
+  }
+  
+  .team-member-img {
+    height: 250px !important;
+  }
+  
+  .team-member-info {
+    padding: 18px !important;
+  }
+  
+  .team-member-info h3 {
+    font-size: 1.3rem !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .team-member-info p {
+    font-size: 0.95rem !important;
+    margin-bottom: 12px !important;
+  }
+  
+  /* Reduce banner text size in team cards */
+  .team-banner-row {
+    font-size: 40px !important;
+  }
+  
+  .rectangle-banner {
+    height: 280px !important;
+  }
+  
+  .banner-row {
+    font-size: 70px !important;
+  }
+  
+  .cart-sidebar, .likes-sidebar {
+    width: 380px !important;
+  }
+  
+  /* Remove blur layer from menu */
+  .nav-links {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* Mobile Footer Styles - Ultra Compact */
+@media (max-width: 767px) {
+  footer {
+    padding: 30px 5% !important;
+    margin-top: 25px !important;
+  }
+  
+  .footer-container {
+    gap: 20px !important;
+  }
+  
+  .footer-column {
+    min-width: 100% !important;
+    text-align: left !important;
+  }
+  
+  footer h3 {
+    font-size: 16px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  footer ul {
+    font-size: 13px !important;
+  }
+  
+  footer ul li {
+    margin-bottom: 6px !important;
+  }
+  
+  .contact-info {
+    gap: 10px !important;
+    align-items: flex-start !important;
+  }
+  
+  .contact-item {
+    gap: 8px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .contact-icon {
+    font-size: 14px !important;
+    width: 16px !important;
+  }
+  
+  .contact-text {
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    text-align: left !important;
+  }
+  
+  .footer-social h4 {
+    font-size: 14px !important;
+    margin-bottom: 10px !important;
+    text-align: left !important;
+  }
+  
+  .social-icons {
+    gap: 10px !important;
+    font-size: 16px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .social-icons a {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .enquiries h4 {
+    font-size: 14px !important;
+    margin-bottom: 10px !important;
+    text-align: left !important;
+  }
+  
+  .enquiries-list {
+    gap: 6px !important;
+  }
+  
+  .enquiry-item {
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .enquiry-item i {
+    font-size: 12px !important;
+  }
+  
+  .enquiry-item a {
+    font-size: 12px !important;
+  }
+  
+  .footer-bottom {
+    margin-top: 25px !important;
+    padding-top: 12px !important;
+    text-align: left !important;
+  }
+  
+  .footer-bottom p {
+    font-size: 11px !important;
+  }
+}
+
+/* Tablet Footer Styles - Ultra Compact */
+@media (min-width: 768px) and (max-width: 1023px) {
+  footer {
+    padding: 35px 5% !important;
+    margin-top: 30px !important;
+  }
+  
+  .footer-container {
+    gap: 25px !important;
+  }
+  
+  .footer-column {
+    min-width: 45% !important;
+    text-align: left !important;
+  }
+  
+  footer h3 {
+    font-size: 17px !important;
+    margin-bottom: 15px !important;
+  }
+  
+  footer ul {
+    font-size: 14px !important;
+  }
+  
+  footer ul li {
+    margin-bottom: 8px !important;
+  }
+  
+  .contact-info {
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+  
+  .contact-item {
+    gap: 10px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .contact-icon {
+    font-size: 15px !important;
+    width: 16px !important;
+  }
+  
+  .contact-text {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
+  }
+  
+  .footer-social h4 {
+    font-size: 15px !important;
+    margin-bottom: 12px !important;
+    text-align: left !important;
+  }
+  
+  .social-icons {
+    gap: 12px !important;
+    font-size: 17px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .social-icons a {
+    width: 34px !important;
+    height: 34px !important;
+  }
+  
+  .enquiries h4 {
+    font-size: 15px !important;
+    margin-bottom: 12px !important;
+    text-align: left !important;
+  }
+  
+  .enquiries-list {
+    gap: 8px !important;
+  }
+  
+  .enquiry-item {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .enquiry-item i {
+    font-size: 13px !important;
+  }
+  
+  .enquiry-item a {
+    font-size: 13px !important;
+  }
+  
+  .footer-bottom {
+    margin-top: 30px !important;
+    padding-top: 15px !important;
+    text-align: left !important;
+  }
+  
+  .footer-bottom p {
+    font-size: 12px !important;
+  }
+}
+    /* Desktop Styles */
+    @media (min-width: 1024px) {
       .content-wrapper {
-        transform: scale(1);
+        margin-top: 165px;
+      }
+      
+      .mobile-menu-btn {
+        display: none !important;
+      }
+      
+      .nav-links {
+        display: flex !important;
       }
     }
 
@@ -206,48 +918,7 @@
       color: #5f2b27;
     }
 
-    .layout-switcher {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 50px;
-      padding: 10px;
-      display: flex;
-      gap: 10px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      border: 2px solid #5f2b27;
-    }
-    
-    .layout-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f1f1f1;
-      color: #333;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
-    }
-    
-    .layout-btn.active {
-      background: #5f2b27;
-      color: white;
-      border-color: #FFD700;
-    }
-    
-    .layout-btn:hover {
-      transform: scale(1.1);
-    }
-
-    body.mobile-view {
-      font-size: inherit !important;
-      min-width: 1200px !important;
-    }
+    /* Layout Switcher Removed */
     
     .notification-bar {
       background: #e7d90f;
@@ -255,10 +926,10 @@
       text-align: center;
       padding: 10px;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 10px;
       letter-spacing: 1px;
       position: fixed;
-      top: 5px;
+      top: 0px;
       left: 0;
       right: 0;
       z-index: 50;
@@ -363,6 +1034,10 @@
     }
     .icon:hover {
       color: #5f2b27;
+    }
+
+    .mobile-menu-btn {
+      display: none;
     }
 
     .content-wrapper {
@@ -780,6 +1455,27 @@
     transform: translateY(-2px);
   }
 }
+
+@media (min-width: 1024px) {
+  .notification-bar {
+    font-size: 13px !important;
+    padding: 12px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .notification-bar {
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .notification-bar {
+    font-size: 7px !important;
+    padding: 8px 10px !important;
+  }
+}
+
 
 .cart-icon-bounce {
   animation: cartBounce 0.6s ease;
@@ -1679,11 +2375,8 @@
       background: rgba(0, 0, 0, 0.5);
       z-index: 999;
       display: none;
-      backdrop-filter: blur(3px);
     }
-    .overlay.active {
-      display: block;
-    }
+
 
     .login-modal {
       position: fixed;
@@ -2651,143 +3344,7 @@
       color: #5f2b27;
     }
     
-    @media (max-width: 768px) {
-      .profile-header {
-        flex-direction: column;
-        text-align: center;
-      }
-      
-      .profile-avatar {
-        margin-right: 0;
-        margin-bottom: 15px;
-      }
-      
-      .profile-actions {
-        margin-left: 0;
-        margin-top: 15px;
-      }
-      
-      .order-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .order-status {
-        margin-top: 10px;
-      }
-      
-      .tracking-steps {
-        flex-wrap: wrap;
-      }
-      
-      .tracking-step {
-        flex: 0 0 50%;
-        margin-bottom: 20px;
-      }
-      
-      .form-row {
-        flex-direction: column;
-        gap: 0;
-      }
-    }
-
-    @media (max-width: 1024px) {
-      .product-card {
-        height: 550px !important;
-        width: 350px !important;
-      }
-      
-      .product-image-container {
-        height: 350px !important;
-      }
-      
-      .product-card .overlay {
-        height: 350px !important;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .nav-links {
-        display: flex !important;
-      }
-      .logo {
-        position: absolute !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        margin: 0 !important;
-      }
-      nav {
-        flex-direction: row !important;
-        padding: 20px 5% !important;
-      }
-      .nav-icons {
-        margin-top: 0 !important;
-        margin-left: auto !important;
-      }
-      .banner-row {
-        font-size: 150px !important;
-        line-height: 0.75 !important;
-      }
-      .circle-images {
-        gap: 100px !important;
-        margin-top: 50px !important;
-        flex-wrap: wrap !important;
-      }
-      .circle-images img {
-        width: 150px !important;
-        height: 150px !important;
-      }
-      .circle-title {
-        font-size: 18px !important;
-      }
-      .second-banner-image {
-        width: 2000px !important;
-        max-width: 100% !important;
-      }
-      .product-card {
-        height: 550px !important;
-        width: 350px !important;
-      }
-      
-      .product-image-container {
-        height: 350px !important;
-      }
-      
-      .product-card .overlay {
-        height: 350px !important;
-      }
-      
-      .product-title {
-        font-size: 18px !important;
-      }
-      
-      .product-price {
-        font-size: 20px !important;
-      }
-      
-      .product-buttons {
-        flex-direction: row !important;
-      }
-      .product-buttons button {
-        width: auto !important;
-      }
-      
-      .review-card {
-        min-width: 300px !important;
-        max-width: 300px !important;
-        margin: 0 15px !important;
-      }
-      
-      .reviews-carousel {
-        max-width: 1000px !important;
-      }
-      
-      .mobile-menu-btn {
-        display: none !important;
-      }
-    }
-    
-  .terms-checkbox {
+    .terms-checkbox {
   display: flex;
   align-items: flex-start;
   margin-bottom: 15px;
@@ -2886,17 +3443,6 @@
       color: #721c24;
     }
 
-    /* Responsive for quick view */
-    @media (max-width: 768px) {
-      .quick-view-body {
-        flex-direction: column;
-      }
-      
-      .quick-view-image {
-        max-width: 100%;
-      }
-    }
-
     /* About Us Page Specific Styles */
     .page-header {
       background: url('https://ik.imagekit.io/hexaanatura/Desktop%20-%201.jpg?updatedAt=1756993544883') center/cover no-repeat;
@@ -2947,6 +3493,14 @@ height: 100%;
       background: white;
       border-radius: 20px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all 0.8s ease;
+    }
+    
+    .content-section.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
     
     .content-section h2 {
@@ -3198,22 +3752,15 @@ height: 100%;
   </style>
 </head>
 <body>
-  <!-- Layout Switcher -->
-  <div class="layout-switcher">
-    <div class="layout-btn active" id="desktopView">
-      <i class="fas fa-desktop"></i>
-    </div>
-    <div class="layout-btn" id="mobileView">
-      <i class="fas fa-mobile-alt"></i>
-    </div>
-  </div>
-
   <!-- Notification Bar -->
   <div class="notification-bar" id="notificationBar"><p>Free shipping on all orders over ₹599! Limited time offer.</p></div>
 
   <!-- Navigation Bar -->
   <nav id="navBar">
-    <ul class="nav-links">
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
       <li><a href="index.html">Home</a></li>
       <li><a href="shop.html">Shop</a></li>
       <li><a href="#">Collections</a></li>
@@ -3393,7 +3940,7 @@ height: 100%;
     </div>
     
     <!-- Our Story Section -->
-    <div class="content-section">
+    <div class="content-section" id="story-section">
       <h2>Our Story</h2>
       <div class="story-section">
         <div class="story-image">
@@ -3409,7 +3956,7 @@ height: 100%;
     </div>
     
     <!-- Our Values Section -->
-    <div class="content-section">
+    <div class="content-section" id="values-section">
       <h2>Our Values</h2>
       <div class="values-grid">
         <div class="value-card">
@@ -3431,7 +3978,7 @@ height: 100%;
     </div>
     
   <!-- Team Section -->
-  <div class="content-section">
+  <div class="content-section" id="team-section">
     <h2>Meet Our Team</h2>
     <div class="team-grid">
       <div class="team-member">
@@ -3443,7 +3990,7 @@ height: 100%;
             <div class="team-banner-row team-slide-right team-row-3">NATURA NATURA NATURA NATURA NATURA</div>
             <div class="team-banner-row team-slide-left team-row-4">NATURA NATURA NATURA NATURA NATURA</div>
           </div>
-          <img src="https://ik.imagekit.io/hexaanatura/team1.jpg?updatedAt=1757223456789" alt="Rajesh Kumar, Founder of Natura Honey" />
+          <img src="https://ik.imagekit.io/hexaanatura/team1.jpg?updatedAt=1757223456789" alt="Jiji George, Founder of Natura Honey" />
         </div>
         <div class="team-member-info">
           <h3>Jiji George</h3>
@@ -3464,7 +4011,7 @@ height: 100%;
             <div class="team-banner-row team-slide-right team-row-3">NATURA NATURA NATURA NATURA NATURA</div>
             <div class="team-banner-row team-slide-left team-row-4">NATURA NATURA NATURA NATURA NATURA</div>
           </div>
-          <img src="https://ik.imagekit.io/hexaanatura/team2.jpg?updatedAt=1757223456789" alt="Priya Sharma, Head of Quality Control" />
+          <img src="https://ik.imagekit.io/hexaanatura/team2.jpg?updatedAt=1757223456789" alt="Roshy Jiji, Director of Product Quality" />
         </div>
         <div class="team-member-info">
           <h3>Roshy Jiji</h3>
@@ -3485,7 +4032,7 @@ height: 100%;
             <div class="team-banner-row team-slide-right team-row-3">NATURA NATURA NATURA NATURA NATURA</div>
             <div class="team-banner-row team-slide-left team-row-4">NATURA NATURA NATURA NATURA NATURA</div>
           </div>
-          <img src="https://ik.imagekit.io/hexaanatura/team3.jpg?updatedAt=1757223456789" alt="Vikram Singh, Sustainability Manager" />
+          <img src="https://ik.imagekit.io/hexaanatura/team3.jpg?updatedAt=1757223456789" alt="Dr. Namitha Maria Jiji, Director of Ayurveda & Wellness" />
         </div>
         <div class="team-member-info">
           <h3>Dr. Namitha Maria Jiji</h3>
@@ -3689,6 +4236,8 @@ height: 100%;
     // DOM Elements
     const notificationBar = document.getElementById('notificationBar');
     const navBar = document.getElementById('navBar');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navLinks = document.getElementById('navLinks');
     const likeIcon = document.getElementById('likeIcon');
     const likeCount = document.getElementById('likeCount');
     const cartIcon = document.getElementById('cartIcon');
@@ -3743,11 +4292,6 @@ height: 100%;
     const signUp = document.getElementById('signUp');
     const loginFooter = document.getElementById('loginFooter');
     const termsCheckbox = document.getElementById('termsCheckbox');
-
-    // Layout Switcher Elements
-    const desktopViewBtn = document.getElementById('desktopView');
-    const mobileViewBtn = document.getElementById('mobileView');
-    const body = document.body;
 
     // Profile Page Elements
     const mainContent = document.getElementById('mainContent');
@@ -4061,39 +4605,6 @@ height: 100%;
       alert('Items added to cart!');
     }
 
-    // Layout Switcher Functionality
-    function setDesktopView() {
-      body.classList.remove('mobile-view');
-      desktopViewBtn.classList.add('active');
-      mobileViewBtn.classList.remove('active');
-      document.body.style.transform = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-      document.body.style.left = '';
-      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.35, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes');
-    }
-    
-    function setMobileView() {
-      body.classList.add('mobile-view');
-      mobileViewBtn.classList.add('active');
-      desktopViewBtn.classList.remove('active');
-      document.body.style.transform = 'scale(0.55)';
-      document.body.style.transformOrigin = 'top center';
-      document.body.style.width = '181.82%';
-      document.body.style.height = '181.82%';
-      document.body.style.left = '-40.91%';
-      document.querySelector('meta[name="viewport"]').setAttribute('content', 'width=1400, initial-scale=0.35, maximum-scale=5.0, minimum-scale=0.1, user-scalable=yes');
-    }
-    
-    // Check if mobile device and set appropriate view
-    function checkMobileDevice() {
-      if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        setMobileView();
-      } else {
-        setDesktopView();
-      }
-    }
-
     // Hide notification bar on scroll down
     let lastScrollTop = 0;
     window.addEventListener('scroll', () => {
@@ -4113,6 +4624,55 @@ height: 100%;
       }
       lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
     }, { passive: true });
+
+// Mobile menu functionality
+mobileMenuBtn.addEventListener('click', () => {
+  navLinks.classList.toggle('active');
+  overlay.classList.toggle('active');
+  document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : 'auto';
+  
+  // Toggle hamburger icon to close icon
+  const icon = mobileMenuBtn.querySelector('i');
+  if (navLinks.classList.contains('active')) {
+    icon.classList.remove('fa-bars');
+    icon.classList.add('fa-times');
+  } else {
+    icon.classList.remove('fa-times');
+    icon.classList.add('fa-bars');
+  }
+});
+
+// Close mobile menu when clicking on a link
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', () => {
+    navLinks.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.style.overflow = 'auto';
+    
+    // Reset hamburger icon
+    const icon = mobileMenuBtn.querySelector('i');
+    icon.classList.remove('fa-times');
+    icon.classList.add('fa-bars');
+  });
+});
+
+// Overlay click to close modals
+overlay.addEventListener('click', () => {
+  likesSidebar.classList.remove('active');
+  cartSidebar.classList.remove('active');
+  loginModal.classList.remove('active');
+  quickViewModal.style.display = 'none';
+  navLinks.classList.remove('active');
+  overlay.classList.remove('active');
+  document.body.style.overflow = 'auto';
+    document.body.classList.remove('mobile-cart-open');
+
+  
+  // Reset hamburger icon
+  const icon = mobileMenuBtn.querySelector('i');
+  icon.classList.remove('fa-times');
+  icon.classList.add('fa-bars');
+});
 
     // User dropdown functionality
     userIcon.addEventListener('click', (e) => {
@@ -4450,14 +5010,24 @@ height: 100%;
       cartSidebar.classList.add('active');
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
-    });
+
+     // Add mobile-specific class for positioning
+  if (window.innerWidth <= 767) {
+    document.body.classList.add('mobile-cart-open');
+  }
+});
 
     // Close cart sidebar
     closeCart.addEventListener('click', () => {
       cartSidebar.classList.remove('active');
       overlay.classList.remove('active');
       document.body.style.overflow = 'auto';
-    });
+      
+  // Remove mobile-specific class
+  if (window.innerWidth <= 767) {
+    document.body.classList.remove('mobile-cart-open');
+  }
+});
 
     // Update cart UI
     function updateCartUI() {
@@ -4681,16 +5251,7 @@ height: 100%;
       showLoginView();
     });
 
-    // Overlay click to close modals
-    overlay.addEventListener('click', () => {
-      likesSidebar.classList.remove('active');
-      cartSidebar.classList.remove('active');
-      loginModal.classList.remove('active');
-      quickViewModal.style.display = 'none';
-      overlay.classList.remove('active');
-      document.body.style.overflow = 'auto';
-    });
-
+    
     // Quick View Modal Functionality
     quickViewClose.addEventListener('click', closeQuickView);
     quickViewModal.addEventListener('click', (e) => {
@@ -4998,15 +5559,29 @@ height: 100%;
       }
     }
 
+    // Scroll animation for content sections
+    function initScrollAnimations() {
+      const sections = document.querySelectorAll('.content-section');
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      });
+      
+      sections.forEach(section => {
+        observer.observe(section);
+      });
+    }
+
     // Initialize everything
     loadGuestData();
-
-    // Set up layout switcher event listeners
-    desktopViewBtn.addEventListener('click', setDesktopView);
-    mobileViewBtn.addEventListener('click', setMobileView);
-    
-    // Initialize with appropriate view
-    checkMobileDevice();
+    initScrollAnimations();
   </script>
 </body>
 </html>
