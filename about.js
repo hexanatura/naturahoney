@@ -33,19 +33,21 @@ function initProfilePage() {
         profileCloseBtn.addEventListener('click', function() {
             profilePage.classList.remove('active');
             mainContent.style.display = 'block';
+            document.body.style.overflow = 'auto';
         });
     }
     
     // Override the profile link click handler for About page
     const profileLink = document.getElementById('profileLink');
     if (profileLink) {
-        // Remove any existing event listeners
-        profileLink.replaceWith(profileLink.cloneNode(true));
+        // Remove any existing event listeners by cloning
+        const newProfileLink = profileLink.cloneNode(true);
+        profileLink.parentNode.replaceChild(newProfileLink, profileLink);
         
         // Get the new reference
-        const newProfileLink = document.getElementById('profileLink');
+        const updatedProfileLink = document.getElementById('profileLink');
         
-        newProfileLink.addEventListener('click', function(e) {
+        updatedProfileLink.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
@@ -80,18 +82,21 @@ function initProfileModals() {
     if (editProfileBtn && editProfileModal) {
         editProfileBtn.addEventListener('click', function() {
             editProfileModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         });
     }
     
     if (closeEditProfileModal && editProfileModal) {
         closeEditProfileModal.addEventListener('click', function() {
             editProfileModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         });
     }
     
     if (cancelEditProfile && editProfileModal) {
         cancelEditProfile.addEventListener('click', function() {
             editProfileModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         });
     }
     
@@ -103,22 +108,25 @@ function initProfileModals() {
                 return;
             }
             
-            currentUser.updateProfile({
-                displayName: newName
-            }).then(() => {
-                return db.collection('users').doc(currentUser.uid).set({
-                    displayName: newName,
-                    email: currentUser.email,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            }).then(() => {
-                alert('Profile updated successfully!');
-                editProfileModal.style.display = 'none';
-                updateUIForUser(currentUser);
-            }).catch((error) => {
-                console.error("Error updating profile:", error);
-                alert('Error updating profile. Please try again.');
-            });
+            if (currentUser) {
+                currentUser.updateProfile({
+                    displayName: newName
+                }).then(() => {
+                    return db.collection('users').doc(currentUser.uid).set({
+                        displayName: newName,
+                        email: currentUser.email,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                }).then(() => {
+                    alert('Profile updated successfully!');
+                    editProfileModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    updateUIForUser(currentUser);
+                }).catch((error) => {
+                    console.error("Error updating profile:", error);
+                    alert('Error updating profile. Please try again.');
+                });
+            }
         });
     }
     
@@ -158,51 +166,60 @@ function initProfileModals() {
                 return;
             }
             
-            const newAddress = {
-                label: label,
-                name: name,
-                address: address,
-                phone: phone,
-                pincode: pincode,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-                .then((docRef) => {
-                    // Refresh addresses display
-                    const addressesContainer = document.getElementById('addresses-container');
-                    if (addressesContainer) {
-                        addressesContainer.innerHTML = '';
-                        loadUserData(currentUser.uid);
-                    }
-                    addAddressForm.style.display = 'none';
-                    document.getElementById('new-label').value = '';
-                    document.getElementById('new-name').value = '';
-                    document.getElementById('new-address').value = '';
-                    document.getElementById('new-phone').value = '';
-                    document.getElementById('new-pincode').value = '';
-                    alert('New address added successfully!');
-                })
-                .catch((error) => {
-                    console.error("Error adding address:", error);
-                    alert('Error adding address. Please try again.');
-                });
+            if (currentUser) {
+                const newAddress = {
+                    label: label,
+                    name: name,
+                    address: address,
+                    phone: phone,
+                    pincode: pincode,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
+                    .then((docRef) => {
+                        // Refresh addresses display
+                        const addressesContainer = document.getElementById('addresses-container');
+                        if (addressesContainer) {
+                            addressesContainer.innerHTML = '';
+                            loadUserData(currentUser.uid);
+                        }
+                        addAddressForm.style.display = 'none';
+                        document.getElementById('new-label').value = '';
+                        document.getElementById('new-name').value = '';
+                        document.getElementById('new-address').value = '';
+                        document.getElementById('new-phone').value = '';
+                        document.getElementById('new-pincode').value = '';
+                        alert('New address added successfully!');
+                    })
+                    .catch((error) => {
+                        console.error("Error adding address:", error);
+                        alert('Error adding address. Please try again.');
+                    });
+            }
         });
     }
 }
 
+// Global function to show profile page
 function showProfilePage() {
     const profilePage = document.getElementById('profilePage');
     const mainContent = document.getElementById('mainContent');
     
     if (profilePage && mainContent) {
+        // Hide all other content
         mainContent.style.display = 'none';
+        
+        // Show profile page
         profilePage.classList.add('active');
         
         // Load user data if user is logged in
         if (currentUser) {
             loadUserData(currentUser.uid);
         }
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
     }
 }
 
