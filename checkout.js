@@ -1,77 +1,68 @@
-// checkout.js - Checkout Page Specific JavaScript
-
-// Checkout page specific variables
 let currentDiscount = 0;
 let originalTotal = 0;
 
-// Checkout page DOM elements
-const loginBtnCheckout = document.getElementById('loginBtnCheckout');
-const emailInput = document.getElementById('email');
-const orderItems = document.getElementById('orderItems');
-const subtotalElement = document.getElementById('subtotal');
-const totalElement = document.getElementById('total');
-const discountRow = document.getElementById('discountRow');
-const discountAmount = document.getElementById('discountAmount');
-const applyBtn = document.querySelector('.apply-btn');
-const promoInput = document.querySelector('.promo-input');
-const promoSuccess = document.getElementById('promoSuccess');
-const promoError = document.getElementById('promoError');
-const checkoutBtnMain = document.querySelector('.checkout-btn');
-
-// Initialize checkout page
 function initCheckoutPage() {
     updateOrderSummary();
     setupCheckoutEventListeners();
     
-    // Update email field based on login status
     if (currentUser) {
-        emailInput.value = currentUser.email;
-        emailInput.disabled = true;
-        loginBtnCheckout.textContent = 'Logout';
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.value = currentUser.email;
+            emailInput.disabled = true;
+        }
+        const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+        if (loginBtnCheckout) {
+            loginBtnCheckout.textContent = 'Logout';
+        }
     } else {
-        emailInput.disabled = false;
-        loginBtnCheckout.textContent = 'Login';
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.disabled = false;
+        }
+        const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+        if (loginBtnCheckout) {
+            loginBtnCheckout.textContent = 'Login';
+        }
     }
 }
 
-// Setup checkout specific event listeners
 function setupCheckoutEventListeners() {
-    // Login/logout button in checkout
-    loginBtnCheckout.addEventListener('click', function() {
-        if (currentUser) {
-            auth.signOut().then(() => {
-                isLoggedIn = false;
-                userEmail = '';
-                loginBtnCheckout.textContent = 'Login';
-                emailInput.disabled = false;
-                emailInput.value = '';
-                emailInput.placeholder = 'your@email.com';
-                alert('You have been logged out successfully!');
-            }).catch((error) => {
-                console.error("Error signing out:", error);
-            });
-        } else {
-            showLoginView();
-            loginModal.classList.add('active');
-            overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-    });
+    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+    const applyBtn = document.querySelector('.apply-btn');
+    const checkoutBtnMain = document.querySelector('.checkout-btn');
 
-    // Promo code application
-    applyBtn.addEventListener('click', applyPromoCode);
+    if (loginBtnCheckout) {
+        loginBtnCheckout.addEventListener('click', function() {
+            if (currentUser) {
+                auth.signOut().then(() => {
+                    window.location.reload();
+                }).catch((error) => {
+                    console.error("Error signing out:", error);
+                });
+            } else {
+                showLoginView();
+                loginModal.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    }
 
-    // Main checkout button
-    checkoutBtnMain.addEventListener('click', processCheckout);
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyPromoCode);
+    }
 
-    // Quantity controls in checkout order summary
+    if (checkoutBtnMain) {
+        checkoutBtnMain.addEventListener('click', processCheckout);
+    }
+
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('quantity-btn-checkout')) {
             handleCheckoutQuantityChange(e);
         }
     });
 
-    // Quantity input changes in checkout
     document.addEventListener('change', function(e) {
         if (e.target.classList.contains('quantity-input-checkout')) {
             handleCheckoutQuantityInput(e);
@@ -79,8 +70,10 @@ function setupCheckoutEventListeners() {
     });
 }
 
-// Update order summary in checkout page
 function updateOrderSummary() {
+    const orderItems = document.getElementById('orderItems');
+    if (!orderItems) return;
+    
     orderItems.innerHTML = '';
     let subtotal = 0;
     
@@ -128,8 +121,14 @@ function updateOrderSummary() {
     updateTotals();
 }
 
-// Update totals with discount
 function updateTotals() {
+    const subtotalElement = document.getElementById('subtotal');
+    const totalElement = document.getElementById('total');
+    const discountRow = document.getElementById('discountRow');
+    const discountAmount = document.getElementById('discountAmount');
+    
+    if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
+    
     const newTotal = originalTotal - currentDiscount;
     
     subtotalElement.textContent = `₹${originalTotal}`;
@@ -144,8 +143,13 @@ function updateTotals() {
     totalElement.textContent = `₹${newTotal}`;
 }
 
-// Apply promo code
 function applyPromoCode() {
+    const promoInput = document.querySelector('.promo-input');
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    
+    if (!promoInput || !promoSuccess || !promoError) return;
+    
     const promoCode = promoInput.value.trim().toUpperCase();
     
     if (promoCode === '') {
@@ -167,14 +171,17 @@ function applyPromoCode() {
     }
 }
 
-// Get active promo codes from localStorage
 function getActivePromoCodes() {
     const promoCodes = localStorage.getItem('naturaPromoCodes');
     return promoCodes ? JSON.parse(promoCodes) : {};
 }
 
-// Show promo success message
 function showPromoSuccess(message) {
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    
+    if (!promoSuccess || !promoError) return;
+    
     promoSuccess.textContent = message;
     promoSuccess.style.display = 'block';
     promoError.style.display = 'none';
@@ -184,8 +191,12 @@ function showPromoSuccess(message) {
     }, 5000);
 }
 
-// Show promo error message
 function showPromoError(message) {
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    
+    if (!promoSuccess || !promoError) return;
+    
     promoError.textContent = message;
     promoError.style.display = 'block';
     promoSuccess.style.display = 'none';
@@ -195,13 +206,14 @@ function showPromoError(message) {
     }, 5000);
 }
 
-// Hide all promo messages
 function hideAllPromoMessages() {
-    promoSuccess.style.display = 'none';
-    promoError.style.display = 'none';
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    
+    if (promoSuccess) promoSuccess.style.display = 'none';
+    if (promoError) promoError.style.display = 'none';
 }
 
-// Handle quantity changes in checkout
 function handleCheckoutQuantityChange(e) {
     const productId = parseInt(e.target.getAttribute('data-id'));
     const isMinus = e.target.classList.contains('minus');
@@ -215,7 +227,6 @@ function handleCheckoutQuantityChange(e) {
     updateOrderSummary();
 }
 
-// Handle quantity input changes in checkout
 function handleCheckoutQuantityInput(e) {
     const productId = parseInt(e.target.getAttribute('data-id'));
     const newQuantity = parseInt(e.target.value) || 1;
@@ -224,7 +235,6 @@ function handleCheckoutQuantityInput(e) {
     updateOrderSummary();
 }
 
-// Validate Indian phone number
 function validateIndianPhoneNumber(phone) {
     if (phone.startsWith('+91')) {
         phone = phone.replace('+91', '').trim();
@@ -236,37 +246,31 @@ function validateIndianPhoneNumber(phone) {
     return phoneRegex.test(cleanedPhone);
 }
 
-// Process checkout
 function processCheckout() {
-    // Get form values
-    const email = document.getElementById('email').value;
-    const firstName = document.getElementById('firstName').value;
-    const lastName = document.getElementById('lastName').value;
-    const address = document.getElementById('address').value;
-    const city = document.getElementById('city').value;
-    const state = document.getElementById('state').value;
-    const zipCode = document.getElementById('zipCode').value;
-    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email')?.value;
+    const firstName = document.getElementById('firstName')?.value;
+    const lastName = document.getElementById('lastName')?.value;
+    const address = document.getElementById('address')?.value;
+    const city = document.getElementById('city')?.value;
+    const state = document.getElementById('state')?.value;
+    const zipCode = document.getElementById('zipCode')?.value;
+    const phone = document.getElementById('phone')?.value;
 
-    // Validate phone number
     if (!validateIndianPhoneNumber(phone)) {
         alert('Please enter a valid Indian phone number (10 digits starting with 6-9)');
         return;
     }      
     
-    // Validate required fields
     if (!email || !firstName || !lastName || !address || !city || !state || !zipCode || !phone) {
         alert('Please fill in all required fields');
         return;
     }
     
-    // Validate cart has items
     if (cartProducts.length === 0) {
         alert('Your cart is empty. Please add items to proceed.');
         return;
     }
     
-    // Create order data
     const orderData = {
         email: email,
         shippingAddress: {
@@ -298,26 +302,26 @@ function processCheckout() {
         paymentMethod: 'razorpay'
     };
     
-    // If user is logged in, save to Firestore
     if (currentUser) {
         orderData.userId = currentUser.uid;
         saveOrderToFirestore(orderData);
     } else {
-        // For guest users, save to localStorage
         saveGuestOrder(orderData);
     }
     
-    // Process payment
     processPayment(orderData);
 }
 
-// Save order to Firestore
 function saveOrderToFirestore(orderData) {
+    if (!db) {
+        alert('Database connection error. Please try again.');
+        return;
+    }
+    
     db.collection('orders').add(orderData)
         .then((docRef) => {
             orderData.id = docRef.id;
             
-            // Also save to user's orders collection if logged in
             if (currentUser) {
                 db.collection('users').doc(currentUser.uid).collection('orders').doc(docRef.id).set(orderData)
                     .then(() => {
@@ -336,7 +340,6 @@ function saveOrderToFirestore(orderData) {
         });
 }
 
-// Save guest order to localStorage
 function saveGuestOrder(orderData) {
     const guestOrders = JSON.parse(localStorage.getItem('guestOrders') || '[]');
     orderData.id = 'guest_' + Date.now();
@@ -346,9 +349,7 @@ function saveGuestOrder(orderData) {
     clearCartAfterOrder();
 }
 
-// Clear cart after successful order
 function clearCartAfterOrder() {
-    // Clear cart from Firestore if user is logged in
     if (currentUser) {
         cartProducts.forEach(item => {
             db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).delete()
@@ -358,25 +359,17 @@ function clearCartAfterOrder() {
         });
     }
     
-    // Clear cart from localStorage
     localStorage.removeItem('guestCart');
     
-    // Reset cart state
     cartProducts = [];
     updateCartUI();
     updateOrderSummary();
 }
 
-// Process payment (simulated Razorpay integration)
 function processPayment(orderData) {
-    // In a real implementation, this would integrate with Razorpay API
-    // For now, we'll simulate the payment process
-    
     alert('Thank you for your order! You will be redirected to Razorpay to complete your payment.');
     
-    // Simulate payment processing
     setTimeout(() => {
-        // Update order status to confirmed
         if (currentUser && orderData.id) {
             db.collection('orders').doc(orderData.id).update({
                 status: 'confirmed',
@@ -393,14 +386,11 @@ function processPayment(orderData) {
                 }
                 
                 alert('Payment successful! Your order has been confirmed.');
-                // Redirect to order confirmation page
-                // window.location.href = `order-confirmation.html?orderId=${orderData.id}`;
             })
             .catch((error) => {
                 console.error("Error updating order status:", error);
             });
         } else {
-            // For guest orders, update localStorage
             const guestOrders = JSON.parse(localStorage.getItem('guestOrders') || '[]');
             const orderIndex = guestOrders.findIndex(order => order.id === orderData.id);
             if (orderIndex !== -1) {
@@ -415,18 +405,17 @@ function processPayment(orderData) {
     }, 2000);
 }
 
-// Override the global updateCartUI to also update checkout summary
-const originalUpdateCartUI = updateCartUI;
-updateCartUI = function() {
-    originalUpdateCartUI();
-    if (typeof updateOrderSummary === 'function') {
-        updateOrderSummary();
-    }
-};
+if (typeof updateCartUI !== 'undefined') {
+    const originalUpdateCartUI = updateCartUI;
+    updateCartUI = function() {
+        originalUpdateCartUI();
+        if (typeof updateOrderSummary === 'function') {
+            updateOrderSummary();
+        }
+    };
+}
 
-// Initialize checkout page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if we're on the checkout page
     if (document.querySelector('.checkout-section')) {
         initCheckoutPage();
     }
