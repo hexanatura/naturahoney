@@ -1,232 +1,72 @@
-function initAboutPage() {
-    initScrollAnimations();
-    initProfilePage();
-}
+// Quick View Modal Elements
+const quickViewModal = document.getElementById('quickViewModal');
+const quickViewClose = document.getElementById('quickViewClose');
+const quickViewImage = document.getElementById('quickViewImage');
+const quickViewTitle = document.getElementById('quickViewTitle');
+const quickViewPrice = document.getElementById('quickViewPrice');
+const quickViewRating = document.getElementById('quickViewRating');
+const quickViewWeight = document.getElementById('quickViewWeight');
+const quickViewAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
+const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
 
-function initScrollAnimations() {
-    const sections = document.querySelectorAll('.content-section');
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-    
-    sections.forEach(section => {
-        observer.observe(section);
-    });
-}
-
-function initProfilePage() {
-    // Ensure profile page elements exist
-    const profilePage = document.getElementById('profilePage');
-    const mainContent = document.getElementById('mainContent');
-    const profileCloseBtn = document.getElementById('profileCloseBtn');
-    
-    if (profilePage && mainContent && profileCloseBtn) {
-        // Add event listener for profile close button
-        profileCloseBtn.addEventListener('click', function() {
-            profilePage.classList.remove('active');
-            mainContent.style.display = 'block';
-            document.body.style.overflow = 'auto';
-        });
-    }
-    
-    // Override the profile link click handler for About page
-    const profileLink = document.getElementById('profileLink');
-    if (profileLink) {
-        // Remove any existing event listeners by cloning
-        const newProfileLink = profileLink.cloneNode(true);
-        profileLink.parentNode.replaceChild(newProfileLink, profileLink);
-        
-        // Get the new reference
-        const updatedProfileLink = document.getElementById('profileLink');
-        
-        updatedProfileLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const userDropdown = document.getElementById('userDropdown');
-            if (userDropdown) {
-                userDropdown.classList.remove('active');
-            }
-            
-            if (currentUser) {
-                showProfilePage();
-            } else {
-                closeAllSidebars();
-                showLoginView();
-                loginModal.classList.add('active');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        });
-    }
-    
-    // Initialize profile modal functionality
-    initProfileModals();
-}
-
-function initProfileModals() {
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-    const editProfileModal = document.getElementById('edit-profile-modal');
-    const closeEditProfileModal = document.getElementById('close-edit-profile-modal');
-    const cancelEditProfile = document.getElementById('cancel-edit-profile');
-    const saveProfileBtn = document.getElementById('save-profile-btn');
-    
-    if (editProfileBtn && editProfileModal) {
-        editProfileBtn.addEventListener('click', function() {
-            editProfileModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        });
-    }
-    
-    if (closeEditProfileModal && editProfileModal) {
-        closeEditProfileModal.addEventListener('click', function() {
-            editProfileModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        });
-    }
-    
-    if (cancelEditProfile && editProfileModal) {
-        cancelEditProfile.addEventListener('click', function() {
-            editProfileModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        });
-    }
-    
-    if (saveProfileBtn) {
-        saveProfileBtn.addEventListener('click', function() {
-            const newName = document.getElementById('edit-name').value;
-            if (newName.trim() === '') {
-                alert('Please enter a valid name');
-                return;
-            }
-            
-            if (currentUser) {
-                currentUser.updateProfile({
-                    displayName: newName
-                }).then(() => {
-                    return db.collection('users').doc(currentUser.uid).set({
-                        displayName: newName,
-                        email: currentUser.email,
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                }).then(() => {
-                    alert('Profile updated successfully!');
-                    editProfileModal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                    updateUIForUser(currentUser);
-                }).catch((error) => {
-                    console.error("Error updating profile:", error);
-                    alert('Error updating profile. Please try again.');
-                });
-            }
-        });
-    }
-    
-    // Initialize address functionality
-    const addAddressBtn = document.getElementById('add-address-btn');
-    const addAddressForm = document.getElementById('add-address-form');
-    const cancelNewAddress = document.getElementById('cancel-new-address');
-    const saveNewAddress = document.getElementById('save-new-address');
-    
-    if (addAddressBtn && addAddressForm) {
-        addAddressBtn.addEventListener('click', function() {
-            addAddressForm.style.display = 'block';
-        });
-    }
-    
-    if (cancelNewAddress && addAddressForm) {
-        cancelNewAddress.addEventListener('click', function() {
-            addAddressForm.style.display = 'none';
-            document.getElementById('new-label').value = '';
-            document.getElementById('new-name').value = '';
-            document.getElementById('new-address').value = '';
-            document.getElementById('new-phone').value = '';
-            document.getElementById('new-pincode').value = '';
-        });
-    }
-    
-    if (saveNewAddress) {
-        saveNewAddress.addEventListener('click', function() {
-            const label = document.getElementById('new-label').value.trim();
-            const name = document.getElementById('new-name').value.trim();
-            const address = document.getElementById('new-address').value.trim();
-            const phone = document.getElementById('new-phone').value.trim();
-            const pincode = document.getElementById('new-pincode').value.trim();
-            
-            if (!label || !name || !address || !phone || !pincode) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            if (currentUser) {
-                const newAddress = {
-                    label: label,
-                    name: name,
-                    address: address,
-                    phone: phone,
-                    pincode: pincode,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-                    .then((docRef) => {
-                        // Refresh addresses display
-                        const addressesContainer = document.getElementById('addresses-container');
-                        if (addressesContainer) {
-                            addressesContainer.innerHTML = '';
-                            loadUserData(currentUser.uid);
-                        }
-                        addAddressForm.style.display = 'none';
-                        document.getElementById('new-label').value = '';
-                        document.getElementById('new-name').value = '';
-                        document.getElementById('new-address').value = '';
-                        document.getElementById('new-phone').value = '';
-                        document.getElementById('new-pincode').value = '';
-                        alert('New address added successfully!');
-                    })
-                    .catch((error) => {
-                        console.error("Error adding address:", error);
-                        alert('Error adding address. Please try again.');
-                    });
-            }
-        });
-    }
-}
-
-// Global function to show profile page
-function showProfilePage() {
-    const profilePage = document.getElementById('profilePage');
-    const mainContent = document.getElementById('mainContent');
-    
-    if (profilePage && mainContent) {
-        // Hide all other content
-        mainContent.style.display = 'none';
-        
-        // Show profile page
-        profilePage.classList.add('active');
-        
-        // Load user data if user is logged in
-        if (currentUser) {
-            loadUserData(currentUser.uid);
-        }
-        
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-// Make sure common.js is loaded first, then initialize about page
-document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit to ensure common.js is loaded
-    setTimeout(() => {
-        initAboutPage();
-    }, 100);
+// Quick View Modal Functionality
+quickViewClose.addEventListener('click', closeQuickView);
+quickViewModal.addEventListener('click', (e) => {
+  if (e.target === quickViewModal) {
+    closeQuickView();
+  }
 });
+
+function closeQuickView() {
+  quickViewModal.style.display = 'none';
+  overlay.classList.remove('active');
+  document.body.style.overflow = 'auto';
+}
+
+// Quick View Add to Cart functionality
+quickViewAddToCartBtn.addEventListener('click', function() {
+  // Add visual feedback
+  this.classList.add('adding');
+  
+  // Remove adding class after animation
+  setTimeout(() => {
+    this.classList.remove('adding');
+  }, 400);
+});
+
+// Quick View Wishlist functionality
+quickViewWishlistBtn.addEventListener('click', function() {
+  // Toggle wishlist state
+  if (this.innerHTML.includes('far')) {
+    this.innerHTML = '<i class="fas fa-heart"></i>';
+    this.style.background = '#ff4d4d';
+    this.style.color = 'white';
+  } else {
+    this.innerHTML = '<i class="far fa-heart"></i>';
+    this.style.background = '#f1f1f1';
+    this.style.color = '#333';
+  }
+});
+
+// Scroll animation for content sections
+function initScrollAnimations() {
+  const sections = document.querySelectorAll('.content-section');
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  });
+  
+  sections.forEach(section => {
+    observer.observe(section);
+  });
+}
+
+// Initialize page-specific functionality
+initScrollAnimations();
