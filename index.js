@@ -1,183 +1,189 @@
+// DOM Elements specific to index.html
+const mainContent = document.getElementById('mainContent');
+const profilePage = document.getElementById('profilePage');
+const profileCloseBtn = document.getElementById('profileCloseBtn');
+
+// Review Elements
+const reviewsContainer = document.getElementById('reviewsContainer');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const carouselDots = document.getElementById('carouselDots');
+const addReviewBtn = document.getElementById('addReviewBtn');
+const reviewModal = document.getElementById('reviewModal');
+const cancelReview = document.getElementById('cancelReview');
+const submitReview = document.getElementById('submitReview');
+const reviewProduct = document.getElementById('reviewProduct');
+
+// Quick View Modal Elements
+const quickViewModal = document.getElementById('quickViewModal');
+const quickViewClose = document.getElementById('quickViewClose');
+const quickViewImage = document.getElementById('quickViewImage');
+const quickViewTitle = document.getElementById('quickViewTitle');
+const quickViewPrice = document.getElementById('quickViewPrice');
+const quickViewRating = document.getElementById('quickViewRating');
+const quickViewWeight = document.getElementById('quickViewWeight');
+const quickViewAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
+const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
+
+// State variables specific to index.html
 let currentCarouselIndex = 0;
 let approvedReviews = [];
 let currentQuickViewProductId = null;
 
+// Quick View Modal Functionality
+quickViewClose.addEventListener('click', closeQuickView);
+quickViewModal.addEventListener('click', (e) => {
+    if (e.target === quickViewModal) {
+        closeQuickView();
+    }
+});
+
 function closeQuickView() {
-    const quickViewModal = document.getElementById('quickViewModal');
-    if (quickViewModal) {
-        quickViewModal.style.display = 'none';
-        overlay.classList.remove('active');
-        document.body.style.overflow = 'auto';
-    }
+    quickViewModal.style.display = 'none';
+    overlay.classList.remove('active');
+    document.body.style.overflow = 'auto';
 }
 
-function initializeQuickView() {
-    const quickViewModal = document.getElementById('quickViewModal');
-    const quickViewClose = document.getElementById('quickViewClose');
-    const quickViewAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
-    const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
-
-    if (quickViewClose) {
-        quickViewClose.addEventListener('click', closeQuickView);
+// Quick View Add to Cart functionality
+quickViewAddToCartBtn.addEventListener('click', function() {
+    if (currentQuickViewProductId) {
+        // Add visual feedback
+        this.classList.add('adding');
+        
+        // Add to cart (this will now auto-open the cart sidebar)
+        addToCart(currentQuickViewProductId, 1);
+        
+        // Remove adding class after animation
+        setTimeout(() => {
+            this.classList.remove('adding');
+        }, 400);
     }
+});
 
-    if (quickViewModal) {
-        quickViewModal.addEventListener('click', (e) => {
-            if (e.target === quickViewModal) {
-                closeQuickView();
-            }
-        });
+// Quick View Wishlist functionality
+quickViewWishlistBtn.addEventListener('click', function() {
+    if (currentQuickViewProductId) {
+        if (likedProducts.includes(currentQuickViewProductId)) {
+            removeFromLikes(currentQuickViewProductId);
+            this.innerHTML = '<i class="far fa-heart"></i>';
+            this.style.background = '#f1f1f1';
+            this.style.color = '#333';
+        } else {
+            addToLikes(currentQuickViewProductId); // This will now auto-open the likes sidebar
+            this.innerHTML = '<i class="fas fa-heart"></i>';
+            this.style.background = '#ff4d4d';
+            this.style.color = 'white';
+        }
     }
+});
 
-    if (quickViewAddToCartBtn) {
-        quickViewAddToCartBtn.addEventListener('click', function() {
-            if (currentQuickViewProductId) {
-                this.classList.add('adding');
-                addToCart(currentQuickViewProductId, 1);
-                setTimeout(() => {
-                    this.classList.remove('adding');
-                }, 400);
-            }
-        });
-    }
-
-    if (quickViewWishlistBtn) {
-        quickViewWishlistBtn.addEventListener('click', function() {
-            if (currentQuickViewProductId) {
-                if (likedProducts.includes(currentQuickViewProductId)) {
-                    removeFromLikes(currentQuickViewProductId);
-                    this.innerHTML = '<i class="far fa-heart"></i>';
-                    this.style.background = '#f1f1f1';
-                    this.style.color = '#333';
-                } else {
-                    addToLikes(currentQuickViewProductId);
-                    this.innerHTML = '<i class="fas fa-heart"></i>';
-                    this.style.background = '#ff4d4d';
-                    this.style.color = 'white';
-                }
-            }
-        });
-    }
-}
-
+// Initialize product cards with data-id attributes and event listeners
 function initializeProductCards() {
     const productCards = document.querySelectorAll('.product-card');
     
     productCards.forEach((card, index) => {
+        // Get the product based on category and position
         let productId;
         const category = card.getAttribute('data-category');
         
         if (category === 'crystal') {
+            // Crystal products are first 4 cards (index 0-3)
             productId = index + 1;
         } else {
-            productId = index + 1;
+            // Premium products are last 2 cards (index 4-5)
+            productId = index + 1; // This will give IDs 5 and 6
         }
         
         card.setAttribute('data-id', productId);
         
         const addToCartBtn = card.querySelector('.add-to-cart-btn');
         
-        if (addToCartBtn) {
-            addToCartBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                addToCartBtn.classList.add('adding');
-                addToCart(productId, 1);
-                
-                setTimeout(() => {
-                    addToCartBtn.classList.remove('adding');
-                }, 400);
-            });
-        }
+        addToCartBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            addToCartBtn.classList.add('adding');
+            
+            // Add to cart (this will now auto-open the cart sidebar)
+            addToCart(productId, 1);
+            
+            setTimeout(() => {
+                addToCartBtn.classList.remove('adding');
+            }, 400);
+        });
         
         const wishlistBtn = card.querySelector('.wishlist-btn');
-        if (wishlistBtn) {
-            wishlistBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                if (likedProducts.includes(productId)) {
-                    removeFromLikes(productId);
-                    wishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
-                    wishlistBtn.style.background = '#f1f1f1';
-                    wishlistBtn.style.color = '#333';
-                } else {
-                    addToLikes(productId);
-                    wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
-                    wishlistBtn.style.background = '#ff4d4d';
-                    wishlistBtn.style.color = 'white';
-                }
-            });
-        }
-        
-        if (likedProducts.includes(productId)) {
-            if (wishlistBtn) {
+        wishlistBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (likedProducts.includes(productId)) {
+                removeFromLikes(productId);
+            } else {
+                // Add to likes (this will now auto-open the likes sidebar)
+                addToLikes(productId);
                 wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
                 wishlistBtn.style.background = '#ff4d4d';
                 wishlistBtn.style.color = 'white';
             }
+        });
+        
+        if (likedProducts.includes(productId)) {
+            wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+            wishlistBtn.style.background = '#ff4d4d';
+            wishlistBtn.style.color = 'white';
         }
         
+        // Quick view functionality
         card.addEventListener('click', (e) => {
             if (!e.target.closest('.add-to-cart-btn') && !e.target.closest('.wishlist-btn')) {
                 const product = products.find(p => p.id === productId);
                 if (product) {
-                    const quickViewImage = document.getElementById('quickViewImage');
-                    const quickViewTitle = document.getElementById('quickViewTitle');
-                    const quickViewPrice = document.getElementById('quickViewPrice');
-                    const quickViewWeight = document.getElementById('quickViewWeight');
-                    const quickViewRating = document.getElementById('quickViewRating');
-                    const quickViewModal = document.getElementById('quickViewModal');
-                    const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
+                    quickViewImage.src = product.image;
+                    quickViewImage.alt = product.name;
+                    quickViewTitle.textContent = product.name;
+                    quickViewPrice.textContent = `₹${product.price}`;
+                    quickViewWeight.textContent = product.weight;
                     
-                    if (quickViewImage) quickViewImage.src = product.image;
-                    if (quickViewImage) quickViewImage.alt = product.name;
-                    if (quickViewTitle) quickViewTitle.textContent = product.name;
-                    if (quickViewPrice) quickViewPrice.textContent = `₹${product.price}`;
-                    if (quickViewWeight) quickViewWeight.textContent = product.weight;
+                    // Get rating from the product card
+                    const ratingStars = card.querySelector('.rating-stars').innerHTML;
+                    const ratingCount = card.querySelector('.rating-count').textContent;
                     
-                    const ratingStars = card.querySelector('.rating-stars');
-                    const ratingCount = card.querySelector('.rating-count');
+                    quickViewRating.innerHTML = `
+                        <div class="rating-stars">
+                            ${ratingStars}
+                        </div>
+                        <span class="rating-count">${ratingCount}</span>
+                    `;
                     
-                    if (quickViewRating && ratingStars && ratingCount) {
-                        quickViewRating.innerHTML = `
-                            <div class="rating-stars">
-                                ${ratingStars.innerHTML}
-                            </div>
-                            <span class="rating-count">${ratingCount.textContent}</span>
-                        `;
-                    }
-                    
+                    // Set current product ID for quick view
                     currentQuickViewProductId = productId;
                     
-                    if (quickViewWishlistBtn) {
-                        if (likedProducts.includes(productId)) {
-                            quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
-                            quickViewWishlistBtn.style.background = '#ff4d4d';
-                            quickViewWishlistBtn.style.color = 'white';
-                        } else {
-                            quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
-                            quickViewWishlistBtn.style.background = '#f1f1f1';
-                            quickViewWishlistBtn.style.color = '#333';
-                        }
+                    // Update quick view wishlist button state
+                    if (likedProducts.includes(productId)) {
+                        quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                        quickViewWishlistBtn.style.background = '#ff4d4d';
+                        quickViewWishlistBtn.style.color = 'white';
+                    } else {
+                        quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+                        quickViewWishlistBtn.style.background = '#f1f1f1';
+                        quickViewWishlistBtn.style.color = '#333';
                     }
                     
-                    if (quickViewModal) {
-                        quickViewModal.style.display = 'flex';
-                        overlay.classList.add('active');
-                        document.body.style.overflow = 'hidden';
-                    }
+                    quickViewModal.style.display = 'flex';
+                    overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
                 }
             }
         });
     });
 }
 
+// Category Filter Functionality
+const categoryBtns = document.querySelectorAll(".category-btn");
+const productRow = document.getElementById("productRow");
+
 function centerProducts(category) {
-    const productRow = document.getElementById("productRow");
-    if (!productRow) return;
-    
     const visibleProducts = document.querySelectorAll(`.product-card[data-category="${category}"]`);
     if (visibleProducts.length <= 2) {
         productRow.classList.add('centered');
@@ -186,10 +192,8 @@ function centerProducts(category) {
     }
 }
 
+// Initialize category filtering
 function initializeCategoryFilter() {
-    const productRow = document.getElementById("productRow");
-    if (!productRow) return;
-    
     document.querySelectorAll('.product-card').forEach(card => {
         if (card.dataset.category === "premium") {
             card.style.display = "none";
@@ -197,7 +201,6 @@ function initializeCategoryFilter() {
     });
     centerProducts("crystal");
 
-    const categoryBtns = document.querySelectorAll(".category-btn");
     categoryBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
             categoryBtns.forEach((b) => {
@@ -221,6 +224,7 @@ function initializeCategoryFilter() {
     });
 }
 
+// Banner rotating images functionality
 function initializeBannerImages() {
     const bannerWrapper = document.querySelector(".banner-wrapper");
     if (!bannerWrapper) return;
@@ -270,10 +274,9 @@ function initializeBannerImages() {
     }, 4000);
 }
 
+// Load approved reviews from Firebase
 function loadApprovedReviews() {
-    const reviewsContainer = document.getElementById('reviewsContainer');
-    if (!reviewsContainer) return;
-    
+    // First, try to load from the 'reviews' collection
     db.collection('reviews')
         .where('status', '==', 'approved')
         .orderBy('createdAt', 'desc')
@@ -283,9 +286,9 @@ function loadApprovedReviews() {
             reviewsContainer.innerHTML = '';
             
             if (querySnapshot.empty) {
+                // If no reviews found, show a message
                 reviewsContainer.innerHTML = '<p style="text-align: center; color: #777; padding: 40px;">No reviews yet. Be the first to review our products!</p>';
-                const carouselDots = document.getElementById('carouselDots');
-                if (carouselDots) carouselDots.innerHTML = '';
+                carouselDots.innerHTML = '';
                 return;
             }
             
@@ -300,14 +303,13 @@ function loadApprovedReviews() {
         })
         .catch((error) => {
             console.error("Error loading reviews:", error);
+            // If there's an error, show sample reviews as fallback
             showSampleReviews();
         });
 }
 
+// Show sample reviews as fallback
 function showSampleReviews() {
-    const reviewsContainer = document.getElementById('reviewsContainer');
-    if (!reviewsContainer) return;
-    
     reviewsContainer.innerHTML = '';
     approvedReviews = [];
     
@@ -350,13 +352,12 @@ function showSampleReviews() {
     initializeCarousel();
 }
 
+// Display a review in the carousel
 function displayReview(review) {
-    const reviewsContainer = document.getElementById('reviewsContainer');
-    if (!reviewsContainer) return;
-    
     const reviewCard = document.createElement('div');
     reviewCard.className = 'review-card';
     
+    // Format date
     const reviewDate = review.createdAt ? review.createdAt.toDate().toLocaleDateString() : 'Recent';
     
     reviewCard.innerHTML = `
@@ -377,6 +378,7 @@ function displayReview(review) {
     reviewsContainer.appendChild(reviewCard);
 }
 
+// Generate star rating HTML
 function generateStarRating(rating) {
     let stars = '';
     for (let i = 1; i <= 5; i++) {
@@ -391,23 +393,22 @@ function generateStarRating(rating) {
     return stars;
 }
 
+// Reviews Carousel Functionality
 function initializeCarousel() {
-    const reviewsContainer = document.getElementById('reviewsContainer');
-    const carouselDots = document.getElementById('carouselDots');
-    if (!reviewsContainer || !carouselDots) return;
-    
     const reviewCards = document.querySelectorAll('.review-card');
     
+    // Handle case when no reviews exist
     if (reviewCards.length === 0) {
         carouselDots.innerHTML = '';
         return;
     }
     
+    // Calculate cards per view based on screen size
     let cardsPerView;
     if (window.innerWidth <= 767) {
-        cardsPerView = 1;
+        cardsPerView = 1; // Show one card at a time on mobile
     } else if (window.innerWidth <= 1023) {
-        cardsPerView = 2;
+        cardsPerView = 2; // Show two cards on tablet
     } else {
         cardsPerView = Math.floor(reviewsContainer.offsetWidth / (300 + 30));
     }
@@ -429,10 +430,6 @@ function initializeCarousel() {
 }
 
 function updateCarousel() {
-    const reviewsContainer = document.getElementById('reviewsContainer');
-    const carouselDots = document.getElementById('carouselDots');
-    if (!reviewsContainer || !carouselDots) return;
-    
     const reviewCards = document.querySelectorAll('.review-card');
     
     if (reviewCards.length === 0) return;
@@ -440,13 +437,13 @@ function updateCarousel() {
     let cardsPerView, cardWidth;
     if (window.innerWidth <= 767) {
         cardsPerView = 1;
-        cardWidth = 280 + 16;
+        cardWidth = 280 + 16; // card width + margin
     } else if (window.innerWidth <= 1023) {
         cardsPerView = 2;
-        cardWidth = 320 + 24;
+        cardWidth = 320 + 24; // card width + margin
     } else {
         cardsPerView = Math.floor(reviewsContainer.offsetWidth / (300 + 30));
-        cardWidth = 300 + 30;
+        cardWidth = 300 + 30; // card width + margin
     }
     
     const offset = -currentCarouselIndex * cardWidth * cardsPerView;
@@ -459,166 +456,144 @@ function updateCarousel() {
 
 function goToSlide(index) {
     const reviewCards = document.querySelectorAll('.review-card');
-    const cardsPerView = Math.floor(window.innerWidth <= 767 ? 1 : window.innerWidth <= 1023 ? 2 : Math.floor((document.getElementById('reviewsContainer')?.offsetWidth || 1200) / (300 + 30)));
+    const cardsPerView = Math.floor(reviewsContainer.offsetWidth / (300 + 30));
     const maxIndex = Math.ceil(reviewCards.length / cardsPerView) - 1;
     currentCarouselIndex = Math.max(0, Math.min(index, maxIndex));
     updateCarousel();
 }
 
-function initializeReviewCarouselControls() {
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const reviewsContainer = document.getElementById('reviewsContainer');
+prevBtn.addEventListener('click', () => {
+    goToSlide(currentCarouselIndex - 1);
+});
+
+nextBtn.addEventListener('click', () => {
+    goToSlide(currentCarouselIndex + 1);
+});
+
+// Add touch swipe support for mobile
+let touchStartX = 0;
+let touchEndX = 0;
+
+reviewsContainer.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+reviewsContainer.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    const swipeThreshold = 50;
     
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            goToSlide(currentCarouselIndex - 1);
-        });
+    if (touchEndX < touchStartX - swipeThreshold) {
+        // Swipe left - next slide
+        goToSlide(currentCarouselIndex + 1);
     }
     
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            goToSlide(currentCarouselIndex + 1);
-        });
-    }
-    
-    if (reviewsContainer) {
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        reviewsContainer.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-        
-        reviewsContainer.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        });
-        
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            
-            if (touchEndX < touchStartX - swipeThreshold) {
-                goToSlide(currentCarouselIndex + 1);
-            }
-            
-            if (touchEndX > touchStartX + swipeThreshold) {
-                goToSlide(currentCarouselIndex - 1);
-            }
-        }
+    if (touchEndX > touchStartX + swipeThreshold) {
+        // Swipe right - previous slide
+        goToSlide(currentCarouselIndex - 1);
     }
 }
 
-function initializeReviewModal() {
-    const addReviewBtn = document.getElementById('addReviewBtn');
-    const reviewModal = document.getElementById('reviewModal');
-    const cancelReview = document.getElementById('cancelReview');
-    const submitReview = document.getElementById('submitReview');
-    
-    if (addReviewBtn) {
-        addReviewBtn.addEventListener('click', () => {
-            if (!currentUser) {
-                alert('Please login to add a review');
-                showLoginView();
-                loginModal.classList.add('active');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                return;
-            }
-            
-            if (userOrders.length === 0) {
-                alert('You need to make a purchase before you can review our products');
-                return;
-            }
-            
-            if (reviewModal) {
-                reviewModal.style.display = 'flex';
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        });
+// Update the window resize event listener
+window.addEventListener('resize', () => {
+    initializeCarousel();
+});
+
+// Review modal functionality
+addReviewBtn.addEventListener('click', () => {
+    if (!currentUser) {
+        alert('Please login to add a review');
+        showLoginView();
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        return;
     }
     
-    if (cancelReview && reviewModal) {
-        cancelReview.addEventListener('click', () => {
+    if (userOrders.length === 0) {
+        alert('You need to make a purchase before you can review our products');
+        return;
+    }
+    
+    reviewModal.style.display = 'flex';
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+});
+
+cancelReview.addEventListener('click', () => {
+    reviewModal.style.display = 'none';
+    overlay.classList.remove('active');
+    document.body.style.overflow = 'auto';
+});
+
+submitReview.addEventListener('click', () => {
+    const productId = parseInt(reviewProduct.value);
+    const rating = document.querySelector('input[name="rating"]:checked');
+    const reviewText = document.getElementById('userReview').value;
+    
+    if (!productId) {
+        alert('Please select a product');
+        return;
+    }
+    
+    if (!rating) {
+        alert('Please provide a rating');
+        return;
+    }
+    
+    if (!reviewText.trim()) {
+        alert('Please write a review');
+        return;
+    }
+    
+    const review = {
+        productId: productId,
+        userId: currentUser.uid,
+        userName: currentUser.displayName || 'Customer',
+        rating: parseInt(rating.value),
+        reviewText: reviewText.trim(),
+        status: 'pending', // All reviews start as pending
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    db.collection('reviews').add(review)
+        .then(() => {
+            alert('Thank you for your review! It will be published after moderation.');
             reviewModal.style.display = 'none';
             overlay.classList.remove('active');
             document.body.style.overflow = 'auto';
+            
+            // Reset form
+            reviewProduct.value = '';
+            document.querySelectorAll('input[name="rating"]').forEach(input => {
+                input.checked = false;
+            });
+            document.getElementById('userReview').value = '';
+        })
+        .catch((error) => {
+            console.error("Error submitting review:", error);
+            alert('Error submitting review. Please try again.');
         });
-    }
-    
-    if (submitReview) {
-        submitReview.addEventListener('click', () => {
-            const reviewProduct = document.getElementById('reviewProduct');
-            const rating = document.querySelector('input[name="rating"]:checked');
-            const reviewText = document.getElementById('userReview').value;
-            
-            if (!reviewProduct || !reviewProduct.value) {
-                alert('Please select a product');
-                return;
-            }
-            
-            if (!rating) {
-                alert('Please provide a rating');
-                return;
-            }
-            
-            if (!reviewText.trim()) {
-                alert('Please write a review');
-                return;
-            }
-            
-            const productId = parseInt(reviewProduct.value);
-            const review = {
-                productId: productId,
-                userId: currentUser.uid,
-                userName: currentUser.displayName || 'Customer',
-                rating: parseInt(rating.value),
-                reviewText: reviewText.trim(),
-                status: 'pending',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            db.collection('reviews').add(review)
-                .then(() => {
-                    alert('Thank you for your review! It will be published after moderation.');
-                    if (reviewModal) {
-                        reviewModal.style.display = 'none';
-                        overlay.classList.remove('active');
-                        document.body.style.overflow = 'auto';
-                    }
-                    
-                    if (reviewProduct) reviewProduct.value = '';
-                    document.querySelectorAll('input[name="rating"]').forEach(input => {
-                        input.checked = false;
-                    });
-                    const userReview = document.getElementById('userReview');
-                    if (userReview) userReview.value = '';
-                })
-                .catch((error) => {
-                    console.error("Error submitting review:", error);
-                    alert('Error submitting review. Please try again.');
-                });
-        });
-    }
-    
-    if (reviewModal) {
-        reviewModal.addEventListener('click', (e) => {
-            if (e.target === reviewModal) {
-                reviewModal.style.display = 'none';
-                overlay.classList.remove('active');
-                document.body.style.overflow = 'auto';
-            }
-        });
-    }
-}
+});
 
+reviewModal.addEventListener('click', (e) => {
+    if (e.target === reviewModal) {
+        reviewModal.style.display = 'none';
+        overlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+});
+
+// Update review product dropdown
 function updateReviewProductDropdown() {
-    const reviewProduct = document.getElementById('reviewProduct');
     if (!reviewProduct) return;
     
     reviewProduct.innerHTML = '<option value="">Select a product you\'ve purchased</option>';
     
+    // Get unique product IDs from orders
     const orderedProductIds = [...new Set(userOrders.flatMap(order => 
         order.items.map(item => item.productId)
     ))];
@@ -634,28 +609,25 @@ function updateReviewProductDropdown() {
     });
 }
 
+// Initialize everything for index page
 function initIndexPage() {
-    initializeQuickView();
     initializeProductCards();
     initializeCategoryFilter();
     initializeBannerImages();
     loadApprovedReviews();
-    initializeReviewCarouselControls();
-    initializeReviewModal();
     
+    // Update review product dropdown when user data is loaded
     const originalLoadUserData = window.loadUserData;
     window.loadUserData = function(userId) {
         if (originalLoadUserData) {
             originalLoadUserData(userId);
         }
+        // Update review dropdown after a short delay to ensure orders are loaded
         setTimeout(updateReviewProductDropdown, 500);
     };
-    
-    window.addEventListener('resize', () => {
-        initializeCarousel();
-    });
 }
 
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initIndexPage();
 });
