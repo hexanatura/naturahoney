@@ -1,18 +1,27 @@
+
+// DOM Elements specific to contact page
+const contactForm = document.getElementById('contactForm');
+
+// Initialize Contact Page
 function initContactPage() {
-    if (document.getElementById('contactForm')) {
-        initContactForm();
-    }
+    // Load guest data
+    loadGuestData();
     
+    // Initialize contact form
+    initContactForm();
+    
+    // Initialize map
     initMap();
+    
+    // Add specific event listeners for contact page
     addContactEventListeners();
-    addSuccessMessageStyles();
-    addRealTimeValidation();
-    autoFillFormForUser();
 }
 
+// Initialize Google Maps with error handling
 function initMap() {
     const mapIframe = document.querySelector('.map-section iframe');
     if (mapIframe) {
+        // Add error handling for map iframe
         mapIframe.addEventListener('load', function() {
             console.log('Map loaded successfully');
         });
@@ -22,6 +31,7 @@ function initMap() {
             showMapFallback();
         });
         
+        // Set a timeout to check if map loads properly
         setTimeout(() => {
             if (mapIframe.contentWindow && mapIframe.contentWindow.document) {
                 console.log('Map is accessible');
@@ -32,6 +42,7 @@ function initMap() {
     }
 }
 
+// Show fallback if map fails to load
 function showMapFallback() {
     const mapSection = document.querySelector('.map-section');
     if (mapSection) {
@@ -65,20 +76,23 @@ function showMapFallback() {
     }
 }
 
+// Initialize contact form functionality
 function initContactForm() {
-    const contactForm = document.getElementById('contactForm');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             handleContactFormSubmission();
         });
         
+        // Add phone number validation (numbers only)
         const phoneInput = document.getElementById('phone');
         if (phoneInput) {
             phoneInput.addEventListener('input', function(e) {
+                // Remove any non-digit characters
                 this.value = this.value.replace(/[^\d]/g, '');
             });
             
+            // Prevent paste of non-numeric characters
             phoneInput.addEventListener('paste', function(e) {
                 const pasteData = e.clipboardData.getData('text');
                 if (!/^\d+$/.test(pasteData)) {
@@ -90,14 +104,11 @@ function initContactForm() {
     }
 }
 
+// Handle contact form submission with better error handling
 function handleContactFormSubmission() {
-    const contactForm = document.getElementById('contactForm');
     if (!contactForm) return;
     
-    if (!validateContactForm()) {
-        return;
-    }
-    
+    // Get form data
     const formData = new FormData(contactForm);
     const name = formData.get('name');
     const email = formData.get('email');
@@ -105,13 +116,35 @@ function handleContactFormSubmission() {
     const subject = formData.get('subject');
     const message = formData.get('message');
     
+    // Basic validation
+    if (!name || !email || !subject || !message) {
+        showFormErrorMessage('Please fill in all required fields');
+        return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showFormErrorMessage('Please enter a valid email address');
+        return;
+    }
+    
+    // Phone validation (if provided)
+    if (phone && !/^\d+$/.test(phone)) {
+        showFormErrorMessage('Phone number can only contain numbers');
+        return;
+    }
+    
+    // Show loading state
     const submitBtn = contactForm.querySelector('.submit-btn');
     const originalText = submitBtn.textContent;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
     submitBtn.disabled = true;
     
+    // Remove any existing success message
     removeExistingSuccessMessage();
     
+    // Check Firebase connection first
     if (!db) {
         console.error('Firebase not initialized');
         showFormErrorMessage('Connection error. Please check your internet connection.');
@@ -119,6 +152,7 @@ function handleContactFormSubmission() {
         return;
     }
     
+    // Save to Firestore with better error handling
     const submissionData = {
         name: name,
         email: email,
@@ -131,10 +165,12 @@ function handleContactFormSubmission() {
         timestamp: new Date().toISOString()
     };
     
+    // Try Firestore first, fallback to email if fails
     db.collection('contactSubmissions').add(submissionData)
         .then((docRef) => {
             console.log('Form submitted successfully with ID:', docRef.id);
             
+            // Track successful submission
             if (currentUser) {
                 db.collection('analytics').add({
                     type: 'contact_form_submission',
@@ -153,12 +189,14 @@ function handleContactFormSubmission() {
         .catch((error) => {
             console.error("Error submitting contact form to Firestore:", error);
             
+            // Fallback: Try to send via email API or show alternative contact methods
             if (error.code === 'unavailable' || error.code === 'failed-precondition') {
                 showFormErrorMessage('Network issue. Please try again or contact us directly at info@hexaanatura.com');
             } else {
                 showFormErrorMessage('Error submitting form. Please try again or contact us directly.');
             }
             
+            // Also save to localStorage as backup
             saveToLocalStorage(submissionData);
         })
         .finally(() => {
@@ -166,6 +204,7 @@ function handleContactFormSubmission() {
         });
 }
 
+// Save form data to localStorage as backup
 function saveToLocalStorage(formData) {
     try {
         const submissions = JSON.parse(localStorage.getItem('contactFormBackup') || '[]');
@@ -181,11 +220,13 @@ function saveToLocalStorage(formData) {
     }
 }
 
+// Reset submit button to original state
 function resetSubmitButton(button, originalText) {
     button.textContent = originalText;
     button.disabled = false;
 }
 
+// Remove existing success message
 function removeExistingSuccessMessage() {
     const existingMessage = document.querySelector('.form-success-feedback');
     if (existingMessage) {
@@ -193,12 +234,11 @@ function removeExistingSuccessMessage() {
     }
 }
 
+// Show success message below the submit button
 function showFormSuccessMessage() {
-    const contactForm = document.getElementById('contactForm');
-    if (!contactForm) return;
-    
     const submitBtn = contactForm.querySelector('.submit-btn');
     
+    // Create success message element
     const successMsg = document.createElement('div');
     successMsg.className = 'form-success-feedback';
     successMsg.innerHTML = `
@@ -220,8 +260,10 @@ function showFormSuccessMessage() {
         </div>
     `;
     
+    // Insert after the submit button
     submitBtn.parentNode.insertBefore(successMsg, submitBtn.nextSibling);
     
+    // Auto remove after 5 seconds
     setTimeout(() => {
         if (successMsg.parentElement) {
             successMsg.style.animation = 'fadeOut 0.5s ease-out';
@@ -234,18 +276,18 @@ function showFormSuccessMessage() {
     }, 5000);
 }
 
+// Show error message with custom text
 function showFormErrorMessage(message = 'Error submitting form. Please try again.') {
-    const contactForm = document.getElementById('contactForm');
-    if (!contactForm) return;
-    
     const submitBtn = contactForm.querySelector('.submit-btn');
     
+    // Remove any existing messages
     removeExistingSuccessMessage();
     const existingError = document.querySelector('.form-error-feedback');
     if (existingError) {
         existingError.remove();
     }
     
+    // Create error message element
     const errorMsg = document.createElement('div');
     errorMsg.className = 'form-error-feedback';
     errorMsg.innerHTML = `
@@ -266,8 +308,10 @@ function showFormErrorMessage(message = 'Error submitting form. Please try again
         </div>
     `;
     
+    // Insert after the submit button
     submitBtn.parentNode.insertBefore(errorMsg, submitBtn.nextSibling);
     
+    // Auto remove after 5 seconds
     setTimeout(() => {
         if (errorMsg.parentElement) {
             errorMsg.remove();
@@ -275,6 +319,7 @@ function showFormErrorMessage(message = 'Error submitting form. Please try again
     }, 5000);
 }
 
+// Add CSS animations for the success message
 function addSuccessMessageStyles() {
     if (!document.getElementById('success-message-styles')) {
         const style = document.createElement('style');
@@ -292,6 +337,7 @@ function addSuccessMessageStyles() {
                 animation: fadeIn 0.5s ease-in;
             }
             
+            /* Map fallback styles */
             .map-fallback {
                 background: #f8f9fa;
                 padding: 40px;
@@ -331,7 +377,9 @@ function addSuccessMessageStyles() {
     }
 }
 
+// Add contact page specific event listeners
 function addContactEventListeners() {
+    // Social media links tracking
     document.querySelectorAll('.social-icons a').forEach(link => {
         link.addEventListener('click', function(e) {
             const platform = this.querySelector('i').className.split(' ')[1].split('-')[1];
@@ -339,6 +387,7 @@ function addContactEventListeners() {
         });
     });
     
+    // Contact method clicks tracking
     document.querySelectorAll('.contact-item').forEach(item => {
         item.addEventListener('click', function() {
             const method = this.querySelector('h3').textContent.toLowerCase();
@@ -347,6 +396,7 @@ function addContactEventListeners() {
     });
 }
 
+// Track social media clicks for analytics
 function trackSocialMediaClick(platform) {
     if (currentUser && db) {
         db.collection('analytics').add({
@@ -361,6 +411,7 @@ function trackSocialMediaClick(platform) {
     }
 }
 
+// Track contact method clicks for analytics
 function trackContactMethodClick(method) {
     if (currentUser && db) {
         db.collection('analytics').add({
@@ -375,39 +426,46 @@ function trackContactMethodClick(method) {
     }
 }
 
+// Enhanced form validation
 function validateContactForm() {
-    const name = document.getElementById('name')?.value.trim();
-    const email = document.getElementById('email')?.value.trim();
-    const phone = document.getElementById('phone')?.value.trim();
-    const subject = document.getElementById('subject')?.value;
-    const message = document.getElementById('message')?.value.trim();
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const subject = document.getElementById('subject').value;
+    const message = document.getElementById('message').value.trim();
     
+    // Clear previous errors
     clearFormErrors();
     
     let isValid = true;
     
-    if (!name || name.length < 2) {
+    // Name validation
+    if (name.length < 2) {
         showFieldError('name', 'Name must be at least 2 characters long');
         isValid = false;
     }
     
+    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
+    if (!emailRegex.test(email)) {
         showFieldError('email', 'Please enter a valid email address');
         isValid = false;
     }
     
+    // Phone validation (if provided)
     if (phone && !/^\d+$/.test(phone)) {
         showFieldError('phone', 'Phone number can only contain numbers');
         isValid = false;
     }
     
+    // Subject validation
     if (!subject) {
         showFieldError('subject', 'Please select a subject');
         isValid = false;
     }
     
-    if (!message || message.length < 10) {
+    // Message validation
+    if (message.length < 10) {
         showFieldError('message', 'Message must be at least 10 characters long');
         isValid = false;
     }
@@ -415,14 +473,15 @@ function validateContactForm() {
     return isValid;
 }
 
+// Show field error
 function showFieldError(fieldId, message) {
     const field = document.getElementById(fieldId);
-    if (!field) return;
-    
     const formGroup = field.closest('.form-group');
     
+    // Add error class
     field.classList.add('error');
     
+    // Create error message
     const errorElement = document.createElement('div');
     errorElement.className = 'field-error';
     errorElement.style.cssText = `
@@ -436,16 +495,20 @@ function showFieldError(fieldId, message) {
     formGroup.appendChild(errorElement);
 }
 
+// Clear form errors
 function clearFormErrors() {
+    // Remove error classes
     document.querySelectorAll('.form-group input.error, .form-group select.error, .form-group textarea.error').forEach(field => {
         field.classList.remove('error');
     });
     
+    // Remove error messages
     document.querySelectorAll('.field-error').forEach(error => {
         error.remove();
     });
 }
 
+// Add real-time form validation
 function addRealTimeValidation() {
     const fields = ['name', 'email', 'phone', 'message'];
     
@@ -458,6 +521,7 @@ function addRealTimeValidation() {
         }
     });
     
+    // Subject field validation
     const subjectField = document.getElementById('subject');
     if (subjectField) {
         subjectField.addEventListener('change', function() {
@@ -466,14 +530,14 @@ function addRealTimeValidation() {
     }
 }
 
+// Validate individual field
 function validateField(fieldId) {
     const field = document.getElementById(fieldId);
-    if (!field) return;
-    
     const value = field.value.trim();
     
+    // Clear existing error for this field
     const formGroup = field.closest('.form-group');
-    const existingError = formGroup?.querySelector('.field-error');
+    const existingError = formGroup.querySelector('.field-error');
     if (existingError) {
         existingError.remove();
     }
@@ -526,11 +590,9 @@ function validateField(fieldId) {
     }
 }
 
+// Auto-fill form for logged-in users
 function autoFillFormForUser() {
-    if (currentUser) {
-        const contactForm = document.getElementById('contactForm');
-        if (!contactForm) return;
-        
+    if (currentUser && contactForm) {
         const nameField = document.getElementById('name');
         const emailField = document.getElementById('email');
         
@@ -544,18 +606,21 @@ function autoFillFormForUser() {
     }
 }
 
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initContactPage();
+    addRealTimeValidation();
+    addSuccessMessageStyles();
     
-    if (typeof auth !== 'undefined') {
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                setTimeout(autoFillFormForUser, 100);
-            }
-        });
-    }
+    // Auto-fill form when user logs in
+    auth.onAuthStateChanged((user) => {
+        if (user && contactForm) {
+            setTimeout(autoFillFormForUser, 100);
+        }
+    });
 });
 
+// Export functions for global access (if needed)
 window.ContactPage = {
     initContactPage,
     handleContactFormSubmission,
