@@ -1,46 +1,45 @@
-// shop.js - Shop Page Specific Functionality
-
-// DOM Elements for Shop Page
-const filterToggle = document.getElementById('filterToggle');
-const filterSidebar = document.getElementById('filterSidebar');
-const closeFilter = document.getElementById('closeFilter');
-const applyFilters = document.getElementById('applyFilters');
-const clearFilters = document.getElementById('clearFilters');
-const sortSelect = document.getElementById('sortSelect');
-const resultsCount = document.getElementById('resultsCount');
-const productsGrid = document.getElementById('productsGrid');
-const productCards = document.querySelectorAll('.product-card');
-
-// Quick View Modal Elements
-const quickViewModal = document.getElementById('quickViewModal');
-const quickViewClose = document.getElementById('quickViewClose');
-const quickViewImage = document.getElementById('quickViewImage');
-const quickViewTitle = document.getElementById('quickViewTitle');
-const quickViewPrice = document.getElementById('quickViewPrice');
-const quickViewRating = document.getElementById('quickViewRating');
-const quickViewWeight = document.getElementById('quickViewWeight');
-const quickViewAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
-const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
-
-// State variables for shop page
-let currentQuickViewProductId = null;
-
-// Filter sidebar functionality
-if (filterToggle) {
-    filterToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closeAllSidebars();
-        filterSidebar.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    });
+function initShopPage() {
+    initializeProductCards();
+    initializeShopEventListeners();
 }
 
-if (closeFilter) {
-    closeFilter.addEventListener('click', closeFilterSidebar);
+function initializeShopEventListeners() {
+    const filterToggle = document.getElementById('filterToggle');
+    const filterSidebar = document.getElementById('filterSidebar');
+    const closeFilter = document.getElementById('closeFilter');
+    const applyFilters = document.getElementById('applyFilters');
+    const clearFilters = document.getElementById('clearFilters');
+    const sortSelect = document.getElementById('sortSelect');
+
+    if (filterToggle && filterSidebar) {
+        filterToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeAllSidebars();
+            filterSidebar.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    if (closeFilter) {
+        closeFilter.addEventListener('click', closeFilterSidebar);
+    }
+
+    if (sortSelect) {
+        sortSelect.addEventListener('change', sortProducts);
+    }
+
+    if (applyFilters) {
+        applyFilters.addEventListener('click', filterProducts);
+    }
+
+    if (clearFilters) {
+        clearFilters.addEventListener('click', clearAllFilters);
+    }
 }
 
 function closeFilterSidebar() {
+    const filterSidebar = document.getElementById('filterSidebar');
     if (filterSidebar) {
         filterSidebar.classList.remove('active');
     }
@@ -48,12 +47,10 @@ function closeFilterSidebar() {
     document.body.style.overflow = '';
 }
 
-// Sort functionality
-if (sortSelect) {
-    sortSelect.addEventListener('change', sortProducts);
-}
-
 function sortProducts() {
+    const sortSelect = document.getElementById('sortSelect');
+    if (!sortSelect) return;
+    
     const sortValue = sortSelect.value;
     const products = Array.from(document.querySelectorAll('.product-card'));
     
@@ -66,14 +63,12 @@ function sortProducts() {
             case 'rating':
                 return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
             case 'newest':
-                // For demonstration, we'll sort by an arbitrary "newness" value
                 return Math.random() - 0.5;
-            default: // featured
+            default:
                 return Math.random() - 0.5;
         }
     });
     
-    // Reappend sorted products to grid
     const productsGrid = document.getElementById('productsGrid');
     if (productsGrid) {
         products.forEach(product => {
@@ -82,18 +77,9 @@ function sortProducts() {
     }
 }
 
-// Filter functionality
-if (applyFilters) {
-    applyFilters.addEventListener('click', filterProducts);
-}
-
-if (clearFilters) {
-    clearFilters.addEventListener('click', clearAllFilters);
-}
-
 function filterProducts() {
     const categoryFilters = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(input => input.value);
-    const priceMax = document.getElementById('priceRange').value;
+    const priceMax = document.getElementById('priceRange')?.value || 1000;
     const weightFilters = Array.from(document.querySelectorAll('input[name="weight"]:checked')).map(input => input.value);
     const ratingFilters = Array.from(document.querySelectorAll('input[name="rating"]:checked')).map(input => parseInt(input.value));
     
@@ -119,6 +105,7 @@ function filterProducts() {
         }
     });
     
+    const resultsCount = document.getElementById('resultsCount');
     if (resultsCount) {
         resultsCount.textContent = `Showing ${visibleCount} of ${products.length} products`;
     }
@@ -140,26 +127,64 @@ function clearAllFilters() {
         product.style.display = 'flex';
     });
     
+    const resultsCount = document.getElementById('resultsCount');
     if (resultsCount) {
         resultsCount.textContent = `Showing ${products.length} of ${products.length} products`;
     }
     closeFilterSidebar();
 }
 
-// Quick View Modal Functionality
-if (quickViewClose) {
-    quickViewClose.addEventListener('click', closeQuickView);
-}
+function initializeQuickView() {
+    const quickViewModal = document.getElementById('quickViewModal');
+    const quickViewClose = document.getElementById('quickViewClose');
+    const quickViewAddToCartBtn = document.querySelector('.quick-view-add-to-cart');
+    const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
 
-if (quickViewModal) {
-    quickViewModal.addEventListener('click', (e) => {
-        if (e.target === quickViewModal) {
-            closeQuickView();
-        }
-    });
+    if (quickViewClose) {
+        quickViewClose.addEventListener('click', closeQuickView);
+    }
+
+    if (quickViewModal) {
+        quickViewModal.addEventListener('click', (e) => {
+            if (e.target === quickViewModal) {
+                closeQuickView();
+            }
+        });
+    }
+
+    if (quickViewAddToCartBtn) {
+        quickViewAddToCartBtn.addEventListener('click', function() {
+            if (currentQuickViewProductId) {
+                this.classList.add('adding');
+                addToCart(currentQuickViewProductId, 1);
+                setTimeout(() => {
+                    this.classList.remove('adding');
+                }, 400);
+            }
+        });
+    }
+
+    if (quickViewWishlistBtn) {
+        quickViewWishlistBtn.addEventListener('click', function() {
+            if (currentQuickViewProductId) {
+                if (likedProducts.includes(currentQuickViewProductId)) {
+                    removeFromLikes(currentQuickViewProductId);
+                    this.innerHTML = '<i class="far fa-heart"></i>';
+                    this.style.background = '#f1f1f1';
+                    this.style.color = '#333';
+                } else {
+                    addToLikes(currentQuickViewProductId);
+                    this.innerHTML = '<i class="fas fa-heart"></i>';
+                    this.style.background = '#ff4d4d';
+                    this.style.color = 'white';
+                }
+            }
+        });
+    }
 }
 
 function closeQuickView() {
+    const quickViewModal = document.getElementById('quickViewModal');
     if (quickViewModal) {
         quickViewModal.style.display = 'none';
     }
@@ -167,45 +192,10 @@ function closeQuickView() {
     document.body.style.overflow = 'auto';
 }
 
-// Quick View Add to Cart functionality
-if (quickViewAddToCartBtn) {
-    quickViewAddToCartBtn.addEventListener('click', function() {
-        if (currentQuickViewProductId) {
-            // Add visual feedback
-            this.classList.add('adding');
-            
-            // Add to cart
-            addToCart(currentQuickViewProductId, 1);
-            
-            // Remove adding class after animation
-            setTimeout(() => {
-                this.classList.remove('adding');
-            }, 400);
-        }
-    });
-}
-
-// Quick View Wishlist functionality
-if (quickViewWishlistBtn) {
-    quickViewWishlistBtn.addEventListener('click', function() {
-        if (currentQuickViewProductId) {
-            if (likedProducts.includes(currentQuickViewProductId)) {
-                removeFromLikes(currentQuickViewProductId);
-                this.innerHTML = '<i class="far fa-heart"></i>';
-                this.style.background = '#f1f1f1';
-                this.style.color = '#333';
-            } else {
-                addToLikes(currentQuickViewProductId);
-                this.innerHTML = '<i class="fas fa-heart"></i>';
-                this.style.background = '#ff4d4d';
-                this.style.color = 'white';
-            }
-        }
-    });
-}
-
-// Initialize product cards with data-id attributes and event listeners
 function initializeProductCards() {
+    const productCards = document.querySelectorAll('.product-card');
+    let currentQuickViewProductId = null;
+    
     productCards.forEach((card, index) => {
         const productId = parseInt(card.getAttribute('data-id'));
         
@@ -217,7 +207,6 @@ function initializeProductCards() {
                 e.stopPropagation();
                 
                 addToCartBtn.classList.add('adding');
-                
                 addToCart(productId, 1);
                 
                 setTimeout(() => {
@@ -234,6 +223,9 @@ function initializeProductCards() {
                 
                 if (likedProducts.includes(productId)) {
                     removeFromLikes(productId);
+                    wishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+                    wishlistBtn.style.background = '#f1f1f1';
+                    wishlistBtn.style.color = '#333';
                 } else {
                     addToLikes(productId);
                     wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
@@ -242,7 +234,6 @@ function initializeProductCards() {
                 }
             });
             
-            // Update wishlist button state based on current likes
             if (likedProducts.includes(productId)) {
                 wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
                 wishlistBtn.style.background = '#ff4d4d';
@@ -250,58 +241,63 @@ function initializeProductCards() {
             }
         }
         
-        // Quick view functionality
         card.addEventListener('click', (e) => {
             if (!e.target.closest('.add-to-cart-btn') && !e.target.closest('.wishlist-btn')) {
                 const product = products.find(p => p.id === productId);
-                if (product && quickViewModal) {
-                    quickViewImage.src = product.image;
-                    quickViewImage.alt = product.name;
-                    quickViewTitle.textContent = product.name;
-                    quickViewPrice.textContent = `₹${product.price}`;
-                    quickViewWeight.textContent = product.weight;
+                if (product) {
+                    const quickViewImage = document.getElementById('quickViewImage');
+                    const quickViewTitle = document.getElementById('quickViewTitle');
+                    const quickViewPrice = document.getElementById('quickViewPrice');
+                    const quickViewWeight = document.getElementById('quickViewWeight');
+                    const quickViewRating = document.getElementById('quickViewRating');
+                    const quickViewModal = document.getElementById('quickViewModal');
+                    const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
                     
-                    // Get rating from the product card
-                    const ratingStars = card.querySelector('.rating-stars').innerHTML;
-                    const ratingCount = card.querySelector('.rating-count').textContent;
+                    if (quickViewImage) quickViewImage.src = product.image;
+                    if (quickViewImage) quickViewImage.alt = product.name;
+                    if (quickViewTitle) quickViewTitle.textContent = product.name;
+                    if (quickViewPrice) quickViewPrice.textContent = `₹${product.price}`;
+                    if (quickViewWeight) quickViewWeight.textContent = product.weight;
                     
-                    quickViewRating.innerHTML = `
-                        <div class="rating-stars">
-                            ${ratingStars}
-                        </div>
-                        <span class="rating-count">${ratingCount}</span>
-                    `;
+                    const ratingStars = card.querySelector('.rating-stars');
+                    const ratingCount = card.querySelector('.rating-count');
                     
-                    // Set current product ID for quick view
-                    currentQuickViewProductId = productId;
-                    
-                    // Update quick view wishlist button state
-                    if (likedProducts.includes(productId)) {
-                        quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
-                        quickViewWishlistBtn.style.background = '#ff4d4d';
-                        quickViewWishlistBtn.style.color = 'white';
-                    } else {
-                        quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
-                        quickViewWishlistBtn.style.background = '#f1f1f1';
-                        quickViewWishlistBtn.style.color = '#333';
+                    if (quickViewRating && ratingStars && ratingCount) {
+                        quickViewRating.innerHTML = `
+                            <div class="rating-stars">
+                                ${ratingStars.innerHTML}
+                            </div>
+                            <span class="rating-count">${ratingCount.textContent}</span>
+                        `;
                     }
                     
-                    closeAllSidebars();
-                    quickViewModal.style.display = 'flex';
-                    overlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
+                    currentQuickViewProductId = productId;
+                    
+                    if (quickViewWishlistBtn) {
+                        if (likedProducts.includes(productId)) {
+                            quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                            quickViewWishlistBtn.style.background = '#ff4d4d';
+                            quickViewWishlistBtn.style.color = 'white';
+                        } else {
+                            quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+                            quickViewWishlistBtn.style.background = '#f1f1f1';
+                            quickViewWishlistBtn.style.color = '#333';
+                        }
+                    }
+                    
+                    if (quickViewModal) {
+                        closeAllSidebars();
+                        quickViewModal.style.display = 'flex';
+                        overlay.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    }
                 }
             }
         });
     });
 }
 
-// Initialize shop page functionality
-function initShopPage() {
-    initializeProductCards();
-}
-
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initShopPage();
+    initializeQuickView();
 });
