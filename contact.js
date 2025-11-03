@@ -1,20 +1,26 @@
+// contact.js - Contact Page Specific Functionality
 
 // DOM Elements specific to contact page
 const contactForm = document.getElementById('contactForm');
 
 // Initialize Contact Page
 function initContactPage() {
-    // Load guest data
-    loadGuestData();
-    
     // Initialize contact form
-    initContactForm();
+    if (contactForm) {
+        initContactForm();
+    }
     
     // Initialize map
     initMap();
     
     // Add specific event listeners for contact page
     addContactEventListeners();
+    
+    // Add success message styles
+    addSuccessMessageStyles();
+    
+    // Add real-time validation
+    addRealTimeValidation();
 }
 
 // Initialize Google Maps with error handling
@@ -108,6 +114,11 @@ function initContactForm() {
 function handleContactFormSubmission() {
     if (!contactForm) return;
     
+    // Validate form first
+    if (!validateContactForm()) {
+        return;
+    }
+    
     // Get form data
     const formData = new FormData(contactForm);
     const name = formData.get('name');
@@ -115,25 +126,6 @@ function handleContactFormSubmission() {
     const phone = formData.get('phone');
     const subject = formData.get('subject');
     const message = formData.get('message');
-    
-    // Basic validation
-    if (!name || !email || !subject || !message) {
-        showFormErrorMessage('Please fill in all required fields');
-        return;
-    }
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        showFormErrorMessage('Please enter a valid email address');
-        return;
-    }
-    
-    // Phone validation (if provided)
-    if (phone && !/^\d+$/.test(phone)) {
-        showFormErrorMessage('Phone number can only contain numbers');
-        return;
-    }
     
     // Show loading state
     const submitBtn = contactForm.querySelector('.submit-btn');
@@ -428,11 +420,11 @@ function trackContactMethodClick(method) {
 
 // Enhanced form validation
 function validateContactForm() {
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const subject = document.getElementById('subject').value;
-    const message = document.getElementById('message').value.trim();
+    const name = document.getElementById('name')?.value.trim();
+    const email = document.getElementById('email')?.value.trim();
+    const phone = document.getElementById('phone')?.value.trim();
+    const subject = document.getElementById('subject')?.value;
+    const message = document.getElementById('message')?.value.trim();
     
     // Clear previous errors
     clearFormErrors();
@@ -440,14 +432,14 @@ function validateContactForm() {
     let isValid = true;
     
     // Name validation
-    if (name.length < 2) {
+    if (!name || name.length < 2) {
         showFieldError('name', 'Name must be at least 2 characters long');
         isValid = false;
     }
     
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!email || !emailRegex.test(email)) {
         showFieldError('email', 'Please enter a valid email address');
         isValid = false;
     }
@@ -465,7 +457,7 @@ function validateContactForm() {
     }
     
     // Message validation
-    if (message.length < 10) {
+    if (!message || message.length < 10) {
         showFieldError('message', 'Message must be at least 10 characters long');
         isValid = false;
     }
@@ -476,6 +468,8 @@ function validateContactForm() {
 // Show field error
 function showFieldError(fieldId, message) {
     const field = document.getElementById(fieldId);
+    if (!field) return;
+    
     const formGroup = field.closest('.form-group');
     
     // Add error class
@@ -533,11 +527,13 @@ function addRealTimeValidation() {
 // Validate individual field
 function validateField(fieldId) {
     const field = document.getElementById(fieldId);
+    if (!field) return;
+    
     const value = field.value.trim();
     
     // Clear existing error for this field
     const formGroup = field.closest('.form-group');
-    const existingError = formGroup.querySelector('.field-error');
+    const existingError = formGroup?.querySelector('.field-error');
     if (existingError) {
         existingError.remove();
     }
@@ -609,15 +605,15 @@ function autoFillFormForUser() {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initContactPage();
-    addRealTimeValidation();
-    addSuccessMessageStyles();
     
     // Auto-fill form when user logs in
-    auth.onAuthStateChanged((user) => {
-        if (user && contactForm) {
-            setTimeout(autoFillFormForUser, 100);
-        }
-    });
+    if (typeof auth !== 'undefined') {
+        auth.onAuthStateChanged((user) => {
+            if (user && contactForm) {
+                setTimeout(autoFillFormForUser, 100);
+            }
+        });
+    }
 });
 
 // Export functions for global access (if needed)
