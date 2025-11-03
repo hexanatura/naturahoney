@@ -173,7 +173,6 @@ function resetProfilePage() {
     if (profilePage && mainContent) {
         profilePage.classList.remove('active');
         mainContent.style.display = 'block';
-        document.body.style.overflow = 'auto';
     }
 }
 
@@ -472,21 +471,12 @@ function closeAllSidebars() {
         reviewModal.style.display = 'none';
     }
     
-    const profilePage = document.getElementById('profilePage');
-    const mainContent = document.getElementById('mainContent');
-    if (profilePage && mainContent) {
-        profilePage.classList.remove('active');
-        mainContent.style.display = 'block';
-    }
-    
     navLinks.classList.remove('active');
     userDropdown.classList.remove('active');
     
     const icon = mobileMenuBtn.querySelector('i');
-    if (icon) {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-    }
+    icon.classList.remove('fa-times');
+    icon.classList.add('fa-bars');
     
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
@@ -542,12 +532,10 @@ document.addEventListener('click', () => {
     userDropdown.classList.remove('active');
 });
 
-// UPDATED PROFILE LINK EVENT LISTENER
 profileLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     userDropdown.classList.remove('active');
-    
     if (currentUser) {
         showProfilePage();
     } else {
@@ -559,30 +547,15 @@ profileLink.addEventListener('click', (e) => {
     }
 });
 
-// UPDATED SHOW PROFILE PAGE FUNCTION
 function showProfilePage() {
     const profilePage = document.getElementById('profilePage');
     const mainContent = document.getElementById('mainContent');
     
     if (profilePage && mainContent) {
-        // First, close all other sidebars and modals
-        closeAllSidebars();
-        
-        // Hide main content
         mainContent.style.display = 'none';
-        
-        // Show profile page
         profilePage.classList.add('active');
-        
-        // Load user data if user is logged in
-        if (currentUser) {
-            loadUserData(currentUser.uid);
-        }
-        
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
+        loadUserData(currentUser.uid);
     } else {
-        // If profile page doesn't exist on this page, redirect to home
         window.location.href = 'index.html';
     }
 }
@@ -1199,7 +1172,6 @@ window.addEventListener('scroll', () => {
     lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 }, { passive: true });
 
-// UPDATED INIT COMMON FUNCTION
 function initCommon() {
     loadGuestData();
     
@@ -1211,7 +1183,6 @@ function initCommon() {
             if (profilePage && mainContent) {
                 profilePage.classList.remove('active');
                 mainContent.style.display = 'block';
-                document.body.style.overflow = 'auto';
             }
         });
     }
@@ -1225,21 +1196,18 @@ function initCommon() {
     if (editProfileBtn && editProfileModal) {
         editProfileBtn.addEventListener('click', function() {
             editProfileModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
         });
     }
     
     if (closeEditProfileModal && editProfileModal) {
         closeEditProfileModal.addEventListener('click', function() {
             editProfileModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
         });
     }
     
     if (cancelEditProfile && editProfileModal) {
         cancelEditProfile.addEventListener('click', function() {
             editProfileModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
         });
     }
     
@@ -1251,25 +1219,22 @@ function initCommon() {
                 return;
             }
             
-            if (currentUser) {
-                currentUser.updateProfile({
-                    displayName: newName
-                }).then(() => {
-                    return db.collection('users').doc(currentUser.uid).set({
-                        displayName: newName,
-                        email: currentUser.email,
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
-                }).then(() => {
-                    alert('Profile updated successfully!');
-                    editProfileModal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                    updateUIForUser(currentUser);
-                }).catch((error) => {
-                    console.error("Error updating profile:", error);
-                    alert('Error updating profile. Please try again.');
-                });
-            }
+            currentUser.updateProfile({
+                displayName: newName
+            }).then(() => {
+                return db.collection('users').doc(currentUser.uid).set({
+                    displayName: newName,
+                    email: currentUser.email,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            }).then(() => {
+                alert('Profile updated successfully!');
+                editProfileModal.style.display = 'none';
+                updateUIForUser(currentUser);
+            }).catch((error) => {
+                console.error("Error updating profile:", error);
+                alert('Error updating profile. Please try again.');
+            });
         });
     }
     
@@ -1308,37 +1273,30 @@ function initCommon() {
                 return;
             }
             
-            if (currentUser) {
-                const newAddress = {
-                    label: label,
-                    name: name,
-                    address: address,
-                    phone: phone,
-                    pincode: pincode,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-                    .then((docRef) => {
-                        // Refresh addresses display
-                        const addressesContainer = document.getElementById('addresses-container');
-                        if (addressesContainer) {
-                            addressesContainer.innerHTML = '';
-                            loadUserData(currentUser.uid);
-                        }
-                        addAddressForm.style.display = 'none';
-                        document.getElementById('new-label').value = '';
-                        document.getElementById('new-name').value = '';
-                        document.getElementById('new-address').value = '';
-                        document.getElementById('new-phone').value = '';
-                        document.getElementById('new-pincode').value = '';
-                        alert('New address added successfully!');
-                    })
-                    .catch((error) => {
-                        console.error("Error adding address:", error);
-                        alert('Error adding address. Please try again.');
-                    });
-            }
+            const newAddress = {
+                label: label,
+                name: name,
+                address: address,
+                phone: phone,
+                pincode: pincode,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
+                .then((docRef) => {
+                    displayAddress(docRef.id, newAddress);
+                    addAddressForm.style.display = 'none';
+                    document.getElementById('new-label').value = '';
+                    document.getElementById('new-name').value = '';
+                    document.getElementById('new-address').value = '';
+                    document.getElementById('new-phone').value = '';
+                    document.getElementById('new-pincode').value = '';
+                    alert('New address added successfully!');
+                })
+                .catch((error) => {
+                    console.error("Error adding address:", error);
+                    alert('Error adding address. Please try again.');
+                });
         });
     }
 }
