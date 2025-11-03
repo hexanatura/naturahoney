@@ -122,16 +122,129 @@ const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
 
+// Storage keys for cross-page sync
+const STORAGE_KEYS = {
+    GUEST_LIKES: 'guestLikes',
+    GUEST_CART: 'guestCart',
+    USER_SYNC: 'userDataSynced'
+};
+
+// Initialize cross-page data sync
+function initializeCrossPageSync() {
+    // Load guest data from localStorage
+    loadGuestData();
+    
+    // Set up storage event listener for cross-tab sync
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Set up beforeunload to ensure data is saved
+    window.addEventListener('beforeunload', saveGuestData);
+    
+    // Periodically save data to prevent loss
+    setInterval(saveGuestData, 30000); // Save every 30 seconds
+}
+
+// Handle storage changes from other tabs
+function handleStorageChange(event) {
+    if (event.key === STORAGE_KEYS.GUEST_LIKES && !currentUser) {
+        try {
+            const newLikes = JSON.parse(event.newValue || '[]');
+            if (JSON.stringify(likedProducts) !== JSON.stringify(newLikes)) {
+                likedProducts = newLikes;
+                updateLikeUI();
+            }
+        } catch (error) {
+            console.error("Error parsing likes from storage:", error);
+        }
+    }
+    
+    if (event.key === STORAGE_KEYS.GUEST_CART && !currentUser) {
+        try {
+            const newCart = JSON.parse(event.newValue || '[]');
+            if (JSON.stringify(cartProducts) !== JSON.stringify(newCart)) {
+                cartProducts = newCart;
+                updateCartUI();
+            }
+        } catch (error) {
+            console.error("Error parsing cart from storage:", error);
+        }
+    }
+}
+
+// Save guest data to localStorage
+function saveGuestData() {
+    if (!currentUser) {
+        try {
+            localStorage.setItem(STORAGE_KEYS.GUEST_LIKES, JSON.stringify(likedProducts));
+            localStorage.setItem(STORAGE_KEYS.GUEST_CART, JSON.stringify(cartProducts));
+        } catch (error) {
+            console.error("Error saving guest data:", error);
+        }
+    }
+}
+
+// Sync data when user logs in/out
+function syncUserDataOnAuthChange() {
+    if (currentUser) {
+        // User logged in - merge guest data with user data
+        mergeGuestDataWithUser();
+    } else {
+        // User logged out - load guest data
+        loadGuestData();
+    }
+}
+
+// Merge guest data with user data when logging in
+function mergeGuestDataWithUser() {
+    try {
+        const guestLikes = JSON.parse(localStorage.getItem(STORAGE_KEYS.GUEST_LIKES) || '[]');
+        const guestCart = JSON.parse(localStorage.getItem(STORAGE_KEYS.GUEST_CART) || '[]');
+        
+        // Merge likes
+        guestLikes.forEach(productId => {
+            if (!likedProducts.includes(productId)) {
+                addToLikes(productId, true); // silent mode for bulk operations
+            }
+        });
+        
+        // Merge cart items
+        guestCart.forEach(guestItem => {
+            const existingItem = cartProducts.find(item => item.id === guestItem.id);
+            if (existingItem) {
+                // Update quantity if item exists
+                updateCartQuantity(guestItem.id, guestItem.quantity - existingItem.quantity, true);
+            } else {
+                // Add new item
+                addToCart(guestItem.id, guestItem.quantity, true);
+            }
+        });
+        
+        // Clear guest data after merge
+        localStorage.removeItem(STORAGE_KEYS.GUEST_LIKES);
+        localStorage.removeItem(STORAGE_KEYS.GUEST_CART);
+    } catch (error) {
+        console.error("Error merging guest data:", error);
+    }
+}
+
 // Initialize Firebase Auth State Listener
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         updateUIForUser(user);
         loadUserData(user.uid);
+        
+        // Sync data when user logs in
+        setTimeout(() => {
+            syncUserDataOnAuthChange();
+        }, 1000);
     } else {
         currentUser = null;
         updateUIForGuest();
         resetProfilePage();
+        
+        // Sync data when user logs out
+        syncUserDataOnAuthChange();
     }
 });
 
@@ -173,10 +286,12 @@ function resetProfilePage() {
     if (profilePage && mainContent) {
         profilePage.classList.remove('active');
         mainContent.style.display = 'block';
+        document.body.style.overflow = 'auto';
     }
 }
 
 function loadUserData(userId) {
+    // Load likes from Firestore
     db.collection('users').doc(userId).collection('likes').get()
         .then((querySnapshot) => {
             likedProducts = [];
@@ -189,6 +304,7 @@ function loadUserData(userId) {
             console.error("Error loading liked products:", error);
         });
 
+    // Load cart from Firestore
     db.collection('users').doc(userId).collection('cart').get()
         .then((querySnapshot) => {
             cartProducts = [];
@@ -471,12 +587,21 @@ function closeAllSidebars() {
         reviewModal.style.display = 'none';
     }
     
+    const profilePage = document.getElementById('profilePage');
+    const mainContent = document.getElementById('mainContent');
+    if (profilePage && mainContent) {
+        profilePage.classList.remove('active');
+        mainContent.style.display = 'block';
+    }
+    
     navLinks.classList.remove('active');
     userDropdown.classList.remove('active');
     
     const icon = mobileMenuBtn.querySelector('i');
-    icon.classList.remove('fa-times');
-    icon.classList.add('fa-bars');
+    if (icon) {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+    }
     
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
@@ -536,6 +661,7 @@ profileLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     userDropdown.classList.remove('active');
+    
     if (currentUser) {
         showProfilePage();
     } else {
@@ -552,10 +678,24 @@ function showProfilePage() {
     const mainContent = document.getElementById('mainContent');
     
     if (profilePage && mainContent) {
+        // First, close all other sidebars and modals
+        closeAllSidebars();
+        
+        // Hide main content
         mainContent.style.display = 'none';
+        
+        // Show profile page
         profilePage.classList.add('active');
-        loadUserData(currentUser.uid);
+        
+        // Load user data if user is logged in
+        if (currentUser) {
+            loadUserData(currentUser.uid);
+        }
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
     } else {
+        // If profile page doesn't exist on this page, redirect to home
         window.location.href = 'index.html';
     }
 }
@@ -639,7 +779,7 @@ function updateLikeUI() {
     }
 }
 
-function addToLikes(productId) {
+function addToLikes(productId, silent = false) {
     if (!likedProducts.includes(productId)) {
         likedProducts.push(productId);
         
@@ -652,20 +792,23 @@ function addToLikes(productId) {
                 console.error("Error adding to likes:", error);
             });
         } else {
-            localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+            // Save to localStorage for cross-page sync
+            localStorage.setItem(STORAGE_KEYS.GUEST_LIKES, JSON.stringify(likedProducts));
         }
         
         updateLikeUI();
         
-        const heartIcon = likeIcon.querySelector('i');
-        heartIcon.classList.remove('far');
-        heartIcon.classList.add('fas');
-        heartIcon.style.color = '#ff4d4d';
-        
-        closeAllSidebars();
-        likesSidebar.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        if (!silent) {
+            const heartIcon = likeIcon.querySelector('i');
+            heartIcon.classList.remove('far');
+            heartIcon.classList.add('fas');
+            heartIcon.style.color = '#ff4d4d';
+            
+            closeAllSidebars();
+            likesSidebar.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
     }
 }
 
@@ -678,7 +821,8 @@ function removeFromLikes(productId) {
             console.error("Error removing from likes:", error);
         });
     } else {
-        localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+        // Save to localStorage for cross-page sync
+        localStorage.setItem(STORAGE_KEYS.GUEST_LIKES, JSON.stringify(likedProducts));
     }
     
     updateLikeUI();
@@ -791,7 +935,7 @@ function updateCartUI() {
     }
 }
 
-function addToCart(productId, quantity = 1) {
+function addToCart(productId, quantity = 1, silent = false) {
     const existingItem = cartProducts.find(item => item.id === productId);
     
     if (existingItem) {
@@ -810,16 +954,20 @@ function addToCart(productId, quantity = 1) {
             console.error("Error adding to cart:", error);
         });
     } else {
-        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+        // Save to localStorage for cross-page sync
+        localStorage.setItem(STORAGE_KEYS.GUEST_CART, JSON.stringify(cartProducts));
     }
     
     updateCartUI();
-    addCartVisualFeedback();
     
-    closeAllSidebars();
-    cartSidebar.classList.add('active');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    if (!silent) {
+        addCartVisualFeedback();
+        
+        closeAllSidebars();
+        cartSidebar.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function addCartVisualFeedback() {
@@ -832,7 +980,7 @@ function addCartVisualFeedback() {
     }, 600);
 }
 
-function updateCartQuantity(productId, change) {
+function updateCartQuantity(productId, change, silent = false) {
     const item = cartProducts.find(item => item.id === productId);
     
     if (item) {
@@ -850,7 +998,8 @@ function updateCartQuantity(productId, change) {
                     console.error("Error updating cart:", error);
                 });
             } else {
-                localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+                // Save to localStorage for cross-page sync
+                localStorage.setItem(STORAGE_KEYS.GUEST_CART, JSON.stringify(cartProducts));
             }
             
             updateCartUI();
@@ -876,7 +1025,8 @@ function setCartQuantity(productId, quantity) {
                     console.error("Error updating cart:", error);
                 });
             } else {
-                localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+                // Save to localStorage for cross-page sync
+                localStorage.setItem(STORAGE_KEYS.GUEST_CART, JSON.stringify(cartProducts));
             }
             
             updateCartUI();
@@ -893,7 +1043,8 @@ function removeFromCart(productId) {
             console.error("Error removing from cart:", error);
         });
     } else {
-        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+        // Save to localStorage for cross-page sync
+        localStorage.setItem(STORAGE_KEYS.GUEST_CART, JSON.stringify(cartProducts));
     }
     
     updateCartUI();
@@ -1140,15 +1291,26 @@ browseProducts.addEventListener('click', () => {
 });
 
 function loadGuestData() {
-    const guestLikes = localStorage.getItem('guestLikes');
-    if (guestLikes) {
-        likedProducts = JSON.parse(guestLikes);
+    try {
+        const guestLikes = localStorage.getItem(STORAGE_KEYS.GUEST_LIKES);
+        if (guestLikes) {
+            likedProducts = JSON.parse(guestLikes);
+            updateLikeUI();
+        }
+        
+        const guestCart = localStorage.getItem(STORAGE_KEYS.GUEST_CART);
+        if (guestCart) {
+            cartProducts = JSON.parse(guestCart);
+            updateCartUI();
+        }
+    } catch (error) {
+        console.error("Error loading guest data:", error);
+        // Reset corrupted data
+        likedProducts = [];
+        cartProducts = [];
+        localStorage.removeItem(STORAGE_KEYS.GUEST_LIKES);
+        localStorage.removeItem(STORAGE_KEYS.GUEST_CART);
         updateLikeUI();
-    }
-    
-    const guestCart = localStorage.getItem('guestCart');
-    if (guestCart) {
-        cartProducts = JSON.parse(guestCart);
         updateCartUI();
     }
 }
@@ -1173,6 +1335,9 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 function initCommon() {
+    // Initialize cross-page data sync
+    initializeCrossPageSync();
+    
     loadGuestData();
     
     const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -1183,6 +1348,7 @@ function initCommon() {
             if (profilePage && mainContent) {
                 profilePage.classList.remove('active');
                 mainContent.style.display = 'block';
+                document.body.style.overflow = 'auto';
             }
         });
     }
@@ -1196,18 +1362,21 @@ function initCommon() {
     if (editProfileBtn && editProfileModal) {
         editProfileBtn.addEventListener('click', function() {
             editProfileModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         });
     }
     
     if (closeEditProfileModal && editProfileModal) {
         closeEditProfileModal.addEventListener('click', function() {
             editProfileModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         });
     }
     
     if (cancelEditProfile && editProfileModal) {
         cancelEditProfile.addEventListener('click', function() {
             editProfileModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
         });
     }
     
@@ -1219,22 +1388,25 @@ function initCommon() {
                 return;
             }
             
-            currentUser.updateProfile({
-                displayName: newName
-            }).then(() => {
-                return db.collection('users').doc(currentUser.uid).set({
-                    displayName: newName,
-                    email: currentUser.email,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            }).then(() => {
-                alert('Profile updated successfully!');
-                editProfileModal.style.display = 'none';
-                updateUIForUser(currentUser);
-            }).catch((error) => {
-                console.error("Error updating profile:", error);
-                alert('Error updating profile. Please try again.');
-            });
+            if (currentUser) {
+                currentUser.updateProfile({
+                    displayName: newName
+                }).then(() => {
+                    return db.collection('users').doc(currentUser.uid).set({
+                        displayName: newName,
+                        email: currentUser.email,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                }).then(() => {
+                    alert('Profile updated successfully!');
+                    editProfileModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    updateUIForUser(currentUser);
+                }).catch((error) => {
+                    console.error("Error updating profile:", error);
+                    alert('Error updating profile. Please try again.');
+                });
+            }
         });
     }
     
@@ -1273,30 +1445,37 @@ function initCommon() {
                 return;
             }
             
-            const newAddress = {
-                label: label,
-                name: name,
-                address: address,
-                phone: phone,
-                pincode: pincode,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-                .then((docRef) => {
-                    displayAddress(docRef.id, newAddress);
-                    addAddressForm.style.display = 'none';
-                    document.getElementById('new-label').value = '';
-                    document.getElementById('new-name').value = '';
-                    document.getElementById('new-address').value = '';
-                    document.getElementById('new-phone').value = '';
-                    document.getElementById('new-pincode').value = '';
-                    alert('New address added successfully!');
-                })
-                .catch((error) => {
-                    console.error("Error adding address:", error);
-                    alert('Error adding address. Please try again.');
-                });
+            if (currentUser) {
+                const newAddress = {
+                    label: label,
+                    name: name,
+                    address: address,
+                    phone: phone,
+                    pincode: pincode,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
+                    .then((docRef) => {
+                        // Refresh addresses display
+                        const addressesContainer = document.getElementById('addresses-container');
+                        if (addressesContainer) {
+                            addressesContainer.innerHTML = '';
+                            loadUserData(currentUser.uid);
+                        }
+                        addAddressForm.style.display = 'none';
+                        document.getElementById('new-label').value = '';
+                        document.getElementById('new-name').value = '';
+                        document.getElementById('new-address').value = '';
+                        document.getElementById('new-phone').value = '';
+                        document.getElementById('new-pincode').value = '';
+                        alert('New address added successfully!');
+                    })
+                    .catch((error) => {
+                        console.error("Error adding address:", error);
+                        alert('Error adding address. Please try again.');
+                    });
+            }
         });
     }
 }
