@@ -2348,6 +2348,110 @@ footer a:hover {
     </div>
   </div>
 
+  <!-- Profile Page -->
+<div class="profile-page" id="profilePage">
+    <div class="profile-close-container">
+        <button class="profile-close-btn" id="profileCloseBtn">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="profile-info">
+                <h1 id="user-name">User Name</h1>
+                <p id="user-email">user@example.com</p>
+                <p>Member since: <span id="member-since">Loading...</span></p>
+            </div>
+            <div class="profile-actions">
+                <button class="btn" id="edit-profile-btn">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </button>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Saved Addresses</h2>
+            
+            <div id="addresses-container">
+            </div>
+            
+            <button class="btn btn-outline" id="add-address-btn">
+                <i class="fas fa-plus"></i> Add New Address
+            </button>
+            
+            <div class="address-form" id="add-address-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-label">Address Label (e.g., Home, Work)</label>
+                        <input type="text" id="new-label" placeholder="Home">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-pincode">Pincode</label>
+                        <input type="text" id="new-pincode" placeholder="Enter pincode">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="new-name">Full Name</label>
+                    <input type="text" id="new-name" placeholder="Enter full name">
+                </div>
+                <div class="form-group">
+                    <label for="new-address">Address</label>
+                    <textarea id="new-address" placeholder="Enter full address"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="new-phone">Phone</label>
+                    <input type="text" id="new-phone" placeholder="Enter phone number">
+                </div>
+                <div class="form-actions">
+                    <button class="btn" id="save-new-address">
+                        <i class="fas fa-save"></i> Save Address
+                    </button>
+                    <button class="btn btn-outline" id="cancel-new-address">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h2 class="section-title"><i class="fas fa-shopping-bag"></i> Order History</h2>
+            
+            <div id="orders-container">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal" id="edit-profile-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Profile</h3>
+            <button class="close-modal" id="close-edit-profile-modal">&times;</button>
+        </div>
+        <div class="form-group">
+            <label for="edit-name">Full Name</label>
+            <input type="text" id="edit-name">
+        </div>
+        <div class="form-group">
+            <label for="edit-email">Email Address</label>
+            <input type="email" id="edit-email" disabled>
+            <p style="font-size: 12px; color: #777; margin-top: 5px;">Email address cannot be changed</p>
+        </div>
+        <div class="form-actions">
+            <button class="btn" id="save-profile-btn">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <button class="btn btn-outline" id="cancel-edit-profile">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
   <!-- Footer -->
   <footer>
     <div class="footer-container">
