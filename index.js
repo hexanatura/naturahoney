@@ -28,8 +28,9 @@ const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
 // State variables specific to index.html
 let currentCarouselIndex = 0;
 let approvedReviews = [];
+let currentQuickViewProductId = null;
 
-// Enhanced Quick View Modal Functionality
+// Quick View Modal Functionality
 quickViewClose.addEventListener('click', closeQuickView);
 quickViewModal.addEventListener('click', (e) => {
     if (e.target === quickViewModal) {
@@ -41,10 +42,9 @@ function closeQuickView() {
     quickViewModal.style.display = 'none';
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
-    currentQuickViewProductId = null;
 }
 
-// Enhanced Quick View Add to Cart functionality
+// Quick View Add to Cart functionality
 quickViewAddToCartBtn.addEventListener('click', function() {
     if (currentQuickViewProductId) {
         // Add visual feedback
@@ -60,16 +60,20 @@ quickViewAddToCartBtn.addEventListener('click', function() {
     }
 });
 
-// Enhanced Quick View Wishlist functionality
+// Quick View Wishlist functionality
 quickViewWishlistBtn.addEventListener('click', function() {
     if (currentQuickViewProductId) {
         if (likedProducts.includes(currentQuickViewProductId)) {
             removeFromLikes(currentQuickViewProductId);
+            this.innerHTML = '<i class="far fa-heart"></i>';
+            this.style.background = '#f1f1f1';
+            this.style.color = '#333';
         } else {
             addToLikes(currentQuickViewProductId); // This will now auto-open the likes sidebar
+            this.innerHTML = '<i class="fas fa-heart"></i>';
+            this.style.background = '#ff4d4d';
+            this.style.color = 'white';
         }
-        
-        // Update button state will be handled by the updateLikeUI function
     }
 });
 
@@ -118,81 +122,61 @@ function initializeProductCards() {
             } else {
                 // Add to likes (this will now auto-open the likes sidebar)
                 addToLikes(productId);
+                wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                wishlistBtn.style.background = '#ff4d4d';
+                wishlistBtn.style.color = 'white';
             }
         });
         
-        // Set initial state
         if (likedProducts.includes(productId)) {
             wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
             wishlistBtn.style.background = '#ff4d4d';
             wishlistBtn.style.color = 'white';
-        } else {
-            wishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
-            wishlistBtn.style.background = '#f1f1f1';
-            wishlistBtn.style.color = '#333';
         }
         
         // Quick view functionality
         card.addEventListener('click', (e) => {
             if (!e.target.closest('.add-to-cart-btn') && !e.target.closest('.wishlist-btn')) {
-                openQuickView(productId, card);
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    quickViewImage.src = product.image;
+                    quickViewImage.alt = product.name;
+                    quickViewTitle.textContent = product.name;
+                    quickViewPrice.textContent = `₹${product.price}`;
+                    quickViewWeight.textContent = product.weight;
+                    
+                    // Get rating from the product card
+                    const ratingStars = card.querySelector('.rating-stars').innerHTML;
+                    const ratingCount = card.querySelector('.rating-count').textContent;
+                    
+                    quickViewRating.innerHTML = `
+                        <div class="rating-stars">
+                            ${ratingStars}
+                        </div>
+                        <span class="rating-count">${ratingCount}</span>
+                    `;
+                    
+                    // Set current product ID for quick view
+                    currentQuickViewProductId = productId;
+                    
+                    // Update quick view wishlist button state
+                    if (likedProducts.includes(productId)) {
+                        quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                        quickViewWishlistBtn.style.background = '#ff4d4d';
+                        quickViewWishlistBtn.style.color = 'white';
+                    } else {
+                        quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+                        quickViewWishlistBtn.style.background = '#f1f1f1';
+                        quickViewWishlistBtn.style.color = '#333';
+                    }
+                    
+                    quickViewModal.style.display = 'flex';
+                    overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
             }
         });
     });
-}
-
-// Enhanced openQuickView function
-function openQuickView(productId, card = null) {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-        quickViewImage.src = product.image;
-        quickViewImage.alt = product.name;
-        quickViewTitle.textContent = product.name;
-        quickViewPrice.textContent = `₹${product.price}`;
-        quickViewWeight.textContent = product.weight;
-        
-        // Get rating from the product card or use default
-        let ratingStars, ratingCount;
-        if (card) {
-            ratingStars = card.querySelector('.rating-stars').innerHTML;
-            ratingCount = card.querySelector('.rating-count').textContent;
-        } else {
-            // Default rating if card not provided
-            ratingStars = `
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star-half-alt"></i>
-            `;
-            ratingCount = '(128)';
-        }
-        
-        quickViewRating.innerHTML = `
-            <div class="rating-stars">
-                ${ratingStars}
-            </div>
-            <span class="rating-count">${ratingCount}</span>
-        `;
-        
-        // Set current product ID for quick view
-        currentQuickViewProductId = productId;
-        
-        // Update quick view wishlist button state
-        if (likedProducts.includes(productId)) {
-            quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
-            quickViewWishlistBtn.style.background = '#ff4d4d';
-            quickViewWishlistBtn.style.color = 'white';
-        } else {
-            quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
-            quickViewWishlistBtn.style.background = '#f1f1f1';
-            quickViewWishlistBtn.style.color = '#333';
-        }
-        
-        quickViewModal.style.display = 'flex';
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
 }
 
 // Category Filter Functionality
@@ -625,58 +609,12 @@ function updateReviewProductDropdown() {
     });
 }
 
-// Enhanced initialization for index page with event listeners
+// Initialize everything for index page
 function initIndexPage() {
     initializeProductCards();
     initializeCategoryFilter();
     initializeBannerImages();
     loadApprovedReviews();
-    
-    // Set up event listeners for real-time updates
-    eventSystem.on('likesUIUpdated', () => {
-        // Re-initialize product cards to update like buttons
-        initializeProductCards();
-    });
-    
-    eventSystem.on('productLiked', (productId) => {
-        // Update specific product card if it exists
-        const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
-        if (productCard) {
-            const wishlistBtn = productCard.querySelector('.wishlist-btn');
-            if (wishlistBtn) {
-                wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
-                wishlistBtn.style.background = '#ff4d4d';
-                wishlistBtn.style.color = 'white';
-            }
-        }
-        
-        // Update quick view if it's open for this product
-        if (currentQuickViewProductId === productId) {
-            quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
-            quickViewWishlistBtn.style.background = '#ff4d4d';
-            quickViewWishlistBtn.style.color = 'white';
-        }
-    });
-    
-    eventSystem.on('productUnliked', (productId) => {
-        // Update specific product card if it exists
-        const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
-        if (productCard) {
-            const wishlistBtn = productCard.querySelector('.wishlist-btn');
-            if (wishlistBtn) {
-                wishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
-                wishlistBtn.style.background = '#f1f1f1';
-                wishlistBtn.style.color = '#333';
-            }
-        }
-        
-        // Update quick view if it's open for this product
-        if (currentQuickViewProductId === productId) {
-            quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
-            quickViewWishlistBtn.style.background = '#f1f1f1';
-            quickViewWishlistBtn.style.color = '#333';
-        }
-    });
     
     // Update review product dropdown when user data is loaded
     const originalLoadUserData = window.loadUserData;
