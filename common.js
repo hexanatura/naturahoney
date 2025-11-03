@@ -122,15 +122,34 @@ const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
 
-// Initialize Firebase Auth State Listener
+// Event system for cross-page synchronization
+const eventSystem = {
+    events: {},
+    on(event, callback) {
+        if (!this.events[event]) this.events[event] = [];
+        this.events[event].push(callback);
+    },
+    emit(event, data) {
+        if (this.events[event]) {
+            this.events[event].forEach(callback => callback(data));
+        }
+    }
+};
+
+// Initialize Firebase Auth State Listener with enhanced synchronization
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         updateUIForUser(user);
         loadUserData(user.uid);
+        // Sync data when user logs in
+        syncUserData();
     } else {
         currentUser = null;
         updateUIForGuest();
+        // Load guest data when no user is logged in
+        loadGuestData();
+        
         // Reset profile-related elements if they exist
         const profilePage = document.getElementById('profilePage');
         const mainContent = document.getElementById('mainContent');
@@ -141,7 +160,22 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// Update UI for logged in user - ENHANCED
+// Enhanced sync function for cross-page data consistency
+function syncUserData() {
+    if (currentUser) {
+        // Force reload all user data
+        loadUserData(currentUser.uid);
+        
+        // Emit sync events
+        eventSystem.emit('userDataSynced', {
+            likedProducts,
+            cartProducts,
+            userOrders
+        });
+    }
+}
+
+// Update UI for logged in user - ENHANCED with better sync
 function updateUIForUser(user) {
     userIcon.classList.add('logged-in');
     profileLink.style.display = 'block';
@@ -163,6 +197,10 @@ function updateUIForUser(user) {
         const memberSince = user.metadata.creationTime;
         memberSinceElement.textContent = new Date(memberSince).toLocaleDateString();
     }
+    
+    // Update all UI elements that depend on user state
+    updateLikeUI();
+    updateCartUI();
 }
 
 // Update UI for guest
@@ -176,26 +214,30 @@ function updateUIForGuest() {
     
     if (userNameElement) userNameElement.textContent = 'User Name';
     if (userEmailElement) userEmailElement.textContent = 'user@example.com';
+    
+    // Update all UI elements
+    updateLikeUI();
+    updateCartUI();
 }
 
-// Load user data from Firestore
+// Enhanced Load user data from Firestore with real-time updates
 function loadUserData(userId) {
-    // Load liked products
-    db.collection('users').doc(userId).collection('likes').get()
-        .then((querySnapshot) => {
+    // Load liked products with real-time listener
+    db.collection('users').doc(userId).collection('likes')
+        .onSnapshot((querySnapshot) => {
             likedProducts = [];
             querySnapshot.forEach((doc) => {
                 likedProducts.push(doc.data().productId);
             });
             updateLikeUI();
-        })
-        .catch((error) => {
+            eventSystem.emit('likesUpdated', likedProducts);
+        }, (error) => {
             console.error("Error loading liked products:", error);
         });
 
-    // Load cart items
-    db.collection('users').doc(userId).collection('cart').get()
-        .then((querySnapshot) => {
+    // Load cart items with real-time listener
+    db.collection('users').doc(userId).collection('cart')
+        .onSnapshot((querySnapshot) => {
             cartProducts = [];
             querySnapshot.forEach((doc) => {
                 cartProducts.push({
@@ -204,8 +246,8 @@ function loadUserData(userId) {
                 });
             });
             updateCartUI();
-        })
-        .catch((error) => {
+            eventSystem.emit('cartUpdated', cartProducts);
+        }, (error) => {
             console.error("Error loading cart items:", error);
         });
 
@@ -592,6 +634,12 @@ logoutLink.addEventListener('click', (e) => {
     e.stopPropagation();
     auth.signOut().then(() => {
         alert('You have been logged out successfully!');
+        // Clear all data on logout
+        likedProducts = [];
+        cartProducts = [];
+        userOrders = [];
+        updateLikeUI();
+        updateCartUI();
     }).catch((error) => {
         console.error("Error signing out:", error);
     });
@@ -612,7 +660,7 @@ closeLikes.addEventListener('click', () => {
     document.body.style.overflow = 'auto';
 });
 
-// Update likes UI
+// Enhanced Update likes UI with immediate visual feedback
 function updateLikeUI() {
     if (likedProducts.length > 0) {
         likeCount.textContent = likedProducts.length;
@@ -621,55 +669,113 @@ function updateLikeUI() {
         likeCount.classList.add('hidden');
     }
     
-    if (likedProducts.length === 0) {
-        emptyLikes.style.display = 'flex';
-        likesItems.innerHTML = '';
+    // Update heart icon in header
+    const heartIcon = likeIcon.querySelector('i');
+    if (likedProducts.length > 0) {
+        heartIcon.classList.remove('far');
+        heartIcon.classList.add('fas');
+        heartIcon.style.color = '#ff4d4d';
     } else {
-        emptyLikes.style.display = 'none';
-        likesItems.innerHTML = '';
-        
-        likedProducts.forEach(productId => {
-            const product = products.find(p => p.id === productId);
-            if (product) {
-                const likeItem = document.createElement('div');
-                likeItem.className = 'like-item';
-                likeItem.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <div class="like-item-details">
-                        <div class="like-item-title">${product.name}</div>
-                        <div class="like-item-price">₹${product.price}</div>
-                        <div class="like-item-actions">
-                            <button class="add-to-cart-btn" data-id="${product.id}">
-                                <i class="fas fa-cart-plus"></i> Add to Cart
-                            </button>
-                            <button class="remove-like" data-id="${product.id}">
-                                <i class="fas fa-times"></i>
-                            </button>
+        heartIcon.classList.remove('fas');
+        heartIcon.classList.add('far');
+        heartIcon.style.color = '';
+    }
+    
+    // Update likes sidebar
+    if (likesItems) {
+        if (likedProducts.length === 0) {
+            emptyLikes.style.display = 'flex';
+            likesItems.innerHTML = '';
+        } else {
+            emptyLikes.style.display = 'none';
+            likesItems.innerHTML = '';
+            
+            likedProducts.forEach(productId => {
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    const likeItem = document.createElement('div');
+                    likeItem.className = 'like-item';
+                    likeItem.innerHTML = `
+                        <img src="${product.image}" alt="${product.name}">
+                        <div class="like-item-details">
+                            <div class="like-item-title">${product.name}</div>
+                            <div class="like-item-price">₹${product.price}</div>
+                            <div class="like-item-actions">
+                                <button class="add-to-cart-btn" data-id="${product.id}">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                                <button class="remove-like" data-id="${product.id}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                `;
-                likesItems.appendChild(likeItem);
+                    `;
+                    likesItems.appendChild(likeItem);
+                }
+            });
+            
+            // Add event listeners for like items
+            document.querySelectorAll('.remove-like').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    removeFromLikes(productId);
+                });
+            });
+            
+            document.querySelectorAll('.likes-items .add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    addToCart(productId, 1);
+                });
+            });
+        }
+    }
+    
+    // Update all product cards on the page
+    updateAllProductCardsLikes();
+    
+    // Emit event for other pages
+    eventSystem.emit('likesUIUpdated', likedProducts);
+}
+
+// Update all product cards likes status
+function updateAllProductCardsLikes() {
+    document.querySelectorAll('.product-card').forEach(card => {
+        const productId = parseInt(card.getAttribute('data-id'));
+        const wishlistBtn = card.querySelector('.wishlist-btn');
+        
+        if (wishlistBtn) {
+            if (likedProducts.includes(productId)) {
+                wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                wishlistBtn.style.background = '#ff4d4d';
+                wishlistBtn.style.color = 'white';
+            } else {
+                wishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+                wishlistBtn.style.background = '#f1f1f1';
+                wishlistBtn.style.color = '#333';
             }
-        });
-        
-        // Add event listeners for like items
-        document.querySelectorAll('.remove-like').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                removeFromLikes(productId);
-            });
-        });
-        
-        document.querySelectorAll('.likes-items .add-to-cart-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                addToCart(productId, 1);
-            });
-        });
+        }
+    });
+    
+    // Update quick view modal if open
+    const quickViewModal = document.getElementById('quickViewModal');
+    if (quickViewModal && quickViewModal.style.display === 'flex') {
+        const quickViewWishlistBtn = document.querySelector('.quick-view-wishlist');
+        if (quickViewWishlistBtn && currentQuickViewProductId) {
+            if (likedProducts.includes(currentQuickViewProductId)) {
+                quickViewWishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                quickViewWishlistBtn.style.background = '#ff4d4d';
+                quickViewWishlistBtn.style.color = 'white';
+            } else {
+                quickViewWishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+                quickViewWishlistBtn.style.background = '#f1f1f1';
+                quickViewWishlistBtn.style.color = '#333';
+            }
+        }
     }
 }
 
-// Add to likes with auto-open sidebar
+// Add to likes with auto-open sidebar and immediate UI update
 function addToLikes(productId) {
     if (!likedProducts.includes(productId)) {
         likedProducts.push(productId);
@@ -690,20 +796,18 @@ function addToLikes(productId) {
         
         updateLikeUI();
         
-        const heartIcon = likeIcon.querySelector('i');
-        heartIcon.classList.remove('far');
-        heartIcon.classList.add('fas');
-        heartIcon.style.color = '#ff4d4d';
-        
         // Auto-open likes sidebar when adding to favorites (close others first)
         closeAllSidebars();
         likesSidebar.classList.add('active');
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
+        
+        // Emit event
+        eventSystem.emit('productLiked', productId);
     }
 }
 
-// Remove from likes
+// Remove from likes with immediate UI update
 function removeFromLikes(productId) {
     likedProducts = likedProducts.filter(id => id !== productId);
     
@@ -720,12 +824,8 @@ function removeFromLikes(productId) {
     
     updateLikeUI();
     
-    if (likedProducts.length === 0) {
-        const heartIcon = likeIcon.querySelector('i');
-        heartIcon.classList.remove('fas');
-        heartIcon.classList.add('far');
-        heartIcon.style.color = '';
-    }
+    // Emit event
+    eventSystem.emit('productUnliked', productId);
 }
 
 // Cart functionality
@@ -743,7 +843,7 @@ closeCart.addEventListener('click', () => {
     document.body.style.overflow = 'auto';
 });
 
-// Update cart UI
+// Enhanced Update cart UI with immediate visual feedback
 function updateCartUI() {
     const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
     
@@ -754,83 +854,88 @@ function updateCartUI() {
         cartCount.classList.add('hidden');
     }
     
-    if (cartProducts.length === 0) {
-        emptyCart.style.display = 'flex';
-        cartItems.innerHTML = '';
-        cartSummary.style.display = 'none';
-    } else {
-        emptyCart.style.display = 'none';
-        cartItems.innerHTML = '';
-        cartSummary.style.display = 'block';
-        
-        let subtotal = 0;
-        
-        cartProducts.forEach(item => {
-            const product = products.find(p => p.id === item.id);
-            if (product) {
-                const itemTotal = product.price * item.quantity;
-                subtotal += itemTotal;
-                
-                const cartItem = document.createElement('div');
-                cartItem.className = 'cart-item';
-                cartItem.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <div class="cart-item-details">
-                        <div class="cart-item-title">${product.name}</div>
-                        <div class="cart-item-price">₹${product.price}</div>
-                        <div class="cart-item-controls">
-                            <div class="cart-item-quantity">
-                                <button class="quantity-btn minus" data-id="${product.id}">-</button>
-                                <input type="text" class="quantity-input" value="${item.quantity}" data-id="${product.id}">
-                                <button class="quantity-btn plus" data-id="${product.id}">+</button>
+    if (cartSidebar) {
+        if (cartProducts.length === 0) {
+            emptyCart.style.display = 'flex';
+            cartItems.innerHTML = '';
+            cartSummary.style.display = 'none';
+        } else {
+            emptyCart.style.display = 'none';
+            cartItems.innerHTML = '';
+            cartSummary.style.display = 'block';
+            
+            let subtotal = 0;
+            
+            cartProducts.forEach(item => {
+                const product = products.find(p => p.id === item.id);
+                if (product) {
+                    const itemTotal = product.price * item.quantity;
+                    subtotal += itemTotal;
+                    
+                    const cartItem = document.createElement('div');
+                    cartItem.className = 'cart-item';
+                    cartItem.innerHTML = `
+                        <img src="${product.image}" alt="${product.name}">
+                        <div class="cart-item-details">
+                            <div class="cart-item-title">${product.name}</div>
+                            <div class="cart-item-price">₹${product.price}</div>
+                            <div class="cart-item-controls">
+                                <div class="cart-item-quantity">
+                                    <button class="quantity-btn minus" data-id="${product.id}">-</button>
+                                    <input type="text" class="quantity-input" value="${item.quantity}" data-id="${product.id}">
+                                    <button class="quantity-btn plus" data-id="${product.id}">+</button>
+                                </div>
+                                <button class="delete-item" data-id="${product.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
-                            <button class="delete-item" data-id="${product.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
                         </div>
-                    </div>
-                `;
-                cartItems.appendChild(cartItem);
-            }
-        });
-        
-        // Update cart totals
-        const cartSubtotal = document.querySelector('.cart-subtotal span:last-child');
-        const cartTotal = document.querySelector('.cart-total span:last-child');
-        
-        if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal}`;
-        if (cartTotal) cartTotal.textContent = `₹${subtotal}`;
-        
-        // Add event listeners for cart items
-        document.querySelectorAll('.quantity-btn.minus').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                updateCartQuantity(productId, -1);
+                    `;
+                    cartItems.appendChild(cartItem);
+                }
             });
-        });
-        
-        document.querySelectorAll('.quantity-btn.plus').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                updateCartQuantity(productId, 1);
+            
+            // Update cart totals
+            const cartSubtotal = document.querySelector('.cart-subtotal span:last-child');
+            const cartTotal = document.querySelector('.cart-total span:last-child');
+            
+            if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal}`;
+            if (cartTotal) cartTotal.textContent = `₹${subtotal}`;
+            
+            // Add event listeners for cart items
+            document.querySelectorAll('.quantity-btn.minus').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    updateCartQuantity(productId, -1);
+                });
             });
-        });
-        
-        document.querySelectorAll('.delete-item').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                removeFromCart(productId);
+            
+            document.querySelectorAll('.quantity-btn.plus').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    updateCartQuantity(productId, 1);
+                });
             });
-        });
-        
-        document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('change', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                const newQuantity = parseInt(e.currentTarget.value) || 1;
-                setCartQuantity(productId, newQuantity);
+            
+            document.querySelectorAll('.delete-item').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    removeFromCart(productId);
+                });
             });
-        });
+            
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    const newQuantity = parseInt(e.currentTarget.value) || 1;
+                    setCartQuantity(productId, newQuantity);
+                });
+            });
+        }
     }
+    
+    // Emit event for other pages
+    eventSystem.emit('cartUIUpdated', cartProducts);
 }
 
 // Enhanced Add to cart function with effects and auto-open sidebar
@@ -866,6 +971,9 @@ function addToCart(productId, quantity = 1) {
     cartSidebar.classList.add('active');
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    // Emit event
+    eventSystem.emit('productAddedToCart', { productId, quantity });
 }
 
 // Visual feedback for adding to cart
@@ -953,6 +1061,9 @@ function removeFromCart(productId) {
     }
     
     updateCartUI();
+    
+    // Emit event
+    eventSystem.emit('productRemovedFromCart', productId);
 }
 
 // WhatsApp functionality
@@ -1232,13 +1343,14 @@ browseProducts.addEventListener('click', () => {
     document.body.style.overflow = 'auto';
 });
 
-// Load guest data from localStorage
+// Enhanced Load guest data from localStorage with event emission
 function loadGuestData() {
     // Load liked products
     const guestLikes = localStorage.getItem('guestLikes');
     if (guestLikes) {
         likedProducts = JSON.parse(guestLikes);
         updateLikeUI();
+        eventSystem.emit('likesUpdated', likedProducts);
     }
     
     // Load cart items
@@ -1246,6 +1358,7 @@ function loadGuestData() {
     if (guestCart) {
         cartProducts = JSON.parse(guestCart);
         updateCartUI();
+        eventSystem.emit('cartUpdated', cartProducts);
     }
 }
 
@@ -1272,6 +1385,27 @@ window.addEventListener('scroll', () => {
 // Initialize common functionality
 function initCommon() {
     loadGuestData();
+    
+    // Set up event listeners for cross-page synchronization
+    eventSystem.on('likesUpdated', (likes) => {
+        likedProducts = likes;
+        updateLikeUI();
+    });
+    
+    eventSystem.on('cartUpdated', (cart) => {
+        cartProducts = cart;
+        updateCartUI();
+    });
+    
+    eventSystem.on('productLiked', (productId) => {
+        // This will trigger UI updates on all pages
+        updateLikeUI();
+    });
+    
+    eventSystem.on('productUnliked', (productId) => {
+        // This will trigger UI updates on all pages
+        updateLikeUI();
+    });
     
     // Initialize profile close button if it exists
     const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -1407,3 +1541,6 @@ function initCommon() {
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
 });
+
+// Global variable for quick view (will be used in index.js)
+let currentQuickViewProductId = null;
