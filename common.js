@@ -1167,7 +1167,7 @@ signUp.addEventListener('click', (e) => {
     showSignupView();
 });
 
-// Checkout button
+// Checkout button - Redirect to checkout page
 if (checkoutBtn) {
     checkoutBtn.addEventListener('click', () => {
         if (cartProducts.length === 0) {
@@ -1175,46 +1175,34 @@ if (checkoutBtn) {
             return;
         }
         
-        // Create order
-        const order = {
-            items: cartProducts,
-            total: cartProducts.reduce((total, item) => {
+        // Save cart data to localStorage for checkout page
+        const checkoutData = {
+            items: cartProducts.map(item => {
+                const product = products.find(p => p.id === item.id);
+                return {
+                    id: item.id,
+                    name: product ? product.name : 'Product',
+                    price: product ? product.price : 0,
+                    weight: product ? product.weight : '',
+                    image: product ? product.image : '',
+                    quantity: item.quantity
+                };
+            }),
+            subtotal: cartProducts.reduce((total, item) => {
                 const product = products.find(p => p.id === item.id);
                 return total + (product ? product.price * item.quantity : 0);
             }, 0),
-            status: 'placed',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            timestamp: new Date().getTime()
         };
         
-        // If user is logged in, save to Firestore
-        if (currentUser) {
-            db.collection('users').doc(currentUser.uid).collection('orders').add(order)
-                .then((docRef) => {
-                    // Clear cart
-                    cartProducts.forEach(item => {
-                        db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).delete()
-                        .catch((error) => {
-                            console.error("Error clearing cart:", error);
-                        });
-                    });
-                    
-                    cartProducts = [];
-                    updateCartUI();
-                    
-                    alert('Order placed successfully! Order ID: ' + docRef.id.substring(0, 8));
-                    closeAllSidebars();
-                    overlay.classList.remove('active');
-                    document.body.style.overflow = 'auto';
-                })
-                .catch((error) => {
-                    console.error("Error creating order:", error);
-                    alert('Error placing order. Please try again.');
-                });
-        } else {
-            // For guest users, just show success message
-            cartProducts = [];
-            updateCartUI();
-        }
+        // Save to localStorage
+        localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+        
+        // Also save the raw cart data for persistence
+        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+        
+        // Redirect to checkout page
+        window.location.href = 'checkout.html';
     });
 }
 
@@ -1406,4 +1394,5 @@ function initCommon() {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
+
 });
