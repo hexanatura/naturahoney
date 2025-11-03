@@ -69,4 +69,6 @@ function initScrollAnimations() {
 }
 
 // Initialize page-specific functionality
-initScrollAnimations();
+document.addEventListener('DOMContentLoaded', function() {
+  initScrollAnimations();
+});
