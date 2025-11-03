@@ -131,22 +131,14 @@ auth.onAuthStateChanged((user) => {
     } else {
         currentUser = null;
         updateUIForGuest();
-        // Reset profile-related elements if they exist
-        const profilePage = document.getElementById('profilePage');
-        const mainContent = document.getElementById('mainContent');
-        if (profilePage && mainContent) {
-            profilePage.classList.remove('active');
-            mainContent.style.display = 'block';
-        }
+        resetProfilePage();
     }
 });
 
-// Update UI for logged in user - ENHANCED
 function updateUIForUser(user) {
     userIcon.classList.add('logged-in');
     profileLink.style.display = 'block';
     
-    // Update profile info if elements exist
     const userNameElement = document.getElementById('user-name');
     const userEmailElement = document.getElementById('user-email');
     const editNameElement = document.getElementById('edit-name');
@@ -158,19 +150,16 @@ function updateUIForUser(user) {
     if (editNameElement) editNameElement.value = user.displayName || '';
     if (editEmailElement) editEmailElement.value = user.email;
     
-    // Update member since date
     if (memberSinceElement) {
         const memberSince = user.metadata.creationTime;
         memberSinceElement.textContent = new Date(memberSince).toLocaleDateString();
     }
 }
 
-// Update UI for guest
 function updateUIForGuest() {
     userIcon.classList.remove('logged-in');
     profileLink.style.display = 'block';
     
-    // Reset profile info if elements exist
     const userNameElement = document.getElementById('user-name');
     const userEmailElement = document.getElementById('user-email');
     
@@ -178,9 +167,16 @@ function updateUIForGuest() {
     if (userEmailElement) userEmailElement.textContent = 'user@example.com';
 }
 
-// Load user data from Firestore
+function resetProfilePage() {
+    const profilePage = document.getElementById('profilePage');
+    const mainContent = document.getElementById('mainContent');
+    if (profilePage && mainContent) {
+        profilePage.classList.remove('active');
+        mainContent.style.display = 'block';
+    }
+}
+
 function loadUserData(userId) {
-    // Load liked products
     db.collection('users').doc(userId).collection('likes').get()
         .then((querySnapshot) => {
             likedProducts = [];
@@ -193,7 +189,6 @@ function loadUserData(userId) {
             console.error("Error loading liked products:", error);
         });
 
-    // Load cart items
     db.collection('users').doc(userId).collection('cart').get()
         .then((querySnapshot) => {
             cartProducts = [];
@@ -209,7 +204,6 @@ function loadUserData(userId) {
             console.error("Error loading cart items:", error);
         });
 
-    // Load addresses if on profile page
     const addressesContainer = document.getElementById('addresses-container');
     if (addressesContainer) {
         db.collection('users').doc(userId).collection('addresses').get()
@@ -225,7 +219,6 @@ function loadUserData(userId) {
             });
     }
 
-    // Load orders if on profile page
     const ordersContainer = document.getElementById('orders-container');
     if (ordersContainer) {
         db.collection('users').doc(userId).collection('orders').get()
@@ -245,7 +238,6 @@ function loadUserData(userId) {
     }
 }
 
-// Display address in profile
 function displayAddress(addressId, address) {
     const addressesContainer = document.getElementById('addresses-container');
     if (!addressesContainer) return;
@@ -301,7 +293,6 @@ function displayAddress(addressId, address) {
     `;
     addressesContainer.appendChild(addressCard);
     
-    // Add event listeners
     setTimeout(() => {
         const editBtn = document.querySelector(`.edit-address-btn[data-id="${addressId}"]`);
         const deleteBtn = document.querySelector(`.delete-address-btn[data-id="${addressId}"]`);
@@ -336,7 +327,6 @@ function displayAddress(addressId, address) {
     }, 100);
 }
 
-// Display order in profile
 function displayOrder(order) {
     const ordersContainer = document.getElementById('orders-container');
     if (!ordersContainer) return;
@@ -384,7 +374,6 @@ function displayOrder(order) {
     
     ordersContainer.appendChild(orderCard);
     
-    // Add event listeners
     setTimeout(() => {
         const trackBtn = orderCard.querySelector('.track-order-btn');
         const reorderBtn = orderCard.querySelector('.reorder-btn');
@@ -403,7 +392,6 @@ function displayOrder(order) {
     }, 100);
 }
 
-// Reorder items
 function reorderItems(items) {
     items.forEach(item => {
         addToCart(item.productId, item.quantity);
@@ -411,7 +399,6 @@ function reorderItems(items) {
     alert('Items added to cart!');
 }
 
-// Save edited address
 function saveEditedAddress(addressId) {
     const label = document.getElementById(`edit-label-${addressId}`).value.trim();
     const name = document.getElementById(`edit-name-${addressId}`).value.trim();
@@ -435,7 +422,6 @@ function saveEditedAddress(addressId) {
     
     db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
         .then(() => {
-            // Refresh addresses
             const addressesContainer = document.getElementById('addresses-container');
             if (addressesContainer) {
                 addressesContainer.innerHTML = '';
@@ -449,11 +435,9 @@ function saveEditedAddress(addressId) {
         });
 }
 
-// Delete address
 function deleteAddress(addressId) {
     db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
         .then(() => {
-            // Refresh addresses
             const addressesContainer = document.getElementById('addresses-container');
             if (addressesContainer) {
                 addressesContainer.innerHTML = '';
@@ -467,25 +451,21 @@ function deleteAddress(addressId) {
         });
 }
 
-// Close all sidebars and modals
 function closeAllSidebars() {
     likesSidebar.classList.remove('active');
     cartSidebar.classList.remove('active');
     loginModal.classList.remove('active');
     
-    // Close filter sidebar if it exists
     const filterSidebar = document.getElementById('filterSidebar');
     if (filterSidebar) {
         filterSidebar.classList.remove('active');
     }
     
-    // Close quick view modal if it exists
     const quickViewModal = document.getElementById('quickViewModal');
     if (quickViewModal) {
         quickViewModal.style.display = 'none';
     }
     
-    // Close review modal if it exists
     const reviewModal = document.getElementById('reviewModal');
     if (reviewModal) {
         reviewModal.style.display = 'none';
@@ -494,7 +474,6 @@ function closeAllSidebars() {
     navLinks.classList.remove('active');
     userDropdown.classList.remove('active');
     
-    // Reset hamburger icon
     const icon = mobileMenuBtn.querySelector('i');
     icon.classList.remove('fa-times');
     icon.classList.add('fa-bars');
@@ -503,13 +482,11 @@ function closeAllSidebars() {
     document.body.style.overflow = 'auto';
 }
 
-// Mobile menu functionality
 mobileMenuBtn.addEventListener('click', () => {
     navLinks.classList.toggle('active');
     overlay.classList.toggle('active');
     document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : 'auto';
     
-    // Toggle hamburger icon to close icon
     const icon = mobileMenuBtn.querySelector('i');
     if (navLinks.classList.contains('active')) {
         icon.classList.remove('fa-bars');
@@ -520,28 +497,24 @@ mobileMenuBtn.addEventListener('click', () => {
     }
 });
 
-// Close mobile menu when clicking on a link
 document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => {
         navLinks.classList.remove('active');
         overlay.classList.remove('active');
         document.body.style.overflow = 'auto';
         
-        // Reset hamburger icon
         const icon = mobileMenuBtn.querySelector('i');
         icon.classList.remove('fa-times');
         icon.classList.add('fa-bars');
     });
 });
 
-// Overlay click to close modals
 overlay.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// User dropdown functionality
 userIcon.addEventListener('click', (e) => {
     e.stopPropagation();
     if (currentUser) {
@@ -555,28 +528,16 @@ userIcon.addEventListener('click', (e) => {
     }
 });
 
-// Close dropdown when clicking outside
 document.addEventListener('click', () => {
     userDropdown.classList.remove('active');
 });
 
-// Profile link functionality - ENHANCED
 profileLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     userDropdown.classList.remove('active');
     if (currentUser) {
-        // Show profile page if it exists
-        const profilePage = document.getElementById('profilePage');
-        const mainContent = document.getElementById('mainContent');
-        if (profilePage && mainContent) {
-            mainContent.style.display = 'none';
-            profilePage.classList.add('active');
-            // Load user data for profile page
-            loadUserData(currentUser.uid);
-        } else {
-            alert('Profile page would open here');
-        }
+        showProfilePage();
     } else {
         closeAllSidebars();
         showLoginView();
@@ -586,18 +547,30 @@ profileLink.addEventListener('click', (e) => {
     }
 });
 
-// Logout functionality
+function showProfilePage() {
+    const profilePage = document.getElementById('profilePage');
+    const mainContent = document.getElementById('mainContent');
+    
+    if (profilePage && mainContent) {
+        mainContent.style.display = 'none';
+        profilePage.classList.add('active');
+        loadUserData(currentUser.uid);
+    } else {
+        window.location.href = 'index.html';
+    }
+}
+
 logoutLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     auth.signOut().then(() => {
         alert('You have been logged out successfully!');
+        window.location.reload();
     }).catch((error) => {
         console.error("Error signing out:", error);
     });
 });
 
-// Like icon functionality
 likeIcon.addEventListener('click', () => {
     closeAllSidebars();
     likesSidebar.classList.add('active');
@@ -605,14 +578,12 @@ likeIcon.addEventListener('click', () => {
     document.body.style.overflow = 'hidden';
 });
 
-// Close likes sidebar
 closeLikes.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// Update likes UI
 function updateLikeUI() {
     if (likedProducts.length > 0) {
         likeCount.textContent = likedProducts.length;
@@ -652,7 +623,6 @@ function updateLikeUI() {
             }
         });
         
-        // Add event listeners for like items
         document.querySelectorAll('.remove-like').forEach(button => {
             button.addEventListener('click', (e) => {
                 const productId = parseInt(e.currentTarget.getAttribute('data-id'));
@@ -669,12 +639,10 @@ function updateLikeUI() {
     }
 }
 
-// Add to likes with auto-open sidebar
 function addToLikes(productId) {
     if (!likedProducts.includes(productId)) {
         likedProducts.push(productId);
         
-        // Save to Firestore if user is logged in
         if (currentUser) {
             db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).set({
                 productId: productId,
@@ -684,7 +652,6 @@ function addToLikes(productId) {
                 console.error("Error adding to likes:", error);
             });
         } else {
-            // Save to localStorage for guest users
             localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
         }
         
@@ -695,7 +662,6 @@ function addToLikes(productId) {
         heartIcon.classList.add('fas');
         heartIcon.style.color = '#ff4d4d';
         
-        // Auto-open likes sidebar when adding to favorites (close others first)
         closeAllSidebars();
         likesSidebar.classList.add('active');
         overlay.classList.add('active');
@@ -703,18 +669,15 @@ function addToLikes(productId) {
     }
 }
 
-// Remove from likes
 function removeFromLikes(productId) {
     likedProducts = likedProducts.filter(id => id !== productId);
     
-    // Remove from Firestore if user is logged in
     if (currentUser) {
         db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).delete()
         .catch((error) => {
             console.error("Error removing from likes:", error);
         });
     } else {
-        // Update localStorage for guest users
         localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
     }
     
@@ -728,7 +691,6 @@ function removeFromLikes(productId) {
     }
 }
 
-// Cart functionality
 cartIcon.addEventListener('click', () => {
     closeAllSidebars();
     cartSidebar.classList.add('active');
@@ -736,14 +698,12 @@ cartIcon.addEventListener('click', () => {
     document.body.style.overflow = 'hidden';
 });
 
-// Close cart sidebar
 closeCart.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// Update cart UI
 function updateCartUI() {
     const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
     
@@ -794,14 +754,12 @@ function updateCartUI() {
             }
         });
         
-        // Update cart totals
         const cartSubtotal = document.querySelector('.cart-subtotal span:last-child');
         const cartTotal = document.querySelector('.cart-total span:last-child');
         
         if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal}`;
         if (cartTotal) cartTotal.textContent = `₹${subtotal}`;
         
-        // Add event listeners for cart items
         document.querySelectorAll('.quantity-btn.minus').forEach(button => {
             button.addEventListener('click', (e) => {
                 const productId = parseInt(e.currentTarget.getAttribute('data-id'));
@@ -833,7 +791,6 @@ function updateCartUI() {
     }
 }
 
-// Enhanced Add to cart function with effects and auto-open sidebar
 function addToCart(productId, quantity = 1) {
     const existingItem = cartProducts.find(item => item.id === productId);
     
@@ -843,7 +800,6 @@ function addToCart(productId, quantity = 1) {
         cartProducts.push({ id: productId, quantity });
     }
     
-    // Save to Firestore if user is logged in
     if (currentUser) {
         db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).set({
             productId: productId,
@@ -854,21 +810,18 @@ function addToCart(productId, quantity = 1) {
             console.error("Error adding to cart:", error);
         });
     } else {
-        // Save to localStorage for guest users
         localStorage.setItem('guestCart', JSON.stringify(cartProducts));
     }
     
     updateCartUI();
     addCartVisualFeedback();
     
-    // Auto-open cart sidebar when adding to cart (close others first)
     closeAllSidebars();
     cartSidebar.classList.add('active');
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
-// Visual feedback for adding to cart
 function addCartVisualFeedback() {
     cartIcon.classList.add('cart-icon-bounce');
     cartCount.classList.add('badge-pulse');
@@ -879,7 +832,6 @@ function addCartVisualFeedback() {
     }, 600);
 }
 
-// Update cart quantity
 function updateCartQuantity(productId, change) {
     const item = cartProducts.find(item => item.id === productId);
     
@@ -889,7 +841,6 @@ function updateCartQuantity(productId, change) {
         if (item.quantity <= 0) {
             removeFromCart(productId);
         } else {
-            // Update Firestore if user is logged in
             if (currentUser) {
                 db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
                     quantity: item.quantity,
@@ -899,7 +850,6 @@ function updateCartQuantity(productId, change) {
                     console.error("Error updating cart:", error);
                 });
             } else {
-                // Update localStorage for guest users
                 localStorage.setItem('guestCart', JSON.stringify(cartProducts));
             }
             
@@ -908,7 +858,6 @@ function updateCartQuantity(productId, change) {
     }
 }
 
-// Set cart quantity
 function setCartQuantity(productId, quantity) {
     const item = cartProducts.find(item => item.id === productId);
     
@@ -918,7 +867,6 @@ function setCartQuantity(productId, quantity) {
         } else {
             item.quantity = quantity;
             
-            // Update Firestore if user is logged in
             if (currentUser) {
                 db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
                     quantity: quantity,
@@ -928,7 +876,6 @@ function setCartQuantity(productId, quantity) {
                     console.error("Error updating cart:", error);
                 });
             } else {
-                // Update localStorage for guest users
                 localStorage.setItem('guestCart', JSON.stringify(cartProducts));
             }
             
@@ -937,25 +884,21 @@ function setCartQuantity(productId, quantity) {
     }
 }
 
-// Remove from cart
 function removeFromCart(productId) {
     cartProducts = cartProducts.filter(item => item.id !== productId);
     
-    // Remove from Firestore if user is logged in
     if (currentUser) {
         db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).delete()
         .catch((error) => {
             console.error("Error removing from cart:", error);
         });
     } else {
-        // Update localStorage for guest users
         localStorage.setItem('guestCart', JSON.stringify(cartProducts));
     }
     
     updateCartUI();
 }
 
-// WhatsApp functionality
 whatsappIcon.addEventListener('click', () => {
     const phoneNumber = "919876543210";
     const message = "Hello, I'm interested in your honey products!";
@@ -963,19 +906,16 @@ whatsappIcon.addEventListener('click', () => {
     window.open(url, '_blank');
 });
 
-// Close login modal
 closeLogin.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// Back button functionality
 backBtn.addEventListener('click', () => {
     showLoginView();
 });
 
-// Show login view
 function showLoginView() {
     currentModalView = 'login';
     loginForm.classList.add('active');
@@ -987,7 +927,6 @@ function showLoginView() {
     loginFooter.style.display = 'block';
 }
 
-// Show signup view
 function showSignupView() {
     currentModalView = 'signup';
     loginForm.classList.remove('active');
@@ -999,7 +938,6 @@ function showSignupView() {
     loginFooter.style.display = 'none';
 }
 
-// Show forgot password view
 function showForgotView() {
     currentModalView = 'forgot';
     loginForm.classList.remove('active');
@@ -1011,7 +949,6 @@ function showForgotView() {
     loginFooter.style.display = 'none';
 }
 
-// Login functionality
 loginBtn.addEventListener('click', () => {
     const email = loginForm.querySelector('input[type="email"]').value;
     const password = loginForm.querySelector('input[type="password"]').value;
@@ -1034,7 +971,6 @@ loginBtn.addEventListener('click', () => {
         });
 });
 
-// Signup functionality
 signupBtn.addEventListener('click', () => {
     const name = signupForm.querySelector('input[type="text"]').value;
     const email = signupForm.querySelector('input[type="email"]').value;
@@ -1060,14 +996,11 @@ signupBtn.addEventListener('click', () => {
         .then((userCredential) => {
             const user = userCredential.user;
             
-            // Update profile with display name
             return user.updateProfile({
                 displayName: name
             }).then(() => {
-                // Send email verification
                 return user.sendEmailVerification();
             }).then(() => {
-                // Create user document in Firestore
                 return db.collection('users').doc(user.uid).set({
                     displayName: name,
                     email: email,
@@ -1087,7 +1020,6 @@ signupBtn.addEventListener('click', () => {
         });
 });
 
-// Reset password functionality
 resetBtn.addEventListener('click', () => {
     const email = forgotForm.querySelector('input[type="email"]').value;
     
@@ -1109,9 +1041,7 @@ resetBtn.addEventListener('click', () => {
         });
 });
 
-// Google login
 googleLoginBtn.addEventListener('click', () => {
-    // Check if we're in a supported environment
     if (window.location.protocol !== 'https:' && window.location.protocol !== 'http:' && !window.location.hostname.includes('localhost')) {
         alert('Google login is not supported in this environment. Please use email/password login instead.');
         return;
@@ -1124,7 +1054,6 @@ googleLoginBtn.addEventListener('click', () => {
             .then((result) => {
                 const user = result.user;
                 
-                // Check if user exists in Firestore, if not create document
                 return db.collection('users').doc(user.uid).get().then((doc) => {
                     if (!doc.exists) {
                         return db.collection('users').doc(user.uid).set({
@@ -1155,19 +1084,16 @@ googleLoginBtn.addEventListener('click', () => {
     }
 });
 
-// Forgot password link
 forgotPassword.addEventListener('click', (e) => {
     e.preventDefault();
     showForgotView();
 });
 
-// Sign up link
 signUp.addEventListener('click', (e) => {
     e.preventDefault();
     showSignupView();
 });
 
-// Checkout button - Redirect to checkout page
 if (checkoutBtn) {
     checkoutBtn.addEventListener('click', () => {
         if (cartProducts.length === 0) {
@@ -1175,7 +1101,6 @@ if (checkoutBtn) {
             return;
         }
         
-        // Save cart data to localStorage for checkout page
         const checkoutData = {
             items: cartProducts.map(item => {
                 const product = products.find(p => p.id === item.id);
@@ -1195,41 +1120,32 @@ if (checkoutBtn) {
             timestamp: new Date().getTime()
         };
         
-        // Save to localStorage
         localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-        
-        // Also save the raw cart data for persistence
         localStorage.setItem('guestCart', JSON.stringify(cartProducts));
         
-        // Redirect to checkout page
         window.location.href = 'checkout.html';
     });
 }
 
-// Continue shopping button
 if (continueShopping) {
     continueShopping.addEventListener('click', function() {
         window.location.href = "shop.html";
     });
 }
 
-// Browse products button
 browseProducts.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// Load guest data from localStorage
 function loadGuestData() {
-    // Load liked products
     const guestLikes = localStorage.getItem('guestLikes');
     if (guestLikes) {
         likedProducts = JSON.parse(guestLikes);
         updateLikeUI();
     }
     
-    // Load cart items
     const guestCart = localStorage.getItem('guestCart');
     if (guestCart) {
         cartProducts = JSON.parse(guestCart);
@@ -1237,7 +1153,6 @@ function loadGuestData() {
     }
 }
 
-// Hide notification bar on scroll down
 let lastScrollTop = 0;
 window.addEventListener('scroll', () => {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -1257,11 +1172,9 @@ window.addEventListener('scroll', () => {
     lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 }, { passive: true });
 
-// Initialize common functionality
 function initCommon() {
     loadGuestData();
     
-    // Initialize profile close button if it exists
     const profileCloseBtn = document.getElementById('profileCloseBtn');
     if (profileCloseBtn) {
         profileCloseBtn.addEventListener('click', () => {
@@ -1274,7 +1187,6 @@ function initCommon() {
         });
     }
     
-    // Initialize profile edit functionality if elements exist
     const editProfileBtn = document.getElementById('edit-profile-btn');
     const editProfileModal = document.getElementById('edit-profile-modal');
     const closeEditProfileModal = document.getElementById('close-edit-profile-modal');
@@ -1310,7 +1222,6 @@ function initCommon() {
             currentUser.updateProfile({
                 displayName: newName
             }).then(() => {
-                // Update Firestore
                 return db.collection('users').doc(currentUser.uid).set({
                     displayName: newName,
                     email: currentUser.email,
@@ -1327,7 +1238,6 @@ function initCommon() {
         });
     }
     
-    // Initialize address functionality if elements exist
     const addAddressBtn = document.getElementById('add-address-btn');
     const addAddressForm = document.getElementById('add-address-form');
     const cancelNewAddress = document.getElementById('cancel-new-address');
@@ -1391,8 +1301,6 @@ function initCommon() {
     }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
-
 });
