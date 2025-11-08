@@ -127,7 +127,7 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         updateUIForUser(user);
-        loadUserData(user.uid);
+        syncUserDataOnLogin(user.uid);
     } else {
         currentUser = null;
         updateUIForGuest();
@@ -140,6 +140,132 @@ auth.onAuthStateChanged((user) => {
         }
     }
 });
+
+// Sync user data when logging in (merge guest data with user data)
+function syncUserDataOnLogin(userId) {
+    // Load guest data from localStorage
+    const guestLikes = JSON.parse(localStorage.getItem('guestLikes') || '[]');
+    const guestCart = JSON.parse(localStorage.getItem('guestCart') || '[]');
+    
+    // Load user data from Firestore
+    Promise.all([
+        db.collection('users').doc(userId).collection('likes').get(),
+        db.collection('users').doc(userId).collection('cart').get()
+    ]).then(([likesSnapshot, cartSnapshot]) => {
+        let userLikes = [];
+        let userCart = [];
+        
+        // Process user likes from Firestore
+        likesSnapshot.forEach((doc) => {
+            userLikes.push(doc.data().productId);
+        });
+        
+        // Process user cart from Firestore
+        cartSnapshot.forEach((doc) => {
+            const cartItem = doc.data();
+            userCart.push({
+                id: cartItem.productId,
+                quantity: cartItem.quantity
+            });
+        });
+        
+        // Merge guest likes with user likes
+        const mergedLikes = [...new Set([...userLikes, ...guestLikes])];
+        likedProducts = mergedLikes;
+        
+        // Merge guest cart with user cart
+        const mergedCart = mergeCartItems(userCart, guestCart);
+        cartProducts = mergedCart;
+        
+        // Save merged data back to Firestore
+        return Promise.all([
+            saveLikesToFirestore(userId, mergedLikes),
+            saveCartToFirestore(userId, mergedCart)
+        ]);
+    }).then(() => {
+        // Clear guest data from localStorage
+        localStorage.removeItem('guestLikes');
+        localStorage.removeItem('guestCart');
+        
+        // Update UI
+        updateLikeUI();
+        updateCartUI();
+        
+        // Load additional user data
+        loadUserData(userId);
+    }).catch((error) => {
+        console.error("Error syncing user data:", error);
+        // Fallback: just load user data without merging
+        loadUserData(userId);
+    });
+}
+
+// Merge cart items from different sources
+function mergeCartItems(userCart, guestCart) {
+    const mergedCart = [...userCart];
+    
+    guestCart.forEach(guestItem => {
+        const existingItem = mergedCart.find(item => item.id === guestItem.id);
+        if (existingItem) {
+            existingItem.quantity += guestItem.quantity;
+        } else {
+            mergedCart.push(guestItem);
+        }
+    });
+    
+    return mergedCart;
+}
+
+// Save likes to Firestore
+function saveLikesToFirestore(userId, likes) {
+    const batch = db.batch();
+    const likesRef = db.collection('users').doc(userId).collection('likes');
+    
+    // Clear existing likes
+    return likesRef.get().then(snapshot => {
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        return batch.commit();
+    }).then(() => {
+        // Add merged likes
+        const batch = db.batch();
+        likes.forEach(productId => {
+            const likeRef = likesRef.doc(productId.toString());
+            batch.set(likeRef, {
+                productId: productId,
+                addedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+        return batch.commit();
+    });
+}
+
+// Save cart to Firestore
+function saveCartToFirestore(userId, cart) {
+    const batch = db.batch();
+    const cartRef = db.collection('users').doc(userId).collection('cart');
+    
+    // Clear existing cart
+    return cartRef.get().then(snapshot => {
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        return batch.commit();
+    }).then(() => {
+        // Add merged cart
+        const batch = db.batch();
+        cart.forEach(item => {
+            const cartRef = db.collection('users').doc(userId).collection('cart').doc(item.id.toString());
+            batch.set(cartRef, {
+                productId: item.id,
+                quantity: item.quantity,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+        return batch.commit();
+    });
+}
 
 // Update UI for logged in user - ENHANCED
 function updateUIForUser(user) {
@@ -1167,7 +1293,7 @@ signUp.addEventListener('click', (e) => {
     showSignupView();
 });
 
-// Checkout button
+// Checkout button - REDIRECT TO CHECKOUT.HTML
 if (checkoutBtn) {
     checkoutBtn.addEventListener('click', () => {
         if (cartProducts.length === 0) {
@@ -1175,46 +1301,11 @@ if (checkoutBtn) {
             return;
         }
         
-        // Create order
-        const order = {
-            items: cartProducts,
-            total: cartProducts.reduce((total, item) => {
-                const product = products.find(p => p.id === item.id);
-                return total + (product ? product.price * item.quantity : 0);
-            }, 0),
-            status: 'placed',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
+        // Save cart data to localStorage for checkout page
+        localStorage.setItem('checkoutCart', JSON.stringify(cartProducts));
         
-        // If user is logged in, save to Firestore
-        if (currentUser) {
-            db.collection('users').doc(currentUser.uid).collection('orders').add(order)
-                .then((docRef) => {
-                    // Clear cart
-                    cartProducts.forEach(item => {
-                        db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).delete()
-                        .catch((error) => {
-                            console.error("Error clearing cart:", error);
-                        });
-                    });
-                    
-                    cartProducts = [];
-                    updateCartUI();
-                    
-                    alert('Order placed successfully! Order ID: ' + docRef.id.substring(0, 8));
-                    closeAllSidebars();
-                    overlay.classList.remove('active');
-                    document.body.style.overflow = 'auto';
-                })
-                .catch((error) => {
-                    console.error("Error creating order:", error);
-                    alert('Error placing order. Please try again.');
-                });
-        } else {
-            // For guest users, just show success message
-            cartProducts = [];
-            updateCartUI();
-        }
+        // Redirect to checkout page
+        window.location.href = 'checkout.html';
     });
 }
 
