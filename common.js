@@ -127,12 +127,11 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         updateUIForUser(user);
-        // Always load user data when user is detected
-        loadUserData(user.uid);
+        // Only load profile data (orders, addresses), not cart/likes
+        loadUserProfileData(user.uid);
     } else {
         currentUser = null;
         updateUIForGuest();
-        loadGuestData(); // Load guest data from localStorage
         // Reset profile-related elements if they exist
         const profilePage = document.getElementById('profilePage');
         const mainContent = document.getElementById('mainContent');
@@ -143,140 +142,7 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// Handle user login with data synchronization
-function handleUserLogin(user) {
-    currentUser = user;
-    updateUIForUser(user);
-    syncUserDataOnLogin(user.uid);
-}
-
-// Sync user data when logging in (merge guest data with user data)
-function syncUserDataOnLogin(userId) {
-    // Load guest data from localStorage
-    const guestLikes = JSON.parse(localStorage.getItem('guestLikes') || '[]');
-    const guestCart = JSON.parse(localStorage.getItem('guestCart') || '[]');
-    
-    // Load user data from Firestore
-    Promise.all([
-        db.collection('users').doc(userId).collection('likes').get(),
-        db.collection('users').doc(userId).collection('cart').get()
-    ]).then(([likesSnapshot, cartSnapshot]) => {
-        let userLikes = [];
-        let userCart = [];
-        
-        // Process user likes from Firestore
-        likesSnapshot.forEach((doc) => {
-            userLikes.push(doc.data().productId);
-        });
-        
-        // Process user cart from Firestore
-        cartSnapshot.forEach((doc) => {
-            const cartItem = doc.data();
-            userCart.push({
-                id: cartItem.productId,
-                quantity: cartItem.quantity
-            });
-        });
-        
-        // Merge guest likes with user likes
-        const mergedLikes = [...new Set([...userLikes, ...guestLikes])];
-        likedProducts = mergedLikes;
-        
-        // Merge guest cart with user cart
-        const mergedCart = mergeCartItems(userCart, guestCart);
-        cartProducts = mergedCart;
-        
-        // Save merged data back to Firestore
-        return Promise.all([
-            saveLikesToFirestore(userId, mergedLikes),
-            saveCartToFirestore(userId, mergedCart)
-        ]);
-    }).then(() => {
-        // Clear guest data from localStorage
-        localStorage.removeItem('guestLikes');
-        localStorage.removeItem('guestCart');
-        
-        // Update UI
-        updateLikeUI();
-        updateCartUI();
-        
-        // Load additional user data
-        loadUserData(userId);
-    }).catch((error) => {
-        console.error("Error syncing user data:", error);
-        // Fallback: just load user data without merging
-        loadUserData(userId);
-    });
-}
-
-// Merge cart items from different sources
-function mergeCartItems(userCart, guestCart) {
-    const mergedCart = [...userCart];
-    
-    guestCart.forEach(guestItem => {
-        const existingItem = mergedCart.find(item => item.id === guestItem.id);
-        if (existingItem) {
-            existingItem.quantity += guestItem.quantity;
-        } else {
-            mergedCart.push(guestItem);
-        }
-    });
-    
-    return mergedCart;
-}
-
-// Save likes to Firestore
-function saveLikesToFirestore(userId, likes) {
-    const batch = db.batch();
-    const likesRef = db.collection('users').doc(userId).collection('likes');
-    
-    // Clear existing likes
-    return likesRef.get().then(snapshot => {
-        snapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-        return batch.commit();
-    }).then(() => {
-        // Add merged likes
-        const batch = db.batch();
-        likes.forEach(productId => {
-            const likeRef = likesRef.doc(productId.toString());
-            batch.set(likeRef, {
-                productId: productId,
-                addedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        });
-        return batch.commit();
-    });
-}
-
-// Save cart to Firestore
-function saveCartToFirestore(userId, cart) {
-    const batch = db.batch();
-    const cartRef = db.collection('users').doc(userId).collection('cart');
-    
-    // Clear existing cart
-    return cartRef.get().then(snapshot => {
-        snapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-        return batch.commit();
-    }).then(() => {
-        // Add merged cart
-        const batch = db.batch();
-        cart.forEach(item => {
-            const cartRef = db.collection('users').doc(userId).collection('cart').doc(item.id.toString());
-            batch.set(cartRef, {
-                productId: item.id,
-                quantity: item.quantity,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        });
-        return batch.commit();
-    });
-}
-
-// Update UI for logged in user
+// Update UI for logged in user - ENHANCED
 function updateUIForUser(user) {
     userIcon.classList.add('logged-in');
     profileLink.style.display = 'block';
@@ -313,37 +179,8 @@ function updateUIForGuest() {
     if (userEmailElement) userEmailElement.textContent = 'user@example.com';
 }
 
-// Load user data from Firestore
-function loadUserData(userId) {
-    // Load liked products
-    db.collection('users').doc(userId).collection('likes').get()
-        .then((querySnapshot) => {
-            likedProducts = [];
-            querySnapshot.forEach((doc) => {
-                likedProducts.push(doc.data().productId);
-            });
-            updateLikeUI();
-        })
-        .catch((error) => {
-            console.error("Error loading liked products:", error);
-        });
-
-    // Load cart items
-    db.collection('users').doc(userId).collection('cart').get()
-        .then((querySnapshot) => {
-            cartProducts = [];
-            querySnapshot.forEach((doc) => {
-                cartProducts.push({
-                    id: doc.data().productId,
-                    quantity: doc.data().quantity
-                });
-            });
-            updateCartUI();
-        })
-        .catch((error) => {
-            console.error("Error loading cart items:", error);
-        });
-
+// Load only profile data (orders, addresses) from Firestore - NOT cart/likes
+function loadUserProfileData(userId) {
     // Load addresses if on profile page
     const addressesContainer = document.getElementById('addresses-container');
     if (addressesContainer) {
@@ -574,7 +411,7 @@ function saveEditedAddress(addressId) {
             const addressesContainer = document.getElementById('addresses-container');
             if (addressesContainer) {
                 addressesContainer.innerHTML = '';
-                loadUserData(currentUser.uid);
+                loadUserProfileData(currentUser.uid);
             }
             alert('Address updated successfully!');
         })
@@ -592,7 +429,7 @@ function deleteAddress(addressId) {
             const addressesContainer = document.getElementById('addresses-container');
             if (addressesContainer) {
                 addressesContainer.innerHTML = '';
-                loadUserData(currentUser.uid);
+                loadUserProfileData(currentUser.uid);
             }
             alert('Address deleted successfully!');
         })
@@ -695,7 +532,7 @@ document.addEventListener('click', () => {
     userDropdown.classList.remove('active');
 });
 
-// Profile link functionality
+// Profile link functionality - ENHANCED
 profileLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -708,7 +545,7 @@ profileLink.addEventListener('click', (e) => {
             mainContent.style.display = 'none';
             profilePage.classList.add('active');
             // Load user data for profile page
-            loadUserData(currentUser.uid);
+            loadUserProfileData(currentUser.uid);
         } else {
             alert('Profile page would open here');
         }
@@ -809,24 +646,10 @@ function addToLikes(productId) {
     if (!likedProducts.includes(productId)) {
         likedProducts.push(productId);
         
-        // Save to Firestore if user is logged in
-        if (currentUser) {
-            db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).set({
-                productId: productId,
-                addedAt: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                // After saving to Firestore, update local state
-                updateLikeUI();
-            })
-            .catch((error) => {
-                console.error("Error adding to likes:", error);
-            });
-        } else {
-            // Save to localStorage for guest users
-            localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
-            updateLikeUI();
-        }
+        // Save ONLY to localStorage (no Firestore saving)
+        localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+        
+        updateLikeUI();
         
         const heartIcon = likeIcon.querySelector('i');
         heartIcon.classList.remove('far');
@@ -845,20 +668,10 @@ function addToLikes(productId) {
 function removeFromLikes(productId) {
     likedProducts = likedProducts.filter(id => id !== productId);
     
-    // Remove from Firestore if user is logged in
-    if (currentUser) {
-        db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).delete()
-        .then(() => {
-            updateLikeUI();
-        })
-        .catch((error) => {
-            console.error("Error removing from likes:", error);
-        });
-    } else {
-        // Update localStorage for guest users
-        localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
-        updateLikeUI();
-    }
+    // Update ONLY localStorage (no Firestore update)
+    localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+    
+    updateLikeUI();
     
     if (likedProducts.length === 0) {
         const heartIcon = likeIcon.querySelector('i');
@@ -973,7 +786,7 @@ function updateCartUI() {
     }
 }
 
-// Enhanced Add to cart function with proper persistence
+// Enhanced Add to cart function with effects and auto-open sidebar
 function addToCart(productId, quantity = 1) {
     const existingItem = cartProducts.find(item => item.id === productId);
     
@@ -983,26 +796,10 @@ function addToCart(productId, quantity = 1) {
         cartProducts.push({ id: productId, quantity });
     }
     
-    // Save to Firestore if user is logged in
-    if (currentUser) {
-        db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).set({
-            productId: productId,
-            quantity: existingItem ? existingItem.quantity : quantity,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(() => {
-            // After saving to Firestore, update local state
-            updateCartUI();
-        })
-        .catch((error) => {
-            console.error("Error adding to cart:", error);
-        });
-    } else {
-        // Save to localStorage for guest users
-        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-        updateCartUI();
-    }
+    // Save ONLY to localStorage (no Firestore saving)
+    localStorage.setItem('guestCart', JSON.stringify(cartProducts));
     
+    updateCartUI();
     addCartVisualFeedback();
     
     // Auto-open cart sidebar when adding to cart (close others first)
@@ -1033,23 +830,10 @@ function updateCartQuantity(productId, change) {
         if (item.quantity <= 0) {
             removeFromCart(productId);
         } else {
-            // Update Firestore if user is logged in
-            if (currentUser) {
-                db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
-                    quantity: item.quantity,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                })
-                .then(() => {
-                    updateCartUI();
-                })
-                .catch((error) => {
-                    console.error("Error updating cart:", error);
-                });
-            } else {
-                // Update localStorage for guest users
-                localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-                updateCartUI();
-            }
+            // Update ONLY localStorage (no Firestore update)
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+            
+            updateCartUI();
         }
     }
 }
@@ -1064,23 +848,10 @@ function setCartQuantity(productId, quantity) {
         } else {
             item.quantity = quantity;
             
-            // Update Firestore if user is logged in
-            if (currentUser) {
-                db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).update({
-                    quantity: quantity,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                })
-                .then(() => {
-                    updateCartUI();
-                })
-                .catch((error) => {
-                    console.error("Error updating cart:", error);
-                });
-            } else {
-                // Update localStorage for guest users
-                localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-                updateCartUI();
-            }
+            // Update ONLY localStorage (no Firestore update)
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+            
+            updateCartUI();
         }
     }
 }
@@ -1089,20 +860,10 @@ function setCartQuantity(productId, quantity) {
 function removeFromCart(productId) {
     cartProducts = cartProducts.filter(item => item.id !== productId);
     
-    // Remove from Firestore if user is logged in
-    if (currentUser) {
-        db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).delete()
-        .then(() => {
-            updateCartUI();
-        })
-        .catch((error) => {
-            console.error("Error removing from cart:", error);
-        });
-    } else {
-        // Update localStorage for guest users
-        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-        updateCartUI();
-    }
+    // Update ONLY localStorage (no Firestore update)
+    localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+    
+    updateCartUI();
 }
 
 // WhatsApp functionality
@@ -1173,8 +934,6 @@ loginBtn.addEventListener('click', () => {
     
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
-            const user = userCredential.user;
-            handleUserLogin(user);
             closeAllSidebars();
             overlay.classList.remove('active');
             document.body.style.overflow = 'auto';
@@ -1219,7 +978,7 @@ signupBtn.addEventListener('click', () => {
                 // Send email verification
                 return user.sendEmailVerification();
             }).then(() => {
-                // Create user document in Firestore
+                // Create user document in Firestore (only for profile data)
                 return db.collection('users').doc(user.uid).set({
                     displayName: name,
                     email: email,
@@ -1228,8 +987,6 @@ signupBtn.addEventListener('click', () => {
             });
         })
         .then(() => {
-            const user = auth.currentUser;
-            handleUserLogin(user);
             closeAllSidebars();
             overlay.classList.remove('active');
             document.body.style.overflow = 'auto';
@@ -1278,7 +1035,7 @@ googleLoginBtn.addEventListener('click', () => {
             .then((result) => {
                 const user = result.user;
                 
-                // Check if user exists in Firestore, if not create document
+                // Check if user exists in Firestore, if not create document (only for profile data)
                 return db.collection('users').doc(user.uid).get().then((doc) => {
                     if (!doc.exists) {
                         return db.collection('users').doc(user.uid).set({
@@ -1290,9 +1047,6 @@ googleLoginBtn.addEventListener('click', () => {
                 });
             })
             .then(() => {
-                // Get the current user after sign-in
-                const user = auth.currentUser;
-                handleUserLogin(user);
                 closeAllSidebars();
                 overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
@@ -1371,15 +1125,6 @@ function loadGuestData() {
     }
 }
 
-// Refresh user data function
-function refreshUserData() {
-    if (currentUser) {
-        loadUserData(currentUser.uid);
-    } else {
-        loadGuestData();
-    }
-}
-
 // Hide notification bar on scroll down
 let lastScrollTop = 0;
 window.addEventListener('scroll', () => {
@@ -1402,12 +1147,7 @@ window.addEventListener('scroll', () => {
 
 // Initialize common functionality
 function initCommon() {
-    // Load appropriate data based on auth state
-    if (currentUser) {
-        loadUserData(currentUser.uid);
-    } else {
-        loadGuestData();
-    }
+    loadGuestData();
     
     // Initialize profile close button if it exists
     const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -1458,7 +1198,7 @@ function initCommon() {
             currentUser.updateProfile({
                 displayName: newName
             }).then(() => {
-                // Update Firestore
+                // Update Firestore (only for profile data)
                 return db.collection('users').doc(currentUser.uid).set({
                     displayName: newName,
                     email: currentUser.email,
@@ -1538,14 +1278,6 @@ function initCommon() {
         });
     }
 }
-
-// Add page visibility listener to refresh data when user returns to the page
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && currentUser) {
-        // Refresh user data when page becomes visible
-        loadUserData(currentUser.uid);
-    }
-});
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
