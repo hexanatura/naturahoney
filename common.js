@@ -127,10 +127,12 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         updateUIForUser(user);
-        syncUserDataOnLogin(user.uid);
+        // Always load user data when user is detected
+        loadUserData(user.uid);
     } else {
         currentUser = null;
         updateUIForGuest();
+        loadGuestData(); // Load guest data from localStorage
         // Reset profile-related elements if they exist
         const profilePage = document.getElementById('profilePage');
         const mainContent = document.getElementById('mainContent');
@@ -140,6 +142,13 @@ auth.onAuthStateChanged((user) => {
         }
     }
 });
+
+// Handle user login with data synchronization
+function handleUserLogin(user) {
+    currentUser = user;
+    updateUIForUser(user);
+    syncUserDataOnLogin(user.uid);
+}
 
 // Sync user data when logging in (merge guest data with user data)
 function syncUserDataOnLogin(userId) {
@@ -267,7 +276,7 @@ function saveCartToFirestore(userId, cart) {
     });
 }
 
-// Update UI for logged in user - ENHANCED
+// Update UI for logged in user
 function updateUIForUser(user) {
     userIcon.classList.add('logged-in');
     profileLink.style.display = 'block';
@@ -686,7 +695,7 @@ document.addEventListener('click', () => {
     userDropdown.classList.remove('active');
 });
 
-// Profile link functionality - ENHANCED
+// Profile link functionality
 profileLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -806,15 +815,18 @@ function addToLikes(productId) {
                 productId: productId,
                 addedAt: firebase.firestore.FieldValue.serverTimestamp()
             })
+            .then(() => {
+                // After saving to Firestore, update local state
+                updateLikeUI();
+            })
             .catch((error) => {
                 console.error("Error adding to likes:", error);
             });
         } else {
             // Save to localStorage for guest users
             localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+            updateLikeUI();
         }
-        
-        updateLikeUI();
         
         const heartIcon = likeIcon.querySelector('i');
         heartIcon.classList.remove('far');
@@ -836,15 +848,17 @@ function removeFromLikes(productId) {
     // Remove from Firestore if user is logged in
     if (currentUser) {
         db.collection('users').doc(currentUser.uid).collection('likes').doc(productId.toString()).delete()
+        .then(() => {
+            updateLikeUI();
+        })
         .catch((error) => {
             console.error("Error removing from likes:", error);
         });
     } else {
         // Update localStorage for guest users
         localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+        updateLikeUI();
     }
-    
-    updateLikeUI();
     
     if (likedProducts.length === 0) {
         const heartIcon = likeIcon.querySelector('i');
@@ -959,7 +973,7 @@ function updateCartUI() {
     }
 }
 
-// Enhanced Add to cart function with effects and auto-open sidebar
+// Enhanced Add to cart function with proper persistence
 function addToCart(productId, quantity = 1) {
     const existingItem = cartProducts.find(item => item.id === productId);
     
@@ -976,15 +990,19 @@ function addToCart(productId, quantity = 1) {
             quantity: existingItem ? existingItem.quantity : quantity,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         })
+        .then(() => {
+            // After saving to Firestore, update local state
+            updateCartUI();
+        })
         .catch((error) => {
             console.error("Error adding to cart:", error);
         });
     } else {
         // Save to localStorage for guest users
         localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+        updateCartUI();
     }
     
-    updateCartUI();
     addCartVisualFeedback();
     
     // Auto-open cart sidebar when adding to cart (close others first)
@@ -1021,15 +1039,17 @@ function updateCartQuantity(productId, change) {
                     quantity: item.quantity,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 })
+                .then(() => {
+                    updateCartUI();
+                })
                 .catch((error) => {
                     console.error("Error updating cart:", error);
                 });
             } else {
                 // Update localStorage for guest users
                 localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+                updateCartUI();
             }
-            
-            updateCartUI();
         }
     }
 }
@@ -1050,15 +1070,17 @@ function setCartQuantity(productId, quantity) {
                     quantity: quantity,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 })
+                .then(() => {
+                    updateCartUI();
+                })
                 .catch((error) => {
                     console.error("Error updating cart:", error);
                 });
             } else {
                 // Update localStorage for guest users
                 localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+                updateCartUI();
             }
-            
-            updateCartUI();
         }
     }
 }
@@ -1070,15 +1092,17 @@ function removeFromCart(productId) {
     // Remove from Firestore if user is logged in
     if (currentUser) {
         db.collection('users').doc(currentUser.uid).collection('cart').doc(productId.toString()).delete()
+        .then(() => {
+            updateCartUI();
+        })
         .catch((error) => {
             console.error("Error removing from cart:", error);
         });
     } else {
         // Update localStorage for guest users
         localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+        updateCartUI();
     }
-    
-    updateCartUI();
 }
 
 // WhatsApp functionality
@@ -1149,6 +1173,8 @@ loginBtn.addEventListener('click', () => {
     
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
+            const user = userCredential.user;
+            handleUserLogin(user);
             closeAllSidebars();
             overlay.classList.remove('active');
             document.body.style.overflow = 'auto';
@@ -1202,6 +1228,8 @@ signupBtn.addEventListener('click', () => {
             });
         })
         .then(() => {
+            const user = auth.currentUser;
+            handleUserLogin(user);
             closeAllSidebars();
             overlay.classList.remove('active');
             document.body.style.overflow = 'auto';
@@ -1262,6 +1290,9 @@ googleLoginBtn.addEventListener('click', () => {
                 });
             })
             .then(() => {
+                // Get the current user after sign-in
+                const user = auth.currentUser;
+                handleUserLogin(user);
                 closeAllSidebars();
                 overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
@@ -1340,6 +1371,15 @@ function loadGuestData() {
     }
 }
 
+// Refresh user data function
+function refreshUserData() {
+    if (currentUser) {
+        loadUserData(currentUser.uid);
+    } else {
+        loadGuestData();
+    }
+}
+
 // Hide notification bar on scroll down
 let lastScrollTop = 0;
 window.addEventListener('scroll', () => {
@@ -1362,7 +1402,12 @@ window.addEventListener('scroll', () => {
 
 // Initialize common functionality
 function initCommon() {
-    loadGuestData();
+    // Load appropriate data based on auth state
+    if (currentUser) {
+        loadUserData(currentUser.uid);
+    } else {
+        loadGuestData();
+    }
     
     // Initialize profile close button if it exists
     const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -1493,6 +1538,14 @@ function initCommon() {
         });
     }
 }
+
+// Add page visibility listener to refresh data when user returns to the page
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && currentUser) {
+        // Refresh user data when page becomes visible
+        loadUserData(currentUser.uid);
+    }
+});
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
