@@ -197,13 +197,11 @@ function loadUserProfileData(userId) {
                 userOrders = [];
                 
                 if (querySnapshot.empty) {
-                    ordersContainer.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-shopping-bag"></i>
-                            <h3>No orders yet</h3>
-                            <p>Your orders will appear here</p>
-                        </div>
-                    `;
+ordersContainer.innerHTML = `
+    <div class="empty-state">
+        <i class="fas fa-shopping-bag"></i> No orders yet
+    </div>
+`;
                     return;
                 }
                 
@@ -249,10 +247,9 @@ function loadUserAddresses(userId) {
                 addressesContainer.innerHTML = '';
                 
                 if (querySnapshot.empty) {
-                   addressesContainer.innerHTML = `
+        addressesContainer.innerHTML = `
     <div class="empty-state">
-        <i class="fas fa-map-marker-alt"></i>
-        <h3>No addresses saved</h3>
+        <i class="fas fa-map-marker-alt"></i> No addresses saved
     </div>
 `;
                     return;
@@ -1477,3 +1474,4 @@ function initCommon() {
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
 });
+
