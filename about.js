@@ -28,27 +28,7 @@ function closeQuickView() {
     document.body.style.overflow = 'auto';
 }
 
-// Scroll animation for content sections
-function initScrollAnimations() {
-    const sections = document.querySelectorAll('.content-section');
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-    
-    sections.forEach(section => {
-        observer.observe(section);
-    });
-}
-
 // Initialize about page
 document.addEventListener('DOMContentLoaded', function() {
-    initScrollAnimations();
+    console.log('About page initialized');
 });
