@@ -127,8 +127,9 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         updateUIForUser(user);
-        // Only load profile data (orders, addresses), not cart/likes
+        // Load profile data including addresses
         loadUserProfileData(user.uid);
+        loadUserAddresses(user.uid);
     } else {
         currentUser = null;
         updateUIForGuest();
@@ -182,20 +183,7 @@ function updateUIForGuest() {
 // Load only profile data (orders, addresses) from Firestore - NOT cart/likes
 function loadUserProfileData(userId) {
     // Load addresses if on profile page
-    const addressesContainer = document.getElementById('addresses-container');
-    if (addressesContainer) {
-        db.collection('users').doc(userId).collection('addresses').get()
-            .then((querySnapshot) => {
-                addressesContainer.innerHTML = '';
-                querySnapshot.forEach((doc) => {
-                    const address = doc.data();
-                    displayAddress(doc.id, address);
-                });
-            })
-            .catch((error) => {
-                console.error("Error loading addresses:", error);
-            });
-    }
+    loadUserAddresses(userId);
 
     // Load orders if on profile page
     const ordersContainer = document.getElementById('orders-container');
@@ -217,20 +205,79 @@ function loadUserProfileData(userId) {
     }
 }
 
-// Display address in profile
+// Load addresses from user's Firestore profile
+function loadUserAddresses(userId) {
+    const addressesContainer = document.getElementById('addresses-container');
+    if (!addressesContainer) return;
+    
+    addressesContainer.innerHTML = '<div class="loading">Loading addresses...</div>';
+    
+    db.collection('users').doc(userId).collection('addresses')
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then((querySnapshot) => {
+            addressesContainer.innerHTML = '';
+            
+            if (querySnapshot.empty) {
+                addressesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h3>No addresses saved</h3>
+                        <p>Add your first address to make checkout faster</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            querySnapshot.forEach((doc) => {
+                const address = doc.data();
+                displayAddress(doc.id, address);
+            });
+        })
+        .catch((error) => {
+            console.error("Error loading addresses:", error);
+            addressesContainer.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error loading addresses</h3>
+                    <p>Please try refreshing the page</p>
+                </div>
+            `;
+        });
+}
+
+// Display address in profile with better UI
 function displayAddress(addressId, address) {
     const addressesContainer = document.getElementById('addresses-container');
     if (!addressesContainer) return;
     
+    // Remove loading or empty states if present
+    const loadingState = addressesContainer.querySelector('.loading, .empty-state, .error-state');
+    if (loadingState) {
+        loadingState.remove();
+    }
+    
     const addressCard = document.createElement('div');
     addressCard.className = 'address-card';
     addressCard.innerHTML = `
-        <h3>
-            ${address.label} Address
-            <span style="font-size: 14px; color: #777;">Pincode: ${address.pincode}</span>
-        </h3>
-        <p>${address.name}<br>${address.address.replace(/\n/g, '<br>')}<br>Phone: ${address.phone}</p>
+        <div class="address-header">
+            <h3>
+                ${address.label} Address
+                ${address.isDefault ? '<span class="default-badge">Default</span>' : ''}
+            </h3>
+            <span class="address-pincode">Pincode: ${address.pincode}</span>
+        </div>
+        <div class="address-details">
+            <p><strong>${address.name}</strong></p>
+            <p>${address.address.replace(/\n/g, '<br>')}</p>
+            <p>Phone: ${address.phone}</p>
+        </div>
         <div class="address-actions">
+            ${!address.isDefault ? `
+                <button class="btn btn-sm set-default-address-btn" data-id="${addressId}">
+                    <i class="fas fa-star"></i> Set Default
+                </button>
+            ` : ''}
             <button class="btn btn-sm edit-address-btn" data-id="${addressId}">
                 <i class="fas fa-edit"></i> Edit
             </button>
@@ -239,31 +286,32 @@ function displayAddress(addressId, address) {
             </button>
         </div>
         <div class="address-form edit-address-form" id="edit-address-form-${addressId}" style="display: none;">
+            <h4>Edit Address</h4>
             <div class="form-row">
                 <div class="form-group">
                     <label for="edit-label-${addressId}">Address Label</label>
-                    <input type="text" id="edit-label-${addressId}" value="${address.label}">
+                    <input type="text" id="edit-label-${addressId}" value="${address.label}" placeholder="Home, Work, etc.">
                 </div>
                 <div class="form-group">
                     <label for="edit-pincode-${addressId}">Pincode</label>
-                    <input type="text" id="edit-pincode-${addressId}" value="${address.pincode}">
+                    <input type="text" id="edit-pincode-${addressId}" value="${address.pincode}" maxlength="6">
                 </div>
             </div>
             <div class="form-group">
                 <label for="edit-name-${addressId}">Full Name</label>
-                <input type="text" id="edit-name-${addressId}" value="${address.name}">
+                    <input type="text" id="edit-name-${addressId}" value="${address.name}">
             </div>
             <div class="form-group">
                 <label for="edit-address-${addressId}">Address</label>
-                <textarea id="edit-address-${addressId}">${address.address}</textarea>
+                <textarea id="edit-address-${addressId}" rows="3">${address.address}</textarea>
             </div>
             <div class="form-group">
                 <label for="edit-phone-${addressId}">Phone</label>
-                <input type="text" id="edit-phone-${addressId}" value="${address.phone}">
+                <input type="text" id="edit-phone-${addressId}" value="${address.phone}" maxlength="10">
             </div>
             <div class="form-actions">
                 <button class="btn save-edit-address-btn" data-id="${addressId}">
-                    <i class="fas fa-save"></i> Save
+                    <i class="fas fa-save"></i> Save Changes
                 </button>
                 <button class="btn btn-outline cancel-edit-address-btn" data-id="${addressId}">
                     <i class="fas fa-times"></i> Cancel
@@ -274,38 +322,215 @@ function displayAddress(addressId, address) {
     addressesContainer.appendChild(addressCard);
     
     // Add event listeners
+    attachAddressEventListeners(addressId);
+}
+
+// Attach event listeners to address actions
+function attachAddressEventListeners(addressId) {
     setTimeout(() => {
+        // Edit button
         const editBtn = document.querySelector(`.edit-address-btn[data-id="${addressId}"]`);
-        const deleteBtn = document.querySelector(`.delete-address-btn[data-id="${addressId}"]`);
-        const saveBtn = document.querySelector(`.save-edit-address-btn[data-id="${addressId}"]`);
-        const cancelBtn = document.querySelector(`.cancel-edit-address-btn[data-id="${addressId}"]`);
-        
         if (editBtn) {
             editBtn.addEventListener('click', function() {
                 document.getElementById(`edit-address-form-${addressId}`).style.display = 'block';
             });
         }
         
+        // Delete button
+        const deleteBtn = document.querySelector(`.delete-address-btn[data-id="${addressId}"]`);
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to delete this address?')) {
-                    deleteAddress(addressId);
+                    deleteAddressFromFirestore(addressId);
                 }
             });
         }
         
+        // Save edited address button
+        const saveBtn = document.querySelector(`.save-edit-address-btn[data-id="${addressId}"]`);
         if (saveBtn) {
             saveBtn.addEventListener('click', function() {
-                saveEditedAddress(addressId);
+                saveEditedAddressToFirestore(addressId);
             });
         }
         
+        // Cancel edit button
+        const cancelBtn = document.querySelector(`.cancel-edit-address-btn[data-id="${addressId}"]`);
         if (cancelBtn) {
             cancelBtn.addEventListener('click', function() {
                 document.getElementById(`edit-address-form-${addressId}`).style.display = 'none';
             });
         }
+        
+        // Set default address button
+        const setDefaultBtn = document.querySelector(`.set-default-address-btn[data-id="${addressId}"]`);
+        if (setDefaultBtn) {
+            setDefaultBtn.addEventListener('click', function() {
+                setDefaultAddress(addressId);
+            });
+        }
     }, 100);
+}
+
+// Save new address to user's profile in Firestore
+function saveNewAddressToProfile() {
+    const label = document.getElementById('new-label').value.trim();
+    const name = document.getElementById('new-name').value.trim();
+    const address = document.getElementById('new-address').value.trim();
+    const phone = document.getElementById('new-phone').value.trim();
+    const pincode = document.getElementById('new-pincode').value.trim();
+    
+    if (!label || !name || !address || !phone || !pincode) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    // Validate phone number (basic validation)
+    if (phone.length < 10) {
+        alert('Please enter a valid phone number');
+        return;
+    }
+    
+    // Validate pincode (basic validation)
+    if (pincode.length < 6) {
+        alert('Please enter a valid pincode');
+        return;
+    }
+    
+    if (!currentUser) {
+        alert('Please log in to save addresses');
+        showLoginView();
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        return;
+    }
+    
+    const newAddress = {
+        label: label,
+        name: name,
+        address: address,
+        phone: phone,
+        pincode: pincode,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        isDefault: false
+    };
+    
+    // Save to Firestore under user's addresses collection
+    db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
+        .then((docRef) => {
+            console.log('Address saved with ID:', docRef.id);
+            
+            // Add the new address to the UI
+            displayAddress(docRef.id, newAddress);
+            
+            // Reset the form
+            const addAddressForm = document.getElementById('add-address-form');
+            if (addAddressForm) {
+                addAddressForm.style.display = 'none';
+            }
+            document.getElementById('new-label').value = '';
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-address').value = '';
+            document.getElementById('new-phone').value = '';
+            document.getElementById('new-pincode').value = '';
+            
+            // Show success message
+            showNotification('Address saved successfully!', 'success');
+        })
+        .catch((error) => {
+            console.error("Error adding address:", error);
+            showNotification('Error saving address. Please try again.', 'error');
+        });
+}
+
+// Save edited address to Firestore
+function saveEditedAddressToFirestore(addressId) {
+    const label = document.getElementById(`edit-label-${addressId}`).value.trim();
+    const name = document.getElementById(`edit-name-${addressId}`).value.trim();
+    const address = document.getElementById(`edit-address-${addressId}`).value.trim();
+    const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
+    const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
+    
+    if (!label || !name || !address || !phone || !pincode) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    const updatedAddress = {
+        label: label,
+        name: name,
+        address: address,
+        phone: phone,
+        pincode: pincode,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
+        .then(() => {
+            // Refresh addresses display
+            const addressesContainer = document.getElementById('addresses-container');
+            if (addressesContainer) {
+                addressesContainer.innerHTML = '';
+                loadUserAddresses(currentUser.uid);
+            }
+            showNotification('Address updated successfully!', 'success');
+        })
+        .catch((error) => {
+            console.error("Error updating address:", error);
+            showNotification('Error updating address. Please try again.', 'error');
+        });
+}
+
+// Delete address from Firestore
+function deleteAddressFromFirestore(addressId) {
+    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
+        .then(() => {
+            // Refresh addresses display
+            const addressesContainer = document.getElementById('addresses-container');
+            if (addressesContainer) {
+                addressesContainer.innerHTML = '';
+                loadUserAddresses(currentUser.uid);
+            }
+            showNotification('Address deleted successfully!', 'success');
+        })
+        .catch((error) => {
+            console.error("Error deleting address:", error);
+            showNotification('Error deleting address. Please try again.', 'error');
+        });
+}
+
+// Set default address
+function setDefaultAddress(addressId) {
+    // First, remove default from all addresses
+    db.collection('users').doc(currentUser.uid).collection('addresses').get()
+        .then((querySnapshot) => {
+            const batch = db.batch();
+            
+            querySnapshot.forEach((doc) => {
+                const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
+                if (doc.id === addressId) {
+                    batch.update(addressRef, { isDefault: true });
+                } else {
+                    batch.update(addressRef, { isDefault: false });
+                }
+            });
+            
+            return batch.commit();
+        })
+        .then(() => {
+            // Refresh addresses display
+            const addressesContainer = document.getElementById('addresses-container');
+            if (addressesContainer) {
+                addressesContainer.innerHTML = '';
+                loadUserAddresses(currentUser.uid);
+            }
+            showNotification('Default address set successfully!', 'success');
+        })
+        .catch((error) => {
+            console.error("Error setting default address:", error);
+            showNotification('Error setting default address. Please try again.', 'error');
+        });
 }
 
 // Display order in profile
@@ -383,60 +608,10 @@ function reorderItems(items) {
     alert('Items added to cart!');
 }
 
-// Save edited address
-function saveEditedAddress(addressId) {
-    const label = document.getElementById(`edit-label-${addressId}`).value.trim();
-    const name = document.getElementById(`edit-name-${addressId}`).value.trim();
-    const address = document.getElementById(`edit-address-${addressId}`).value.trim();
-    const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
-    const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
-    
-    if (!label || !name || !address || !phone || !pincode) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    const updatedAddress = {
-        label: label,
-        name: name,
-        address: address,
-        phone: phone,
-        pincode: pincode,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
-        .then(() => {
-            // Refresh addresses
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserProfileData(currentUser.uid);
-            }
-            alert('Address updated successfully!');
-        })
-        .catch((error) => {
-            console.error("Error updating address:", error);
-            alert('Error updating address. Please try again.');
-        });
-}
-
-// Delete address
-function deleteAddress(addressId) {
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
-        .then(() => {
-            // Refresh addresses
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserProfileData(currentUser.uid);
-            }
-            alert('Address deleted successfully!');
-        })
-        .catch((error) => {
-            console.error("Error deleting address:", error);
-            alert('Error deleting address. Please try again.');
-        });
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    // Simple alert for now - you can enhance this with toast notifications
+    alert(message);
 }
 
 // Close all sidebars and modals
@@ -1238,58 +1413,9 @@ function initCommon() {
         });
     }
     
-if (saveNewAddress) {
-    saveNewAddress.addEventListener('click', function() {
-        if (!currentUser) {
-            alert('Please log in to save an address.');
-            return;
-        }
-
-        const label = document.getElementById('new-label').value.trim();
-        const name = document.getElementById('new-name').value.trim();
-        const address = document.getElementById('new-address').value.trim();
-        const phone = document.getElementById('new-phone').value.trim();
-        const pincode = document.getElementById('new-pincode').value.trim();
-
-        if (!label || !name || !address || !phone || !pincode) {
-            alert('Please fill in all fields');
-            return;
-        }
-
-        const newAddress = {
-            label,
-            name,
-            address,
-            phone,
-            pincode,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        db.collection('users')
-            .doc(currentUser.uid)
-            .collection('addresses')
-            .add(newAddress)
-            .then((docRef) => {
-                // Display new address immediately
-                displayAddress(docRef.id, newAddress);
-
-                // Reset form
-                addAddressForm.style.display = 'none';
-                document.getElementById('new-label').value = '';
-                document.getElementById('new-name').value = '';
-                document.getElementById('new-address').value = '';
-                document.getElementById('new-phone').value = '';
-                document.getElementById('new-pincode').value = '';
-
-                alert('New address added successfully!');
-            })
-            .catch((error) => {
-                console.error('Error adding address:', error);
-                alert('Error adding address. Please try again.');
-            });
-    });
-}
-
+    if (saveNewAddress) {
+        saveNewAddress.addEventListener('click', saveNewAddressToProfile);
+    }
 }
 
 // Initialize when DOM is loaded
