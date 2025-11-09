@@ -129,7 +129,6 @@ auth.onAuthStateChanged((user) => {
         updateUIForUser(user);
         // Load profile data including addresses
         loadUserProfileData(user.uid);
-        loadUserAddresses(user.uid);
     } else {
         currentUser = null;
         updateUIForGuest();
@@ -182,16 +181,32 @@ function updateUIForGuest() {
 
 // Load only profile data (orders, addresses) from Firestore - NOT cart/likes
 function loadUserProfileData(userId) {
+    console.log('Loading profile data for user:', userId);
+    
     // Load addresses if on profile page
     loadUserAddresses(userId);
 
     // Load orders if on profile page
     const ordersContainer = document.getElementById('orders-container');
     if (ordersContainer) {
+        console.log('Loading orders...');
         db.collection('users').doc(userId).collection('orders').get()
             .then((querySnapshot) => {
+                console.log('Orders loaded:', querySnapshot.size);
                 ordersContainer.innerHTML = '';
                 userOrders = [];
+                
+                if (querySnapshot.empty) {
+                    ordersContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-shopping-bag"></i>
+                            <h3>No orders yet</h3>
+                            <p>Your orders will appear here</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
                 querySnapshot.forEach((doc) => {
                     const order = doc.data();
                     order.id = doc.id;
@@ -201,55 +216,90 @@ function loadUserProfileData(userId) {
             })
             .catch((error) => {
                 console.error("Error loading orders:", error);
+                ordersContainer.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error loading orders</h3>
+                        <p>Please try refreshing the page</p>
+                        <button class="btn btn-sm" onclick="loadUserProfileData('${userId}')">Retry</button>
+                    </div>
+                `;
             });
     }
 }
 
-// Load addresses from user's Firestore profile
+// Load addresses from user's Firestore profile with better error handling
 function loadUserAddresses(userId) {
     const addressesContainer = document.getElementById('addresses-container');
-    if (!addressesContainer) return;
+    if (!addressesContainer) {
+        console.log('Addresses container not found');
+        return;
+    }
     
+    console.log('Loading addresses for user:', userId);
     addressesContainer.innerHTML = '<div class="loading">Loading addresses...</div>';
     
-    db.collection('users').doc(userId).collection('addresses')
-        .orderBy('createdAt', 'desc')
-        .get()
-        .then((querySnapshot) => {
-            addressesContainer.innerHTML = '';
-            
-            if (querySnapshot.empty) {
-                addressesContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <h3>No addresses saved</h3>
-                        <p>Add your first address to make checkout faster</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            querySnapshot.forEach((doc) => {
-                const address = doc.data();
-                displayAddress(doc.id, address);
+    // Add a small delay to ensure DOM is ready
+    setTimeout(() => {
+        db.collection('users').doc(userId).collection('addresses')
+            .orderBy('createdAt', 'desc')
+            .get()
+            .then((querySnapshot) => {
+                console.log('Addresses query result:', querySnapshot.size, 'addresses found');
+                addressesContainer.innerHTML = '';
+                
+                if (querySnapshot.empty) {
+                    addressesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <h3>No addresses saved</h3>
+                            <p>Add your first address to make checkout faster</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                querySnapshot.forEach((doc) => {
+                    const address = doc.data();
+                    console.log('Displaying address:', doc.id, address);
+                    displayAddress(doc.id, address);
+                });
+            })
+            .catch((error) => {
+                console.error("Error loading addresses:", error);
+                console.error("Error details:", error.code, error.message);
+                
+                // Check if it's a permissions error
+                if (error.code === 'permission-denied') {
+                    addressesContainer.innerHTML = `
+                        <div class="error-state">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Permission Denied</h3>
+                            <p>Please check Firebase Firestore rules</p>
+                            <button class="btn btn-sm" onclick="loadUserAddresses('${userId}')">Retry</button>
+                        </div>
+                    `;
+                } else {
+                    addressesContainer.innerHTML = `
+                        <div class="error-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h3>Error loading addresses</h3>
+                            <p>${error.message}</p>
+                            <button class="btn btn-sm" onclick="loadUserAddresses('${userId}')">Retry</button>
+                        </div>
+                    `;
+                }
             });
-        })
-        .catch((error) => {
-            console.error("Error loading addresses:", error);
-            addressesContainer.innerHTML = `
-                <div class="error-state">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <h3>Error loading addresses</h3>
-                    <p>Please try refreshing the page</p>
-                </div>
-            `;
-        });
+    }, 100);
 }
 
 // Display address in profile with better UI
 function displayAddress(addressId, address) {
     const addressesContainer = document.getElementById('addresses-container');
-    if (!addressesContainer) return;
+    if (!addressesContainer) {
+        console.error('Addresses container not found for displaying address');
+        return;
+    }
     
     // Remove loading or empty states if present
     const loadingState = addressesContainer.querySelector('.loading, .empty-state, .error-state');
@@ -299,7 +349,7 @@ function displayAddress(addressId, address) {
             </div>
             <div class="form-group">
                 <label for="edit-name-${addressId}">Full Name</label>
-                    <input type="text" id="edit-name-${addressId}" value="${address.name}">
+                <input type="text" id="edit-name-${addressId}" value="${address.name}">
             </div>
             <div class="form-group">
                 <label for="edit-address-${addressId}">Address</label>
@@ -386,14 +436,14 @@ function saveNewAddressToProfile() {
     }
     
     // Validate phone number (basic validation)
-    if (phone.length < 10) {
-        alert('Please enter a valid phone number');
+    if (phone.length < 10 || !/^\d+$/.test(phone)) {
+        alert('Please enter a valid 10-digit phone number');
         return;
     }
     
     // Validate pincode (basic validation)
-    if (pincode.length < 6) {
-        alert('Please enter a valid pincode');
+    if (pincode.length < 6 || !/^\d+$/.test(pincode)) {
+        alert('Please enter a valid 6-digit pincode');
         return;
     }
     
@@ -415,6 +465,8 @@ function saveNewAddressToProfile() {
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         isDefault: false
     };
+    
+    console.log('Saving new address:', newAddress);
     
     // Save to Firestore under user's addresses collection
     db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
@@ -440,7 +492,7 @@ function saveNewAddressToProfile() {
         })
         .catch((error) => {
             console.error("Error adding address:", error);
-            showNotification('Error saving address. Please try again.', 'error');
+            showNotification('Error saving address: ' + error.message, 'error');
         });
 }
 
@@ -478,7 +530,7 @@ function saveEditedAddressToFirestore(addressId) {
         })
         .catch((error) => {
             console.error("Error updating address:", error);
-            showNotification('Error updating address. Please try again.', 'error');
+            showNotification('Error updating address: ' + error.message, 'error');
         });
 }
 
@@ -496,7 +548,7 @@ function deleteAddressFromFirestore(addressId) {
         })
         .catch((error) => {
             console.error("Error deleting address:", error);
-            showNotification('Error deleting address. Please try again.', 'error');
+            showNotification('Error deleting address: ' + error.message, 'error');
         });
 }
 
@@ -529,7 +581,7 @@ function setDefaultAddress(addressId) {
         })
         .catch((error) => {
             console.error("Error setting default address:", error);
-            showNotification('Error setting default address. Please try again.', 'error');
+            showNotification('Error setting default address: ' + error.message, 'error');
         });
 }
 
@@ -611,7 +663,11 @@ function reorderItems(items) {
 // Helper function to show notifications
 function showNotification(message, type = 'info') {
     // Simple alert for now - you can enhance this with toast notifications
-    alert(message);
+    if (type === 'error') {
+        alert('Error: ' + message);
+    } else {
+        alert(message);
+    }
 }
 
 // Close all sidebars and modals
