@@ -249,13 +249,16 @@ function loadUserAddresses(userId) {
                 addressesContainer.innerHTML = '';
                 
                 if (querySnapshot.empty) {
-                    addressesContainer.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <h3>No addresses saved</h3>
-                            <p>Add your first address to make checkout faster</p>
-                        </div>
-                    `;
+                   addressesContainer.innerHTML = `
+    <div class="empty-state">
+        <i class="fas fa-map-marker-alt"></i>
+        <h3>No addresses saved</h3>
+        <p>Add your first address to make checkout faster</p>
+        <button class="btn" onclick="document.getElementById('add-address-form').style.display='block'">
+            <i class="fas fa-plus"></i> Add Your First Address
+        </button>
+    </div>
+`;
                     return;
                 }
                 
