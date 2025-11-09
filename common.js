@@ -1238,45 +1238,58 @@ function initCommon() {
         });
     }
     
-    if (saveNewAddress) {
-        saveNewAddress.addEventListener('click', function() {
-            const label = document.getElementById('new-label').value.trim();
-            const name = document.getElementById('new-name').value.trim();
-            const address = document.getElementById('new-address').value.trim();
-            const phone = document.getElementById('new-phone').value.trim();
-            const pincode = document.getElementById('new-pincode').value.trim();
-            
-            if (!label || !name || !address || !phone || !pincode) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            const newAddress = {
-                label: label,
-                name: name,
-                address: address,
-                phone: phone,
-                pincode: pincode,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-                .then((docRef) => {
-                    displayAddress(docRef.id, newAddress);
-                    addAddressForm.style.display = 'none';
-                    document.getElementById('new-label').value = '';
-                    document.getElementById('new-name').value = '';
-                    document.getElementById('new-address').value = '';
-                    document.getElementById('new-phone').value = '';
-                    document.getElementById('new-pincode').value = '';
-                    alert('New address added successfully!');
-                })
-                .catch((error) => {
-                    console.error("Error adding address:", error);
-                    alert('Error adding address. Please try again.');
-                });
-        });
-    }
+if (saveNewAddress) {
+    saveNewAddress.addEventListener('click', function() {
+        if (!currentUser) {
+            alert('Please log in to save an address.');
+            return;
+        }
+
+        const label = document.getElementById('new-label').value.trim();
+        const name = document.getElementById('new-name').value.trim();
+        const address = document.getElementById('new-address').value.trim();
+        const phone = document.getElementById('new-phone').value.trim();
+        const pincode = document.getElementById('new-pincode').value.trim();
+
+        if (!label || !name || !address || !phone || !pincode) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        const newAddress = {
+            label,
+            name,
+            address,
+            phone,
+            pincode,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection('users')
+            .doc(currentUser.uid)
+            .collection('addresses')
+            .add(newAddress)
+            .then((docRef) => {
+                // Display new address immediately
+                displayAddress(docRef.id, newAddress);
+
+                // Reset form
+                addAddressForm.style.display = 'none';
+                document.getElementById('new-label').value = '';
+                document.getElementById('new-name').value = '';
+                document.getElementById('new-address').value = '';
+                document.getElementById('new-phone').value = '';
+                document.getElementById('new-pincode').value = '';
+
+                alert('New address added successfully!');
+            })
+            .catch((error) => {
+                console.error('Error adding address:', error);
+                alert('Error adding address. Please try again.');
+            });
+    });
+}
+
 }
 
 // Initialize when DOM is loaded
