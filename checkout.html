@@ -411,16 +411,22 @@
     align-items: flex-start;
   }
 
-  .order-item-price {
-    margin-top: -10px !important;
-    align-self: flex-end !important;
-    display: block;
-  }
-
   .order-item-header {
     flex-direction: row;
     width: 100%;
     align-items: flex-start;
+    position: relative;
+  }
+
+  .order-item-price {
+    position: absolute;
+    top: 125px;
+    right: 45px;
+    margin-top: 0 !important;
+  }
+
+  .order-item-info {
+    padding-right: 80px; 
   }
 
   .order-item-footer {
@@ -433,7 +439,6 @@
     width: auto;
   }
 }
-
 
     .profile-close-container {
       position: fixed;
