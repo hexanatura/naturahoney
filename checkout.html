@@ -358,21 +358,21 @@
 }
 
 @media (max-width: 767px) {
-  .order-item-main {
-    flex-direction: row !important;
-    align-items: flex-start;
+  .order-item-price {
+    margin-top: -12px !important; 
+    align-self: flex-end !important;
+    display: block;
   }
 
   .order-item-header {
-    flex-direction: row;
     width: 100%;
   }
 
-  .order-item-price {
-    align-self: flex-start;
+  /* Ensure quantity stays below */
+  .order-item-footer {
+    margin-top: 5px;
   }
 }
-
 
     .profile-close-container {
       position: fixed;
