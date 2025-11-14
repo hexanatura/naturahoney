@@ -35,22 +35,47 @@
       overflow-x: hidden;
     }
 
-    /* Profile Page Styles */
-    .profile-page {
-      display: none;
-      padding: 120px 5%;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+/* Profile Page Styles - Updated */
+.profile-page {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: white;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 120px 5% 40px;
+}
 
-    .profile-page.active {
-      display: block;
-    }
+.profile-page.active {
+  display: block;
+}
 
-    .profile-container {
-      max-width: 1000px;
-      margin: 0 auto;
-    }
+.profile-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+/* Mobile adjustments for profile page */
+@media (max-width: 767px) {
+  .profile-page {
+    padding: 100px 4% 20px;
+  }
+  
+  .profile-close-container {
+    top: 90px;
+    right: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    padding: 90px 3% 15px;
+  }
+}
 
     .profile-header {
       display: flex;
