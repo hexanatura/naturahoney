@@ -310,12 +310,26 @@
       color: #155724;
     }
 
-   /* FORCE HORIZONTAL LAYOUT ON ALL SCREEN SIZES */
+   .order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.order-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
 .order-item-main {
   display: flex;
   flex-direction: row !important;
+  gap: 15px;
   align-items: flex-start;
-  gap: 12px;
   width: 100%;
 }
 
@@ -326,11 +340,16 @@
 .order-item-image {
   width: 70px;
   height: 70px;
+  border-radius: 10px;
   background: #f5f5f5;
   display: flex;
-  justify-content: center;
   align-items: center;
-  border-radius: 10px;
+  justify-content: center;
+}
+
+.order-item-image i {
+  font-size: 24px;
+  color: #5f2b27;
 }
 
 .order-item-content {
@@ -343,36 +362,78 @@
 .order-item-header {
   display: flex;
   justify-content: space-between;
-  width: 100%;
   align-items: flex-start;
+  width: 100%;
+  gap: 10px;
 }
 
 .order-item-info {
   flex: 1;
 }
 
+.order-item-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 3px;
+}
+
+.order-item-weight {
+  font-size: 14px;
+  color: #777;
+}
+
 .order-item-price {
-  white-space: nowrap;
+  font-size: 16px;
   font-weight: 600;
   color: #5f2b27;
+  white-space: nowrap;
+}
+
+.order-item-footer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.order-item-quantity {
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 @media (max-width: 767px) {
+  .order-item-main {
+    flex-direction: row !important;
+    align-items: flex-start;
+  }
+
   .order-item-price {
-    margin-top: -12px !important; 
+    margin-top: -10px !important;
     align-self: flex-end !important;
     display: block;
   }
 
   .order-item-header {
+    flex-direction: row;
     width: 100%;
+    align-items: flex-start;
   }
 
-  /* Ensure quantity stays below */
   .order-item-footer {
-    margin-top: 5px;
+    margin-top: 8px;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .order-item-quantity {
+    width: auto;
   }
 }
+
 
     .profile-close-container {
       position: fixed;
