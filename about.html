@@ -74,6 +74,16 @@
   margin-right: 25px;
   border: 3px solid #5f2b27;
 }
+  .section-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px;
+  color: #5f2b27;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e7d90f; 
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
 .profile-avatar i {
   font-size: 40px;
@@ -784,6 +794,34 @@
   outline: none;
   border-color: #ddd;
   box-shadow: none;
+}
+
+@media (max-width: 767px) {
+  .order-item-main {
+    flex-direction: row !important;
+    align-items: flex-start;
+  }
+
+  .order-item-header {
+    flex-direction: row;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .order-item-price {
+    margin-top: 0px !important;
+    align-self: flex-start !important; 
+  }
+
+  .order-item-footer {
+    margin-top: 8px;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .order-item-quantity {
+    width: auto;
+  }
 }
     
 /* Mobile First Styles */
