@@ -35,7 +35,7 @@
       overflow-x: hidden;
     }
     
-    /* Add these styles to your existing CSS */
+   /* Add these styles to your existing CSS */
 
 /* Loading and Empty States */
 .loading, .empty-state, .error-state {
@@ -59,7 +59,7 @@
   color: #333;
 }
 
-/* Address Card Styles */
+/* Address Card Styles - UPDATED to match checkout page */
 .address-header {
   display: flex;
   justify-content: space-between;
@@ -87,6 +87,8 @@
 
 .address-details p {
   margin-bottom: 5px;
+  color: #333;
+  font-size: 15px;
 }
 
 /* Order Item Styles */
@@ -223,7 +225,8 @@
   margin-right: 25px;
   border: 3px solid #5f2b27;
 }
-  .section-title {
+
+.section-title {
   font-family: 'Unbounded', sans-serif;
   font-size: 20px;
   color: #5f2b27;
@@ -277,10 +280,13 @@
   margin-right: 10px;
 }
 
+/* UPDATED ADDRESS CARD STYLES - Simple white cards like checkout page */
 .address-card {
-  background: #f9f9f9;
-  border-radius: 10px;
-  padding: 20px;
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
   margin-bottom: 15px;
   position: relative;
   transition: all 0.3s;
@@ -303,6 +309,8 @@
 .address-card p {
   line-height: 1.6;
   font-size: 15px;
+  color: #333;
+  margin-bottom: 8px;
 }
 
 .address-actions {
@@ -972,7 +980,6 @@
     width: auto;
   }
 }
-
     /* Mobile First Styles */
     @media (max-width: 767px) {
       body {
