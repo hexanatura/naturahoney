@@ -187,7 +187,7 @@
   }
 }
 
-/* Profile Page Styles */
+/* Profile Page Styles - UPDATED TO MATCH CHECKOUT PAGE */
 .profile-page {
   display: none;
   padding: 120px 5%;
@@ -207,11 +207,11 @@
 .profile-header {
   display: flex;
   align-items: center;
-  background: white;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
+  background: #f8f3e6;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 40px;
 }
 
 .profile-avatar {
@@ -260,18 +260,22 @@
 }
 
 .profile-section {
-  background: white;
-  border-radius: 15px;
-  padding: 25px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  margin-bottom: 30px;
+  background: #f8f3e6;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 40px;
 }
 
 .section-title {
-  font-family: 'Akira Expanded', sans-serif;
-  font-size: 22px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px;
   color: #5f2b27;
   margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e7d90f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
 }
@@ -1933,7 +1937,8 @@
       color: #FFD700;
     }
 
- footer {
+    /* Footer Styles - UPDATED FOR MOBILE TEXT SIZE */
+    footer {
       background:#556b2f; 
       color:white; 
       padding:60px 5%; 
@@ -2106,6 +2111,46 @@
       font-family:'Unbounded', sans-serif; 
       font-size:14px; 
       color:rgba(255,255,255,0.8);
+    }
+
+    /* Mobile Footer Text Size - UPDATED TO MATCH CHECKOUT PAGE */
+    @media (max-width: 767px) {
+      footer {
+        padding: 40px 5%;
+      }
+      
+      footer h3 {
+        font-size: 18px;
+        margin-bottom: 15px;
+      }
+      
+      footer ul {
+        font-size: 14px;
+      }
+      
+      footer ul li {
+        margin-bottom: 10px;
+      }
+      
+      .contact-text {
+        font-size: 14px;
+      }
+      
+      .footer-social h4 {
+        font-size: 16px;
+      }
+      
+      .enquiries h4 {
+        font-size: 16px;
+      }
+      
+      .enquiry-item a {
+        font-size: 13px;
+      }
+      
+      .footer-bottom p {
+        font-size: 12px;
+      }
     }
 
     /* Sidebars */
@@ -2929,7 +2974,7 @@
     </div>
   </div>
 
-     <!-- Profile Page -->
+     <!-- Profile Page - UPDATED TO MATCH CHECKOUT PAGE STYLING -->
   <div class="profile-page" id="profilePage">
     <div class="profile-close-container">
       <button class="profile-close-btn" id="profileCloseBtn">
