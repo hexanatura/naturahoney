@@ -38,28 +38,34 @@ body {
 /* Notification Bar - FIXED */
 .notification-bar {
   background: #e7d90f;
-  color: #333;
+  color: #fff;
   text-align: center;
-  padding: 8px 10px;
+  padding: 10px;
   font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.5px;
+  font-size: 10px;
+  letter-spacing: 1px;
   position: fixed;
+  top: 0px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  will-change: transform, opacity;
+}
+.notification-bar::before {
+  content: "";
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1001;
-  transition: all 0.3s ease;
-  will-change: transform;
-  transform: translateY(0);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
 }
-
 .notification-bar p {
-  margin: 0;
-  font-family: 'Unbounded', sans-serif;
+  position: relative;
+  z-index: 2;
 }
-
 .notification-bar.hidden {
   transform: translateY(-100%);
   opacity: 0;
@@ -71,20 +77,20 @@ nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 5%;
+  padding: 20px 5%;
   background: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: fixed;
-  top: 40px; /* Matches notification bar height */
+  top: 43px;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 60;
   font-family: 'Nirmala UI', sans-serif;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   transition: top 0.3s ease;
-  height: 70px;
+  flex-direction: row !important;
 }
 
 /* When notification bar is hidden */
@@ -95,16 +101,16 @@ nav {
 .logo {
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 30px;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1002;
+  z-index: 65;
 }
 
 .logo img {
-  height: 50px;
+  height: 70px;
   width: auto;
   cursor: pointer;
   transition: transform 0.3s;
@@ -131,7 +137,7 @@ nav {
   text-decoration: none;
   color: #333;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.3s;
   padding: 5px 0;
   font-family: 'Unbounded', sans-serif;
@@ -167,36 +173,33 @@ nav {
 
 /* Content Wrapper - FIXED */
 .content-wrapper {
-  margin-top: 110px; /* nav height + notification bar height */
+  margin-top: 165px;
   transition: margin-top 0.3s ease;
-  min-height: calc(100vh - 110px);
+  min-height: calc(100vh - 165px);
 }
 
 /* Adjust content when notification bar is hidden */
 .notification-bar.hidden ~ .content-wrapper {
-  margin-top: 70px; /* Only nav height */
+  margin-top: 125px;
 }
 
 .nav-icons {
   display: flex;
   align-items: center;
-  gap: 20px;
-  z-index: 1002;
+  margin-left: auto;
+  gap: 35px;
 }
 
 .icon {
-  font-size: 18px;
+  font-size: 20px;
   color: #333;
   transition: color 0.3s;
   cursor: pointer;
   position: relative;
-  padding: 5px;
-  border-radius: 4px;
 }
 
 .icon:hover {
   color: #5f2b27;
-  background: rgba(95, 43, 39, 0.05);
 }
 
 .user-dropdown {
@@ -211,7 +214,7 @@ nav {
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   min-width: 200px;
-  z-index: 1000;
+  z-index: 100;
   display: none;
   overflow: hidden;
   margin-top: 10px;
@@ -244,7 +247,7 @@ nav {
   border-bottom: 1px solid #f8f8f8;
   font-family: 'Unbounded', sans-serif;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .dropdown-item:last-child {
@@ -274,8 +277,8 @@ nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   transition: all 0.3s ease;
   cursor: pointer;
@@ -296,7 +299,7 @@ nav {
 }
 
 .user-icon-wrapper .fa-user {
-  font-size: 16px;
+  font-size: 18px;
   transition: all 0.3s ease;
 }
 
@@ -328,15 +331,15 @@ nav {
   background: linear-gradient(135deg, #FFD700, #FFA500);
   color: #5f2b27;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  font-size: 11px;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
   font-family: 'Unbounded', sans-serif;
 }
 
@@ -351,41 +354,43 @@ nav {
   }
   
   .notification-bar {
-    font-size: 10px;
-    padding: 6px 8px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 8px !important;
+    padding: 8px 10px !important;
   }
   
   nav {
-    padding: 10px 4% !important;
-    height: 60px;
-    top: 30px; /* Matches mobile notification bar height */
+    padding: 12px 5% !important;
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
+    top: 28px !important;
   }
   
   .notification-bar.hidden + nav {
-    top: 0;
+    top: 0 !important;
   }
   
   .mobile-menu-btn {
     display: block !important;
-    order: 1;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
     margin-right: 10px;
+    order: 1;
+    flex-shrink: 0;
+    z-index: 101;
+    position: relative;
   }
   
   .logo {
-    position: static;
-    transform: none;
+    position: static !important;
+    transform: none !important;
     order: 2;
     flex-grow: 1;
     display: flex;
     justify-content: center;
-    z-index: 1002;
   }
   
   .logo img {
@@ -397,20 +402,21 @@ nav {
     margin-left: 0 !important;
     display: flex;
     align-items: center;
-    gap: 12px !important;
+    gap: 8px !important;
     order: 3;
+    flex-shrink: 0;
   }
   
   .icon {
     margin-left: 0 !important;
-    font-size: 16px;
+    font-size: 18px;
   }
   
   .nav-links {
     position: fixed;
     top: 0;
     left: -100%;
-    width: 85%;
+    width: 80%;
     height: 100vh;
     background: white;
     flex-direction: column;
@@ -419,9 +425,8 @@ nav {
     padding: 80px 25px 30px;
     transition: left 0.3s ease;
     box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
-    z-index: 999;
+    z-index: 100;
     overflow-y: auto;
-    margin: 0;
   }
   
   .nav-links.active {
@@ -429,25 +434,24 @@ nav {
   }
   
   .nav-links li {
-    margin: 0 0 20px 0;
+    margin: 0 0 15px 0;
     width: 100%;
   }
   
   .nav-links a {
-    font-size: 16px;
-    padding: 12px 0;
+    font-size: 14px;
+    padding: 10px 0;
     display: block;
     width: 100%;
     border-bottom: 1px solid #f0f0f0;
-    font-weight: 600;
   }
   
   .content-wrapper {
-    margin-top: 90px !important; /* 30px notification + 60px nav */
+    margin-top: 110px !important;
   }
   
   .notification-bar.hidden ~ .content-wrapper {
-    margin-top: 60px !important; /* Only nav height */
+    margin-top: 80px !important;
   }
   
   .user-icon-wrapper {
@@ -468,27 +472,38 @@ nav {
 
 /* Tablet Styles - UPDATED */
 @media (min-width: 768px) and (max-width: 1023px) {
+  body {
+    font-size: 15px;
+  }
+  
   .notification-bar {
-    font-size: 11px;
-    padding: 8px 10px;
-    height: 35px;
+    font-size: 9px !important;
   }
   
   nav {
-    padding: 12px 4% !important;
-    height: 65px;
-    top: 35px; /* Matches tablet notification bar height */
+    padding: 15px 5% !important;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    top: 30px !important;
   }
   
   .notification-bar.hidden + nav {
-    top: 0;
+    top: 0 !important;
   }
   
   .mobile-menu-btn {
     display: block !important;
-    order: 1;
-    margin-right: 15px;
+    background: none;
+    border: none;
     font-size: 22px;
+    color: #333;
+    cursor: pointer;
+    margin-right: 12px;
+    order: 1;
+    flex-shrink: 0;
+    z-index: 101;
+    position: relative;
   }
   
   .logo {
@@ -501,7 +516,7 @@ nav {
   }
   
   .logo img {
-    height: 40px !important;
+    height: 45px !important;
     margin: 0 auto;
   }
   
@@ -509,20 +524,21 @@ nav {
     margin-left: 0 !important;
     display: flex;
     align-items: center;
-    gap: 20px !important;
+    gap: 12px !important;
     order: 3;
+    flex-shrink: 0;
   }
   
   .icon {
     margin-left: 0 !important;
-    font-size: 18px;
+    font-size: 20px;
   }
   
   .nav-links {
     position: fixed;
     top: 0;
     left: -100%;
-    width: 70%;
+    width: 60%;
     height: 100vh;
     background: white;
     flex-direction: column;
@@ -531,9 +547,8 @@ nav {
     padding: 90px 30px 30px;
     transition: left 0.3s ease;
     box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
-    z-index: 999;
+    z-index: 100;
     overflow-y: auto;
-    margin: 0;
   }
   
   .nav-links.active {
@@ -541,42 +556,36 @@ nav {
   }
   
   .nav-links li {
-    margin: 0 0 22px 0;
+    margin: 0 0 18px 0;
     width: 100%;
   }
   
   .nav-links a {
-    font-size: 17px;
-    padding: 13px 0;
+    font-size: 15px;
+    padding: 11px 0;
     display: block;
     width: 100%;
     border-bottom: 1px solid #f0f0f0;
   }
   
   .content-wrapper {
-    margin-top: 100px !important; /* 35px notification + 65px nav */
+    margin-top: 125px !important;
   }
   
   .notification-bar.hidden ~ .content-wrapper {
-    margin-top: 65px !important; /* Only nav height */
+    margin-top: 95px !important;
   }
 }
 
 /* Desktop Styles */
 @media (min-width: 1024px) {
   .notification-bar {
-    font-size: 13px;
-    padding: 10px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 13px !important;
+    padding: 12px !important;
   }
   
   nav {
-    top: 40px; /* Matches desktop notification bar height */
-    height: 80px;
-    padding: 20px 5%;
+    top: 43px;
   }
   
   .notification-bar.hidden + nav {
@@ -584,11 +593,11 @@ nav {
   }
   
   .content-wrapper {
-    margin-top: 120px; /* 40px notification + 80px nav */
+    margin-top: 165px;
   }
   
   .notification-bar.hidden ~ .content-wrapper {
-    margin-top: 80px; /* Only nav height */
+    margin-top: 125px;
   }
   
   .mobile-menu-btn {
@@ -614,18 +623,18 @@ nav {
   .nav-links a {
     padding: 5px 0;
     border-bottom: none;
-    font-size: 14px;
+    font-size: 16px;
   }
   
   .logo {
     position: absolute;
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    top: 30px;
+    transform: translateX(-50%);
   }
   
   .logo img {
-    height: 60px;
+    height: 70px;
   }
   
   .nav-icons {
@@ -2680,27 +2689,29 @@ footer a:hover {
 .contact-info {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 4px; /* DRAMATICALLY REDUCED from 15px */
 }
 
 .contact-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 8px; /* Reduced from 12px */
 }
 
 .contact-icon {
   color: white;
-  font-size: 18px;
-  width: 20px;
-  margin-top: 2px;
+  font-size: 16px; /* Reduced from 18px */
+  width: 16px; /* Reduced from 20px */
+  margin-top: 1px; /* Reduced from 2px */
+  flex-shrink: 0;
 }
 
 .contact-text {
   flex: 1;
   font-family:'Unbounded', sans-serif; 
   font-size:16px; 
-  line-height:1.5;
+  line-height:1.2; /* DRAMATICALLY REDUCED from 1.5 */
+  margin: 0;
 }
 
 .footer-social {
