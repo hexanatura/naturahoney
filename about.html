@@ -34,6 +34,35 @@
       width: 100%;
       overflow-x: hidden;
     }
+
+    .notification-bar {
+  top: 0;
+  z-index: 1001;
+}
+
+nav {
+  top: 43px;
+}
+
+.notification-bar.hidden + nav {
+  top: 0;
+}
+
+@media (max-width: 767px) {
+  .notification-bar {
+    font-size: 8px !important;
+    padding: 8px 10px !important;
+  }
+  
+  nav {
+    top: 36px;
+  }
+  
+  .notification-bar.hidden + nav {
+    top: 0;
+  }
+}
+
     
     /* Profile Page Styles */
     .profile-page {
