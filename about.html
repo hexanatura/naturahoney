@@ -34,6 +34,75 @@
       width: 100%;
       overflow-x: hidden;
     }
+
+    /* Profile Page Styles - UPDATED POSITIONING */
+.profile-page {
+  display: none;
+  padding: 180px 5% 60px; /* Increased top padding to move content down */
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative; /* Added for close button positioning */
+}
+
+.profile-page.active {
+  display: block;
+}
+
+.profile-close-container {
+  position: absolute;
+  top: 140px; /* Positioned at top of profile page */
+  right: 5%; /* Align with content padding */
+  z-index: 100;
+}
+
+.profile-close-btn {
+  background: transparent;
+  color: #666;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.profile-close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 767px) {
+  .profile-page {
+    padding: 180px 4% 20px !important; /* Increased top padding for mobile */
+  }
+  
+  .profile-close-container {
+    top: 150px; /* Adjusted for mobile */
+    right: 4%; /* Match mobile padding */
+  }
+  
+  .profile-close-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    padding: 160px 3% 15px !important; /* Increased top padding for small mobile */
+  }
+  
+  .profile-close-container {
+    top: 130px; /* Adjusted for small mobile */
+    right: 3%; /* Match small mobile padding */
+  }
+}
 /* Profile Page Styles */
 .profile-page {
   display: none;
