@@ -85,6 +85,75 @@
   z-index: 5;
   mix-blend-mode: multiply;
 }
+/* Fixed position for profile close button - Stays on screen during scroll */
+.profile-close-container {
+    position: fixed !important;
+    top: 120px !important;
+    right: 30px !important;
+    z-index: 1000 !important;
+}
+
+/* Mobile adjustment */
+@media (max-width: 767px) {
+    .profile-close-container {
+        top: 80px !important; /* Lower to account for smaller nav bar */
+        right: 15px !important;
+    }
+    
+    .profile-close-btn {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 20px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid #e0e0e0 !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+    }
+}
+
+/* Tablet adjustment */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .profile-close-container {
+        top: 100px !important;
+        right: 20px !important;
+    }
+    
+    .profile-close-btn {
+        width: 45px !important;
+        height: 45px !important;
+        font-size: 22px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid #e0e0e0 !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+    }
+}
+
+/* Desktop adjustment */
+@media (min-width: 1024px) {
+    .profile-close-container {
+        top: 130px !important;
+        right: 40px !important;
+    }
+    
+    .profile-close-btn {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 24px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid #e0e0e0 !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+    }
+}
+
+/* Hover effects */
+.profile-close-btn:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    color: #5f2b27 !important;
+}
 
 /* Mobile First - Small screens */
 @media (max-width: 767px) {
