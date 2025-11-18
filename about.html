@@ -35,7 +35,7 @@
       overflow-x: hidden;
     }
     
-/* Profile Page Styles - UPDATED TO MATCH CHECKOUT PAGE */
+/* Profile Page Styles */
 .profile-page {
   display: none;
   padding: 120px 5%;
@@ -55,11 +55,11 @@
 .profile-header {
   display: flex;
   align-items: center;
-  background: #f8f3e6;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-  margin-bottom: 40px;
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  margin-bottom: 30px;
 }
 
 .profile-avatar {
@@ -73,8 +73,7 @@
   margin-right: 25px;
   border: 3px solid #5f2b27;
 }
-
-.section-title {
+  .section-title {
   font-family: 'Unbounded', sans-serif;
   font-size: 20px;
   color: #5f2b27;
@@ -108,11 +107,11 @@
 }
 
 .profile-section {
-  background: #f8f3e6;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-  margin-bottom: 40px;
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  margin-bottom: 30px;
 }
 
 .section-title {
@@ -121,24 +120,21 @@
   color: #5f2b27;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #e7d90f;
+  border-bottom: 2px solid #e7d90f; /* Yellow line */
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: flex;
   align-items: center;
 }
-
+    
 .section-title i {
   margin-right: 10px;
 }
 
-/* UPDATED ADDRESS CARD STYLES - Simple white cards like checkout page */
 .address-card {
-  background: white;
-  border-radius: 15px;
-  padding: 25px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 20px;
   margin-bottom: 15px;
   position: relative;
   transition: all 0.3s;
@@ -161,8 +157,6 @@
 .address-card p {
   line-height: 1.6;
   font-size: 15px;
-  color: #333;
-  margin-bottom: 8px;
 }
 
 .address-actions {
@@ -789,6 +783,53 @@
 .btn-danger:hover {
   background: #c82333;
   border-color: #bd2130;
+}
+
+@media (max-width: 1023px) {
+  nav {
+    top: 30px !important;
+    transition: top 0.3s ease !important;
+  }
+  
+  .content-wrapper {
+    margin-top: 120px !important;
+  }
+  
+  .notification-bar.hidden + nav {
+    top: 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  nav {
+    top: 28px !important;
+  }
+  
+  .content-wrapper {
+    margin-top: 110px !important;
+  }
+  
+  .notification-bar {
+    padding: 6px 10px !important;
+  }
+  
+  .notification-bar.hidden + nav {
+    top: 0 !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  nav {
+    top: 30px !important;
+  }
+  
+  .content-wrapper {
+    margin-top: 125px !important;
+  }
+  
+  .notification-bar.hidden + nav {
+    top: 0 !important;
+  }
 }
 
 /* Disabled email input */
