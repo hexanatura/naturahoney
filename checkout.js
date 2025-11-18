@@ -27,6 +27,16 @@ function initCheckoutPage() {
     }
 }
 
+function toggleNotificationBar() {
+  const notificationBar = document.getElementById('notificationBar');
+  if (notificationBar) {
+    notificationBar.classList.toggle('hidden');
+  }
+}
+document.addEventListener('DOMContentLoaded', function() {
+
+});
+
 function setupCheckoutEventListeners() {
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
     const applyBtn = document.querySelector('.apply-btn');
