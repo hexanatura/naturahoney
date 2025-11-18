@@ -35,6 +35,413 @@
       overflow-x: hidden;
     }
 
+    /* Mobile Checkout Styles */
+@media (max-width: 767px) {
+  .checkout-section {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 0 4% !important;
+    margin: 20px auto !important;
+  }
+  
+  .checkout-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 15px !important;
+    line-height: 1.2;
+  }
+  
+  .checkout-form, .checkout-summary {
+    padding: 20px !important;
+    border-radius: 15px !important;
+  }
+  
+  .form-section {
+    margin-bottom: 20px !important;
+  }
+  
+  .section-title {
+    font-size: 1.1rem !important;
+    margin-bottom: 15px !important;
+    padding-bottom: 8px !important;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+  
+  .form-group {
+    margin-bottom: 15px !important;
+  }
+  
+  .form-group label {
+    font-size: 0.9rem !important;
+    margin-bottom: 5px !important;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 12px !important;
+    font-size: 14px !important;
+  }
+  
+  .address-card {
+    padding: 15px !important;
+  }
+  
+  .payment-method {
+    padding: 15px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .payment-icon {
+    font-size: 20px !important;
+    margin-right: 12px !important;
+  }
+  
+  .payment-title {
+    font-size: 14px !important;
+  }
+  
+  .payment-description {
+    font-size: 12px !important;
+  }
+  
+  .payment-price {
+    font-size: 14px !important;
+  }
+  
+  .order-item {
+    padding: 12px 0 !important;
+    gap: 8px !important;
+  }
+  
+  .order-item-main {
+    gap: 12px !important;
+  }
+  
+  .order-item-image {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  .order-item-image i {
+    font-size: 20px !important;
+  }
+  
+  .order-item-name {
+    font-size: 14px !important;
+    margin-bottom: 3px !important;
+  }
+  
+  .order-item-weight {
+    font-size: 12px !important;
+  }
+  
+  .order-item-price {
+    font-size: 14px !important;
+  }
+  
+  .order-item-quantity {
+    font-size: 12px !important;
+  }
+  
+  .order-summary-row {
+    padding: 10px 0 !important;
+    font-size: 14px !important;
+  }
+  
+  .order-summary-row.total {
+    font-size: 1.1rem !important;
+  }
+  
+  .promo-code {
+    margin: 20px 0 !important;
+  }
+  
+  .promo-input-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .promo-input {
+    padding: 10px !important;
+    font-size: 14px !important;
+  }
+  
+  .apply-btn {
+    padding: 10px !important;
+    font-size: 14px !important;
+  }
+  
+  .checkout-btn {
+    padding: 14px !important;
+    font-size: 1rem !important;
+    margin-top: 15px !important;
+  }
+  
+  .security-notice {
+    font-size: 12px !important;
+    margin-top: 12px !important;
+  }
+  
+  .continue-shopping {
+    font-size: 14px !important;
+    margin-top: 15px !important;
+  }
+  
+  .payment-notice {
+    font-size: 12px !important;
+    padding: 12px !important;
+  }
+}
+
+/* Tablet Checkout Styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .checkout-section {
+    grid-template-columns: 1fr !important;
+    gap: 30px !important;
+    padding: 0 4% !important;
+    margin: 30px auto !important;
+  }
+  
+  .checkout-title {
+    font-size: 2rem !important;
+    margin-bottom: 25px !important;
+  }
+  
+  .checkout-form, .checkout-summary {
+    padding: 25px !important;
+  }
+  
+  .section-title {
+    font-size: 1.3rem !important;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 14px !important;
+  }
+  
+  .order-item-name {
+    font-size: 15px !important;
+  }
+  
+  .order-item-price {
+    font-size: 15px !important;
+  }
+}
+
+/* Compact Footer for Checkout Page */
+@media (max-width: 767px) {
+  footer {
+    padding: 30px 5% !important;
+    margin-top: 25px !important;
+  }
+  
+  .footer-container {
+    gap: 20px !important;
+  }
+  
+  .footer-column {
+    min-width: 100% !important;
+    text-align: left !important;
+  }
+  
+  footer h3 {
+    font-size: 16px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  footer ul {
+    font-size: 13px !important;
+  }
+  
+  footer ul li {
+    margin-bottom: 6px !important;
+  }
+  
+  .contact-info {
+    gap: 2px !important;
+    align-items: flex-start !important;
+  }
+  
+  .contact-item {
+    gap: 6px !important;
+    justify-content: flex-start !important;
+    align-items: flex-start;
+  }
+  
+  .contact-icon {
+    font-size: 12px !important;
+    width: 12px !important;
+    margin-top: 0 !important;
+  }
+  
+  .contact-text {
+    font-size: 13px !important;
+    line-height: 1.1 !important;
+    text-align: left !important;
+    margin: 0 !important;
+  }
+  
+  .footer-social h4 {
+    font-size: 14px !important;
+    margin-bottom: 10px !important;
+    text-align: left !important;
+  }
+  
+  .social-icons {
+    gap: 10px !important;
+    font-size: 16px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .social-icons a {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .enquiries h4 {
+    font-size: 14px !important;
+    margin-bottom: 10px !important;
+    text-align: left !important;
+  }
+  
+  .enquiries-list {
+    gap: 6px !important;
+  }
+  
+  .enquiry-item {
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .enquiry-item i {
+    font-size: 12px !important;
+  }
+  
+  .enquiry-item a {
+    font-size: 12px !important;
+  }
+  
+  .footer-bottom {
+    margin-top: 25px !important;
+    padding-top: 12px !important;
+    text-align: left !important;
+  }
+  
+  .footer-bottom p {
+    font-size: 11px !important;
+  }
+}
+
+/* Profile Page Mobile Styles for Checkout */
+@media (max-width: 767px) {
+  .profile-page {
+    padding: 100px 4% 20px !important;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px !important;
+    gap: 15px;
+  }
+
+  .profile-avatar {
+    width: 80px !important;
+    height: 80px !important;
+    margin-right: 0 !important;
+    margin-bottom: 10px !important;
+  }
+
+  .profile-avatar i {
+    font-size: 32px !important;
+  }
+
+  .profile-info h1 {
+    font-size: 22px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .profile-info p {
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .profile-actions {
+    margin-left: 0 !important;
+    margin-top: 10px !important;
+  }
+
+  .profile-section {
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .section-title {
+    font-size: 18px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .address-card {
+    padding: 15px !important;
+  }
+
+  .address-card h3 {
+    font-size: 16px !important;
+  }
+
+  .address-card p {
+    font-size: 13px !important;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0 !important;
+  }
+
+  .order-card {
+    padding: 15px !important;
+  }
+
+  .profile-close-container {
+    top: 90px !important;
+    right: 15px !important;
+  }
+}
+
+/* Login Button Positioning Fix */
+@media (max-width: 1023px) {
+  .form-section {
+    position: relative;
+    padding-top: 50px;
+  }
+  
+  .login-btn {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    margin-top: 0 !important;
+    transform: none !important;
+  }
+}
+
+/* Desktop Optimization */
+@media (min-width: 1024px) {
+  .checkout-section {
+    gap: 40px !important;
+  }
+  
+  .checkout-form, .checkout-summary {
+    padding: 30px !important;
+  }
+}
+
 /* Profile Page Styles */
 .profile-page {
   display: none;
