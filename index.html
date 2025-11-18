@@ -100,18 +100,15 @@
 @media (max-width: 1023px) {
   nav {
     top: 30px !important;
-  }
-  
-  .notification-bar {
-    padding: 8px 10px !important;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: top 0.3s ease !important;
   }
   
   .content-wrapper {
-    margin-top: 115px !important;
+    margin-top: 120px !important;
+  }
+  
+  .notification-bar.hidden + nav {
+    top: 0 !important;
   }
 }
 
@@ -120,13 +117,16 @@
     top: 28px !important;
   }
   
-  .notification-bar {
-    padding: 6px 10px !important;
-    height: 28px;
+  .content-wrapper {
+    margin-top: 110px !important;
   }
   
-  .content-wrapper {
-    margin-top: 105px !important;
+  .notification-bar {
+    padding: 6px 10px !important;
+  }
+  
+  .notification-bar.hidden + nav {
+    top: 0 !important;
   }
 }
 
@@ -135,15 +135,15 @@
     top: 30px !important;
   }
   
-  .notification-bar {
-    padding: 8px 10px !important;
-    height: 30px;
+  .content-wrapper {
+    margin-top: 125px !important;
   }
   
-  .content-wrapper {
-    margin-top: 120px !important;
+  .notification-bar.hidden + nav {
+    top: 0 !important;
   }
 }
+
 /* Tablet */
 @media (min-width: 768px) and (max-width: 1023px) {
   .second-banner-image {
