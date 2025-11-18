@@ -4,53 +4,103 @@ let originalTotal = 0;
 function initCheckoutPage() {
     updateOrderSummary();
     setupCheckoutEventListeners();
+    updateUserInterface();
+    
+    // Listen for auth state changes
+    auth.onAuthStateChanged((user) => {
+        currentUser = user;
+        updateUserInterface();
+    });
+}
+
+function updateUserInterface() {
+    const emailInput = document.getElementById('email');
+    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
     
     if (currentUser) {
-        const emailInput = document.getElementById('email');
+        // User is logged in - auto-fill email and disable it
         if (emailInput) {
             emailInput.value = currentUser.email;
             emailInput.disabled = true;
+            emailInput.style.backgroundColor = '#f5f5f5';
+            emailInput.style.color = '#666';
+            emailInput.style.cursor = 'not-allowed';
         }
-        const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+        
+        // Change button to Logout
         if (loginBtnCheckout) {
             loginBtnCheckout.textContent = 'Logout';
+            loginBtnCheckout.style.backgroundColor = '#dc3545';
+            loginBtnCheckout.style.color = 'white';
         }
+        
+        // Try to load user's saved addresses if available
+        loadUserAddresses();
+        
     } else {
-        const emailInput = document.getElementById('email');
+        // User is not logged in
         if (emailInput) {
+            emailInput.value = '';
             emailInput.disabled = false;
+            emailInput.style.backgroundColor = '';
+            emailInput.style.color = '';
+            emailInput.style.cursor = '';
         }
-        const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+        
         if (loginBtnCheckout) {
             loginBtnCheckout.textContent = 'Login';
+            loginBtnCheckout.style.backgroundColor = '';
+            loginBtnCheckout.style.color = '#5f2b27';
         }
     }
 }
 
-function toggleNotificationBar() {
-  const notificationBar = document.getElementById('notificationBar');
-  if (notificationBar) {
-    notificationBar.classList.toggle('hidden');
-  }
+function loadUserAddresses() {
+    if (!currentUser || !db) return;
+    
+    // Load user's default/saved addresses from Firestore
+    db.collection('users').doc(currentUser.uid).collection('addresses').where('isDefault', '==', true)
+        .get()
+        .then((querySnapshot) => {
+            if (!querySnapshot.empty) {
+                const defaultAddress = querySnapshot.docs[0].data();
+                fillAddressForm(defaultAddress);
+            }
+        })
+        .catch((error) => {
+            console.error("Error loading user addresses:", error);
+        });
 }
-document.addEventListener('DOMContentLoaded', function() {
 
-});
+function fillAddressForm(address) {
+    if (address.firstName) document.getElementById('firstName').value = address.firstName;
+    if (address.lastName) document.getElementById('lastName').value = address.lastName;
+    if (address.address) document.getElementById('address').value = address.address;
+    if (address.city) document.getElementById('city').value = address.city;
+    if (address.state) document.getElementById('state').value = address.state;
+    if (address.zipCode) document.getElementById('zipCode').value = address.zipCode;
+    if (address.phone) document.getElementById('phone').value = address.phone;
+}
 
 function setupCheckoutEventListeners() {
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
     const applyBtn = document.querySelector('.apply-btn');
     const checkoutBtnMain = document.querySelector('.checkout-btn');
+    const promoInput = document.querySelector('.promo-input');
 
     if (loginBtnCheckout) {
         loginBtnCheckout.addEventListener('click', function() {
             if (currentUser) {
-                auth.signOut().then(() => {
-                    window.location.reload();
-                }).catch((error) => {
-                    console.error("Error signing out:", error);
-                });
+                // User is logged in - show logout confirmation
+                if (confirm('Are you sure you want to logout?')) {
+                    auth.signOut().then(() => {
+                        window.location.reload();
+                    }).catch((error) => {
+                        console.error("Error signing out:", error);
+                    });
+                }
             } else {
+                // User is not logged in - show login modal
                 showLoginView();
                 loginModal.classList.add('active');
                 overlay.classList.add('active');
@@ -63,10 +113,19 @@ function setupCheckoutEventListeners() {
         applyBtn.addEventListener('click', applyPromoCode);
     }
 
+    if (promoInput) {
+        promoInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyPromoCode();
+            }
+        });
+    }
+
     if (checkoutBtnMain) {
         checkoutBtnMain.addEventListener('click', processCheckout);
     }
 
+    // Quantity controls
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('quantity-btn-checkout')) {
             handleCheckoutQuantityChange(e);
@@ -78,6 +137,80 @@ function setupCheckoutEventListeners() {
             handleCheckoutQuantityInput(e);
         }
     });
+
+    // Form validation
+    const formInputs = document.querySelectorAll('.checkout-form input, .checkout-form select');
+    formInputs.forEach(input => {
+        input.addEventListener('blur', validateField);
+        input.addEventListener('input', clearFieldError);
+    });
+}
+
+function validateField(e) {
+    const field = e.target;
+    const value = field.value.trim();
+    
+    field.classList.remove('error');
+    
+    if (field.hasAttribute('required') && !value) {
+        showFieldError(field, 'This field is required');
+        return false;
+    }
+    
+    if (field.type === 'email' && value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+            showFieldError(field, 'Please enter a valid email address');
+            return false;
+        }
+    }
+    
+    if (field.id === 'phone' && value) {
+        if (!validateIndianPhoneNumber(value)) {
+            showFieldError(field, 'Please enter a valid 10-digit Indian phone number');
+            return false;
+        }
+    }
+    
+    if (field.id === 'zipCode' && value) {
+        const zipRegex = /^\d{6}$/;
+        if (!zipRegex.test(value)) {
+            showFieldError(field, 'Please enter a valid 6-digit PIN code');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function showFieldError(field, message) {
+    field.classList.add('error');
+    
+    // Remove existing error message
+    const existingError = field.parentNode.querySelector('.field-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // Add error message
+    const errorElement = document.createElement('div');
+    errorElement.className = 'field-error';
+    errorElement.style.color = '#e74c3c';
+    errorElement.style.fontSize = '12px';
+    errorElement.style.marginTop = '5px';
+    errorElement.textContent = message;
+    
+    field.parentNode.appendChild(errorElement);
+}
+
+function clearFieldError(e) {
+    const field = e.target;
+    field.classList.remove('error');
+    
+    const existingError = field.parentNode.querySelector('.field-error');
+    if (existingError) {
+        existingError.remove();
+    }
 }
 
 function updateOrderSummary() {
@@ -90,9 +223,12 @@ function updateOrderSummary() {
     if (cartProducts.length === 0) {
         const emptyMessage = document.createElement('div');
         emptyMessage.className = 'empty-order';
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.padding = '40px 20px';
+        emptyMessage.style.color = '#777';
         emptyMessage.innerHTML = `
-            <i class="fas fa-shopping-cart"></i>
-            <p>Your cart is empty</p>
+            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px; color: #e0e0e0;"></i>
+            <p style="font-size: 16px;">Your cart is empty</p>
         `;
         orderItems.appendChild(emptyMessage);
     } else {
@@ -105,21 +241,26 @@ function updateOrderSummary() {
                 const orderItem = document.createElement('div');
                 orderItem.className = 'order-item';
                 orderItem.innerHTML = `
-                    <div class="order-item-row">
-                        <img src="${product.image}" alt="${product.name}" class="order-item-image">
-                        <div class="order-item-details">
-                            <div class="order-item-name">${product.name}</div>
-                            <div class="order-item-weight">${product.weight}</div>
-                            <div class="order-item-quantity">
-                                Quantity: 
-                                <div class="quantity-controls">
-                                    <button class="quantity-btn-checkout minus" data-id="${product.id}" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
-                                    <input type="text" class="quantity-input-checkout" value="${item.quantity}" data-id="${product.id}">
-                                    <button class="quantity-btn-checkout plus" data-id="${product.id}">+</button>
+                    <div class="order-item-main">
+                        <div class="order-item-image-container">
+                            <div class="order-item-image">
+                                <i class="fas fa-jar"></i>
+                            </div>
+                        </div>
+                        <div class="order-item-content">
+                            <div class="order-item-header">
+                                <div class="order-item-info">
+                                    <div class="order-item-name">${product.name}</div>
+                                    <div class="order-item-weight">${product.weight}</div>
+                                </div>
+                                <div class="order-item-price">₹${itemTotal}</div>
+                            </div>
+                            <div class="order-item-footer">
+                                <div class="order-item-quantity">
+                                    <span>Quantity: ${item.quantity}</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="order-item-price">₹${itemTotal}</div>
                     </div>
                 `;
                 orderItems.appendChild(orderItem);
@@ -256,41 +397,61 @@ function validateIndianPhoneNumber(phone) {
     return phoneRegex.test(cleanedPhone);
 }
 
-function processCheckout() {
-    const email = document.getElementById('email')?.value;
-    const firstName = document.getElementById('firstName')?.value;
-    const lastName = document.getElementById('lastName')?.value;
-    const address = document.getElementById('address')?.value;
-    const city = document.getElementById('city')?.value;
-    const state = document.getElementById('state')?.value;
-    const zipCode = document.getElementById('zipCode')?.value;
-    const phone = document.getElementById('phone')?.value;
-
-    if (!validateIndianPhoneNumber(phone)) {
-        alert('Please enter a valid Indian phone number (10 digits starting with 6-9)');
-        return;
-    }      
+function validateCheckoutForm() {
+    const requiredFields = [
+        'email', 'firstName', 'lastName', 'address', 
+        'city', 'state', 'zipCode', 'phone'
+    ];
     
-    if (!email || !firstName || !lastName || !address || !city || !state || !zipCode || !phone) {
-        alert('Please fill in all required fields');
-        return;
-    }
+    let isValid = true;
     
+    // Clear all errors first
+    document.querySelectorAll('.field-error').forEach(error => error.remove());
+    document.querySelectorAll('.error').forEach(field => field.classList.remove('error'));
+    
+    // Validate each required field
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field && !validateField({ target: field })) {
+            isValid = false;
+        }
+    });
+    
+    // Validate cart
     if (cartProducts.length === 0) {
         alert('Your cart is empty. Please add items to proceed.');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+function processCheckout() {
+    if (!validateCheckoutForm()) {
         return;
     }
     
+    const email = document.getElementById('email').value;
+    const firstName = document.getElementById('firstName').value;
+    const lastName = document.getElementById('lastName').value;
+    const address = document.getElementById('address').value;
+    const apartment = document.getElementById('apartment').value;
+    const city = document.getElementById('city').value;
+    const state = document.getElementById('state').value;
+    const zipCode = document.getElementById('zipCode').value;
+    const phone = document.getElementById('phone').value;
+
     const orderData = {
         email: email,
         shippingAddress: {
             firstName: firstName,
             lastName: lastName,
             address: address,
+            apartment: apartment,
             city: city,
             state: state,
             zipCode: zipCode,
-            phone: phone,
+            phone: '+91 ' + phone,
             country: 'India'
         },
         items: cartProducts.map(item => {
@@ -314,6 +475,7 @@ function processCheckout() {
     
     if (currentUser) {
         orderData.userId = currentUser.uid;
+        orderData.userEmail = currentUser.email;
         saveOrderToFirestore(orderData);
     } else {
         saveGuestOrder(orderData);
@@ -342,7 +504,7 @@ function saveOrderToFirestore(orderData) {
                     });
             }
             
-            alert(`Order created successfully! Order ID: ${docRef.id.substring(0, 8)}`);
+            console.log('Order created successfully:', docRef.id);
         })
         .catch((error) => {
             console.error("Error creating order:", error);
@@ -377,10 +539,15 @@ function clearCartAfterOrder() {
 }
 
 function processPayment(orderData) {
-    alert('Thank you for your order! You will be redirected to Razorpay to complete your payment.');
+    // Show processing message
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    const originalText = checkoutBtn.innerHTML;
+    checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    checkoutBtn.disabled = true;
     
+    // Simulate payment processing
     setTimeout(() => {
-        if (currentUser && orderData.id) {
+        if (currentUser && orderData.id && db) {
             db.collection('orders').doc(orderData.id).update({
                 status: 'confirmed',
                 paymentStatus: 'paid',
@@ -395,10 +562,13 @@ function processPayment(orderData) {
                     });
                 }
                 
-                alert('Payment successful! Your order has been confirmed.');
+                showOrderSuccess(orderData);
             })
             .catch((error) => {
                 console.error("Error updating order status:", error);
+                checkoutBtn.innerHTML = originalText;
+                checkoutBtn.disabled = false;
+                alert('Payment processing error. Please try again.');
             });
         } else {
             const guestOrders = JSON.parse(localStorage.getItem('guestOrders') || '[]');
@@ -409,12 +579,46 @@ function processPayment(orderData) {
                 guestOrders[orderIndex].paidAt = new Date().toISOString();
                 localStorage.setItem('guestOrders', JSON.stringify(guestOrders));
                 
-                alert('Payment successful! Your order has been confirmed.');
+                showOrderSuccess(orderData);
             }
         }
     }, 2000);
 }
 
+function showOrderSuccess(orderData) {
+    alert(`Order confirmed successfully! Order ID: ${orderData.id.substring(0, 8)}\n\nThank you for your purchase. You will receive an email confirmation shortly.`);
+    
+    // Redirect to home page or order confirmation page
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 3000);
+}
+
+// Add this CSS for error states
+const style = document.createElement('style');
+style.textContent = `
+    .checkout-form input.error,
+    .checkout-form select.error {
+        border-color: #e74c3c !important;
+        background-color: #fffafa !important;
+    }
+    
+    .field-error {
+        color: #e74c3c;
+        font-size: 12px;
+        margin-top: 5px;
+        font-family: 'Unbounded', sans-serif;
+    }
+    
+    #email:disabled {
+        background-color: #f5f5f5 !important;
+        color: #666 !important;
+        cursor: not-allowed !important;
+    }
+`;
+document.head.appendChild(style);
+
+// Override updateCartUI to also update checkout page
 if (typeof updateCartUI !== 'undefined') {
     const originalUpdateCartUI = updateCartUI;
     updateCartUI = function() {
