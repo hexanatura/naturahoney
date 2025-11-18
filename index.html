@@ -85,109 +85,82 @@
   z-index: 5;
   mix-blend-mode: multiply;
 }
-/* Fixed position for profile close button - Force it to stay fixed */
+
+  /* Fixed position for profile close button - No movement, no effects */
 .profile-close-container {
     position: fixed !important;
     top: 120px !important;
     right: 30px !important;
-    z-index: 10000 !important; /* Much higher z-index */
-    pointer-events: auto !important;
+    z-index: 10000 !important;
 }
 
-/* Ensure profile page doesn't interfere with fixed positioning */
-.profile-page {
-    position: relative;
-    z-index: 1; /* Lower than close button */
-}
-
-/* Mobile adjustment - with higher z-index */
+/* Mobile */
 @media (max-width: 767px) {
     .profile-close-container {
         top: 80px !important;
         right: 15px !important;
-        z-index: 10000 !important;
-    }
-    
-    .profile-close-btn {
-        width: 45px !important;
-        height: 45px !important;
-        font-size: 20px !important;
-        background: rgba(255, 255, 255, 0.98) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 2px solid #5f2b27 !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
-    }
-    
-    /* Ensure no transform or filter on parent elements that break fixed positioning */
-    .profile-page {
-        transform: none !important;
-        filter: none !important;
     }
 }
 
-/* Tablet adjustment - with higher z-index */
+/* Tablet */
 @media (min-width: 768px) and (max-width: 1023px) {
     .profile-close-container {
         top: 100px !important;
         right: 20px !important;
-        z-index: 10000 !important;
-    }
-    
-    .profile-close-btn {
-        width: 50px !important;
-        height: 50px !important;
-        font-size: 22px !important;
-        background: rgba(255, 255, 255, 0.98) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 2px solid #5f2b27 !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
-    }
-    
-    .profile-page {
-        transform: none !important;
-        filter: none !important;
     }
 }
 
-/* Desktop adjustment */
+/* Desktop */
 @media (min-width: 1024px) {
     .profile-close-container {
         top: 130px !important;
         right: 40px !important;
-        z-index: 10000 !important;
-    }
-    
-    .profile-close-btn {
-        width: 55px !important;
-        height: 55px !important;
-        font-size: 24px !important;
-        background: rgba(255, 255, 255, 0.98) !important;
-        backdrop-filter: blur(10px) !important;
-        border: 2px solid #5f2b27 !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
     }
 }
 
-/* Hover effects */
-.profile-close-btn:hover {
+/* Simple close button styling */
+.profile-close-btn {
     background: white !important;
-    transform: scale(1.1) !important;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
-    color: #5f2b27 !important;
+    color: #333 !important;
+    border: 2px solid #5f2b27 !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Make sure body doesn't have overflow hidden or transform that breaks fixed positioning */
-body {
-    overflow-x: hidden;
-    transform: none !important;
+/* Mobile button size */
+@media (max-width: 767px) {
+    .profile-close-btn {
+        width: 35px !important;
+        height: 35px !important;
+        font-size: 16px !important;
+    }
 }
 
-/* Force the close button to be visible and fixed */
-.profile-page.active ~ .profile-close-container {
-    display: block !important;
-    position: fixed !important;
+/* Tablet button size */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .profile-close-btn {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 18px !important;
+    }
 }
 
+/* Desktop button size */
+@media (min-width: 1024px) {
+    .profile-close-btn {
+        width: 45px !important;
+        height: 45px !important;
+        font-size: 20px !important;
+    }
+}
+  
 /* Mobile First - Small screens */
 @media (max-width: 767px) {
   .second-banner-image {
