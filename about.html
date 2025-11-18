@@ -34,15 +34,22 @@
       width: 100%;
       overflow-x: hidden;
     } 
-    /* Profile Page Styles */
-    .profile-page {
-      display: none;
-  padding-top: 1000px !important;
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 10;
-    }
+    
+  .profile-page {
+  display: none;
+  padding-top: 120px !important; /* Reduced from 1000px */
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 767px) {
+  .profile-page {
+    padding-top: 160px !important; /* Reduced from 1000px */
+  }
+}
 
     .profile-page.active {
       display: block;
@@ -451,9 +458,6 @@
 
     /* Mobile Responsive Styles */
    @media (max-width: 767px) {
-  .profile-page {
-    padding-top: 160px !important;
-  }
 
       .profile-header {
         flex-direction: column;
