@@ -35,7 +35,7 @@
       overflow-x: hidden;
     } 
 
-   /* Profile Page Styles - INCREASED SPACING */
+  /* Profile Page Styles - WORKING SPACING FOR ALL DEVICES */
 .profile-page {
   display: none;
   position: relative;
@@ -44,8 +44,8 @@
   min-height: 100vh;
   background: white;
   overflow-y: auto;
-  /* SIGNIFICANTLY INCREASED PADDING */
-  padding-top: 220px !important; /* Increased from 180px */
+  /* Default desktop spacing */
+  padding-top: 220px;
 }
 
 .profile-content {
@@ -54,7 +54,6 @@
   position: relative;
   padding-left: 20px;
   padding-right: 20px;
-  margin-top: 0 !important;
 }
 
 .profile-page.active {
@@ -64,52 +63,65 @@
 .profile-container {
   max-width: 1000px;
   margin: 0 auto;
-  /* ADD EXTRA MARGIN FOR MORE SPACING */
-  margin-top: 30px;
 }
 
-/* Mobile Responsive Styles */
+/* Mobile Responsive Styles - MORE SPECIFIC */
 @media (max-width: 767px) {
   .profile-page {
-    padding-top: 180px !important; /* Increased from 150px */
+    padding-top: 180px !important; /* Force with !important */
   }
-
+  
   .profile-content {
     padding-left: 15px;
     padding-right: 15px;
   }
   
-  .profile-container {
-    margin-top: 20px;
-  }
-}
-
-/* Tablet Styles */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .profile-page {
-    padding-top: 200px; /* Increased from 150px */
-  }
-  
-  .profile-container {
-    margin-top: 25px;
-  }
-}
-
-/* Adjust the close button position to match new spacing */
-.profile-close-container {
-  position: fixed;
-  top: 160px; /* Increased from 120px */
-  right: 30px;
-  z-index: 1001;
-}
-
-@media (max-width: 767px) {
   .profile-close-container {
-    top: 140px; /* Increased from 100px */
+    top: 140px !important; /* Adjusted for mobile */
     right: 20px;
   }
 }
 
+/* Tablet Styles - MORE SPECIFIC */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .profile-page {
+    padding-top: 200px !important; /* Force with !important */
+  }
+  
+  .profile-content {
+    padding-left: 4%;
+    padding-right: 4%;
+  }
+  
+  .profile-close-container {
+    top: 160px !important; /* Adjusted for tablet */
+  }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+  .profile-page {
+    padding-top: 160px !important; /* Even smaller devices */
+  }
+  
+  .profile-content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .profile-close-container {
+    top: 130px !important;
+  }
+}
+
+/* Adjust close button position */
+.profile-close-container {
+  position: fixed;
+  top: 160px; /* Desktop position */
+  right: 30px;
+  z-index: 1001;
+}
+   
     /* Profile Page Styles - MINIMAL PADDING */
     .profile-page {
       display: none;
