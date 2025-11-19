@@ -3853,6 +3853,31 @@ footer a:hover {
       <div class="checkout-summary">
         <h2 class="section-title">Order Summary</h2>
         
+        <!-- Order Items -->
+        <div class="order-items" id="orderItems">
+          <!-- Items will be dynamically added here -->
+        </div>
+        
+        <!-- Order Summary Details -->
+        <div class="order-summary-details">
+          <div class="order-summary-row">
+            <span>Subtotal:</span>
+            <span id="subtotal">₹0</span>
+          </div>
+          <div class="order-summary-row">
+            <span>Shipping:</span>
+            <span id="shipping">FREE</span>
+          </div>
+          <div class="order-summary-row" id="discountRow" style="display: none;">
+            <span>Discount:</span>
+            <span id="discountAmount">-₹0</span>
+          </div>
+          <div class="order-summary-row total">
+            <span>Total:</span>
+            <span id="total">₹0</span>
+          </div>
+        </div>
+        
         <!-- Promo Code -->
         <div class="promo-code">
           <div class="promo-input-group">
