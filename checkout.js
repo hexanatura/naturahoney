@@ -1,8 +1,54 @@
-// Checkout page JavaScript
+// Checkout page JavaScript - Static Version for GitHub Pages
 let cartProducts = [];
 let currentDiscount = 0;
 let promoCodeApplied = false;
 let currentPromoCode = '';
+
+// Product data (same as in common.js but included here for standalone functionality)
+const products = [
+    { 
+        id: 1, 
+        name: "Natura Agmark Honey", 
+        price: 249, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022"
+    },
+    { 
+        id: 2, 
+        name: "Natura Agmark Honey", 
+        price: 449, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026"
+    },
+    { 
+        id: 3, 
+        name: "Natura Agmark Honey", 
+        price: 149, 
+        weight: "100g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115"
+    },
+    { 
+        id: 4, 
+        name: "Natura Agmark Honey", 
+        price: 349, 
+        weight: "50g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864"
+    },
+    { 
+        id: 5, 
+        name: "Natura Agmark Honey", 
+        price: 199, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894"
+    },
+    { 
+        id: 6, 
+        name: "Natura Agmark Honey - Premium Pet", 
+        price: 329, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908"
+    }
+];
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,21 +66,25 @@ function loadCart() {
     console.log('Cart loaded:', cartProducts);
 }
 
-// Check user authentication
+// Check user authentication (static version)
 function checkUserAuth() {
     const emailInput = document.getElementById('email');
     const loginBtn = document.getElementById('loginBtnCheckout');
     
-    if (typeof auth !== 'undefined' && auth.currentUser) {
+    // Check if user data exists in localStorage (simulated auth)
+    const userData = localStorage.getItem('userData');
+    
+    if (userData) {
+        const user = JSON.parse(userData);
         // User is logged in
-        emailInput.value = auth.currentUser.email;
+        emailInput.value = user.email || '';
         emailInput.disabled = true;
         emailInput.style.backgroundColor = '#f5f5f5';
         loginBtn.textContent = 'LOGOUT';
         loginBtn.style.color = '#e74c3c';
         
-        // Load user addresses
-        loadUserAddresses(auth.currentUser.uid);
+        // Load user addresses from localStorage
+        loadUserAddresses();
     } else {
         // User is not logged in
         loginBtn.textContent = 'LOGIN';
@@ -42,22 +92,14 @@ function checkUserAuth() {
     }
 }
 
-// Load user addresses
-function loadUserAddresses(userId) {
-    if (!db) return;
+// Load user addresses from localStorage
+function loadUserAddresses() {
+    const addresses = JSON.parse(localStorage.getItem('userAddresses') || '[]');
+    const defaultAddress = addresses.find(addr => addr.isDefault) || addresses[0];
     
-    db.collection('users').doc(userId).collection('addresses')
-        .where('isDefault', '==', true)
-        .get()
-        .then((querySnapshot) => {
-            if (!querySnapshot.empty) {
-                const address = querySnapshot.docs[0].data();
-                fillAddressForm(address);
-            }
-        })
-        .catch((error) => {
-            console.error('Error loading addresses:', error);
-        });
+    if (defaultAddress) {
+        fillAddressForm(defaultAddress);
+    }
 }
 
 // Fill address form with user data
@@ -70,6 +112,7 @@ function fillAddressForm(address) {
     if (address.address) document.getElementById('address').value = address.address;
     if (address.pincode) document.getElementById('zipCode').value = address.pincode;
     if (address.phone) document.getElementById('phone').value = address.phone;
+    if (address.city) document.getElementById('city').value = address.city;
 }
 
 // Setup event listeners
@@ -82,14 +125,17 @@ function setupEventListeners() {
     // Login/Logout button
     if (loginBtn) {
         loginBtn.addEventListener('click', function() {
-            if (typeof auth !== 'undefined' && auth.currentUser) {
+            const userData = localStorage.getItem('userData');
+            
+            if (userData) {
                 // Logout
                 if (confirm('Are you sure you want to logout?')) {
-                    auth.signOut();
+                    localStorage.removeItem('userData');
+                    location.reload();
                 }
             } else {
-                // Show login modal
-                showLoginModal();
+                // Redirect to login/signup page or show modal
+                window.location.href = 'login.html'; // Create this page
             }
         });
     }
@@ -117,17 +163,31 @@ function setupEventListeners() {
             handleQuantityChange(e);
         }
     });
+    
+    // Input changes for quantity
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('quantity-input-checkout')) {
+            handleInputChange(e);
+        }
+    });
 }
 
-// Show login modal
-function showLoginModal() {
-    const loginModal = document.getElementById('loginModal');
-    const overlay = document.getElementById('overlay');
+// Handle quantity input changes
+function handleInputChange(e) {
+    const input = e.target;
+    const productId = parseInt(input.getAttribute('data-id'));
+    const newQuantity = parseInt(input.value) || 1;
     
-    if (loginModal && overlay) {
-        loginModal.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
+    const item = cartProducts.find(item => item.id === productId);
+    if (item) {
+        if (newQuantity <= 0) {
+            cartProducts = cartProducts.filter(i => i.id !== productId);
+        } else {
+            item.quantity = newQuantity;
+        }
+        
+        saveCart();
+        updateOrderSummary();
     }
 }
 
@@ -217,14 +277,6 @@ function updateOrderSummary() {
 
 // Get product by ID
 function getProductById(id) {
-    const products = [
-        { id: 1, name: "Natura Agmark Honey", price: 249, weight: "1Kg", image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg" },
-        { id: 2, name: "Natura Agmark Honey", price: 449, weight: "500g", image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg" },
-        { id: 3, name: "Natura Agmark Honey", price: 149, weight: "100g", image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg" },
-        { id: 4, name: "Natura Agmark Honey", price: 349, weight: "50g", image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg" },
-        { id: 5, name: "Natura Agmark Honey", price: 199, weight: "1Kg", image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg" },
-        { id: 6, name: "Natura Agmark Honey - Premium Pet", price: 329, weight: "500g", image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg" }
-    ];
     return products.find(p => p.id === id);
 }
 
@@ -323,7 +375,7 @@ function applyPromoCode() {
         applyBtn.style.backgroundColor = '#28a745';
         
         if (promoSuccess) {
-            promoSuccess.textContent = 'Promo code applied! ₹50 discount added.';
+            promoSuccess.textContent = 'Promo code applied!';
             promoSuccess.style.display = 'block';
             if (promoError) promoError.style.display = 'none';
         }
@@ -335,7 +387,7 @@ function applyPromoCode() {
         }
     } else if (code) {
         if (promoError) {
-            promoError.textContent = 'Invalid promo code. Try WELCOME10 for ₹50 off.';
+            promoError.textContent = 'Invalid promo code.';
             promoError.style.display = 'block';
             if (promoSuccess) promoSuccess.style.display = 'none';
         }
@@ -404,7 +456,8 @@ function processCheckout() {
     
     // Create order object
     const order = {
-        items: cartProducts,
+        id: 'ORD' + Date.now(),
+        items: [...cartProducts], // Create a copy
         subtotal: subtotal,
         shipping: shipping,
         discount: currentDiscount,
@@ -424,15 +477,14 @@ function processCheckout() {
         createdAt: new Date().toISOString()
     };
     
-    // Save order to localStorage for demo
+    // Save order to localStorage
     const orders = JSON.parse(localStorage.getItem('userOrders') || '[]');
-    order.id = 'ORD' + Date.now();
     orders.push(order);
     localStorage.setItem('userOrders', JSON.stringify(orders));
     
     // Simulate payment processing
     setTimeout(() => {
-        alert('Order placed successfully! Thank you for your purchase.');
+        alert(`Order #${order.id} placed successfully! Thank you for your purchase.`);
         clearCart();
         window.location.href = 'index.html';
     }, 2000);
@@ -445,10 +497,4 @@ function clearCart() {
     currentDiscount = 0;
     promoCodeApplied = false;
     currentPromoCode = '';
-}
-// Listen for auth state changes
-if (typeof auth !== 'undefined') {
-    auth.onAuthStateChanged((user) => {
-        checkUserAuth();
-    });
 }
