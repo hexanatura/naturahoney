@@ -1,8 +1,8 @@
-// Checkout page JavaScript - Simple & Working
-let currentDiscount = 0;
+// Checkout page JavaScript
 let cartProducts = [];
+let currentDiscount = 0;
 
-// Initialize checkout
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Checkout page loaded');
     loadCart();
@@ -18,33 +18,25 @@ function loadCart() {
     console.log('Cart loaded:', cartProducts);
 }
 
-// Check if user is logged in
+// Check user authentication
 function checkUserAuth() {
     const emailInput = document.getElementById('email');
     const loginBtn = document.getElementById('loginBtnCheckout');
     
-    // Check Firebase auth state
-    if (typeof auth !== 'undefined') {
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User is logged in
-                emailInput.value = user.email;
-                emailInput.disabled = true;
-                emailInput.style.backgroundColor = '#f5f5f5';
-                loginBtn.textContent = 'LOGOUT';
-                loginBtn.style.color = '#e74c3c';
-                
-                // Load user addresses
-                loadUserAddresses(user.uid);
-            } else {
-                // User is not logged in
-                emailInput.value = '';
-                emailInput.disabled = false;
-                emailInput.style.backgroundColor = '';
-                loginBtn.textContent = 'LOGIN';
-                loginBtn.style.color = '#3498db';
-            }
-        });
+    if (typeof auth !== 'undefined' && auth.currentUser) {
+        // User is logged in
+        emailInput.value = auth.currentUser.email;
+        emailInput.disabled = true;
+        emailInput.style.backgroundColor = '#f5f5f5';
+        loginBtn.textContent = 'LOGOUT';
+        loginBtn.style.color = '#e74c3c';
+        
+        // Load user addresses
+        loadUserAddresses(auth.currentUser.uid);
+    } else {
+        // User is not logged in
+        loginBtn.textContent = 'LOGIN';
+        loginBtn.style.color = '#3498db';
     }
 }
 
@@ -66,7 +58,7 @@ function loadUserAddresses(userId) {
         });
 }
 
-// Fill address form
+// Fill address form with user data
 function fillAddressForm(address) {
     if (address.name) {
         const nameParts = address.name.split(' ');
@@ -86,28 +78,36 @@ function setupEventListeners() {
     const promoInput = document.querySelector('.promo-input');
 
     // Login/Logout button
-    loginBtn.addEventListener('click', function() {
-        if (auth.currentUser) {
-            // Logout
-            if (confirm('Are you sure you want to logout?')) {
-                auth.signOut();
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function() {
+            if (typeof auth !== 'undefined' && auth.currentUser) {
+                // Logout
+                if (confirm('Are you sure you want to logout?')) {
+                    auth.signOut();
+                }
+            } else {
+                // Show login modal
+                showLoginModal();
             }
-        } else {
-            // Show login modal
-            showLoginModal();
-        }
-    });
+        });
+    }
 
     // Apply promo code
-    applyBtn.addEventListener('click', applyPromoCode);
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyPromoCode);
+    }
     
     // Enter key for promo code
-    promoInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') applyPromoCode();
-    });
+    if (promoInput) {
+        promoInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') applyPromoCode();
+        });
+    }
 
     // Checkout button
-    checkoutBtn.addEventListener('click', processCheckout);
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', processCheckout);
+    }
 
     // Quantity controls
     document.addEventListener('click', function(e) {
@@ -174,7 +174,8 @@ function updateOrderSummary() {
                         <div class="order-item-image-container">
                             <div class="order-item-image">
                                 <img src="${product.image}" alt="${product.name}" 
-                                     onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
+                                     onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'"
+                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
                             </div>
                         </div>
                         <div class="order-item-content">
@@ -341,4 +342,11 @@ function processCheckout() {
 function clearCart() {
     cartProducts = [];
     localStorage.removeItem('guestCart');
+}
+
+// Listen for auth state changes
+if (typeof auth !== 'undefined') {
+    auth.onAuthStateChanged((user) => {
+        checkUserAuth();
+    });
 }
