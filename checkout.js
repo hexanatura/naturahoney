@@ -1,6 +1,60 @@
 // Checkout page specific JavaScript
 let currentDiscount = 0;
 let originalTotal = 0;
+let shippingCharge = 0;
+let cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
+
+// Product data (same as in common.js)
+const products = [
+    { 
+        id: 1, 
+        name: "Natura Agmark Honey", 
+        price: 249, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022",
+        category: "crystal"
+    },
+    { 
+        id: 2, 
+        name: "Natura Agmark Honey", 
+        price: 449, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026",
+        category: "crystal"
+    },
+    { 
+        id: 3, 
+        name: "Natura Agmark Honey", 
+        price: 149, 
+        weight: "100g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115",
+        category: "crystal"
+    },
+    { 
+        id: 4, 
+        name: "Natura Agmark Honey", 
+        price: 349, 
+        weight: "50g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864",
+        category: "crystal"
+    },
+    { 
+        id: 5, 
+        name: "Natura Agmark Honey", 
+        price: 199, 
+        weight: "1Kg",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894",
+        category: "premium"
+    },
+    { 
+        id: 6, 
+        name: "Natura Agmark Honey - Premium Pet", 
+        price: 329, 
+        weight: "500g",
+        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908",
+        category: "premium"
+    }
+];
 
 function initCheckoutPage() {
     updateOrderSummary();
@@ -96,13 +150,27 @@ function loadUserAddresses() {
 }
 
 function fillAddressForm(address) {
-    if (address.firstName) document.getElementById('firstName').value = address.firstName;
-    if (address.lastName) document.getElementById('lastName').value = address.lastName;
+    if (address.name) {
+        const nameParts = address.name.split(' ');
+        if (nameParts.length > 0) {
+            document.getElementById('firstName').value = nameParts[0];
+        }
+        if (nameParts.length > 1) {
+            document.getElementById('lastName').value = nameParts.slice(1).join(' ');
+        }
+    }
     if (address.address) document.getElementById('address').value = address.address;
-    if (address.city) document.getElementById('city').value = address.city;
-    if (address.state) document.getElementById('state').value = address.state;
-    if (address.zipCode) document.getElementById('zipCode').value = address.zipCode;
+    if (address.pincode) document.getElementById('zipCode').value = address.pincode;
     if (address.phone) document.getElementById('phone').value = address.phone;
+    
+    // Set city and state if available in the address
+    if (address.address) {
+        // Simple parsing - you might want to improve this
+        const addressParts = address.address.split(',');
+        if (addressParts.length > 1) {
+            document.getElementById('city').value = addressParts[addressParts.length - 2]?.trim() || '';
+        }
+    }
 }
 
 function setupCheckoutEventListeners() {
@@ -325,15 +393,20 @@ function updateOrderSummary() {
 
 function updateTotals() {
     const subtotalElement = document.getElementById('subtotal');
+    const shippingElement = document.getElementById('shipping');
     const totalElement = document.getElementById('total');
     const discountRow = document.getElementById('discountRow');
     const discountAmount = document.getElementById('discountAmount');
     
     if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
     
-    const newTotal = originalTotal - currentDiscount;
+    // Calculate shipping - free for orders over 599, otherwise 50
+    shippingCharge = originalTotal >= 599 ? 0 : 50;
+    
+    const newTotal = originalTotal + shippingCharge - currentDiscount;
     
     subtotalElement.textContent = `₹${originalTotal}`;
+    shippingElement.textContent = shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`;
     
     if (currentDiscount > 0) {
         discountRow.style.display = 'flex';
@@ -527,8 +600,9 @@ function processCheckout() {
             };
         }),
         subtotal: originalTotal,
+        shipping: shippingCharge,
         discount: currentDiscount,
-        total: originalTotal - currentDiscount,
+        total: originalTotal + shippingCharge - currentDiscount,
         status: 'pending',
         createdAt: new Date().toISOString(),
         paymentMethod: 'razorpay'
@@ -710,22 +784,6 @@ document.addEventListener('DOMContentLoaded', function() {
         initCheckoutPage();
     }
 });
-
-// Make sure cartProducts and products are available globally
-if (typeof cartProducts === 'undefined') {
-    var cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
-}
-
-// Override updateCartUI to also update checkout page
-if (typeof updateCartUI !== 'undefined') {
-    const originalUpdateCartUI = updateCartUI;
-    updateCartUI = function() {
-        originalUpdateCartUI();
-        if (typeof updateOrderSummary === 'function') {
-            updateOrderSummary();
-        }
-    };
-}
 
 // Function to load cart from Firestore for logged-in users
 function loadCartFromFirestore() {
