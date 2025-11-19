@@ -145,7 +145,7 @@ function setupCheckoutEventListeners() {
 
     // Quantity controls
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('quantity-btn-checkout') || e.target.closest('.quantity-btn-checkout')) {
+        if (e.target.classList.contains('quantity-btn-checkout')) {
             handleCheckoutQuantityChange(e);
         }
     });
@@ -262,7 +262,10 @@ function updateOrderSummary() {
                     <div class="order-item-main">
                         <div class="order-item-image-container">
                             <div class="order-item-image">
-                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" alt="${product.name}" onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
+                                <img src="${product.image}" alt="${product.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="order-item-image-fallback" style="display: none;">
+                                    <i class="fas fa-jar"></i>
+                                </div>
                             </div>
                         </div>
                         <div class="order-item-content">
@@ -274,14 +277,8 @@ function updateOrderSummary() {
                                 <div class="order-item-price">₹${itemTotal}</div>
                             </div>
                             <div class="order-item-footer">
-                                <div class="order-item-quantity-controls">
-                                    <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}" ${item.quantity <= 1 ? 'disabled' : ''}>
-                                        <i class="fas fa-minus"></i>
-                                    </button>
-                                    <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="1" max="10" data-id="${item.id}">
-                                    <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
+                                <div class="order-item-quantity">
+                                    <span>Quantity: ${item.quantity}</span>
                                 </div>
                             </div>
                         </div>
@@ -390,30 +387,24 @@ function hideAllPromoMessages() {
 }
 
 function handleCheckoutQuantityChange(e) {
-    const button = e.target.closest('.quantity-btn-checkout');
-    if (!button) return;
+    const productId = parseInt(e.target.getAttribute('data-id'));
+    const isMinus = e.target.classList.contains('minus');
     
-    const productId = parseInt(button.getAttribute('data-id'));
-    const action = button.getAttribute('data-action');
-    
-    if (action === 'decrease') {
+    if (isMinus) {
         updateCartQuantity(productId, -1);
-    } else if (action === 'increase') {
+    } else {
         updateCartQuantity(productId, 1);
     }
     
     updateOrderSummary();
-    updateCartUI(); // Also update cart sidebar if open
 }
 
 function handleCheckoutQuantityInput(e) {
-    const input = e.target;
-    const productId = parseInt(input.getAttribute('data-id'));
-    const newQuantity = parseInt(input.value) || 1;
+    const productId = parseInt(e.target.getAttribute('data-id'));
+    const newQuantity = parseInt(e.target.value) || 1;
     
     setCartQuantity(productId, newQuantity);
     updateOrderSummary();
-    updateCartUI(); // Also update cart sidebar if open
 }
 
 function validateIndianPhoneNumber(phone) {
@@ -624,7 +615,7 @@ function showOrderSuccess(orderData) {
     }, 3000);
 }
 
-// Add this CSS for error states and quantity controls
+// Add this CSS for error states and image styling
 const style = document.createElement('style');
 style.textContent = `
     .checkout-form input.error,
@@ -660,114 +651,114 @@ style.textContent = `
         transition: color 0.3s ease !important;
     }
     
-    /* Product Images in Order Summary */
     .order-item-image {
-        width: 70px;
-        height: 70px;
-        border-radius: 10px;
-        object-fit: cover;
-        flex-shrink: 0;
-        background: #f5f5f5;
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        position: relative;
     }
     
     .order-item-image img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        border-radius: 10px;
     }
     
-    /* Centered quantity controls */
-    .order-item-quantity-controls {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 8px;
+    .order-item-image-fallback {
         width: 100%;
-    }
-    
-    .quantity-btn-checkout {
-        background: #ffffff;
-        border: 1px solid #5f2b27;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        cursor: pointer;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: 'Unbounded', sans-serif;
-        font-weight: 600;
-        font-size: 12px;
-        transition: all 0.2s ease;
-        color: #5f2b27;
-    }
-    
-    .quantity-btn-checkout:hover:not(:disabled) {
-        background: #5f2b27;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        transform: scale(1.1);
     }
     
-    .quantity-btn-checkout:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-        border-color: #ccc;
-        color: #ccc;
+    .order-item-image-fallback i {
+        font-size: 20px;
     }
     
-    .quantity-btn-checkout:disabled:hover {
-        background: #ffffff;
-        color: #ccc;
-        transform: none;
+    .order-item-image-container {
+        margin-right: 15px;
+        flex-shrink: 0;
     }
     
-    .quantity-input-checkout {
-        width: 40px;
-        height: 24px;
-        text-align: center;
-        border: 1px solid #e5e5e5;
-        border-radius: 12px;
-        background: #fafafa;
-        font-family: 'Unbounded', sans-serif;
+    .order-item-main {
+        display: flex;
+        align-items: flex-start;
+        padding: 15px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .order-item-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .order-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+    }
+    
+    .order-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .order-item-name {
         font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+        font-size: 14px;
+        line-height: 1.3;
+    }
+    
+    .order-item-weight {
+        color: #666;
         font-size: 12px;
-        padding: 0 4px;
     }
     
-    .quantity-input-checkout:focus {
-        border-color: #5f2b27;
-        background: white;
-        outline: none;
+    .order-item-price {
+        font-weight: 600;
+        color: #2c5530;
+        font-size: 14px;
+        margin-left: 10px;
+        flex-shrink: 0;
     }
     
-    .quantity-input-checkout:invalid {
-        border-color: #ff4444;
-        background: #fffafa;
+    .order-item-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
-    /* Mobile responsive adjustments */
-    @media (max-width: 767px) {
-        .order-item-image {
-            width: 60px;
-            height: 60px;
-        }
-        
-        .quantity-btn-checkout {
-            width: 22px;
-            height: 22px;
-        }
-        
-        .quantity-input-checkout {
-            width: 35px;
-            height: 22px;
-            font-size: 11px;
-        }
+    .order-item-quantity {
+        color: #666;
+        font-size: 12px;
+    }
+    
+    .empty-order {
+        text-align: center;
+        padding: 40px 20px;
+        color: #777;
+    }
+    
+    .empty-order i {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #e0e0e0;
+    }
+    
+    .empty-order p {
+        font-size: 16px;
     }
 `;
 document.head.appendChild(style);
@@ -781,78 +772,6 @@ if (typeof updateCartUI !== 'undefined') {
             updateOrderSummary();
         }
     };
-}
-
-// Make sure cartProducts and products are available globally
-if (typeof cartProducts === 'undefined') {
-    var cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
-}
-
-if (typeof products === 'undefined') {
-    var products = [
-        {
-            id: 1,
-            name: "Wild Forest Honey",
-            weight: "500g",
-            price: 499,
-            image: "https://ik.imagekit.io/hexaanatura/honey-jar-1.png"
-        },
-        {
-            id: 2,
-            name: "Organic Multiflora Honey",
-            weight: "1kg",
-            price: 899,
-            image: "https://ik.imagekit.io/hexaanatura/honey-jar-2.png"
-        }
-        // Add more products as needed
-    ];
-}
-
-// Cart management functions
-function updateCartQuantity(productId, change) {
-    const productIndex = cartProducts.findIndex(item => item.id === productId);
-    
-    if (productIndex !== -1) {
-        cartProducts[productIndex].quantity += change;
-        
-        // Remove item if quantity becomes 0 or less
-        if (cartProducts[productIndex].quantity <= 0) {
-            cartProducts.splice(productIndex, 1);
-        }
-        
-        // Save to localStorage or Firestore
-        saveCart();
-    }
-}
-
-function setCartQuantity(productId, quantity) {
-    const productIndex = cartProducts.findIndex(item => item.id === productId);
-    
-    if (productIndex !== -1) {
-        if (quantity <= 0) {
-            cartProducts.splice(productIndex, 1);
-        } else {
-            cartProducts[productIndex].quantity = quantity;
-        }
-        
-        // Save to localStorage or Firestore
-        saveCart();
-    }
-}
-
-function saveCart() {
-    if (currentUser && db) {
-        // Save to Firestore for logged-in users
-        cartProducts.forEach(item => {
-            db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).set({
-                productId: item.id,
-                quantity: item.quantity
-            });
-        });
-    } else {
-        // Save to localStorage for guest users
-        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
