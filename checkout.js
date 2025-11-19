@@ -38,6 +38,9 @@ function updateUserInterface() {
             loginBtnCheckout.style.textTransform = 'uppercase';
             loginBtnCheckout.style.border = 'none';
             loginBtnCheckout.style.cursor = 'pointer';
+            loginBtnCheckout.style.fontSize = '14px';
+            loginBtnCheckout.style.padding = '0';
+            loginBtnCheckout.style.margin = '0';
         }
         
         // Try to load user's saved addresses if available
@@ -63,6 +66,9 @@ function updateUserInterface() {
             loginBtnCheckout.style.textTransform = 'uppercase';
             loginBtnCheckout.style.border = 'none';
             loginBtnCheckout.style.cursor = 'pointer';
+            loginBtnCheckout.style.fontSize = '14px';
+            loginBtnCheckout.style.padding = '0';
+            loginBtnCheckout.style.margin = '0';
         }
     }
 }
@@ -626,6 +632,20 @@ style.textContent = `
         background-color: #f5f5f5 !important;
         color: #666 !important;
         cursor: not-allowed !important;
+    }
+    
+    .login-btn {
+        background: transparent !important;
+        border: none !important;
+        font-family: 'Unbounded', sans-serif !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+        font-size: 14px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        transition: color 0.3s ease !important;
     }
 `;
 document.head.appendChild(style);
