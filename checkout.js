@@ -603,6 +603,70 @@ function processPayment(orderData) {
     }, 2000);
 }
 
+function displayOrders(orders) {
+  const ordersContainer = document.getElementById('orders-container');
+  
+  if (!orders || orders.length === 0) {
+    ordersContainer.innerHTML = `
+      <div class="empty-orders">
+        <i class="fas fa-shopping-bag"></i>
+        <h3>No orders yet</h3>
+        <p>Your order history will appear here</p>
+      </div>
+    `;
+    return;
+  }
+
+  ordersContainer.innerHTML = orders.map(order => `
+    <div class="order-card">
+      <div class="order-header">
+        <div class="order-info">
+          <span class="order-id">Order #${order.id}</span>
+          <span class="order-date">${new Date(order.date).toLocaleDateString()}</span>
+        </div>
+        <span class="order-status status-${order.status.toLowerCase()}">${order.status}</span>
+      </div>
+      
+      <div class="order-items">
+        ${order.items.map(item => `
+          <div class="order-item">
+            <div class="order-item-main">
+              <div class="order-item-image-container">
+                <div class="order-item-image">
+                  ${item.image ? 
+                    `<img src="${item.image}" alt="${item.name}" />` : 
+                    `<i class="fas fa-jar"></i>`
+                  }
+                </div>
+              </div>
+              <div class="order-item-content">
+                <div class="order-item-header">
+                  <div class="order-item-info">
+                    <div class="order-item-name">${item.name}</div>
+                    <div class="order-item-weight">${item.weight || '500g'}</div>
+                  </div>
+                  <div class="order-item-price">₹${item.price}</div>
+                </div>
+                <div class="order-item-footer">
+                  <div class="order-item-quantity">
+                    <span>Qty: ${item.quantity}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div class="order-footer">
+        <div class="order-total">
+          <strong>Total: ₹${order.total}</strong>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
 function showOrderSuccess(orderData) {
     alert(`Order confirmed successfully! Order ID: ${orderData.id.substring(0, 8)}\n\nThank you for your purchase. You will receive an email confirmation shortly.`);
     
