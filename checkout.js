@@ -1,6 +1,8 @@
 // Checkout page JavaScript
 let cartProducts = [];
 let currentDiscount = 0;
+let promoCodeApplied = false;
+let currentPromoCode = '';
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -236,20 +238,38 @@ function updateTotals(subtotal) {
     
     if (!subtotalEl || !totalEl) return;
     
+    // Calculate shipping
     const shipping = subtotal >= 599 ? 0 : 50;
     const total = subtotal + shipping - currentDiscount;
     
     subtotalEl.textContent = `₹${subtotal}`;
-    if (shippingEl) shippingEl.textContent = shipping === 0 ? 'FREE' : `₹${shipping}`;
     
+    // Update shipping display
+    if (shippingEl) {
+        if (shipping === 0) {
+            shippingEl.textContent = 'FREE';
+            shippingEl.style.color = '#5f2b27';
+            shippingEl.style.fontWeight = '600';
+        } else {
+            shippingEl.textContent = `₹${shipping}`;
+            shippingEl.style.color = '#333';
+            shippingEl.style.fontWeight = 'normal';
+        }
+    }
+    
+    // Update discount display
     if (currentDiscount > 0) {
         discountRow.style.display = 'flex';
         discountAmount.textContent = `-₹${currentDiscount}`;
+        discountAmount.style.color = '#e74c3c';
     } else {
         discountRow.style.display = 'none';
     }
     
+    // Update total
     totalEl.textContent = `₹${total}`;
+    totalEl.style.color = '#5f2b27';
+    totalEl.style.fontWeight = '600';
 }
 
 // Handle quantity changes
@@ -284,19 +304,44 @@ function applyPromoCode() {
     
     const code = promoInput.value.trim().toUpperCase();
     
-    if (code === 'WELCOME10') {
+    if (code === 'WELCOME10' && !promoCodeApplied) {
         currentDiscount = 50; // ₹50 discount
+        promoCodeApplied = true;
+        currentPromoCode = code;
         updateOrderSummary();
-        promoInput.value = '';
+        
+        // Update promo input to show applied code
+        promoInput.value = code;
+        promoInput.disabled = true;
+        promoInput.style.backgroundColor = '#f0f8f0';
+        promoInput.style.borderColor = '#5f2b27';
+        
+        // Update apply button
+        const applyBtn = document.querySelector('.apply-btn');
+        applyBtn.textContent = 'Applied';
+        applyBtn.disabled = true;
+        applyBtn.style.backgroundColor = '#28a745';
         
         if (promoSuccess) {
             promoSuccess.textContent = 'Promo code applied! ₹50 discount added.';
             promoSuccess.style.display = 'block';
             if (promoError) promoError.style.display = 'none';
         }
+    } else if (promoCodeApplied) {
+        if (promoError) {
+            promoError.textContent = 'Promo code already applied.';
+            promoError.style.display = 'block';
+            if (promoSuccess) promoSuccess.style.display = 'none';
+        }
     } else if (code) {
         if (promoError) {
             promoError.textContent = 'Invalid promo code. Try WELCOME10 for ₹50 off.';
+            promoError.style.display = 'block';
+            if (promoSuccess) promoSuccess.style.display = 'none';
+        }
+    } else {
+        if (promoError) {
+            promoError.textContent = 'Please enter a promo code.';
             promoError.style.display = 'block';
             if (promoSuccess) promoSuccess.style.display = 'none';
         }
@@ -313,9 +358,14 @@ function processCheckout() {
     // Basic validation
     const email = document.getElementById('email').value;
     const firstName = document.getElementById('firstName').value;
+    const lastName = document.getElementById('lastName').value;
+    const address = document.getElementById('address').value;
+    const city = document.getElementById('city').value;
+    const state = document.getElementById('state').value;
+    const zipCode = document.getElementById('zipCode').value;
     const phone = document.getElementById('phone').value;
     
-    if (!email || !firstName || !phone) {
+    if (!email || !firstName || !lastName || !address || !city || !state || !zipCode || !phone) {
         alert('Please fill in all required fields');
         return;
     }
@@ -325,10 +375,60 @@ function processCheckout() {
         return;
     }
     
+    // Validate phone number
+    if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+        alert('Please enter a valid 10-digit phone number');
+        return;
+    }
+    
+    // Validate PIN code
+    if (zipCode.length < 6 || !/^\d+$/.test(zipCode)) {
+        alert('Please enter a valid PIN code');
+        return;
+    }
+    
     // Show processing
     const checkoutBtn = document.querySelector('.checkout-btn');
+    const originalText = checkoutBtn.innerHTML;
     checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     checkoutBtn.disabled = true;
+    
+    // Calculate order total
+    const subtotal = cartProducts.reduce((total, item) => {
+        const product = getProductById(item.id);
+        return total + (product ? product.price * item.quantity : 0);
+    }, 0);
+    
+    const shipping = subtotal >= 599 ? 0 : 50;
+    const total = subtotal + shipping - currentDiscount;
+    
+    // Create order object
+    const order = {
+        items: cartProducts,
+        subtotal: subtotal,
+        shipping: shipping,
+        discount: currentDiscount,
+        total: total,
+        promoCode: currentPromoCode,
+        customerInfo: {
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            address: address,
+            city: city,
+            state: state,
+            zipCode: zipCode,
+            phone: phone
+        },
+        status: 'placed',
+        createdAt: new Date().toISOString()
+    };
+    
+    // Save order to localStorage for demo
+    const orders = JSON.parse(localStorage.getItem('userOrders') || '[]');
+    order.id = 'ORD' + Date.now();
+    orders.push(order);
+    localStorage.setItem('userOrders', JSON.stringify(orders));
     
     // Simulate payment processing
     setTimeout(() => {
@@ -342,6 +442,9 @@ function processCheckout() {
 function clearCart() {
     cartProducts = [];
     localStorage.removeItem('guestCart');
+    currentDiscount = 0;
+    promoCodeApplied = false;
+    currentPromoCode = '';
 }
 
 // Listen for auth state changes
