@@ -2194,17 +2194,21 @@ nav {
   }
 }
 
+/* IMPROVED QUANTITY CONTROLS */
 .quantity-controls {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .quantity-btn-checkout {
   background: #ffffff;
   border: 1px solid #5f2b27;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -2212,14 +2216,16 @@ nav {
   justify-content: center;
   font-family: 'Unbounded', sans-serif;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 14px;
   transition: all 0.2s ease;
   color: #5f2b27;
+  flex-shrink: 0;
 }
 
 .quantity-btn-checkout:hover:not(:disabled) {
   background: #5f2b27;
   color: white;
+  transform: scale(1.05);
 }
 
 .quantity-btn-checkout:disabled {
@@ -2230,16 +2236,17 @@ nav {
 }
 
 .quantity-input-checkout {
-  width: 40px;
-  height: 24px;
+  width: 50px;
+  height: 32px;
   text-align: center;
   border: 1px solid #e5e5e5;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #fafafa;
   font-family: 'Unbounded', sans-serif;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 14px;
   padding: 0 4px;
+  margin: 0 4px;
 }
 
 .quantity-input-checkout:focus {
@@ -2387,7 +2394,7 @@ nav {
 
 .order-item-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   width: 100%;
   margin-top: 5px;
@@ -3419,17 +3426,17 @@ footer a:hover {
 .order-item-quantity-controls {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
   margin-top: 8px;
-  width: 100%; 
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .quantity-btn-checkout {
   background: #ffffff;
   border: 1px solid #5f2b27;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -3437,14 +3444,16 @@ footer a:hover {
   justify-content: center;
   font-family: 'Unbounded', sans-serif;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 14px;
   transition: all 0.2s ease;
   color: #5f2b27;
+  flex-shrink: 0;
 }
 
 .quantity-btn-checkout:hover:not(:disabled) {
   background: #5f2b27;
   color: white;
+  transform: scale(1.05);
 }
 
 .quantity-btn-checkout:disabled {
@@ -3455,16 +3464,17 @@ footer a:hover {
 }
 
 .quantity-input-checkout {
-  width: 40px;
-  height: 24px;
+  width: 50px;
+  height: 32px;
   text-align: center;
   border: 1px solid #e5e5e5;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #fafafa;
   font-family: 'Unbounded', sans-serif;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 14px;
   padding: 0 4px;
+  margin: 0 4px;
 }
 
 .quantity-input-checkout:focus {
@@ -3502,6 +3512,80 @@ footer a:hover {
   .order-item-price {
     margin-top: 0 !important;
     align-self: flex-start;
+  }
+}
+
+/* Checkout form error styles */
+.checkout-form input.error,
+.checkout-form select.error {
+  border-color: #e74c3c !important;
+  background-color: #fffafa !important;
+}
+
+.field-error {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 5px;
+  font-family: 'Unbounded', sans-serif;
+}
+
+#email:disabled {
+  background-color: #f5f5f5 !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+}
+
+.login-btn {
+  background: transparent !important;
+  border: none !important;
+  font-family: 'Unbounded', sans-serif !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transition: color 0.3s ease !important;
+}
+
+/* Product Images in Order Summary */
+.order-item-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.order-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767px) {
+  .order-item-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .quantity-btn-checkout {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .quantity-input-checkout {
+    width: 45px;
+    height: 28px;
+    font-size: 13px;
   }
 }
   </style>
@@ -4057,5 +4141,6 @@ footer a:hover {
   </footer>
 <script src="common.js"></script>
 <script src="checkout.js"></script>
+
 </body>
 </html>
