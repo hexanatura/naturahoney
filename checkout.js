@@ -1,3 +1,4 @@
+// Checkout page specific JavaScript
 let currentDiscount = 0;
 let originalTotal = 0;
 
@@ -7,10 +8,12 @@ function initCheckoutPage() {
     updateUserInterface();
     
     // Listen for auth state changes
-    auth.onAuthStateChanged((user) => {
-        currentUser = user;
-        updateUserInterface();
-    });
+    if (typeof auth !== 'undefined') {
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            updateUserInterface();
+        });
+    }
 }
 
 function updateUserInterface() {
@@ -25,6 +28,7 @@ function updateUserInterface() {
             emailInput.style.backgroundColor = '#f5f5f5';
             emailInput.style.color = '#666';
             emailInput.style.cursor = 'not-allowed';
+            emailInput.title = 'Email cannot be changed for logged-in users';
         }
         
         // Change button to Logout - text only changes, no background
@@ -54,6 +58,7 @@ function updateUserInterface() {
             emailInput.style.backgroundColor = '';
             emailInput.style.color = '';
             emailInput.style.cursor = '';
+            emailInput.title = '';
         }
         
         if (loginBtnCheckout) {
@@ -143,9 +148,10 @@ function setupCheckoutEventListeners() {
         checkoutBtnMain.addEventListener('click', processCheckout);
     }
 
-    // Quantity controls
+    // Quantity controls - IMPROVED CLICK HANDLING
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('quantity-btn-checkout') || e.target.closest('.quantity-btn-checkout')) {
+        const button = e.target.closest('.quantity-btn-checkout');
+        if (button) {
             handleCheckoutQuantityChange(e);
         }
     });
@@ -169,6 +175,11 @@ function validateField(e) {
     const value = field.value.trim();
     
     field.classList.remove('error');
+    
+    // Skip validation for disabled email field
+    if (field.id === 'email' && field.disabled) {
+        return true;
+    }
     
     if (field.hasAttribute('required') && !value) {
         showFieldError(field, 'This field is required');
@@ -247,9 +258,22 @@ function updateOrderSummary() {
         emptyMessage.innerHTML = `
             <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px; color: #e0e0e0;"></i>
             <p style="font-size: 16px;">Your cart is empty</p>
+            <a href="shop.html" class="continue-shopping" style="display: inline-block; margin-top: 15px;">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
         `;
         orderItems.appendChild(emptyMessage);
+        
+        // Hide summary details when cart is empty
+        document.querySelector('.order-summary-details').style.display = 'none';
+        document.querySelector('.checkout-btn').style.display = 'none';
+        document.querySelector('.security-notice').style.display = 'none';
     } else {
+        // Show summary details when cart has items
+        document.querySelector('.order-summary-details').style.display = 'block';
+        document.querySelector('.checkout-btn').style.display = 'block';
+        document.querySelector('.security-notice').style.display = 'flex';
+        
         cartProducts.forEach(item => {
             const product = products.find(p => p.id === item.id);
             if (product) {
@@ -262,7 +286,10 @@ function updateOrderSummary() {
                     <div class="order-item-main">
                         <div class="order-item-image-container">
                             <div class="order-item-image">
-                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" alt="${product.name}" onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
+                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" 
+                                     alt="${product.name}" 
+                                     onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'"
+                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
                             </div>
                         </div>
                         <div class="order-item-content">
@@ -403,7 +430,9 @@ function handleCheckoutQuantityChange(e) {
     }
     
     updateOrderSummary();
-    updateCartUI(); // Also update cart sidebar if open
+    if (typeof updateCartUI !== 'undefined') {
+        updateCartUI(); // Also update cart sidebar if open
+    }
 }
 
 function handleCheckoutQuantityInput(e) {
@@ -413,7 +442,9 @@ function handleCheckoutQuantityInput(e) {
     
     setCartQuantity(productId, newQuantity);
     updateOrderSummary();
-    updateCartUI(); // Also update cart sidebar if open
+    if (typeof updateCartUI !== 'undefined') {
+        updateCartUI(); // Also update cart sidebar if open
+    }
 }
 
 function validateIndianPhoneNumber(phone) {
@@ -564,7 +595,9 @@ function clearCartAfterOrder() {
     localStorage.removeItem('guestCart');
     
     cartProducts = [];
-    updateCartUI();
+    if (typeof updateCartUI !== 'undefined') {
+        updateCartUI();
+    }
     updateOrderSummary();
 }
 
@@ -624,190 +657,6 @@ function showOrderSuccess(orderData) {
     }, 3000);
 }
 
-// Add this CSS for error states and quantity controls
-const style = document.createElement('style');
-style.textContent = `
-    .checkout-form input.error,
-    .checkout-form select.error {
-        border-color: #e74c3c !important;
-        background-color: #fffafa !important;
-    }
-    
-    .field-error {
-        color: #e74c3c;
-        font-size: 12px;
-        margin-top: 5px;
-        font-family: 'Unbounded', sans-serif;
-    }
-    
-    #email:disabled {
-        background-color: #f5f5f5 !important;
-        color: #666 !important;
-        cursor: not-allowed !important;
-    }
-    
-    .login-btn {
-        background: transparent !important;
-        border: none !important;
-        font-family: 'Unbounded', sans-serif !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        text-decoration: none !important;
-        cursor: pointer !important;
-        font-size: 14px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        transition: color 0.3s ease !important;
-    }
-    
-    /* Product Images in Order Summary */
-    .order-item-image {
-        width: 70px;
-        height: 70px;
-        border-radius: 10px;
-        object-fit: cover;
-        flex-shrink: 0;
-        background: #f5f5f5;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-    
-    .order-item-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 10px;
-    }
-    
-    /* Centered quantity controls */
-    .order-item-quantity-controls {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 8px;
-        width: 100%;
-    }
-    
-    .quantity-btn-checkout {
-        background: #ffffff;
-        border: 1px solid #5f2b27;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'Unbounded', sans-serif;
-        font-weight: 600;
-        font-size: 12px;
-        transition: all 0.2s ease;
-        color: #5f2b27;
-    }
-    
-    .quantity-btn-checkout:hover:not(:disabled) {
-        background: #5f2b27;
-        color: white;
-        transform: scale(1.1);
-    }
-    
-    .quantity-btn-checkout:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-        border-color: #ccc;
-        color: #ccc;
-    }
-    
-    .quantity-btn-checkout:disabled:hover {
-        background: #ffffff;
-        color: #ccc;
-        transform: none;
-    }
-    
-    .quantity-input-checkout {
-        width: 40px;
-        height: 24px;
-        text-align: center;
-        border: 1px solid #e5e5e5;
-        border-radius: 12px;
-        background: #fafafa;
-        font-family: 'Unbounded', sans-serif;
-        font-weight: 600;
-        font-size: 12px;
-        padding: 0 4px;
-    }
-    
-    .quantity-input-checkout:focus {
-        border-color: #5f2b27;
-        background: white;
-        outline: none;
-    }
-    
-    .quantity-input-checkout:invalid {
-        border-color: #ff4444;
-        background: #fffafa;
-    }
-    
-    /* Mobile responsive adjustments */
-    @media (max-width: 767px) {
-        .order-item-image {
-            width: 60px;
-            height: 60px;
-        }
-        
-        .quantity-btn-checkout {
-            width: 22px;
-            height: 22px;
-        }
-        
-        .quantity-input-checkout {
-            width: 35px;
-            height: 22px;
-            font-size: 11px;
-        }
-    }
-`;
-document.head.appendChild(style);
-
-// Override updateCartUI to also update checkout page
-if (typeof updateCartUI !== 'undefined') {
-    const originalUpdateCartUI = updateCartUI;
-    updateCartUI = function() {
-        originalUpdateCartUI();
-        if (typeof updateOrderSummary === 'function') {
-            updateOrderSummary();
-        }
-    };
-}
-
-// Make sure cartProducts and products are available globally
-if (typeof cartProducts === 'undefined') {
-    var cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
-}
-
-if (typeof products === 'undefined') {
-    var products = [
-        {
-            id: 1,
-            name: "Wild Forest Honey",
-            weight: "500g",
-            price: 499,
-            image: "https://ik.imagekit.io/hexaanatura/honey-jar-1.png"
-        },
-        {
-            id: 2,
-            name: "Organic Multiflora Honey",
-            weight: "1kg",
-            price: 899,
-            image: "https://ik.imagekit.io/hexaanatura/honey-jar-2.png"
-        }
-        // Add more products as needed
-    ];
-}
-
 // Cart management functions
 function updateCartQuantity(productId, change) {
     const productIndex = cartProducts.findIndex(item => item.id === productId);
@@ -855,8 +704,60 @@ function saveCart() {
     }
 }
 
+// Initialize checkout page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     if (document.querySelector('.checkout-section')) {
         initCheckoutPage();
     }
 });
+
+// Make sure cartProducts and products are available globally
+if (typeof cartProducts === 'undefined') {
+    var cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
+}
+
+// Override updateCartUI to also update checkout page
+if (typeof updateCartUI !== 'undefined') {
+    const originalUpdateCartUI = updateCartUI;
+    updateCartUI = function() {
+        originalUpdateCartUI();
+        if (typeof updateOrderSummary === 'function') {
+            updateOrderSummary();
+        }
+    };
+}
+
+// Function to load cart from Firestore for logged-in users
+function loadCartFromFirestore() {
+    if (!currentUser || !db) return;
+    
+    db.collection('users').doc(currentUser.uid).collection('cart').get()
+        .then((querySnapshot) => {
+            cartProducts = [];
+            querySnapshot.forEach((doc) => {
+                const cartItem = doc.data();
+                cartProducts.push({
+                    id: cartItem.productId,
+                    quantity: cartItem.quantity
+                });
+            });
+            updateOrderSummary();
+            if (typeof updateCartUI !== 'undefined') {
+                updateCartUI();
+            }
+        })
+        .catch((error) => {
+            console.error("Error loading cart from Firestore:", error);
+        });
+}
+
+// Load cart when user logs in
+if (typeof auth !== 'undefined') {
+    auth.onAuthStateChanged((user) => {
+        currentUser = user;
+        if (user) {
+            loadCartFromFirestore();
+        }
+        updateUserInterface();
+    });
+}
