@@ -55,38 +55,6 @@
       overflow-x: hidden;
     } 
 
-    /* Add gap between nav and profile content */
-.profile-page {
-  padding-top: 120px; /* This creates the gap */
-}
-
-.profile-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  position: relative;
-  padding-left: 20px;
-  padding-right: 20px;
-}
-
-/* Adjust for mobile devices */
-@media (max-width: 767px) {
-  .profile-page {
-    padding-top: 100px; /* Smaller gap on mobile */
-  }
-  
-  .profile-content {
-    padding-left: 15px;
-    padding-right: 15px;
-  }
-}
-
-/* Adjust for tablets */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .profile-page {
-    padding-top: 110px;
-  }
-}
-
     /* Profile Page Styles - MINIMAL PADDING */
     .profile-page {
       display: none;
@@ -96,6 +64,7 @@
       min-height: 100vh;
       background: white;
       overflow-y: auto;
+       padding-top: 160px;
     }
 
     .profile-content {
@@ -104,6 +73,8 @@
       position: relative;
       padding-left: 20px;
       padding-right: 20px;
+        margin-top: 0;
+
     }
 
     .profile-page.active {
@@ -513,11 +484,14 @@
 
     /* Mobile Responsive Styles */
     @media (max-width: 767px) {
-      .profile-content {
-        padding-left: 15px;
-        padding-right: 15px;
-      }
+       .profile-page {
+    padding-top: 140px; /* Adjusted for mobile nav height */
+  }
 
+  .profile-content {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
       .profile-close-container {
         top: 100px;
         right: 20px;
@@ -696,6 +670,10 @@
 
     /* Tablet Styles */
     @media (min-width: 768px) and (max-width: 1023px) {
+
+        .profile-page {
+    padding-top: 150px;
+  }
       .profile-content {
         padding-left: 4%;
         padding-right: 4%;
