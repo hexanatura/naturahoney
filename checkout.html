@@ -3399,6 +3399,109 @@ footer a:hover {
 .terms-checkbox a:hover {
   color: #7a3731;
 }
+
+/* Updated Order Item Styles with Quantity Controls */
+.order-item-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.order-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.order-item-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.quantity-btn-checkout {
+  background: #ffffff;
+  border: 1px solid #5f2b27;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  color: #5f2b27;
+}
+
+.quantity-btn-checkout:hover:not(:disabled) {
+  background: #5f2b27;
+  color: white;
+}
+
+.quantity-btn-checkout:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #ccc;
+  color: #ccc;
+}
+
+.quantity-input-checkout {
+  width: 40px;
+  height: 24px;
+  text-align: center;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fafafa;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 0 4px;
+}
+
+.quantity-input-checkout:focus {
+  border-color: #5f2b27;
+  background: white;
+  outline: none;
+}
+
+.quantity-input-checkout:invalid {
+  border-color: #ff4444;
+  background: #fffafa;
+}
+
+/* Mobile and Tablet specific styles for price positioning */
+@media (max-width: 1023px) {
+  .order-item-header {
+    position: relative;
+    width: 100%;
+  }
+  
+  .order-item-price {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin-top: 0 !important;
+  }
+  
+  .order-item-info {
+    padding-right: 80px; /* Make space for the price */
+  }
+}
+
+/* Desktop specific styles */
+@media (min-width: 1024px) {
+  .order-item-price {
+    margin-top: 0 !important;
+    align-self: flex-start;
+  }
+}
   </style>
 </head>
 <body>
@@ -3671,7 +3774,7 @@ footer a:hover {
             <div class="order-item-main">
               <div class="order-item-image-container">
                 <div class="order-item-image">
-                  <i class="fas fa-jar"></i>
+                  <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Wild Forest Honey">
                 </div>
               </div>
               <div class="order-item-content">
@@ -3683,8 +3786,14 @@ footer a:hover {
                   <div class="order-item-price">₹499</div>
                 </div>
                 <div class="order-item-footer">
-                  <div class="order-item-quantity">
-                    <span>Quantity: 1</span>
+                  <div class="order-item-quantity-controls">
+                    <button class="quantity-btn-checkout" data-action="decrease" disabled>
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <input type="number" class="quantity-input-checkout" value="1" min="1" max="10">
+                    <button class="quantity-btn-checkout" data-action="increase">
+                      <i class="fas fa-plus"></i>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -3696,7 +3805,7 @@ footer a:hover {
             <div class="order-item-main">
               <div class="order-item-image-container">
                 <div class="order-item-image">
-                  <i class="fas fa-jar"></i>
+                  <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Organic Multiflora Honey">
                 </div>
               </div>
               <div class="order-item-content">
@@ -3708,8 +3817,14 @@ footer a:hover {
                   <div class="order-item-price">₹899</div>
                 </div>
                 <div class="order-item-footer">
-                  <div class="order-item-quantity">
-                    <span>Quantity: 2</span>
+                  <div class="order-item-quantity-controls">
+                    <button class="quantity-btn-checkout" data-action="decrease">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <input type="number" class="quantity-input-checkout" value="2" min="1" max="10">
+                    <button class="quantity-btn-checkout" data-action="increase">
+                      <i class="fas fa-plus"></i>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -3939,7 +4054,82 @@ footer a:hover {
     </div>
   </footer>
 <script src="common.js"></script>
-<script src="checkout.js"></script>
+<script>
+// Checkout page specific JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+  // Quantity controls functionality
+  const quantityControls = document.querySelectorAll('.quantity-btn-checkout');
+  
+  quantityControls.forEach(button => {
+    button.addEventListener('click', function() {
+      const action = this.getAttribute('data-action');
+      const input = this.closest('.order-item-quantity-controls').querySelector('.quantity-input-checkout');
+      let value = parseInt(input.value);
+      
+      if (action === 'increase') {
+        value += 1;
+      } else if (action === 'decrease' && value > 1) {
+        value -= 1;
+      }
+      
+      input.value = value;
+      
+      // Update the minus button state
+      const minusButton = this.closest('.order-item-quantity-controls').querySelector('[data-action="decrease"]');
+      minusButton.disabled = value <= 1;
+      
+      // Update the order totals
+      updateOrderTotals();
+    });
+  });
+  
+  // Input change handler
+  const quantityInputs = document.querySelectorAll('.quantity-input-checkout');
+  
+  quantityInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      let value = parseInt(this.value);
+      
+      // Ensure value is at least 1
+      if (isNaN(value) || value < 1) {
+        value = 1;
+        this.value = value;
+      }
+      
+      // Update the minus button state
+      const minusButton = this.closest('.order-item-quantity-controls').querySelector('[data-action="decrease"]');
+      minusButton.disabled = value <= 1;
+      
+      // Update the order totals
+      updateOrderTotals();
+    });
+  });
+  
+  // Function to update order totals
+  function updateOrderTotals() {
+    let subtotal = 0;
+    
+    // Calculate subtotal
+    document.querySelectorAll('.order-item').forEach(item => {
+      const priceText = item.querySelector('.order-item-price').textContent;
+      const price = parseInt(priceText.replace('₹', '').replace(',', ''));
+      const quantity = parseInt(item.querySelector('.quantity-input-checkout').value);
+      
+      subtotal += price * quantity;
+    });
+    
+    // Update subtotal display
+    document.getElementById('subtotal').textContent = `₹${subtotal}`;
+    document.getElementById('total').textContent = `₹${subtotal}`;
+  }
+  
+  // Initialize the minus buttons
+  document.querySelectorAll('[data-action="decrease"]').forEach(button => {
+    const input = button.closest('.order-item-quantity-controls').querySelector('.quantity-input-checkout');
+    button.disabled = parseInt(input.value) <= 1;
+  });
+});
+</script>
 
 </body>
 </html>
