@@ -55,6 +55,38 @@
       overflow-x: hidden;
     } 
 
+    /* Add gap between nav and profile content */
+.profile-page {
+  padding-top: 120px; /* This creates the gap */
+}
+
+.profile-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* Adjust for mobile devices */
+@media (max-width: 767px) {
+  .profile-page {
+    padding-top: 100px; /* Smaller gap on mobile */
+  }
+  
+  .profile-content {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+}
+
+/* Adjust for tablets */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .profile-page {
+    padding-top: 110px;
+  }
+}
+
     /* Profile Page Styles - MINIMAL PADDING */
     .profile-page {
       display: none;
