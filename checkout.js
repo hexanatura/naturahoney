@@ -446,7 +446,6 @@ function clearCart() {
     promoCodeApplied = false;
     currentPromoCode = '';
 }
-
 // Listen for auth state changes
 if (typeof auth !== 'undefined') {
     auth.onAuthStateChanged((user) => {
