@@ -2,7 +2,7 @@
 let currentDiscount = 0;
 let originalTotal = 0;
 let shippingCharge = 0;
-let cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
+let cartProducts = [];
 
 // Product data (same as in common.js)
 const products = [
@@ -56,7 +56,10 @@ const products = [
     }
 ];
 
+// Initialize checkout page
 function initCheckoutPage() {
+    console.log("Initializing checkout page...");
+    loadCartData();
     updateOrderSummary();
     setupCheckoutEventListeners();
     updateUserInterface();
@@ -64,15 +67,31 @@ function initCheckoutPage() {
     // Listen for auth state changes
     if (typeof auth !== 'undefined') {
         auth.onAuthStateChanged((user) => {
+            console.log("Auth state changed:", user);
             currentUser = user;
             updateUserInterface();
         });
     }
 }
 
+// Load cart data from appropriate source
+function loadCartData() {
+    if (currentUser && db) {
+        // Load from Firestore for logged-in users
+        loadCartFromFirestore();
+    } else {
+        // Load from localStorage for guest users
+        const guestCart = localStorage.getItem('guestCart');
+        cartProducts = guestCart ? JSON.parse(guestCart) : [];
+        console.log("Loaded guest cart:", cartProducts);
+    }
+}
+
 function updateUserInterface() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+    
+    console.log("Updating UI, currentUser:", currentUser);
     
     if (currentUser) {
         // User is logged in - auto-fill email and disable it
@@ -85,20 +104,19 @@ function updateUserInterface() {
             emailInput.title = 'Email cannot be changed for logged-in users';
         }
         
-        // Change button to Logout - text only changes, no background
+        // Change button to Logout
         if (loginBtnCheckout) {
             loginBtnCheckout.textContent = 'LOGOUT';
-            loginBtnCheckout.style.backgroundColor = 'transparent';
-            loginBtnCheckout.style.color = '#e74c3c'; // Red color for logout
-            loginBtnCheckout.style.textDecoration = 'none';
-            loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
-            loginBtnCheckout.style.fontWeight = '600';
-            loginBtnCheckout.style.textTransform = 'uppercase';
-            loginBtnCheckout.style.border = 'none';
-            loginBtnCheckout.style.cursor = 'pointer';
-            loginBtnCheckout.style.fontSize = '14px';
-            loginBtnCheckout.style.padding = '0';
-            loginBtnCheckout.style.margin = '0';
+            loginBtnCheckout.style.color = '#e74c3c';
+            loginBtnCheckout.onclick = function() {
+                if (confirm('Are you sure you want to logout?')) {
+                    auth.signOut().then(() => {
+                        window.location.reload();
+                    }).catch((error) => {
+                        console.error("Error signing out:", error);
+                    });
+                }
+            };
         }
         
         // Try to load user's saved addresses if available
@@ -117,17 +135,13 @@ function updateUserInterface() {
         
         if (loginBtnCheckout) {
             loginBtnCheckout.textContent = 'LOGIN';
-            loginBtnCheckout.style.backgroundColor = 'transparent';
-            loginBtnCheckout.style.color = '#3498db'; // Blue color for login
-            loginBtnCheckout.style.textDecoration = 'none';
-            loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
-            loginBtnCheckout.style.fontWeight = '600';
-            loginBtnCheckout.style.textTransform = 'uppercase';
-            loginBtnCheckout.style.border = 'none';
-            loginBtnCheckout.style.cursor = 'pointer';
-            loginBtnCheckout.style.fontSize = '14px';
-            loginBtnCheckout.style.padding = '0';
-            loginBtnCheckout.style.margin = '0';
+            loginBtnCheckout.style.color = '#3498db';
+            loginBtnCheckout.onclick = function() {
+                showLoginView();
+                loginModal.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            };
         }
     }
 }
@@ -135,13 +149,18 @@ function updateUserInterface() {
 function loadUserAddresses() {
     if (!currentUser || !db) return;
     
+    console.log("Loading user addresses...");
+    
     // Load user's default/saved addresses from Firestore
     db.collection('users').doc(currentUser.uid).collection('addresses').where('isDefault', '==', true)
         .get()
         .then((querySnapshot) => {
             if (!querySnapshot.empty) {
                 const defaultAddress = querySnapshot.docs[0].data();
+                console.log("Default address found:", defaultAddress);
                 fillAddressForm(defaultAddress);
+            } else {
+                console.log("No default address found");
             }
         })
         .catch((error) => {
@@ -150,6 +169,8 @@ function loadUserAddresses() {
 }
 
 function fillAddressForm(address) {
+    console.log("Filling address form with:", address);
+    
     if (address.name) {
         const nameParts = address.name.split(' ');
         if (nameParts.length > 0) {
@@ -174,31 +195,9 @@ function fillAddressForm(address) {
 }
 
 function setupCheckoutEventListeners() {
-    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
     const applyBtn = document.querySelector('.apply-btn');
     const checkoutBtnMain = document.querySelector('.checkout-btn');
     const promoInput = document.querySelector('.promo-input');
-
-    if (loginBtnCheckout) {
-        loginBtnCheckout.addEventListener('click', function() {
-            if (currentUser) {
-                // User is logged in - show logout confirmation
-                if (confirm('Are you sure you want to logout?')) {
-                    auth.signOut().then(() => {
-                        window.location.reload();
-                    }).catch((error) => {
-                        console.error("Error signing out:", error);
-                    });
-                }
-            } else {
-                // User is not logged in - show login modal
-                showLoginView();
-                loginModal.classList.add('active');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        });
-    }
 
     if (applyBtn) {
         applyBtn.addEventListener('click', applyPromoCode);
@@ -216,7 +215,7 @@ function setupCheckoutEventListeners() {
         checkoutBtnMain.addEventListener('click', processCheckout);
     }
 
-    // Quantity controls - IMPROVED CLICK HANDLING
+    // Quantity controls
     document.addEventListener('click', function(e) {
         const button = e.target.closest('.quantity-btn-checkout');
         if (button) {
@@ -312,12 +311,19 @@ function clearFieldError(e) {
 
 function updateOrderSummary() {
     const orderItems = document.getElementById('orderItems');
+    const orderSummaryDetails = document.querySelector('.order-summary-details');
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    const securityNotice = document.querySelector('.security-notice');
+    
     if (!orderItems) return;
     
     orderItems.innerHTML = '';
     let subtotal = 0;
     
+    console.log("Updating order summary, cart products:", cartProducts);
+    
     if (cartProducts.length === 0) {
+        // Show empty cart message
         const emptyMessage = document.createElement('div');
         emptyMessage.className = 'empty-order';
         emptyMessage.style.textAlign = 'center';
@@ -325,7 +331,8 @@ function updateOrderSummary() {
         emptyMessage.style.color = '#777';
         emptyMessage.innerHTML = `
             <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px; color: #e0e0e0;"></i>
-            <p style="font-size: 16px;">Your cart is empty</p>
+            <h3 style="font-size: 18px; margin-bottom: 10px; color: #5f2b27;">Your cart is empty</h3>
+            <p style="font-size: 14px; margin-bottom: 20px;">Add some delicious honey products to get started</p>
             <a href="shop.html" class="continue-shopping" style="display: inline-block; margin-top: 15px;">
                 <i class="fas fa-arrow-left"></i> Continue Shopping
             </a>
@@ -333,14 +340,15 @@ function updateOrderSummary() {
         orderItems.appendChild(emptyMessage);
         
         // Hide summary details when cart is empty
-        document.querySelector('.order-summary-details').style.display = 'none';
-        document.querySelector('.checkout-btn').style.display = 'none';
-        document.querySelector('.security-notice').style.display = 'none';
+        if (orderSummaryDetails) orderSummaryDetails.style.display = 'none';
+        if (checkoutBtn) checkoutBtn.style.display = 'none';
+        if (securityNotice) securityNotice.style.display = 'none';
+        
     } else {
         // Show summary details when cart has items
-        document.querySelector('.order-summary-details').style.display = 'block';
-        document.querySelector('.checkout-btn').style.display = 'block';
-        document.querySelector('.security-notice').style.display = 'flex';
+        if (orderSummaryDetails) orderSummaryDetails.style.display = 'block';
+        if (checkoutBtn) checkoutBtn.style.display = 'block';
+        if (securityNotice) securityNotice.style.display = 'flex';
         
         cartProducts.forEach(item => {
             const product = products.find(p => p.id === item.id);
@@ -406,7 +414,9 @@ function updateTotals() {
     const newTotal = originalTotal + shippingCharge - currentDiscount;
     
     subtotalElement.textContent = `₹${originalTotal}`;
-    shippingElement.textContent = shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`;
+    if (shippingElement) {
+        shippingElement.textContent = shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`;
+    }
     
     if (currentDiscount > 0) {
         discountRow.style.display = 'flex';
@@ -657,7 +667,7 @@ function saveGuestOrder(orderData) {
 }
 
 function clearCartAfterOrder() {
-    if (currentUser) {
+    if (currentUser && db) {
         cartProducts.forEach(item => {
             db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).delete()
             .catch((error) => {
@@ -778,13 +788,6 @@ function saveCart() {
     }
 }
 
-// Initialize checkout page when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    if (document.querySelector('.checkout-section')) {
-        initCheckoutPage();
-    }
-});
-
 // Function to load cart from Firestore for logged-in users
 function loadCartFromFirestore() {
     if (!currentUser || !db) return;
@@ -799,6 +802,7 @@ function loadCartFromFirestore() {
                     quantity: cartItem.quantity
                 });
             });
+            console.log("Loaded cart from Firestore:", cartProducts);
             updateOrderSummary();
             if (typeof updateCartUI !== 'undefined') {
                 updateCartUI();
@@ -806,16 +810,51 @@ function loadCartFromFirestore() {
         })
         .catch((error) => {
             console.error("Error loading cart from Firestore:", error);
+            // Fallback to localStorage
+            const guestCart = localStorage.getItem('guestCart');
+            cartProducts = guestCart ? JSON.parse(guestCart) : [];
+            updateOrderSummary();
         });
 }
 
-// Load cart when user logs in
+// Initialize checkout page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded, initializing checkout...");
+    if (document.querySelector('.checkout-section')) {
+        initCheckoutPage();
+    }
+});
+
+// Global auth state listener
 if (typeof auth !== 'undefined') {
     auth.onAuthStateChanged((user) => {
+        console.log("Auth state changed in checkout:", user);
         currentUser = user;
         if (user) {
+            // User just logged in, reload cart data
             loadCartFromFirestore();
+        } else {
+            // User logged out, use guest cart
+            const guestCart = localStorage.getItem('guestCart');
+            cartProducts = guestCart ? JSON.parse(guestCart) : [];
+            updateOrderSummary();
         }
         updateUserInterface();
     });
+}
+
+// Make sure we have the login modal functions available
+function showLoginView() {
+    if (typeof window.showLoginView === 'function') {
+        window.showLoginView();
+    } else {
+        // Fallback if function doesn't exist
+        loginForm.classList.add('active');
+        signupForm.classList.remove('active');
+        forgotForm.classList.remove('active');
+        backBtn.classList.remove('active');
+        modalTitle.textContent = 'Welcome Back';
+        modalSubtitle.textContent = 'Sign in to your account';
+        loginFooter.style.display = 'block';
+    }
 }
