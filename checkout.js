@@ -3,6 +3,7 @@ let cartProducts = [];
 let currentDiscount = 0;
 let promoCodeApplied = false;
 let currentPromoCode = '';
+let originalTotal = 0;
 
 // Product data (same as in common.js but included here for standalone functionality)
 const products = [
@@ -191,8 +192,7 @@ function handleInputChange(e) {
     }
 }
 
-// Update order summary
-// In the updateOrderSummary function, replace the hardcoded subtotal with dynamic calculation
+// Update order summary with dynamic cart items
 function updateOrderSummary() {
     const orderItems = document.getElementById('orderItems');
     if (!orderItems) return;
@@ -257,9 +257,8 @@ function updateOrderSummary() {
     }
     
     originalTotal = subtotal;
-    updateTotals();
+    updateTotals(subtotal);
 }
-
 
 // Get product by ID
 function getProductById(id) {
@@ -269,7 +268,6 @@ function getProductById(id) {
 // Update totals
 function updateTotals(subtotal) {
     const subtotalEl = document.getElementById('subtotal');
-    const shippingEl = document.getElementById('shipping');
     const totalEl = document.getElementById('total');
     const discountRow = document.getElementById('discountRow');
     const discountAmount = document.getElementById('discountAmount');
@@ -281,19 +279,6 @@ function updateTotals(subtotal) {
     const total = subtotal + shipping - currentDiscount;
     
     subtotalEl.textContent = `₹${subtotal}`;
-    
-    // Update shipping display
-    if (shippingEl) {
-        if (shipping === 0) {
-            shippingEl.textContent = 'FREE';
-            shippingEl.style.color = '#5f2b27';
-            shippingEl.style.fontWeight = '600';
-        } else {
-            shippingEl.textContent = `₹${shipping}`;
-            shippingEl.style.color = '#333';
-            shippingEl.style.fontWeight = 'normal';
-        }
-    }
     
     // Update discount display
     if (currentDiscount > 0) {
