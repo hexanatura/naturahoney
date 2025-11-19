@@ -262,7 +262,7 @@ function updateOrderSummary() {
                     <div class="order-item-main">
                         <div class="order-item-image-container">
                             <div class="order-item-image">
-                                <i class="fas fa-jar"></i>
+                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" alt="${product.name}">
                             </div>
                         </div>
                         <div class="order-item-content">
@@ -274,8 +274,14 @@ function updateOrderSummary() {
                                 <div class="order-item-price">₹${itemTotal}</div>
                             </div>
                             <div class="order-item-footer">
-                                <div class="order-item-quantity">
-                                    <span>Quantity: ${item.quantity}</span>
+                                <div class="order-item-quantity-controls">
+                                    <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}" ${item.quantity <= 1 ? 'disabled' : ''}>
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="1" max="10" data-id="${item.id}">
+                                    <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -384,12 +390,15 @@ function hideAllPromoMessages() {
 }
 
 function handleCheckoutQuantityChange(e) {
-    const productId = parseInt(e.target.getAttribute('data-id'));
-    const isMinus = e.target.classList.contains('minus');
+    const button = e.target.closest('.quantity-btn-checkout');
+    if (!button) return;
     
-    if (isMinus) {
+    const productId = parseInt(button.getAttribute('data-id'));
+    const action = button.getAttribute('data-action');
+    
+    if (action === 'decrease') {
         updateCartQuantity(productId, -1);
-    } else {
+    } else if (action === 'increase') {
         updateCartQuantity(productId, 1);
     }
     
@@ -397,8 +406,9 @@ function handleCheckoutQuantityChange(e) {
 }
 
 function handleCheckoutQuantityInput(e) {
-    const productId = parseInt(e.target.getAttribute('data-id'));
-    const newQuantity = parseInt(e.target.value) || 1;
+    const input = e.target;
+    const productId = parseInt(input.getAttribute('data-id'));
+    const newQuantity = parseInt(input.value) || 1;
     
     setCartQuantity(productId, newQuantity);
     updateOrderSummary();
@@ -646,6 +656,69 @@ style.textContent = `
         padding: 0 !important;
         margin: 0 !important;
         transition: color 0.3s ease !important;
+    }
+    
+    /* Centered quantity controls */
+    .order-item-quantity-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+        width: 100%;
+    }
+    
+    .quantity-btn-checkout {
+        background: #ffffff;
+        border: 1px solid #5f2b27;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Unbounded', sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        transition: all 0.2s ease;
+        color: #5f2b27;
+    }
+    
+    .quantity-btn-checkout:hover:not(:disabled) {
+        background: #5f2b27;
+        color: white;
+    }
+    
+    .quantity-btn-checkout:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        border-color: #ccc;
+        color: #ccc;
+    }
+    
+    .quantity-input-checkout {
+        width: 40px;
+        height: 24px;
+        text-align: center;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        background: #fafafa;
+        font-family: 'Unbounded', sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 0 4px;
+    }
+    
+    .quantity-input-checkout:focus {
+        border-color: #5f2b27;
+        background: white;
+        outline: none;
+    }
+    
+    .quantity-input-checkout:invalid {
+        border-color: #ff4444;
+        background: #fffafa;
     }
 `;
 document.head.appendChild(style);
