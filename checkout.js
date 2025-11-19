@@ -27,11 +27,17 @@ function updateUserInterface() {
             emailInput.style.cursor = 'not-allowed';
         }
         
-        // Change button to Logout
+        // Change button to Logout - text only changes, no background
         if (loginBtnCheckout) {
-            loginBtnCheckout.textContent = 'Logout';
-            loginBtnCheckout.style.backgroundColor = '#dc3545';
-            loginBtnCheckout.style.color = 'white';
+            loginBtnCheckout.textContent = 'LOGOUT';
+            loginBtnCheckout.style.backgroundColor = 'transparent';
+            loginBtnCheckout.style.color = '#e74c3c'; // Red color for logout
+            loginBtnCheckout.style.textDecoration = 'none';
+            loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
+            loginBtnCheckout.style.fontWeight = '600';
+            loginBtnCheckout.style.textTransform = 'uppercase';
+            loginBtnCheckout.style.border = 'none';
+            loginBtnCheckout.style.cursor = 'pointer';
         }
         
         // Try to load user's saved addresses if available
@@ -48,9 +54,15 @@ function updateUserInterface() {
         }
         
         if (loginBtnCheckout) {
-            loginBtnCheckout.textContent = 'Login';
-            loginBtnCheckout.style.backgroundColor = '';
-            loginBtnCheckout.style.color = '#5f2b27';
+            loginBtnCheckout.textContent = 'LOGIN';
+            loginBtnCheckout.style.backgroundColor = 'transparent';
+            loginBtnCheckout.style.color = '#3498db'; // Blue color for login
+            loginBtnCheckout.style.textDecoration = 'none';
+            loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
+            loginBtnCheckout.style.fontWeight = '600';
+            loginBtnCheckout.style.textTransform = 'uppercase';
+            loginBtnCheckout.style.border = 'none';
+            loginBtnCheckout.style.cursor = 'pointer';
         }
     }
 }
