@@ -192,39 +192,30 @@ function handleInputChange(e) {
 }
 
 // Update order summary
+// In the updateOrderSummary function, replace the hardcoded subtotal with dynamic calculation
 function updateOrderSummary() {
     const orderItems = document.getElementById('orderItems');
-    const summarySection = document.querySelector('.order-summary-details');
-    const checkoutBtn = document.querySelector('.checkout-btn');
-    const securityNotice = document.querySelector('.security-notice');
-    
     if (!orderItems) return;
-
+    
     orderItems.innerHTML = '';
+    let subtotal = 0;
     
     if (cartProducts.length === 0) {
-        // Show empty cart
-        orderItems.innerHTML = `
-            <div class="empty-order" style="text-align: center; padding: 40px 20px; color: #777;">
-                <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px; color: #e0e0e0;"></i>
-                <h3 style="font-size: 18px; margin-bottom: 10px; color: #5f2b27;">Your cart is empty</h3>
-                <p style="font-size: 14px; margin-bottom: 20px;">Add some delicious honey products to get started</p>
-                <a href="shop.html" class="continue-shopping" style="display: inline-block; margin-top: 15px;">
-                    <i class="fas fa-arrow-left"></i> Continue Shopping
-                </a>
-            </div>
+        // Show empty cart message
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'empty-order';
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.padding = '40px 20px';
+        emptyMessage.style.color = '#777';
+        emptyMessage.innerHTML = `
+            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px; color: #e0e0e0;"></i>
+            <p style="font-size: 16px;">Your cart is empty</p>
         `;
-        
-        if (summarySection) summarySection.style.display = 'none';
-        if (checkoutBtn) checkoutBtn.style.display = 'none';
-        if (securityNotice) securityNotice.style.display = 'none';
-        
+        orderItems.appendChild(emptyMessage);
     } else {
-        // Show cart items
-        let subtotal = 0;
-        
+        // Dynamically generate order items from cartProducts
         cartProducts.forEach(item => {
-            const product = getProductById(item.id);
+            const product = products.find(p => p.id === item.id);
             if (product) {
                 const itemTotal = product.price * item.quantity;
                 subtotal += itemTotal;
@@ -235,9 +226,7 @@ function updateOrderSummary() {
                     <div class="order-item-main">
                         <div class="order-item-image-container">
                             <div class="order-item-image">
-                                <img src="${product.image}" alt="${product.name}" 
-                                     onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'"
-                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" alt="${product.name}" onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
                             </div>
                         </div>
                         <div class="order-item-content">
@@ -253,7 +242,7 @@ function updateOrderSummary() {
                                     <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}" ${item.quantity <= 1 ? 'disabled' : ''}>
                                         <i class="fas fa-minus"></i>
                                     </button>
-                                    <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="1" data-id="${item.id}">
+                                    <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="1" max="10" data-id="${item.id}">
                                     <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
                                         <i class="fas fa-plus"></i>
                                     </button>
@@ -265,15 +254,12 @@ function updateOrderSummary() {
                 orderItems.appendChild(orderItem);
             }
         });
-
-        // Show summary section
-        if (summarySection) summarySection.style.display = 'block';
-        if (checkoutBtn) checkoutBtn.style.display = 'block';
-        if (securityNotice) securityNotice.style.display = 'flex';
-        
-        updateTotals(subtotal);
     }
+    
+    originalTotal = subtotal;
+    updateTotals();
 }
+
 
 // Get product by ID
 function getProductById(id) {
