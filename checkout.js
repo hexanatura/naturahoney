@@ -145,7 +145,7 @@ function setupCheckoutEventListeners() {
 
     // Quantity controls
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('quantity-btn-checkout')) {
+        if (e.target.classList.contains('quantity-btn-checkout') || e.target.closest('.quantity-btn-checkout')) {
             handleCheckoutQuantityChange(e);
         }
     });
@@ -262,7 +262,7 @@ function updateOrderSummary() {
                     <div class="order-item-main">
                         <div class="order-item-image-container">
                             <div class="order-item-image">
-                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" alt="${product.name}">
+                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" alt="${product.name}" onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
                             </div>
                         </div>
                         <div class="order-item-content">
@@ -403,6 +403,7 @@ function handleCheckoutQuantityChange(e) {
     }
     
     updateOrderSummary();
+    updateCartUI(); // Also update cart sidebar if open
 }
 
 function handleCheckoutQuantityInput(e) {
@@ -412,6 +413,7 @@ function handleCheckoutQuantityInput(e) {
     
     setCartQuantity(productId, newQuantity);
     updateOrderSummary();
+    updateCartUI(); // Also update cart sidebar if open
 }
 
 function validateIndianPhoneNumber(phone) {
@@ -622,7 +624,7 @@ function showOrderSuccess(orderData) {
     }, 3000);
 }
 
-// Add this CSS for error states
+// Add this CSS for error states and quantity controls
 const style = document.createElement('style');
 style.textContent = `
     .checkout-form input.error,
@@ -658,6 +660,27 @@ style.textContent = `
         transition: color 0.3s ease !important;
     }
     
+    /* Product Images in Order Summary */
+    .order-item-image {
+        width: 70px;
+        height: 70px;
+        border-radius: 10px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    .order-item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+    
     /* Centered quantity controls */
     .order-item-quantity-controls {
         display: flex;
@@ -688,6 +711,7 @@ style.textContent = `
     .quantity-btn-checkout:hover:not(:disabled) {
         background: #5f2b27;
         color: white;
+        transform: scale(1.1);
     }
     
     .quantity-btn-checkout:disabled {
@@ -695,6 +719,12 @@ style.textContent = `
         cursor: not-allowed;
         border-color: #ccc;
         color: #ccc;
+    }
+    
+    .quantity-btn-checkout:disabled:hover {
+        background: #ffffff;
+        color: #ccc;
+        transform: none;
     }
     
     .quantity-input-checkout {
@@ -720,6 +750,25 @@ style.textContent = `
         border-color: #ff4444;
         background: #fffafa;
     }
+    
+    /* Mobile responsive adjustments */
+    @media (max-width: 767px) {
+        .order-item-image {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .quantity-btn-checkout {
+            width: 22px;
+            height: 22px;
+        }
+        
+        .quantity-input-checkout {
+            width: 35px;
+            height: 22px;
+            font-size: 11px;
+        }
+    }
 `;
 document.head.appendChild(style);
 
@@ -732,6 +781,78 @@ if (typeof updateCartUI !== 'undefined') {
             updateOrderSummary();
         }
     };
+}
+
+// Make sure cartProducts and products are available globally
+if (typeof cartProducts === 'undefined') {
+    var cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
+}
+
+if (typeof products === 'undefined') {
+    var products = [
+        {
+            id: 1,
+            name: "Wild Forest Honey",
+            weight: "500g",
+            price: 499,
+            image: "https://ik.imagekit.io/hexaanatura/honey-jar-1.png"
+        },
+        {
+            id: 2,
+            name: "Organic Multiflora Honey",
+            weight: "1kg",
+            price: 899,
+            image: "https://ik.imagekit.io/hexaanatura/honey-jar-2.png"
+        }
+        // Add more products as needed
+    ];
+}
+
+// Cart management functions
+function updateCartQuantity(productId, change) {
+    const productIndex = cartProducts.findIndex(item => item.id === productId);
+    
+    if (productIndex !== -1) {
+        cartProducts[productIndex].quantity += change;
+        
+        // Remove item if quantity becomes 0 or less
+        if (cartProducts[productIndex].quantity <= 0) {
+            cartProducts.splice(productIndex, 1);
+        }
+        
+        // Save to localStorage or Firestore
+        saveCart();
+    }
+}
+
+function setCartQuantity(productId, quantity) {
+    const productIndex = cartProducts.findIndex(item => item.id === productId);
+    
+    if (productIndex !== -1) {
+        if (quantity <= 0) {
+            cartProducts.splice(productIndex, 1);
+        } else {
+            cartProducts[productIndex].quantity = quantity;
+        }
+        
+        // Save to localStorage or Firestore
+        saveCart();
+    }
+}
+
+function saveCart() {
+    if (currentUser && db) {
+        // Save to Firestore for logged-in users
+        cartProducts.forEach(item => {
+            db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).set({
+                productId: item.id,
+                quantity: item.quantity
+            });
+        });
+    } else {
+        // Save to localStorage for guest users
+        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
