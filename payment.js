@@ -1979,7 +1979,7 @@ function updateOrderSummary() {
                             </div>
                             <div class="order-item-footer">
                                 <div class="order-item-quantity-controls">
-                                    <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}" ${item.quantity <= 1 ? 'disabled' : ''}>
+                                    <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}">
                                         <i class="fas fa-minus"></i>
                                     </button>
                                     <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="0" max="10" data-id="${item.id}">
