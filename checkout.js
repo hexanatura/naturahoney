@@ -7,6 +7,19 @@ let appliedPromoCode = null;
 
 // Initialize checkout page
 function initCheckoutPage() {
+    console.log('Initializing checkout page...');
+    
+    // Make sure cartProducts is available
+    if (typeof cartProducts === 'undefined') {
+        window.cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
+    }
+    
+    // Make sure products is available
+    if (typeof products === 'undefined') {
+        window.products = [];
+        console.error('Products array not found');
+    }
+    
     updateOrderSummary();
     setupCheckoutEventListeners();
     updateUserInterface();
@@ -14,7 +27,7 @@ function initCheckoutPage() {
     // Listen for auth state changes
     if (typeof auth !== 'undefined') {
         auth.onAuthStateChanged((user) => {
-            currentUser = user;
+            window.currentUser = user;
             updateUserInterface();
         });
     }
@@ -25,10 +38,10 @@ function updateUserInterface() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
     
-    if (currentUser) {
+    if (window.currentUser) {
         // User is logged in - auto-fill email and disable it
         if (emailInput) {
-            emailInput.value = currentUser.email;
+            emailInput.value = window.currentUser.email;
             emailInput.disabled = true;
             emailInput.style.backgroundColor = '#f5f5f5';
             emailInput.style.color = '#666';
@@ -83,10 +96,10 @@ function updateUserInterface() {
 
 // Load user's default address from Firestore
 function loadUserAddresses() {
-    if (!currentUser || !db) return;
+    if (!window.currentUser || !window.db) return;
     
     // Load user's default/saved addresses from Firestore
-    db.collection('users').doc(currentUser.uid).collection('addresses').where('isDefault', '==', true)
+    window.db.collection('users').doc(window.currentUser.uid).collection('addresses').where('isDefault', '==', true)
         .get()
         .then((querySnapshot) => {
             if (!querySnapshot.empty) {
@@ -132,10 +145,10 @@ function setupCheckoutEventListeners() {
 
     if (loginBtnCheckout) {
         loginBtnCheckout.addEventListener('click', function() {
-            if (currentUser) {
+            if (window.currentUser) {
                 // User is logged in - show logout confirmation
                 if (confirm('Are you sure you want to logout?')) {
-                    auth.signOut().then(() => {
+                    window.auth.signOut().then(() => {
                         window.location.reload();
                     }).catch((error) => {
                         console.error("Error signing out:", error);
@@ -143,9 +156,15 @@ function setupCheckoutEventListeners() {
                 }
             } else {
                 // User is not logged in - show login modal
-                showLoginView();
-                loginModal.classList.add('active');
-                overlay.classList.add('active');
+                if (typeof showLoginView !== 'undefined') {
+                    showLoginView();
+                }
+                if (window.loginModal) {
+                    window.loginModal.classList.add('active');
+                }
+                if (window.overlay) {
+                    window.overlay.classList.add('active');
+                }
                 document.body.style.overflow = 'hidden';
             }
         });
@@ -267,7 +286,7 @@ function updateOrderSummary() {
     orderItems.innerHTML = '';
     let subtotal = 0;
     
-    if (cartProducts.length === 0) {
+    if (window.cartProducts.length === 0) {
         const emptyMessage = document.createElement('div');
         emptyMessage.className = 'empty-order';
         emptyMessage.style.textAlign = 'center';
@@ -279,8 +298,8 @@ function updateOrderSummary() {
         `;
         orderItems.appendChild(emptyMessage);
     } else {
-        cartProducts.forEach(item => {
-            const product = products.find(p => p.id === item.id);
+        window.cartProducts.forEach(item => {
+            const product = window.products.find(p => p.id === item.id);
             if (product) {
                 const itemTotal = product.price * item.quantity;
                 subtotal += itemTotal;
@@ -499,7 +518,7 @@ function validateCheckoutForm() {
     });
     
     // Validate cart
-    if (cartProducts.length === 0) {
+    if (window.cartProducts.length === 0) {
         alert('Your cart is empty. Please add items to proceed.');
         isValid = false;
     }
@@ -536,8 +555,8 @@ function processCheckout() {
             phone: '+91 ' + phone,
             country: 'India'
         },
-        items: cartProducts.map(item => {
-            const product = products.find(p => p.id === item.id);
+        items: window.cartProducts.map(item => {
+            const product = window.products.find(p => p.id === item.id);
             return {
                 productId: item.id,
                 name: product ? product.name : 'Unknown Product',
@@ -560,9 +579,9 @@ function processCheckout() {
         orderData.promoCode = appliedPromoCode;
     }
     
-    if (currentUser) {
-        orderData.userId = currentUser.uid;
-        orderData.userEmail = currentUser.email;
+    if (window.currentUser) {
+        orderData.userId = window.currentUser.uid;
+        orderData.userEmail = window.currentUser.email;
         saveOrderToFirestore(orderData);
     } else {
         saveGuestOrder(orderData);
@@ -573,17 +592,17 @@ function processCheckout() {
 
 // Save order to Firestore
 function saveOrderToFirestore(orderData) {
-    if (!db) {
+    if (!window.db) {
         alert('Database connection error. Please try again.');
         return;
     }
     
-    db.collection('orders').add(orderData)
+    window.db.collection('orders').add(orderData)
         .then((docRef) => {
             orderData.id = docRef.id;
             
-            if (currentUser) {
-                db.collection('users').doc(currentUser.uid).collection('orders').doc(docRef.id).set(orderData)
+            if (window.currentUser) {
+                window.db.collection('users').doc(window.currentUser.uid).collection('orders').doc(docRef.id).set(orderData)
                     .then(() => {
                         clearCartAfterOrder();
                     })
@@ -612,9 +631,9 @@ function saveGuestOrder(orderData) {
 
 // Clear cart after successful order
 function clearCartAfterOrder() {
-    if (currentUser) {
-        cartProducts.forEach(item => {
-            db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).delete()
+    if (window.currentUser && window.db) {
+        window.cartProducts.forEach(item => {
+            window.db.collection('users').doc(window.currentUser.uid).collection('cart').doc(item.id.toString()).delete()
             .catch((error) => {
                 console.error("Error clearing cart:", error);
             });
@@ -623,7 +642,7 @@ function clearCartAfterOrder() {
     
     localStorage.removeItem('guestCart');
     
-    cartProducts = [];
+    window.cartProducts = [];
     if (typeof updateCartUI !== 'undefined') {
         updateCartUI();
     }
@@ -640,15 +659,15 @@ function processPayment(orderData) {
     
     // Simulate payment processing
     setTimeout(() => {
-        if (currentUser && orderData.id && db) {
-            db.collection('orders').doc(orderData.id).update({
+        if (window.currentUser && orderData.id && window.db) {
+            window.db.collection('orders').doc(orderData.id).update({
                 status: 'confirmed',
                 paymentStatus: 'paid',
                 paidAt: new Date().toISOString()
             })
             .then(() => {
-                if (currentUser) {
-                    db.collection('users').doc(currentUser.uid).collection('orders').doc(orderData.id).update({
+                if (window.currentUser) {
+                    window.db.collection('users').doc(window.currentUser.uid).collection('orders').doc(orderData.id).update({
                         status: 'confirmed',
                         paymentStatus: 'paid',
                         paidAt: new Date().toISOString()
@@ -690,14 +709,14 @@ function showOrderSuccess(orderData) {
 
 // Cart management functions
 function updateCartQuantity(productId, change) {
-    const productIndex = cartProducts.findIndex(item => item.id === productId);
+    const productIndex = window.cartProducts.findIndex(item => item.id === productId);
     
     if (productIndex !== -1) {
-        cartProducts[productIndex].quantity += change;
+        window.cartProducts[productIndex].quantity += change;
         
         // Remove item if quantity becomes 0 or less
-        if (cartProducts[productIndex].quantity <= 0) {
-            cartProducts.splice(productIndex, 1);
+        if (window.cartProducts[productIndex].quantity <= 0) {
+            window.cartProducts.splice(productIndex, 1);
         }
         
         // Save to localStorage or Firestore
@@ -706,13 +725,13 @@ function updateCartQuantity(productId, change) {
 }
 
 function setCartQuantity(productId, quantity) {
-    const productIndex = cartProducts.findIndex(item => item.id === productId);
+    const productIndex = window.cartProducts.findIndex(item => item.id === productId);
     
     if (productIndex !== -1) {
         if (quantity <= 0) {
-            cartProducts.splice(productIndex, 1);
+            window.cartProducts.splice(productIndex, 1);
         } else {
-            cartProducts[productIndex].quantity = quantity;
+            window.cartProducts[productIndex].quantity = quantity;
         }
         
         // Save to localStorage or Firestore
@@ -721,17 +740,17 @@ function setCartQuantity(productId, quantity) {
 }
 
 function saveCart() {
-    if (currentUser && db) {
+    if (window.currentUser && window.db) {
         // Save to Firestore for logged-in users
-        cartProducts.forEach(item => {
-            db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).set({
+        window.cartProducts.forEach(item => {
+            window.db.collection('users').doc(window.currentUser.uid).collection('cart').doc(item.id.toString()).set({
                 productId: item.id,
                 quantity: item.quantity
             });
         });
     } else {
         // Save to localStorage for guest users
-        localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+        localStorage.setItem('guestCart', JSON.stringify(window.cartProducts));
     }
 }
 
@@ -744,8 +763,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Make sure cartProducts and products are available globally
 if (typeof cartProducts === 'undefined') {
-    var cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
+    window.cartProducts = JSON.parse(localStorage.getItem('guestCart') || '[]');
 }
 if (typeof products === 'undefined') {
-    var products = [];
+    window.products = [];
 }
