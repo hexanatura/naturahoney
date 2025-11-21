@@ -526,9 +526,7 @@ function saveNewAddressToProfile() {
             document.getElementById('new-state').value = '';
             document.getElementById('new-country').value = 'India';
             
-            // Show success message
-            showNotification('Address saved successfully!', 'success');
-        })
+      
         .catch((error) => {
             console.error("Error adding address:", error);
             showNotification('Error saving address: ' + error.message, 'error');
@@ -571,7 +569,6 @@ function saveEditedAddressToFirestore(addressId) {
                 addressesContainer.innerHTML = '';
                 loadUserAddresses(currentUser.uid);
             }
-            showNotification('Address updated successfully!', 'success');
         })
         .catch((error) => {
             console.error("Error updating address:", error);
@@ -589,7 +586,6 @@ function deleteAddressFromFirestore(addressId) {
                 addressesContainer.innerHTML = '';
                 loadUserAddresses(currentUser.uid);
             }
-            showNotification('Address deleted successfully!', 'success');
         })
         .catch((error) => {
             console.error("Error deleting address:", error);
@@ -622,7 +618,6 @@ function setDefaultAddress(addressId) {
                 addressesContainer.innerHTML = '';
                 loadUserAddresses(currentUser.uid);
             }
-            showNotification('Default address set successfully!', 'success');
         })
         .catch((error) => {
             console.error("Error setting default address:", error);
@@ -1373,8 +1368,6 @@ function updateCartQuantity(productId, newQuantity) {
             // Remove product from cart if quantity is 0 or less
             cart.splice(productIndex, 1);
             
-            // Show removal notification
-            showNotification('Product removed from cart', 'info');
         } else {
             // Update quantity
             cart[productIndex].quantity = newQuantity;
