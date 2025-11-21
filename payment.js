@@ -136,6 +136,8 @@ auth.onAuthStateChanged((user) => {
         loadUserProfileData(user.uid);
         // Update checkout UI
         updateCheckoutUI();
+        // Load user's default address for auto-fill
+        loadUserDefaultAddress();
     } else {
         currentUser = null;
         updateUIForGuest();
@@ -150,6 +152,85 @@ auth.onAuthStateChanged((user) => {
         updateCheckoutUI();
     }
 });
+
+// Load user's default address from Firestore and auto-fill checkout form
+function loadUserDefaultAddress() {
+    if (!currentUser || !db) return;
+    
+    console.log('Loading default address for user:', currentUser.uid);
+    
+    db.collection('users').doc(currentUser.uid).collection('addresses').where('isDefault', '==', true)
+        .get()
+        .then((querySnapshot) => {
+            if (!querySnapshot.empty) {
+                const defaultAddress = querySnapshot.docs[0].data();
+                console.log('Default address found:', defaultAddress);
+                fillAddressForm(defaultAddress);
+            } else {
+                console.log('No default address found for user');
+                // Check if user has any addresses (even without default)
+                db.collection('users').doc(currentUser.uid).collection('addresses')
+                    .orderBy('createdAt', 'desc')
+                    .limit(1)
+                    .get()
+                    .then((addressSnapshot) => {
+                        if (!addressSnapshot.empty) {
+                            const recentAddress = addressSnapshot.docs[0].data();
+                            console.log('Using most recent address:', recentAddress);
+                            fillAddressForm(recentAddress);
+                        }
+                    });
+            }
+        })
+        .catch((error) => {
+            console.error("Error loading user addresses:", error);
+        });
+}
+
+// Fill address form with user's saved address
+function fillAddressForm(address) {
+    console.log('Filling address form with:', address);
+    
+    if (address.name) {
+        const nameParts = address.name.split(' ');
+        if (nameParts.length > 1) {
+            const firstNameField = document.getElementById('firstName');
+            const lastNameField = document.getElementById('lastName');
+            if (firstNameField) firstNameField.value = nameParts[0];
+            if (lastNameField) lastNameField.value = nameParts.slice(1).join(' ');
+        } else {
+            const firstNameField = document.getElementById('firstName');
+            if (firstNameField) firstNameField.value = address.name;
+        }
+    }
+    
+    const addressField = document.getElementById('address');
+    if (addressField && address.address) addressField.value = address.address;
+    
+    const zipCodeField = document.getElementById('zipCode');
+    if (zipCodeField && address.pincode) zipCodeField.value = address.pincode;
+    
+    const phoneField = document.getElementById('phone');
+    if (phoneField && address.phone) {
+        // Remove country code if present and format
+        let phoneNumber = address.phone.replace('+91 ', '').replace(/\D/g, '');
+        if (phoneNumber.length === 10) {
+            phoneField.value = phoneNumber;
+        }
+    }
+    
+    // Try to extract city from address if available
+    if (address.address) {
+        const addressParts = address.address.split(',');
+        if (addressParts.length > 1) {
+            const cityField = document.getElementById('city');
+            if (cityField) cityField.value = addressParts[addressParts.length - 2].trim();
+        }
+    }
+    
+    // Show success message
+    showNotification('Address auto-filled from your saved profile!', 'success');
+}
 
 // Update checkout UI based on login status
 function updateCheckoutUI() {
@@ -182,9 +263,6 @@ function updateCheckoutUI() {
             loginBtnCheckout.style.margin = '0';
         }
         
-        // Try to load user's saved addresses if available
-        loadUserAddresses();
-        
     } else {
         // User is not logged in
         if (emailInput) {
@@ -208,48 +286,6 @@ function updateCheckoutUI() {
             loginBtnCheckout.style.fontSize = '14px';
             loginBtnCheckout.style.padding = '0';
             loginBtnCheckout.style.margin = '0';
-        }
-    }
-}
-
-// Load user's default address from Firestore
-function loadUserAddresses() {
-    if (!currentUser || !db) return;
-    
-    // Load user's default/saved addresses from Firestore
-    db.collection('users').doc(currentUser.uid).collection('addresses').where('isDefault', '==', true)
-        .get()
-        .then((querySnapshot) => {
-            if (!querySnapshot.empty) {
-                const defaultAddress = querySnapshot.docs[0].data();
-                fillAddressForm(defaultAddress);
-            }
-        })
-        .catch((error) => {
-            console.error("Error loading user addresses:", error);
-        });
-}
-
-// Fill address form with user's saved address
-function fillAddressForm(address) {
-    if (address.name) {
-        const nameParts = address.name.split(' ');
-        if (nameParts.length > 1) {
-            document.getElementById('firstName').value = nameParts[0];
-            document.getElementById('lastName').value = nameParts.slice(1).join(' ');
-        } else {
-            document.getElementById('firstName').value = address.name;
-        }
-    }
-    if (address.address) document.getElementById('address').value = address.address;
-    if (address.pincode) document.getElementById('zipCode').value = address.pincode;
-    if (address.phone) document.getElementById('phone').value = address.phone.replace('+91 ', '');
-    
-    // Try to extract city from address if available
-    if (address.address) {
-        const addressParts = address.address.split(',');
-        if (addressParts.length > 1) {
-            document.getElementById('city').value = addressParts[addressParts.length - 2].trim();
         }
     }
 }
@@ -1656,12 +1692,13 @@ function updateOrderSummary() {
     updateTotals();
 }
 
-// Update totals including discount
+// Update totals including discount with promo code display
 function updateTotals() {
     const subtotalElement = document.getElementById('subtotal');
     const totalElement = document.getElementById('total');
     const discountRow = document.getElementById('discountRow');
     const discountAmount = document.getElementById('discountAmount');
+    const promoDisplay = document.getElementById('promoDisplay');
     
     if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
     
@@ -1669,12 +1706,36 @@ function updateTotals() {
     
     subtotalElement.textContent = `₹${originalTotal}`;
     
-    if (currentDiscount > 0) {
+    if (currentDiscount > 0 && appliedPromoCode) {
         discountRow.style.display = 'flex';
         discountAmount.textContent = `-₹${currentDiscount}`;
         discountAmount.style.color = '#27ae60'; // Green color for discount
+        
+        // Create or update promo code display under subtotal
+        if (!promoDisplay) {
+            const promoDisplayElement = document.createElement('div');
+            promoDisplayElement.id = 'promoDisplay';
+            promoDisplayElement.style.color = '#27ae60';
+            promoDisplayElement.style.fontSize = '14px';
+            promoDisplayElement.style.marginTop = '5px';
+            promoDisplayElement.style.fontWeight = '500';
+            promoDisplayElement.innerHTML = `Promo code <strong>${appliedPromoCode}</strong> applied: ₹${currentDiscount} OFF`;
+            
+            // Insert after subtotal
+            const subtotalRow = document.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                subtotalRow.parentNode.insertBefore(promoDisplayElement, subtotalRow.nextSibling);
+            }
+        } else {
+            promoDisplay.innerHTML = `Promo code <strong>${appliedPromoCode}</strong> applied: ₹${currentDiscount} OFF`;
+            promoDisplay.style.display = 'block';
+        }
     } else {
         discountRow.style.display = 'none';
+        // Hide promo display if no promo code applied
+        if (promoDisplay) {
+            promoDisplay.style.display = 'none';
+        }
     }
     
     totalElement.textContent = `₹${newTotal}`;
