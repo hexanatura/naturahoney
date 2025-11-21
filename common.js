@@ -226,6 +226,66 @@ ordersContainer.innerHTML = `
     }
 }
 
+// Save checkout address to user's profile
+function saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefault) {
+    if (!currentUser || !db) return;
+    
+    const fullName = `${firstName} ${lastName}`.trim();
+    
+    const newAddress = {
+        label: 'Home', // Default label, you can customize this
+        name: fullName,
+        address: address,
+        phone: phone.replace('+91 ', ''), // Remove country code for storage
+        pincode: zipCode,
+        city: city,
+        state: state,
+        country: 'India',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        isDefault: isDefault
+    };
+    
+    console.log('Saving checkout address to profile:', newAddress);
+    
+    // If setting as default, first remove default from all other addresses
+    if (isDefault) {
+        db.collection('users').doc(currentUser.uid).collection('addresses').get()
+            .then((querySnapshot) => {
+                const batch = db.batch();
+                
+                querySnapshot.forEach((doc) => {
+                    const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
+                    batch.update(addressRef, { isDefault: false });
+                });
+                
+                return batch.commit();
+            })
+            .then(() => {
+                // Now add the new address as default
+                return db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress);
+            })
+            .then((docRef) => {
+                console.log('Default address saved with ID:', docRef.id);
+                showNotification('Address saved as default in your profile!', 'success');
+            })
+            .catch((error) => {
+                console.error("Error saving default address:", error);
+                showNotification('Error saving address to profile: ' + error.message, 'error');
+            });
+    } else {
+        // Just add the address without setting as default
+        db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
+            .then((docRef) => {
+                console.log('Address saved with ID:', docRef.id);
+                showNotification('Address saved to your profile!', 'success');
+            })
+            .catch((error) => {
+                console.error("Error saving address:", error);
+                showNotification('Error saving address to profile: ' + error.message, 'error');
+            });
+    }
+}
+
 // Load addresses from user's Firestore profile with better error handling
 function loadUserAddresses(userId) {
     const addressesContainer = document.getElementById('addresses-container');
@@ -1523,3 +1583,4 @@ function initCommon() {
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
 });
+
