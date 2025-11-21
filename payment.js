@@ -216,7 +216,6 @@ function loadUserDefaultAddress() {
         });
 }
 
-// Fill address form with user's saved address - UPDATED for new fields
 function fillAddressForm(address) {
     console.log('Filling address form with:', address);
     
@@ -233,25 +232,24 @@ function fillAddressForm(address) {
     safeSetFormField('address', address.address);
     safeSetFormField('zipCode', address.pincode);
     
-    // Use city directly if available
     if (address.city) {
         safeSetFormField('city', address.city);
     }
     
-    // FIXED: Phone number autofill - FINAL VERSION
+    if (address.state) {
+        safeSetFormField('state', address.state);
+    }
+    
     const phoneField = document.getElementById('phone');
     if (phoneField && address.phone) {
         let phoneNumber = address.phone.toString();
         
-        // Remove country code and any non-digit characters
         phoneNumber = phoneNumber.replace(/\+91/g, '').replace(/\D/g, '');
         
-        // Take only the last 10 digits
         if (phoneNumber.length > 10) {
             phoneNumber = phoneNumber.substring(phoneNumber.length - 10);
         }
         
-        // Validate it's a proper 10-digit Indian number
         if (phoneNumber.length === 10 && /^[6-9]\d{9}$/.test(phoneNumber)) {
             phoneField.value = phoneNumber;
             console.log('Phone number autofilled:', phoneNumber);
@@ -261,23 +259,20 @@ function fillAddressForm(address) {
         }
     }
     
-    // Show success message only if we're on checkout page and actually filled fields
     const checkoutSection = document.querySelector('.checkout-section');
     if (checkoutSection) {
-        const filledFields = document.querySelectorAll('#firstName, #lastName, #address, #phone').length;
+        const filledFields = document.querySelectorAll('#firstName, #lastName, #address, #phone, #state').length;
         if (filledFields > 0) {
             showNotification('Address auto-filled from your saved profile!', 'success');
         }
     }
 }
 
-// Update checkout UI based on login status
 function updateCheckoutUI() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
     
     if (currentUser) {
-        // User is logged in - auto-fill email and disable it
         if (emailInput) {
             emailInput.value = currentUser.email;
             emailInput.disabled = true;
@@ -286,11 +281,10 @@ function updateCheckoutUI() {
             emailInput.style.cursor = 'not-allowed';
         }
         
-        // Change button to Logout - text only changes, no background
         if (loginBtnCheckout) {
             loginBtnCheckout.textContent = 'LOGOUT';
             loginBtnCheckout.style.backgroundColor = 'transparent';
-            loginBtnCheckout.style.color = '#e74c3c'; // Red color for logout
+            loginBtnCheckout.style.color = '#e74c3c';
             loginBtnCheckout.style.textDecoration = 'none';
             loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
             loginBtnCheckout.style.fontWeight = '600';
