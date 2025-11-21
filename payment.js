@@ -1898,7 +1898,43 @@ function initCheckoutPage() {
     updateCheckoutUI();
 }
 
-// Update order summary with cart items
+// Handle quantity change in checkout - FIXED VERSION
+function handleCheckoutQuantityChange(e) {
+    const button = e.target.closest('.quantity-btn-checkout');
+    if (!button) return;
+    
+    const productId = parseInt(button.getAttribute('data-id'));
+    const action = button.getAttribute('data-action');
+    
+    if (action === 'decrease') {
+        const item = cartProducts.find(item => item.id === productId);
+        if (item && item.quantity <= 1) {
+            // Remove product from cart when quantity would go below 1
+            removeFromCart(productId);
+        } else {
+            updateCartQuantity(productId, -1);
+        }
+    } else if (action === 'increase') {
+        updateCartQuantity(productId, 1);
+    }
+    
+    // Order summary is now updated automatically via updateCartUI()
+}
+
+// Handle quantity input in checkout - FIXED VERSION  
+function handleCheckoutQuantityInput(e) {
+    const input = e.target;
+    const productId = parseInt(input.getAttribute('data-id'));
+    const newQuantity = parseInt(input.value) || 0;
+    
+    if (newQuantity <= 0) {
+        removeFromCart(productId);
+    } else {
+        setCartQuantity(productId, newQuantity);
+    }
+}
+
+// Update order summary with cart items - FIXED VERSION
 function updateOrderSummary() {
     const orderItems = document.getElementById('orderItems');
     if (!orderItems) return;
@@ -1946,7 +1982,7 @@ function updateOrderSummary() {
                                     <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}" ${item.quantity <= 1 ? 'disabled' : ''}>
                                         <i class="fas fa-minus"></i>
                                     </button>
-                                    <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="1" max="10" data-id="${item.id}">
+                                    <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="0" max="10" data-id="${item.id}">
                                     <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
                                         <i class="fas fa-plus"></i>
                                     </button>
@@ -2162,32 +2198,7 @@ function hideAllPromoMessages() {
     if (promoError) promoError.style.display = 'none';
 }
 
-// Handle quantity change in checkout
-function handleCheckoutQuantityChange(e) {
-    const button = e.target.closest('.quantity-btn-checkout');
-    if (!button) return;
-    
-    const productId = parseInt(button.getAttribute('data-id'));
-    const action = button.getAttribute('data-action');
-    
-    if (action === 'decrease') {
-        updateCartQuantity(productId, -1);
-    } else if (action === 'increase') {
-        updateCartQuantity(productId, 1);
-    }
-    
-    // Order summary is now updated automatically via updateCartUI()
-}
 
-// Handle quantity input in checkout
-function handleCheckoutQuantityInput(e) {
-    const input = e.target;
-    const productId = parseInt(input.getAttribute('data-id'));
-    const newQuantity = parseInt(input.value) || 1;
-    
-    setCartQuantity(productId, newQuantity);
-    // Order summary is now updated automatically via updateCartUI()
-}
 
 // Validate form field
 function validateField(e) {
