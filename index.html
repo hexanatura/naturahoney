@@ -4677,70 +4677,131 @@
         <i class="fas fa-times"></i>
       </button>
     </div>
-    <div class="profile-header">
-      <div class="profile-avatar">
-        <i class="fas fa-user"></i>
+    <div class="profile-container">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="profile-info">
+          <h1 id="user-name">User Name</h1>
+          <p id="user-email">user@example.com</p>
+          <p>Member since: <span id="member-since">Loading...</span></p>
+        </div>
+        <div class="profile-actions">
+          <button class="btn" id="edit-profile-btn">
+            <i class="fas fa-edit"></i> Edit Profile
+          </button>
+        </div>
       </div>
-      <div class="profile-info">
-        <h1 id="user-name">User Name</h1>
-        <p id="user-email">user@example.com</p>
-        <p>Member since: <span id="member-since">Loading...</span></p>
-      </div>
-      <div class="profile-actions">
-        <button class="btn" id="edit-profile-btn">
-          <i class="fas fa-edit"></i> Edit Profile
+
+      <div class="profile-section">
+        <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Saved Addresses</h2>
+        
+        <div id="addresses-container">
+        </div>
+        
+        <button class="btn btn-outline" id="add-address-btn">
+          <i class="fas fa-plus"></i> Add New Address
         </button>
-      </div>
+        
+<div class="address-form" id="add-address-form">
+  <div class="form-row">
+    <div class="form-group">
+      <label for="new-label">Address Label (e.g., Home, Work)</label>
+      <input type="text" id="new-label" placeholder="Home">
     </div>
-
-    <div class="profile-section">
-      <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Saved Addresses</h2>
-      
-      <div id="addresses-container">
-      </div>
-      
-      <button class="btn btn-outline" id="add-address-btn">
-        <i class="fas fa-plus"></i> Add New Address
-      </button>
-      
-      <div class="address-form" id="add-address-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="new-label">Address Label (e.g., Home, Work)</label>
-            <input type="text" id="new-label" placeholder="Home">
-          </div>
-          <div class="form-group">
-            <label for="new-pincode">Pincode</label>
-            <input type="text" id="new-pincode" placeholder="Enter pincode">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="new-name">Full Name</label>
-          <input type="text" id="new-name" placeholder="Enter full name">
-        </div>
-        <div class="form-group">
-          <label for="new-address">Address</label>
-          <textarea id="new-address" placeholder="Enter full address"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="new-phone">Phone</label>
-          <input type="text" id="new-phone" placeholder="Enter phone number">
-        </div>
-        <div class="form-actions">
-          <button class="btn" id="save-new-address">
-            <i class="fas fa-save"></i> Save Address
-          </button>
-          <button class="btn btn-outline" id="cancel-new-address">
-            <i class="fas fa-times"></i> Cancel
-          </button>
-        </div>
-      </div>
+    <div class="form-group">
+      <label for="new-pincode">Pincode</label>
+      <input type="text" id="new-pincode" placeholder="Enter pincode">
     </div>
+  </div>
+  
+  <div class="form-group">
+    <label for="new-name">Full Name</label>
+    <input type="text" id="new-name" placeholder="Enter full name">
+  </div>
+  
+  <div class="form-row">
+    <div class="form-group">
+      <label for="new-country">Country</label>
+      <select id="new-country" required>
+        <option value="">Select Country</option>
+        <option value="India" selected>India</option>
+        <!-- Add more countries as needed -->
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="new-state">State</label>
+      <select id="new-state" required>
+<option value="Andhra Pradesh">Andhra Pradesh</option>
+<option value="Arunachal Pradesh">Arunachal Pradesh</option>
+<option value="Assam">Assam</option>
+<option value="Bihar">Bihar</option>
+<option value="Chandigarh">Chandigarh</option>
+<option value="Chhattisgarh">Chhattisgarh</option>
+<option value="Delhi">Delhi</option>
+<option value="Goa">Goa</option>
+<option value="Gujarat">Gujarat</option>
+<option value="Haryana">Haryana</option>
+<option value="Himachal Pradesh">Himachal Pradesh</option>
+<option value="Jammu and Kashmir">Jammu and Kashmir</option>
+<option value="Jharkhand">Jharkhand</option>
+<option value="Karnataka">Karnataka</option>
+<option value="Kerala">Kerala</option>
+<option value="Ladakh">Ladakh</option>
+<option value="Madhya Pradesh">Madhya Pradesh</option>
+<option value="Maharashtra">Maharashtra</option>
+<option value="Manipur">Manipur</option>
+<option value="Meghalaya">Meghalaya</option>
+<option value="Mizoram">Mizoram</option>
+<option value="Nagaland">Nagaland</option>
+<option value="Odisha">Odisha</option>
+<option value="Puducherry">Puducherry</option>
+<option value="Punjab">Punjab</option>
+<option value="Rajasthan">Rajasthan</option>
+<option value="Sikkim">Sikkim</option>
+<option value="Tamil Nadu">Tamil Nadu</option>
+<option value="Telangana">Telangana</option>
+<option value="Tripura">Tripura</option>
+<option value="Uttar Pradesh">Uttar Pradesh</option>
+<option value="Uttarakhand">Uttarakhand</option>
+<option value="West Bengal">West Bengal</option>
+        <!-- Add more states as needed -->
+      </select>
+    </div>
+  </div>
+  
+  <div class="form-row">
+    <div class="form-group">
+      <label for="new-city">City</label>
+      <input type="text" id="new-city" placeholder="Enter city" required>
+    </div>
+    <div class="form-group">
+      <label for="new-phone">Phone</label>
+      <input type="text" id="new-phone" placeholder="Enter phone number">
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <label for="new-address">Address</label>
+    <textarea id="new-address" placeholder="Enter full address (street, area, landmark)"></textarea>
+  </div>
+  
+  <div class="form-actions">
+    <button class="btn" id="save-new-address">
+      <i class="fas fa-save"></i> Save Address
+    </button>
+    <button class="btn btn-outline" id="cancel-new-address">
+      <i class="fas fa-times"></i> Cancel
+    </button>
+  </div>
+</div>
 
-    <div class="profile-section">
-      <h2 class="section-title"><i class="fas fa-shopping-bag"></i> Order History</h2>
-      
-      <div id="orders-container">
+      <div class="profile-section">
+        <h2 class="section-title"><i class="fas fa-shopping-bag"></i> Order History</h2>
+        
+        <div id="orders-container">
+        </div>
       </div>
     </div>
   </div>
@@ -4769,8 +4830,9 @@
           <i class="fas fa-times"></i> Cancel
         </button>
       </div>
-    </div>
-  </div>
+    </div> 
+      </div>
+    </div> 
 
   <!-- Footer -->
   <footer>
