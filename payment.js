@@ -128,6 +128,16 @@ let originalTotal = 0;
 let appliedPromoCode = null;
 let addressUnsubscribe = null; // For real-time address updates
 
+// Helper function to safely set form field values
+function safeSetFormField(fieldId, value) {
+    const field = document.getElementById(fieldId);
+    if (field && value) {
+        field.value = value;
+        return true;
+    }
+    return false;
+}
+
 // Initialize Firebase Auth State Listener
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -174,10 +184,15 @@ function loadUserDefaultAddress() {
     addressUnsubscribe = db.collection('users').doc(currentUser.uid).collection('addresses')
         .where('isDefault', '==', true)
         .onSnapshot((querySnapshot) => {
-            if (!querySnapshot.empty) {
+            if (!querySnapshot.empty && querySnapshot.docs.length > 0) {
                 const defaultAddress = querySnapshot.docs[0].data();
                 console.log('Default address found (real-time):', defaultAddress);
-                fillAddressForm(defaultAddress);
+                
+                // Add a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    fillAddressForm(defaultAddress);
+                }, 100);
+                
             } else {
                 console.log('No default address found for user');
                 // Check if user has any addresses (even without default)
@@ -186,10 +201,13 @@ function loadUserDefaultAddress() {
                     .limit(1)
                     .get()
                     .then((addressSnapshot) => {
-                        if (!addressSnapshot.empty) {
+                        if (!addressSnapshot.empty && addressSnapshot.docs.length > 0) {
                             const recentAddress = addressSnapshot.docs[0].data();
                             console.log('Using most recent address:', recentAddress);
-                            fillAddressForm(recentAddress);
+                            
+                            setTimeout(() => {
+                                fillAddressForm(recentAddress);
+                            }, 100);
                         }
                     });
             }
@@ -198,42 +216,43 @@ function loadUserDefaultAddress() {
         });
 }
 
-// Fill address form with user's saved address - FIXED PHONE NUMBER
+// Fill address form with user's saved address - COMPLETELY FIXED
 function fillAddressForm(address) {
     console.log('Filling address form with:', address);
     
     if (address.name) {
         const nameParts = address.name.split(' ');
         if (nameParts.length > 1) {
-            const firstNameField = document.getElementById('firstName');
-            const lastNameField = document.getElementById('lastName');
-            if (firstNameField) firstNameField.value = nameParts[0];
-            if (lastNameField) lastNameField.value = nameParts.slice(1).join(' ');
+            safeSetFormField('firstName', nameParts[0]);
+            safeSetFormField('lastName', nameParts.slice(1).join(' '));
         } else {
-            const firstNameField = document.getElementById('firstName');
-            if (firstNameField) firstNameField.value = address.name;
+            safeSetFormField('firstName', address.name);
         }
     }
     
-    const addressField = document.getElementById('address');
-    if (addressField && address.address) addressField.value = address.address;
+    safeSetFormField('address', address.address);
+    safeSetFormField('zipCode', address.pincode);
     
-    const zipCodeField = document.getElementById('zipCode');
-    if (zipCodeField && address.pincode) zipCodeField.value = address.pincode;
-    
-    // FIXED: Phone number autofill
+    // FIXED: Phone number autofill - FINAL VERSION
     const phoneField = document.getElementById('phone');
     if (phoneField && address.phone) {
+        let phoneNumber = address.phone.toString();
+        
         // Remove country code and any non-digit characters
-        let phoneNumber = address.phone.replace('+91', '').replace(/\D/g, '');
-        // Take only the last 10 digits to ensure proper formatting
+        phoneNumber = phoneNumber.replace(/\+91/g, '').replace(/\D/g, '');
+        
+        // Take only the last 10 digits
         if (phoneNumber.length > 10) {
             phoneNumber = phoneNumber.substring(phoneNumber.length - 10);
         }
-        if (phoneNumber.length === 10) {
+        
+        // Validate it's a proper 10-digit Indian number
+        if (phoneNumber.length === 10 && /^[6-9]\d{9}$/.test(phoneNumber)) {
             phoneField.value = phoneNumber;
+            console.log('Phone number autofilled:', phoneNumber);
         } else {
             console.log('Invalid phone number format:', address.phone);
+            phoneField.value = '';
         }
     }
     
@@ -241,12 +260,8 @@ function fillAddressForm(address) {
     if (address.address) {
         const addressParts = address.address.split(',');
         if (addressParts.length > 1) {
-            const cityField = document.getElementById('city');
-            if (cityField) {
-                // Get the second last part (usually city)
-                const cityPart = addressParts[addressParts.length - 2].trim();
-                cityField.value = cityPart;
-            }
+            const cityPart = addressParts[addressParts.length - 2].trim();
+            safeSetFormField('city', cityPart);
         }
     }
     
