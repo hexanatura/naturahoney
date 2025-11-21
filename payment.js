@@ -1,3 +1,4 @@
+// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
     authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -121,6 +122,22 @@ const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
 
+// Checkout specific variables
+let currentDiscount = 0;
+let originalTotal = 0;
+let appliedPromoCode = null;
+let addressUnsubscribe = null; // For real-time address updates
+
+// Helper function to safely set form field values
+function safeSetFormField(fieldId, value) {
+    const field = document.getElementById(fieldId);
+    if (field && value) {
+        field.value = value;
+        return true;
+    }
+    return false;
+}
+
 // Initialize Firebase Auth State Listener
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -128,8 +145,17 @@ auth.onAuthStateChanged((user) => {
         updateUIForUser(user);
         // Load profile data including addresses
         loadUserProfileData(user.uid);
+        // Update checkout UI
+        updateCheckoutUI();
+        // Load user's default address for auto-fill with real-time updates
+        loadUserDefaultAddress();
     } else {
         currentUser = null;
+        // Unsubscribe from address updates if user logs out
+        if (addressUnsubscribe) {
+            addressUnsubscribe();
+            addressUnsubscribe = null;
+        }
         updateUIForGuest();
         // Reset profile-related elements if they exist
         const profilePage = document.getElementById('profilePage');
@@ -138,8 +164,170 @@ auth.onAuthStateChanged((user) => {
             profilePage.classList.remove('active');
             mainContent.style.display = 'block';
         }
+        // Update checkout UI
+        updateCheckoutUI();
     }
 });
+
+// Load user's default address from Firestore and auto-fill checkout form with real-time updates
+function loadUserDefaultAddress() {
+    if (!currentUser || !db) return;
+    
+    console.log('Loading default address for user:', currentUser.uid);
+    
+    // Unsubscribe from previous listener if exists
+    if (addressUnsubscribe) {
+        addressUnsubscribe();
+    }
+    
+    // Set up real-time listener for default address changes
+    addressUnsubscribe = db.collection('users').doc(currentUser.uid).collection('addresses')
+        .where('isDefault', '==', true)
+        .onSnapshot((querySnapshot) => {
+            if (!querySnapshot.empty && querySnapshot.docs.length > 0) {
+                const defaultAddress = querySnapshot.docs[0].data();
+                console.log('Default address found (real-time):', defaultAddress);
+                
+                // Add a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    fillAddressForm(defaultAddress);
+                }, 100);
+                
+            } else {
+                console.log('No default address found for user');
+                // Check if user has any addresses (even without default)
+                db.collection('users').doc(currentUser.uid).collection('addresses')
+                    .orderBy('createdAt', 'desc')
+                    .limit(1)
+                    .get()
+                    .then((addressSnapshot) => {
+                        if (!addressSnapshot.empty && addressSnapshot.docs.length > 0) {
+                            const recentAddress = addressSnapshot.docs[0].data();
+                            console.log('Using most recent address:', recentAddress);
+                            
+                            setTimeout(() => {
+                                fillAddressForm(recentAddress);
+                            }, 100);
+                        }
+                    });
+            }
+        }, (error) => {
+            console.error("Error in address listener:", error);
+        });
+}
+
+// Fill address form with user's saved address - UPDATED for new fields
+function fillAddressForm(address) {
+    console.log('Filling address form with:', address);
+    
+    if (address.name) {
+        const nameParts = address.name.split(' ');
+        if (nameParts.length > 1) {
+            safeSetFormField('firstName', nameParts[0]);
+            safeSetFormField('lastName', nameParts.slice(1).join(' '));
+        } else {
+            safeSetFormField('firstName', address.name);
+        }
+    }
+    
+    safeSetFormField('address', address.address);
+    safeSetFormField('zipCode', address.pincode);
+    
+    // Use city directly if available
+    if (address.city) {
+        safeSetFormField('city', address.city);
+    }
+    
+    // FIXED: Phone number autofill - FINAL VERSION
+    const phoneField = document.getElementById('phone');
+    if (phoneField && address.phone) {
+        let phoneNumber = address.phone.toString();
+        
+        // Remove country code and any non-digit characters
+        phoneNumber = phoneNumber.replace(/\+91/g, '').replace(/\D/g, '');
+        
+        // Take only the last 10 digits
+        if (phoneNumber.length > 10) {
+            phoneNumber = phoneNumber.substring(phoneNumber.length - 10);
+        }
+        
+        // Validate it's a proper 10-digit Indian number
+        if (phoneNumber.length === 10 && /^[6-9]\d{9}$/.test(phoneNumber)) {
+            phoneField.value = phoneNumber;
+            console.log('Phone number autofilled:', phoneNumber);
+        } else {
+            console.log('Invalid phone number format:', address.phone);
+            phoneField.value = '';
+        }
+    }
+    
+    // Show success message only if we're on checkout page and actually filled fields
+    const checkoutSection = document.querySelector('.checkout-section');
+    if (checkoutSection) {
+        const filledFields = document.querySelectorAll('#firstName, #lastName, #address, #phone').length;
+        if (filledFields > 0) {
+            showNotification('Address auto-filled from your saved profile!', 'success');
+        }
+    }
+}
+
+// Update checkout UI based on login status
+function updateCheckoutUI() {
+    const emailInput = document.getElementById('email');
+    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+    
+    if (currentUser) {
+        // User is logged in - auto-fill email and disable it
+        if (emailInput) {
+            emailInput.value = currentUser.email;
+            emailInput.disabled = true;
+            emailInput.style.backgroundColor = '#f5f5f5';
+            emailInput.style.color = '#666';
+            emailInput.style.cursor = 'not-allowed';
+        }
+        
+        // Change button to Logout - text only changes, no background
+        if (loginBtnCheckout) {
+            loginBtnCheckout.textContent = 'LOGOUT';
+            loginBtnCheckout.style.backgroundColor = 'transparent';
+            loginBtnCheckout.style.color = '#e74c3c'; // Red color for logout
+            loginBtnCheckout.style.textDecoration = 'none';
+            loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
+            loginBtnCheckout.style.fontWeight = '600';
+            loginBtnCheckout.style.textTransform = 'uppercase';
+            loginBtnCheckout.style.border = 'none';
+            loginBtnCheckout.style.cursor = 'pointer';
+            loginBtnCheckout.style.fontSize = '14px';
+            loginBtnCheckout.style.padding = '0';
+            loginBtnCheckout.style.margin = '0';
+        }
+        
+    } else {
+        // User is not logged in
+        if (emailInput) {
+            emailInput.value = '';
+            emailInput.disabled = false;
+            emailInput.style.backgroundColor = '';
+            emailInput.style.color = '';
+            emailInput.style.cursor = '';
+        }
+        
+        if (loginBtnCheckout) {
+            loginBtnCheckout.textContent = 'LOGIN';
+            loginBtnCheckout.style.backgroundColor = 'transparent';
+            loginBtnCheckout.style.color = '#3498db'; // Blue color for login
+            loginBtnCheckout.style.textDecoration = 'none';
+            loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
+            loginBtnCheckout.style.fontWeight = '600';
+            loginBtnCheckout.style.textTransform = 'uppercase';
+            loginBtnCheckout.style.border = 'none';
+            loginBtnCheckout.style.cursor = 'pointer';
+            loginBtnCheckout.style.fontSize = '14px';
+            loginBtnCheckout.style.padding = '0';
+            loginBtnCheckout.style.margin = '0';
+        }
+    }
+}
 
 // Update UI for logged in user - ENHANCED
 function updateUIForUser(user) {
@@ -288,7 +476,6 @@ function loadUserAddresses(userId) {
     }, 100);
 }
 
-// Display address in profile with better UI
 // Display address in profile with NEW fields
 function displayAddress(addressId, address) {
     const addressesContainer = document.getElementById('addresses-container');
@@ -402,6 +589,50 @@ function displayAddress(addressId, address) {
     
     // Add event listeners
     attachAddressEventListeners(addressId);
+}
+
+// Save edited address to Firestore - UPDATED for new fields
+function saveEditedAddressToFirestore(addressId) {
+    const label = document.getElementById(`edit-label-${addressId}`).value.trim();
+    const name = document.getElementById(`edit-name-${addressId}`).value.trim();
+    const address = document.getElementById(`edit-address-${addressId}`).value.trim();
+    const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
+    const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
+    const city = document.getElementById(`edit-city-${addressId}`).value.trim();
+    const state = document.getElementById(`edit-state-${addressId}`).value;
+    const country = document.getElementById(`edit-country-${addressId}`).value;
+    
+    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    const updatedAddress = {
+        label: label,
+        name: name,
+        address: address,
+        phone: phone,
+        pincode: pincode,
+        city: city,
+        state: state,
+        country: country,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
+        .then(() => {
+            // Refresh addresses display
+            const addressesContainer = document.getElementById('addresses-container');
+            if (addressesContainer) {
+                addressesContainer.innerHTML = '';
+                loadUserAddresses(currentUser.uid);
+            }
+            showNotification('Address updated successfully!', 'success');
+        })
+        .catch((error) => {
+            console.error("Error updating address:", error);
+            showNotification('Error updating address: ' + error.message, 'error');
+        });
 }
 
 // Attach event listeners to address actions
@@ -525,54 +756,128 @@ function saveNewAddressToProfile() {
             document.getElementById('new-state').value = '';
             document.getElementById('new-country').value = 'India';
             
-      
+            // Show success message
+            showNotification('Address saved successfully!', 'success');
+        })
         .catch((error) => {
             console.error("Error adding address:", error);
             showNotification('Error saving address: ' + error.message, 'error');
         });
 }
 
-// Save edited address to Firestore - UPDATED for new fields
-function saveEditedAddressToFirestore(addressId) {
-    const label = document.getElementById(`edit-label-${addressId}`).value.trim();
-    const name = document.getElementById(`edit-name-${addressId}`).value.trim();
-    const address = document.getElementById(`edit-address-${addressId}`).value.trim();
-    const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
-    const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
-    const city = document.getElementById(`edit-city-${addressId}`).value.trim();
-    const state = document.getElementById(`edit-state-${addressId}`).value;
-    const country = document.getElementById(`edit-country-${addressId}`).value;
-    
-    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
-        alert('Please fill in all fields');
+// Display address in profile with NEW fields
+function displayAddress(addressId, address) {
+    const addressesContainer = document.getElementById('addresses-container');
+    if (!addressesContainer) {
+        console.error('Addresses container not found for displaying address');
         return;
     }
     
-    const updatedAddress = {
-        label: label,
-        name: name,
-        address: address,
-        phone: phone,
-        pincode: pincode,
-        city: city,
-        state: state,
-        country: country,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
+    // Remove loading or empty states if present
+    const loadingState = addressesContainer.querySelector('.loading, .empty-state, .error-state');
+    if (loadingState) {
+        loadingState.remove();
+    }
     
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
-        .then(() => {
-            // Refresh addresses display
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserAddresses(currentUser.uid);
-            }
-        })
-        .catch((error) => {
-            console.error("Error updating address:", error);
-            showNotification('Error updating address: ' + error.message, 'error');
-        });
+    const addressCard = document.createElement('div');
+    addressCard.className = 'address-card';
+    addressCard.innerHTML = `
+        <div class="address-header">
+            <h3>
+                ${address.label || 'Address'}
+                ${address.isDefault ? '<span class="default-badge">Default</span>' : ''}
+            </h3>
+            <span class="address-pincode">Pincode: ${address.pincode || 'N/A'}</span>
+        </div>
+        <div class="address-details">
+            <p><strong>${address.name || 'No name'}</strong></p>
+            <p><strong>Address:</strong> ${address.address || 'No address provided'}</p>
+            <p><strong>City:</strong> ${address.city || 'N/A'}</p>
+            <p><strong>State:</strong> ${address.state || 'N/A'}</p>
+            <p><strong>Country:</strong> ${address.country || 'India'}</p>
+            <p><strong>Phone:</strong> ${address.phone || 'N/A'}</p>
+        </div>
+        <div class="address-actions">
+            ${!address.isDefault ? `
+                <button class="btn btn-sm set-default-address-btn" data-id="${addressId}">
+                    <i class="fas fa-star"></i> Set Default
+                </button>
+            ` : ''}
+            <button class="btn btn-sm edit-address-btn" data-id="${addressId}">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="btn btn-sm btn-danger delete-address-btn" data-id="${addressId}">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+        <div class="address-form edit-address-form" id="edit-address-form-${addressId}" style="display: none;">
+            <h4>Edit Address</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-label-${addressId}">Address Label</label>
+                    <input type="text" id="edit-label-${addressId}" value="${address.label || ''}" placeholder="Home, Work, etc.">
+                </div>
+                <div class="form-group">
+                    <label for="edit-pincode-${addressId}">Pincode</label>
+                    <input type="text" id="edit-pincode-${addressId}" value="${address.pincode || ''}" maxlength="6">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edit-name-${addressId}">Full Name</label>
+                <input type="text" id="edit-name-${addressId}" value="${address.name || ''}">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-country-${addressId}">Country</label>
+                    <select id="edit-country-${addressId}" required>
+                        <option value="">Select Country</option>
+                        <option value="India" ${address.country === 'India' ? 'selected' : ''}>India</option>
+                        <option value="United States" ${address.country === 'United States' ? 'selected' : ''}>United States</option>
+                        <option value="United Kingdom" ${address.country === 'United Kingdom' ? 'selected' : ''}>United Kingdom</option>
+                        <option value="Canada" ${address.country === 'Canada' ? 'selected' : ''}>Canada</option>
+                        <option value="Australia" ${address.country === 'Australia' ? 'selected' : ''}>Australia</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-state-${addressId}">State</label>
+                    <select id="edit-state-${addressId}" required>
+                        <option value="">Select State</option>
+                        <option value="Kerala" ${address.state === 'Kerala' ? 'selected' : ''}>Kerala</option>
+                        <option value="Tamil Nadu" ${address.state === 'Tamil Nadu' ? 'selected' : ''}>Tamil Nadu</option>
+                        <option value="Karnataka" ${address.state === 'Karnataka' ? 'selected' : ''}>Karnataka</option>
+                        <option value="Maharashtra" ${address.state === 'Maharashtra' ? 'selected' : ''}>Maharashtra</option>
+                        <option value="Delhi" ${address.state === 'Delhi' ? 'selected' : ''}>Delhi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-city-${addressId}">City</label>
+                    <input type="text" id="edit-city-${addressId}" value="${address.city || ''}" placeholder="Enter city" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-phone-${addressId}">Phone</label>
+                    <input type="text" id="edit-phone-${addressId}" value="${address.phone || ''}" maxlength="10">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edit-address-${addressId}">Address</label>
+                <textarea id="edit-address-${addressId}" rows="3">${address.address || ''}</textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn save-edit-address-btn" data-id="${addressId}">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <button class="btn btn-outline cancel-edit-address-btn" data-id="${addressId}">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    addressesContainer.appendChild(addressCard);
+    
+    // Add event listeners
+    attachAddressEventListeners(addressId);
 }
 
 // Delete address from Firestore
@@ -585,6 +890,7 @@ function deleteAddressFromFirestore(addressId) {
                 addressesContainer.innerHTML = '';
                 loadUserAddresses(currentUser.uid);
             }
+            showNotification('Address deleted successfully!', 'success');
         })
         .catch((error) => {
             console.error("Error deleting address:", error);
@@ -592,7 +898,7 @@ function deleteAddressFromFirestore(addressId) {
         });
 }
 
-// Set default address
+// Set default address - UPDATED to trigger real-time update
 function setDefaultAddress(addressId) {
     // First, remove default from all addresses
     db.collection('users').doc(currentUser.uid).collection('addresses').get()
@@ -617,6 +923,9 @@ function setDefaultAddress(addressId) {
                 addressesContainer.innerHTML = '';
                 loadUserAddresses(currentUser.uid);
             }
+            showNotification('Default address set successfully!', 'success');
+            
+            // The real-time listener in loadUserDefaultAddress will automatically update checkout form
         })
         .catch((error) => {
             console.error("Error setting default address:", error);
@@ -698,7 +1007,6 @@ function reorderItems(items) {
     });
     alert('Items added to cart!');
 }
-
 
 // Close all sidebars and modals
 function closeAllSidebars() {
@@ -825,6 +1133,7 @@ logoutLink.addEventListener('click', (e) => {
     e.stopPropagation();
     auth.signOut().then(() => {
         alert('You have been logged out successfully!');
+        window.location.reload();
     }).catch((error) => {
         console.error("Error signing out:", error);
     });
@@ -957,7 +1266,7 @@ closeCart.addEventListener('click', () => {
     document.body.style.overflow = 'auto';
 });
 
-// Update cart UI
+// Update cart UI - ENHANCED to update checkout order summary instantly
 function updateCartUI() {
     const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
     
@@ -1045,6 +1354,11 @@ function updateCartUI() {
             });
         });
     }
+    
+    // INSTANTLY update checkout order summary if on checkout page
+    if (document.querySelector('.checkout-section')) {
+        updateOrderSummary();
+    }
 }
 
 // Enhanced Add to cart function with effects and auto-open sidebar
@@ -1081,9 +1395,25 @@ function addCartVisualFeedback() {
     }, 600);
 }
 
+// Update cart quantity - ENHANCED to instantly update checkout
+function updateCartQuantity(productId, change) {
+    const item = cartProducts.find(item => item.id === productId);
+    
+    if (item) {
+        item.quantity += change;
+        
+        if (item.quantity <= 0) {
+            removeFromCart(productId);
+        } else {
+            // Update ONLY localStorage (no Firestore update)
+            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+            
+            updateCartUI(); // This now also updates checkout order summary
+        }
+    }
+}
 
-
-// Set cart quantity
+// Set cart quantity - ENHANCED to instantly update checkout
 function setCartQuantity(productId, quantity) {
     const item = cartProducts.find(item => item.id === productId);
     
@@ -1096,19 +1426,19 @@ function setCartQuantity(productId, quantity) {
             // Update ONLY localStorage (no Firestore update)
             localStorage.setItem('guestCart', JSON.stringify(cartProducts));
             
-            updateCartUI();
+            updateCartUI(); // This now also updates checkout order summary
         }
     }
 }
 
-// Remove from cart
+// Remove from cart - ENHANCED to instantly update checkout
 function removeFromCart(productId) {
     cartProducts = cartProducts.filter(item => item.id !== productId);
     
     // Update ONLY localStorage (no Firestore update)
     localStorage.setItem('guestCart', JSON.stringify(cartProducts));
     
-    updateCartUI();
+    updateCartUI(); // This now also updates checkout order summary
 }
 
 // WhatsApp functionality
@@ -1353,249 +1683,6 @@ browseProducts.addEventListener('click', () => {
     document.body.style.overflow = 'auto';
 });
 
-
-// Add this function to handle quantity updates in the checkout page
-function updateCartQuantity(productId, newQuantity) {
-    // Get current cart from localStorage
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    
-    // Find the product in cart
-    const productIndex = cart.findIndex(item => item.id === productId);
-    
-    if (productIndex !== -1) {
-        if (newQuantity <= 0) {
-            // Remove product from cart if quantity is 0 or less
-            cart.splice(productIndex, 1);
-            
-        } else {
-            // Update quantity
-            cart[productIndex].quantity = newQuantity;
-        }
-        
-        // Save updated cart
-        localStorage.setItem('cart', JSON.stringify(cart));
-        
-        // Update cart count in navigation
-        updateCartCount();
-        
-        // Refresh checkout display
-        loadCheckoutItems();
-        
-        // Update cart sidebar if open
-        if (document.getElementById('cartSidebar').classList.contains('active')) {
-            loadCartItems();
-        }
-    }
-}
-
-// Function to show notifications
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: ${type === 'info' ? '#5f2b27' : type === 'success' ? '#28a745' : '#dc3545'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        font-family: 'Unbounded', sans-serif;
-        font-size: 14px;
-        transition: all 0.3s ease;
-        max-width: 300px;
-    `;
-    notification.textContent = message;
-    
-    // Add to page
-    document.body.appendChild(notification);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
-}
-
-// Update the loadCheckoutItems function to include quantity controls
-function loadCheckoutItems() {
-    const orderItemsContainer = document.getElementById('orderItems');
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    
-    // Clear existing items
-    orderItemsContainer.innerHTML = '';
-    
-    if (cart.length === 0) {
-        orderItemsContainer.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #777;">
-                <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px;"></i>
-                <h3>Your cart is empty</h3>
-                <p>Add some products to continue</p>
-            </div>
-        `;
-        return;
-    }
-    
-    let subtotal = 0;
-    
-    // Add each cart item to the order summary
-    cart.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        subtotal += itemTotal;
-        
-        const orderItem = document.createElement('div');
-        orderItem.className = 'order-item';
-        orderItem.innerHTML = `
-            <div class="order-item-main">
-                <div class="order-item-image-container">
-                    <div class="order-item-image">
-                        ${item.image ? 
-                            `<img src="${item.image}" alt="${item.name}">` : 
-                            `<i class="fas fa-jar"></i>`
-                        }
-                    </div>
-                </div>
-                <div class="order-item-content">
-                    <div class="order-item-header">
-                        <div class="order-item-info">
-                            <div class="order-item-name">${item.name}</div>
-                            <div class="order-item-weight">${item.weight || '500g'}</div>
-                        </div>
-                        <div class="order-item-price">₹${item.price}</div>
-                    </div>
-                    <div class="order-item-footer">
-                        <div class="order-item-quantity-controls">
-                            <button class="quantity-btn-checkout" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})" ${item.quantity <= 1 ? 'disabled' : ''}>
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="1" 
-                                   onchange="updateCartQuantity('${item.id}', parseInt(this.value))">
-                            <button class="quantity-btn-checkout" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                        <div class="order-item-quantity">
-                            Quantity: ${item.quantity}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        orderItemsContainer.appendChild(orderItem);
-    });
-    
-    // Update totals
-    document.getElementById('subtotal').textContent = `₹${subtotal}`;
-    document.getElementById('total').textContent = `₹${subtotal}`;
-}
-
-// Update the existing loadCartItems function to use the same updateCartQuantity function
-function loadCartItems() {
-    const cartItemsContainer = document.getElementById('cartItems');
-    const emptyCart = document.getElementById('emptyCart');
-    const cartSummary = document.getElementById('cartSummary');
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    
-    if (cart.length === 0) {
-        cartItemsContainer.innerHTML = '';
-        emptyCart.style.display = 'flex';
-        cartSummary.style.display = 'none';
-        return;
-    }
-    
-    emptyCart.style.display = 'none';
-    cartSummary.style.display = 'block';
-    
-    cartItemsContainer.innerHTML = '';
-    let subtotal = 0;
-    
-    cart.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        subtotal += itemTotal;
-        
-        const cartItem = document.createElement('div');
-        cartItem.className = 'cart-item';
-        cartItem.innerHTML = `
-            <div class="cart-item-image">
-                ${item.image ? 
-                    `<img src="${item.image}" alt="${item.name}">` : 
-                    `<i class="fas fa-jar"></i>`
-                }
-            </div>
-            <div class="cart-item-details">
-                <div class="cart-item-title">${item.name}</div>
-                <div class="cart-item-price">₹${item.price}</div>
-                <div class="cart-item-controls">
-                    <div class="cart-item-quantity">
-                        <button class="quantity-btn" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})" ${item.quantity <= 1 ? 'disabled' : ''}>
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <input type="number" class="quantity-input" value="${item.quantity}" min="1" 
-                               onchange="updateCartQuantity('${item.id}', parseInt(this.value))">
-                        <button class="quantity-btn" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                    <button class="delete-item" onclick="updateCartQuantity('${item.id}', 0)">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        cartItemsContainer.appendChild(cartItem);
-    });
-    
-    // Update cart summary
-    document.querySelector('.cart-subtotal span:last-child').textContent = `₹${subtotal}`;
-    document.querySelector('.cart-total span:last-child').textContent = `₹${subtotal}`;
-}
-
-// Initialize the checkout page when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Load checkout items
-    loadCheckoutItems();
-    
-    // Update cart count
-    updateCartCount();
-    
-    // Add event listener for checkout button
-    document.querySelector('.checkout-btn').addEventListener('click', function() {
-        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-        if (cart.length === 0) {
-            showNotification('Your cart is empty', 'error');
-            return;
-        }
-        
-        // Here you would typically process the payment
-        showNotification('Redirecting to payment gateway...', 'info');
-        // Your payment processing code would go here
-    });
-});
-
-// Update the updateCartCount function if it doesn't exist
-function updateCartCount() {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const cartCount = document.getElementById('cartCount');
-    const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
-    
-    if (totalItems > 0) {
-        cartCount.textContent = totalItems;
-        cartCount.classList.remove('hidden');
-    } else {
-        cartCount.classList.add('hidden');
-    }
-}
-
-
-
-
-
 // Load guest data from localStorage
 function loadGuestData() {
     // Load liked products
@@ -1731,7 +1818,601 @@ function initCommon() {
     }
 }
 
+// Initialize checkout page
+function initCheckoutPage() {
+    updateOrderSummary();
+    setupCheckoutEventListeners();
+    updateCheckoutUI();
+}
+
+// Update order summary with cart items
+function updateOrderSummary() {
+    const orderItems = document.getElementById('orderItems');
+    if (!orderItems) return;
+    
+    orderItems.innerHTML = '';
+    let subtotal = 0;
+    
+    if (cartProducts.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'empty-order';
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.padding = '40px 20px';
+        emptyMessage.style.color = '#777';
+        emptyMessage.innerHTML = `
+            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px; color: #e0e0e0;"></i>
+            <p style="font-size: 16px;">Your cart is empty</p>
+        `;
+        orderItems.appendChild(emptyMessage);
+    } else {
+        cartProducts.forEach(item => {
+            const product = products.find(p => p.id === item.id);
+            if (product) {
+                const itemTotal = product.price * item.quantity;
+                subtotal += itemTotal;
+                
+                const orderItem = document.createElement('div');
+                orderItem.className = 'order-item';
+                orderItem.innerHTML = `
+                    <div class="order-item-main">
+                        <div class="order-item-image-container">
+                            <div class="order-item-image">
+                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" alt="${product.name}" onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
+                            </div>
+                        </div>
+                        <div class="order-item-content">
+                            <div class="order-item-header">
+                                <div class="order-item-info">
+                                    <div class="order-item-name">${product.name}</div>
+                                    <div class="order-item-weight">${product.weight}</div>
+                                </div>
+                                <div class="order-item-price">₹${itemTotal}</div>
+                            </div>
+                            <div class="order-item-footer">
+                                <div class="order-item-quantity-controls">
+                                    <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}" ${item.quantity <= 1 ? 'disabled' : ''}>
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="1" max="10" data-id="${item.id}">
+                                    <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                orderItems.appendChild(orderItem);
+            }
+        });
+    }
+    
+    originalTotal = subtotal;
+    updateTotals();
+}
+
+// Update totals including discount with promo code display
+function updateTotals() {
+    const subtotalElement = document.getElementById('subtotal');
+    const totalElement = document.getElementById('total');
+    const discountRow = document.getElementById('discountRow');
+    const discountAmount = document.getElementById('discountAmount');
+    const promoDisplay = document.getElementById('promoDisplay');
+    
+    if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
+    
+    const newTotal = originalTotal - currentDiscount;
+    
+    subtotalElement.textContent = `₹${originalTotal}`;
+    
+    if (currentDiscount > 0 && appliedPromoCode) {
+        discountRow.style.display = 'flex';
+        discountAmount.textContent = `-₹${currentDiscount}`;
+        discountAmount.style.color = '#27ae60'; // Green color for discount
+        
+        // Create or update promo code display under subtotal
+        if (!promoDisplay) {
+            const promoDisplayElement = document.createElement('div');
+            promoDisplayElement.id = 'promoDisplay';
+            promoDisplayElement.style.color = '#27ae60';
+            promoDisplayElement.style.fontSize = '14px';
+            promoDisplayElement.style.marginTop = '5px';
+            promoDisplayElement.style.fontWeight = '500';
+            promoDisplayElement.innerHTML = `Promo code <strong>${appliedPromoCode}</strong> applied: ₹${currentDiscount} OFF`;
+            
+            // Insert after subtotal
+            const subtotalRow = document.querySelector('.subtotal-row');
+            if (subtotalRow) {
+                subtotalRow.parentNode.insertBefore(promoDisplayElement, subtotalRow.nextSibling);
+            }
+        } else {
+            promoDisplay.innerHTML = `Promo code <strong>${appliedPromoCode}</strong> applied: ₹${currentDiscount} OFF`;
+            promoDisplay.style.display = 'block';
+        }
+    } else {
+        discountRow.style.display = 'none';
+        // Hide promo display if no promo code applied
+        if (promoDisplay) {
+            promoDisplay.style.display = 'none';
+        }
+    }
+    
+    totalElement.textContent = `₹${newTotal}`;
+}
+
+// Setup event listeners for checkout page
+function setupCheckoutEventListeners() {
+    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+    const applyBtn = document.querySelector('.apply-btn');
+    const checkoutBtnMain = document.querySelector('.checkout-btn');
+    const promoInput = document.querySelector('.promo-input');
+
+    if (loginBtnCheckout) {
+        loginBtnCheckout.addEventListener('click', function() {
+            if (currentUser) {
+                // User is logged in - show logout confirmation
+                if (confirm('Are you sure you want to logout?')) {
+                    auth.signOut().then(() => {
+                        window.location.reload();
+                    }).catch((error) => {
+                        console.error("Error signing out:", error);
+                    });
+                }
+            } else {
+                // User is not logged in - show login modal
+                showLoginView();
+                loginModal.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    }
+
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyPromoCode);
+    }
+
+    if (promoInput) {
+        promoInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyPromoCode();
+            }
+        });
+    }
+
+    if (checkoutBtnMain) {
+        checkoutBtnMain.addEventListener('click', processCheckout);
+    }
+
+    // Quantity controls
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('.quantity-btn-checkout');
+        if (button) {
+            handleCheckoutQuantityChange(e);
+        }
+    });
+
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('quantity-input-checkout')) {
+            handleCheckoutQuantityInput(e);
+        }
+    });
+
+    // Form validation
+    const formInputs = document.querySelectorAll('.checkout-form input, .checkout-form select');
+    formInputs.forEach(input => {
+        input.addEventListener('blur', validateField);
+        input.addEventListener('input', clearFieldError);
+    });
+}
+
+// Apply promo code
+function applyPromoCode() {
+    const promoInput = document.querySelector('.promo-input');
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    
+    if (!promoInput || !promoSuccess || !promoError) return;
+    
+    const promoCode = promoInput.value.trim().toUpperCase();
+    
+    if (promoCode === '') {
+        showPromoError('Please enter a promo code');
+        return;
+    }
+    
+    hideAllPromoMessages();
+    
+    const activePromoCodes = getActivePromoCodes();
+    
+    if (activePromoCodes[promoCode] && activePromoCodes[promoCode].active) {
+        currentDiscount = activePromoCodes[promoCode].value;
+        appliedPromoCode = promoCode;
+        updateTotals();
+        promoInput.value = '';
+        showPromoSuccess(`Promo code "${promoCode}" applied successfully! ₹${currentDiscount} discount applied.`);
+    } else {
+        showPromoError('Invalid promo code. Please try again.');
+    }
+}
+
+// Get active promo codes
+function getActivePromoCodes() {
+    // Define some sample promo codes
+    const promoCodes = {
+        'WELCOME10': { value: 50, active: true, type: 'fixed' },
+        'HONEY20': { value: 100, active: true, type: 'fixed' },
+        'FIRSTORDER': { value: 75, active: true, type: 'fixed' }
+    };
+    
+    return promoCodes;
+}
+
+// Show promo success message
+function showPromoSuccess(message) {
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    
+    if (!promoSuccess || !promoError) return;
+    
+    promoSuccess.textContent = message;
+    promoSuccess.style.display = 'block';
+    promoError.style.display = 'none';
+    
+    setTimeout(() => {
+        promoSuccess.style.display = 'none';
+    }, 5000);
+}
+
+// Show promo error message
+function showPromoError(message) {
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    
+    if (!promoSuccess || !promoError) return;
+    
+    promoError.textContent = message;
+    promoError.style.display = 'block';
+    promoSuccess.style.display = 'none';
+    
+    setTimeout(() => {
+        promoError.style.display = 'none';
+    }, 5000);
+}
+
+// Hide all promo messages
+function hideAllPromoMessages() {
+    const promoSuccess = document.getElementById('promoSuccess');
+    const promoError = document.getElementById('promoError');
+    
+    if (promoSuccess) promoSuccess.style.display = 'none';
+    if (promoError) promoError.style.display = 'none';
+}
+
+// Handle quantity change in checkout
+function handleCheckoutQuantityChange(e) {
+    const button = e.target.closest('.quantity-btn-checkout');
+    if (!button) return;
+    
+    const productId = parseInt(button.getAttribute('data-id'));
+    const action = button.getAttribute('data-action');
+    
+    if (action === 'decrease') {
+        updateCartQuantity(productId, -1);
+    } else if (action === 'increase') {
+        updateCartQuantity(productId, 1);
+    }
+    
+    // Order summary is now updated automatically via updateCartUI()
+}
+
+// Handle quantity input in checkout
+function handleCheckoutQuantityInput(e) {
+    const input = e.target;
+    const productId = parseInt(input.getAttribute('data-id'));
+    const newQuantity = parseInt(input.value) || 1;
+    
+    setCartQuantity(productId, newQuantity);
+    // Order summary is now updated automatically via updateCartUI()
+}
+
+// Validate form field
+function validateField(e) {
+    const field = e.target;
+    const value = field.value.trim();
+    
+    field.classList.remove('error');
+    
+    if (field.hasAttribute('required') && !value) {
+        showFieldError(field, 'This field is required');
+        return false;
+    }
+    
+    if (field.type === 'email' && value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+            showFieldError(field, 'Please enter a valid email address');
+            return false;
+        }
+    }
+    
+    if (field.id === 'phone' && value) {
+        if (!validateIndianPhoneNumber(value)) {
+            showFieldError(field, 'Please enter a valid 10-digit Indian phone number');
+            return false;
+        }
+    }
+    
+    if (field.id === 'zipCode' && value) {
+        const zipRegex = /^\d{6}$/;
+        if (!zipRegex.test(value)) {
+            showFieldError(field, 'Please enter a valid 6-digit PIN code');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Show field error message
+function showFieldError(field, message) {
+    field.classList.add('error');
+    
+    // Remove existing error message
+    const existingError = field.parentNode.querySelector('.field-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // Add error message
+    const errorElement = document.createElement('div');
+    errorElement.className = 'field-error';
+    errorElement.style.color = '#e74c3c';
+    errorElement.style.fontSize = '12px';
+    errorElement.style.marginTop = '5px';
+    errorElement.textContent = message;
+    
+    field.parentNode.appendChild(errorElement);
+}
+
+// Clear field error
+function clearFieldError(e) {
+    const field = e.target;
+    field.classList.remove('error');
+    
+    const existingError = field.parentNode.querySelector('.field-error');
+    if (existingError) {
+        existingError.remove();
+    }
+}
+
+// Validate Indian phone number
+function validateIndianPhoneNumber(phone) {
+    if (phone.startsWith('+91')) {
+        phone = phone.replace('+91', '').trim();
+    }
+
+    const cleanedPhone = phone.replace(/\D/g, '');
+
+    const phoneRegex = /^[6-9]\d{9}$/;
+    return phoneRegex.test(cleanedPhone);
+}
+
+// Validate entire checkout form
+function validateCheckoutForm() {
+    const requiredFields = [
+        'email', 'firstName', 'lastName', 'address', 
+        'city', 'state', 'zipCode', 'phone'
+    ];
+    
+    let isValid = true;
+    
+    // Clear all errors first
+    document.querySelectorAll('.field-error').forEach(error => error.remove());
+    document.querySelectorAll('.error').forEach(field => field.classList.remove('error'));
+    
+    // Validate each required field
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field && !validateField({ target: field })) {
+            isValid = false;
+        }
+    });
+    
+    // Validate cart
+    if (cartProducts.length === 0) {
+        alert('Your cart is empty. Please add items to proceed.');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+// Process checkout
+function processCheckout() {
+    if (!validateCheckoutForm()) {
+        return;
+    }
+    
+    const email = document.getElementById('email').value;
+    const firstName = document.getElementById('firstName').value;
+    const lastName = document.getElementById('lastName').value;
+    const address = document.getElementById('address').value;
+    const apartment = document.getElementById('apartment').value;
+    const city = document.getElementById('city').value;
+    const state = document.getElementById('state').value;
+    const zipCode = document.getElementById('zipCode').value;
+    const phone = document.getElementById('phone').value;
+
+    const orderData = {
+        email: email,
+        shippingAddress: {
+            firstName: firstName,
+            lastName: lastName,
+            address: address,
+            apartment: apartment,
+            city: city,
+            state: state,
+            zipCode: zipCode,
+            phone: '+91 ' + phone,
+            country: 'India'
+        },
+        items: cartProducts.map(item => {
+            const product = products.find(p => p.id === item.id);
+            return {
+                productId: item.id,
+                name: product ? product.name : 'Unknown Product',
+                weight: product ? product.weight : '',
+                price: product ? product.price : 0,
+                quantity: item.quantity,
+                image: product ? product.image : ''
+            };
+        }),
+        subtotal: originalTotal,
+        discount: currentDiscount,
+        total: originalTotal - currentDiscount,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        paymentMethod: 'razorpay'
+    };
+    
+    // Add promo code if applied
+    if (appliedPromoCode) {
+        orderData.promoCode = appliedPromoCode;
+    }
+    
+    if (currentUser) {
+        orderData.userId = currentUser.uid;
+        orderData.userEmail = currentUser.email;
+        saveOrderToFirestore(orderData);
+    } else {
+        saveGuestOrder(orderData);
+    }
+    
+    processPayment(orderData);
+}
+
+// Save order to Firestore
+function saveOrderToFirestore(orderData) {
+    if (!db) {
+        alert('Database connection error. Please try again.');
+        return;
+    }
+    
+    db.collection('orders').add(orderData)
+        .then((docRef) => {
+            orderData.id = docRef.id;
+            
+            if (currentUser) {
+                db.collection('users').doc(currentUser.uid).collection('orders').doc(docRef.id).set(orderData)
+                    .then(() => {
+                        clearCartAfterOrder();
+                    })
+                    .catch((error) => {
+                        console.error("Error saving to user orders:", error);
+                    });
+            }
+            
+            console.log('Order created successfully:', docRef.id);
+        })
+        .catch((error) => {
+            console.error("Error creating order:", error);
+            alert('Error creating order. Please try again.');
+        });
+}
+
+// Save guest order to localStorage
+function saveGuestOrder(orderData) {
+    const guestOrders = JSON.parse(localStorage.getItem('guestOrders') || '[]');
+    orderData.id = 'guest_' + Date.now();
+    guestOrders.push(orderData);
+    localStorage.setItem('guestOrders', JSON.stringify(guestOrders));
+    
+    clearCartAfterOrder();
+}
+
+// Clear cart after successful order
+function clearCartAfterOrder() {
+    if (currentUser) {
+        cartProducts.forEach(item => {
+            db.collection('users').doc(currentUser.uid).collection('cart').doc(item.id.toString()).delete()
+            .catch((error) => {
+                console.error("Error clearing cart:", error);
+            });
+        });
+    }
+    
+    localStorage.removeItem('guestCart');
+    
+    cartProducts = [];
+    updateCartUI();
+    updateOrderSummary();
+}
+
+// Process payment (simulated)
+function processPayment(orderData) {
+    // Show processing message
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    const originalText = checkoutBtn.innerHTML;
+    checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    checkoutBtn.disabled = true;
+    
+    // Simulate payment processing
+    setTimeout(() => {
+        if (currentUser && orderData.id && db) {
+            db.collection('orders').doc(orderData.id).update({
+                status: 'confirmed',
+                paymentStatus: 'paid',
+                paidAt: new Date().toISOString()
+            })
+            .then(() => {
+                if (currentUser) {
+                    db.collection('users').doc(currentUser.uid).collection('orders').doc(orderData.id).update({
+                        status: 'confirmed',
+                        paymentStatus: 'paid',
+                        paidAt: new Date().toISOString()
+                    });
+                }
+                
+                showOrderSuccess(orderData);
+            })
+            .catch((error) => {
+                console.error("Error updating order status:", error);
+                checkoutBtn.innerHTML = originalText;
+                checkoutBtn.disabled = false;
+                alert('Payment processing error. Please try again.');
+            });
+        } else {
+            const guestOrders = JSON.parse(localStorage.getItem('guestOrders') || '[]');
+            const orderIndex = guestOrders.findIndex(order => order.id === orderData.id);
+            if (orderIndex !== -1) {
+                guestOrders[orderIndex].status = 'confirmed';
+                guestOrders[orderIndex].paymentStatus = 'paid';
+                guestOrders[orderIndex].paidAt = new Date().toISOString();
+                localStorage.setItem('guestOrders', JSON.stringify(guestOrders));
+                
+                showOrderSuccess(orderData);
+            }
+        }
+    }, 2000);
+}
+
+// Show order success message
+function showOrderSuccess(orderData) {
+    alert(`Order confirmed successfully! Order ID: ${orderData.id.substring(0, 8)}\n\nThank you for your purchase. You will receive an email confirmation shortly.`);
+    
+    // Redirect to home page or order confirmation page
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 3000);
+}
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
+    
+    // Initialize checkout page if on checkout page
+    if (document.querySelector('.checkout-section')) {
+        initCheckoutPage();
+    }
 });
