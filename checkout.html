@@ -35,6 +35,32 @@ body {
   overflow-x: hidden;
 }
 
+/* Add these styles to your existing CSS */
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Unbounded', sans-serif;
+  transition: border 0.3s;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.form-group select:focus {
+  border-color: #5f2b27;
+  outline: none;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767px) {
+  .form-group select {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
 /* Notification Bar - FIXED */
 .notification-bar {
   background: #e7d90f;
@@ -70,32 +96,6 @@ body {
   transform: translateY(-100%);
   opacity: 0;
   pointer-events: none;
-}
-
-/* Add these styles to your existing CSS */
-.form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-family: 'Unbounded', sans-serif;
-  transition: border 0.3s;
-  font-size: 14px;
-  background-color: white;
-  cursor: pointer;
-}
-
-.form-group select:focus {
-  border-color: #5f2b27;
-  outline: none;
-}
-
-/* Mobile responsive adjustments */
-@media (max-width: 767px) {
-  .form-group select {
-    padding: 10px;
-    font-size: 13px;
-  }
 }
 
 /* Navigation - FIXED */
@@ -3969,76 +3969,7 @@ footer a:hover {
         <button class="btn btn-outline" id="add-address-btn">
           <i class="fas fa-plus"></i> Add New Address
         </button>
-                </div>
-        </div>
-<div class="address-form" id="add-address-form">
-  <div class="form-row">
-    <div class="form-group">
-      <label for="new-label">Address Label (e.g., Home, Work)</label>
-      <input type="text" id="new-label" placeholder="Home">
-    </div>
-    <div class="form-group">
-      <label for="new-pincode">Pincode</label>
-      <input type="text" id="new-pincode" placeholder="Enter pincode">
-    </div>
-  </div>
-  
-  <div class="form-group">
-    <label for="new-name">Full Name</label>
-    <input type="text" id="new-name" placeholder="Enter full name">
-  </div>
-  
-  <div class="form-row">
-    <div class="form-group">
-      <label for="new-country">Country</label>
-      <select id="new-country" required>
-        <option value="">Select Country</option>
-        <option value="India" selected>India</option>
-        <option value="United States">United States</option>
-        <option value="United Kingdom">United Kingdom</option>
-        <option value="Canada">Canada</option>
-        <option value="Australia">Australia</option>
-        <!-- Add more countries as needed -->
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="new-state">State</label>
-      <select id="new-state" required>
-        <option value="">Select State</option>
-        <option value="Kerala">Kerala</option>
-        <option value="Tamil Nadu">Tamil Nadu</option>
-        <option value="Karnataka">Karnataka</option>
-        <option value="Maharashtra">Maharashtra</option>
-        <option value="Delhi">Delhi</option>
-        <!-- Add more states as needed -->
-      </select>
-    </div>
-  </div>
-  
-  <div class="form-row">
-    <div class="form-group">
-      <label for="new-city">City</label>
-      <input type="text" id="new-city" placeholder="Enter city" required>
-    </div>
-    <div class="form-group">
-      <label for="new-phone">Phone</label>
-      <input type="text" id="new-phone" placeholder="Enter phone number">
-    </div>
-  </div>
-  
-  <div class="form-group">
-    <label for="new-address">Address</label>
-    <textarea id="new-address" placeholder="Enter full address (street, area, landmark)"></textarea>
-  </div>
-  
-  <div class="form-actions">
-    <button class="btn" id="save-new-address">
-      <i class="fas fa-save"></i> Save Address
-    </button>
-    <button class="btn btn-outline" id="cancel-new-address">
-      <i class="fas fa-times"></i> Cancel
-    </button>
-  
+        
 <div class="address-form" id="add-address-form">
   <div class="form-row">
     <div class="form-group">
