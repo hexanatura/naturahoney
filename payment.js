@@ -2145,18 +2145,6 @@ function applyPromoCode() {
     }
 }
 
-// Get active promo codes
-function getActivePromoCodes() {
-    // Define some sample promo codes
-    const promoCodes = {
-        'WELCOME10': { value: 50, active: true, type: 'fixed' },
-        'HONEY20': { value: 100, active: true, type: 'fixed' },
-        'FIRSTORDER': { value: 75, active: true, type: 'fixed' }
-    };
-    
-    return promoCodes;
-}
-
 // Show promo success message
 function showPromoSuccess(message) {
     const promoSuccess = document.getElementById('promoSuccess');
