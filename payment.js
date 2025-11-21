@@ -126,6 +126,7 @@ const termsCheckbox = document.getElementById('termsCheckbox');
 let currentDiscount = 0;
 let originalTotal = 0;
 let appliedPromoCode = null;
+let addressUnsubscribe = null; // For real-time address updates
 
 // Initialize Firebase Auth State Listener
 auth.onAuthStateChanged((user) => {
@@ -136,10 +137,15 @@ auth.onAuthStateChanged((user) => {
         loadUserProfileData(user.uid);
         // Update checkout UI
         updateCheckoutUI();
-        // Load user's default address for auto-fill
+        // Load user's default address for auto-fill with real-time updates
         loadUserDefaultAddress();
     } else {
         currentUser = null;
+        // Unsubscribe from address updates if user logs out
+        if (addressUnsubscribe) {
+            addressUnsubscribe();
+            addressUnsubscribe = null;
+        }
         updateUIForGuest();
         // Reset profile-related elements if they exist
         const profilePage = document.getElementById('profilePage');
@@ -153,18 +159,24 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// Load user's default address from Firestore and auto-fill checkout form
+// Load user's default address from Firestore and auto-fill checkout form with real-time updates
 function loadUserDefaultAddress() {
     if (!currentUser || !db) return;
     
     console.log('Loading default address for user:', currentUser.uid);
     
-    db.collection('users').doc(currentUser.uid).collection('addresses').where('isDefault', '==', true)
-        .get()
-        .then((querySnapshot) => {
+    // Unsubscribe from previous listener if exists
+    if (addressUnsubscribe) {
+        addressUnsubscribe();
+    }
+    
+    // Set up real-time listener for default address changes
+    addressUnsubscribe = db.collection('users').doc(currentUser.uid).collection('addresses')
+        .where('isDefault', '==', true)
+        .onSnapshot((querySnapshot) => {
             if (!querySnapshot.empty) {
                 const defaultAddress = querySnapshot.docs[0].data();
-                console.log('Default address found:', defaultAddress);
+                console.log('Default address found (real-time):', defaultAddress);
                 fillAddressForm(defaultAddress);
             } else {
                 console.log('No default address found for user');
@@ -181,13 +193,12 @@ function loadUserDefaultAddress() {
                         }
                     });
             }
-        })
-        .catch((error) => {
-            console.error("Error loading user addresses:", error);
+        }, (error) => {
+            console.error("Error in address listener:", error);
         });
 }
 
-// Fill address form with user's saved address
+// Fill address form with user's saved address - FIXED PHONE NUMBER
 function fillAddressForm(address) {
     console.log('Filling address form with:', address);
     
@@ -210,12 +221,19 @@ function fillAddressForm(address) {
     const zipCodeField = document.getElementById('zipCode');
     if (zipCodeField && address.pincode) zipCodeField.value = address.pincode;
     
+    // FIXED: Phone number autofill
     const phoneField = document.getElementById('phone');
     if (phoneField && address.phone) {
-        // Remove country code if present and format
-        let phoneNumber = address.phone.replace('+91 ', '').replace(/\D/g, '');
+        // Remove country code and any non-digit characters
+        let phoneNumber = address.phone.replace('+91', '').replace(/\D/g, '');
+        // Take only the last 10 digits to ensure proper formatting
+        if (phoneNumber.length > 10) {
+            phoneNumber = phoneNumber.substring(phoneNumber.length - 10);
+        }
         if (phoneNumber.length === 10) {
             phoneField.value = phoneNumber;
+        } else {
+            console.log('Invalid phone number format:', address.phone);
         }
     }
     
@@ -224,12 +242,22 @@ function fillAddressForm(address) {
         const addressParts = address.address.split(',');
         if (addressParts.length > 1) {
             const cityField = document.getElementById('city');
-            if (cityField) cityField.value = addressParts[addressParts.length - 2].trim();
+            if (cityField) {
+                // Get the second last part (usually city)
+                const cityPart = addressParts[addressParts.length - 2].trim();
+                cityField.value = cityPart;
+            }
         }
     }
     
-    // Show success message
-    showNotification('Address auto-filled from your saved profile!', 'success');
+    // Show success message only if we're on checkout page and actually filled fields
+    const checkoutSection = document.querySelector('.checkout-section');
+    if (checkoutSection) {
+        const filledFields = document.querySelectorAll('#firstName, #lastName, #address, #phone').length;
+        if (filledFields > 0) {
+            showNotification('Address auto-filled from your saved profile!', 'success');
+        }
+    }
 }
 
 // Update checkout UI based on login status
@@ -696,7 +724,7 @@ function deleteAddressFromFirestore(addressId) {
         });
 }
 
-// Set default address
+// Set default address - UPDATED to trigger real-time update
 function setDefaultAddress(addressId) {
     // First, remove default from all addresses
     db.collection('users').doc(currentUser.uid).collection('addresses').get()
@@ -722,6 +750,8 @@ function setDefaultAddress(addressId) {
                 loadUserAddresses(currentUser.uid);
             }
             showNotification('Default address set successfully!', 'success');
+            
+            // The real-time listener in loadUserDefaultAddress will automatically update checkout form
         })
         .catch((error) => {
             console.error("Error setting default address:", error);
@@ -1072,7 +1102,7 @@ closeCart.addEventListener('click', () => {
     document.body.style.overflow = 'auto';
 });
 
-// Update cart UI
+// Update cart UI - ENHANCED to update checkout order summary instantly
 function updateCartUI() {
     const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
     
@@ -1160,6 +1190,11 @@ function updateCartUI() {
             });
         });
     }
+    
+    // INSTANTLY update checkout order summary if on checkout page
+    if (document.querySelector('.checkout-section')) {
+        updateOrderSummary();
+    }
 }
 
 // Enhanced Add to cart function with effects and auto-open sidebar
@@ -1196,7 +1231,7 @@ function addCartVisualFeedback() {
     }, 600);
 }
 
-// Update cart quantity
+// Update cart quantity - ENHANCED to instantly update checkout
 function updateCartQuantity(productId, change) {
     const item = cartProducts.find(item => item.id === productId);
     
@@ -1209,12 +1244,12 @@ function updateCartQuantity(productId, change) {
             // Update ONLY localStorage (no Firestore update)
             localStorage.setItem('guestCart', JSON.stringify(cartProducts));
             
-            updateCartUI();
+            updateCartUI(); // This now also updates checkout order summary
         }
     }
 }
 
-// Set cart quantity
+// Set cart quantity - ENHANCED to instantly update checkout
 function setCartQuantity(productId, quantity) {
     const item = cartProducts.find(item => item.id === productId);
     
@@ -1227,19 +1262,19 @@ function setCartQuantity(productId, quantity) {
             // Update ONLY localStorage (no Firestore update)
             localStorage.setItem('guestCart', JSON.stringify(cartProducts));
             
-            updateCartUI();
+            updateCartUI(); // This now also updates checkout order summary
         }
     }
 }
 
-// Remove from cart
+// Remove from cart - ENHANCED to instantly update checkout
 function removeFromCart(productId) {
     cartProducts = cartProducts.filter(item => item.id !== productId);
     
     // Update ONLY localStorage (no Firestore update)
     localStorage.setItem('guestCart', JSON.stringify(cartProducts));
     
-    updateCartUI();
+    updateCartUI(); // This now also updates checkout order summary
 }
 
 // WhatsApp functionality
@@ -1904,8 +1939,7 @@ function handleCheckoutQuantityChange(e) {
         updateCartQuantity(productId, 1);
     }
     
-    updateOrderSummary();
-    updateCartUI();
+    // Order summary is now updated automatically via updateCartUI()
 }
 
 // Handle quantity input in checkout
@@ -1915,8 +1949,7 @@ function handleCheckoutQuantityInput(e) {
     const newQuantity = parseInt(input.value) || 1;
     
     setCartQuantity(productId, newQuantity);
-    updateOrderSummary();
-    updateCartUI();
+    // Order summary is now updated automatically via updateCartUI()
 }
 
 // Validate form field
