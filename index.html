@@ -32,6 +32,32 @@
       width: 100%;
       overflow-x: hidden;
     }
+
+  /* Add these styles to your existing CSS */
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Unbounded', sans-serif;
+  transition: border 0.3s;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.form-group select:focus {
+  border-color: #5f2b27;
+  outline: none;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767px) {
+  .form-group select {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
     
 
 @media (max-width: 767px) {
