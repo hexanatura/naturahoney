@@ -216,7 +216,7 @@ function loadUserDefaultAddress() {
         });
 }
 
-// Fill address form with user's saved address - COMPLETELY FIXED
+// Fill address form with user's saved address - UPDATED for new fields
 function fillAddressForm(address) {
     console.log('Filling address form with:', address);
     
@@ -232,6 +232,11 @@ function fillAddressForm(address) {
     
     safeSetFormField('address', address.address);
     safeSetFormField('zipCode', address.pincode);
+    
+    // Use city directly if available
+    if (address.city) {
+        safeSetFormField('city', address.city);
+    }
     
     // FIXED: Phone number autofill - FINAL VERSION
     const phoneField = document.getElementById('phone');
@@ -253,15 +258,6 @@ function fillAddressForm(address) {
         } else {
             console.log('Invalid phone number format:', address.phone);
             phoneField.value = '';
-        }
-    }
-    
-    // Try to extract city from address if available
-    if (address.address) {
-        const addressParts = address.address.split(',');
-        if (addressParts.length > 1) {
-            const cityPart = addressParts[addressParts.length - 2].trim();
-            safeSetFormField('city', cityPart);
         }
     }
     
@@ -480,7 +476,7 @@ function loadUserAddresses(userId) {
     }, 100);
 }
 
-// Display address in profile with better UI
+// Display address in profile with NEW fields
 function displayAddress(addressId, address) {
     const addressesContainer = document.getElementById('addresses-container');
     if (!addressesContainer) {
@@ -499,15 +495,18 @@ function displayAddress(addressId, address) {
     addressCard.innerHTML = `
         <div class="address-header">
             <h3>
-                ${address.label} Address
+                ${address.label || 'Address'}
                 ${address.isDefault ? '<span class="default-badge">Default</span>' : ''}
             </h3>
-            <span class="address-pincode">Pincode: ${address.pincode}</span>
+            <span class="address-pincode">Pincode: ${address.pincode || 'N/A'}</span>
         </div>
         <div class="address-details">
-            <p><strong>${address.name}</strong></p>
-            <p>${address.address.replace(/\n/g, '<br>')}</p>
-            <p>Phone: ${address.phone}</p>
+            <p><strong>${address.name || 'No name'}</strong></p>
+            <p><strong>Address:</strong> ${address.address || 'No address provided'}</p>
+            <p><strong>City:</strong> ${address.city || 'N/A'}</p>
+            <p><strong>State:</strong> ${address.state || 'N/A'}</p>
+            <p><strong>Country:</strong> ${address.country || 'India'}</p>
+            <p><strong>Phone:</strong> ${address.phone || 'N/A'}</p>
         </div>
         <div class="address-actions">
             ${!address.isDefault ? `
@@ -527,24 +526,54 @@ function displayAddress(addressId, address) {
             <div class="form-row">
                 <div class="form-group">
                     <label for="edit-label-${addressId}">Address Label</label>
-                    <input type="text" id="edit-label-${addressId}" value="${address.label}" placeholder="Home, Work, etc.">
+                    <input type="text" id="edit-label-${addressId}" value="${address.label || ''}" placeholder="Home, Work, etc.">
                 </div>
                 <div class="form-group">
                     <label for="edit-pincode-${addressId}">Pincode</label>
-                    <input type="text" id="edit-pincode-${addressId}" value="${address.pincode}" maxlength="6">
+                    <input type="text" id="edit-pincode-${addressId}" value="${address.pincode || ''}" maxlength="6">
                 </div>
             </div>
             <div class="form-group">
                 <label for="edit-name-${addressId}">Full Name</label>
-                <input type="text" id="edit-name-${addressId}" value="${address.name}">
+                <input type="text" id="edit-name-${addressId}" value="${address.name || ''}">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-country-${addressId}">Country</label>
+                    <select id="edit-country-${addressId}" required>
+                        <option value="">Select Country</option>
+                        <option value="India" ${address.country === 'India' ? 'selected' : ''}>India</option>
+                        <option value="United States" ${address.country === 'United States' ? 'selected' : ''}>United States</option>
+                        <option value="United Kingdom" ${address.country === 'United Kingdom' ? 'selected' : ''}>United Kingdom</option>
+                        <option value="Canada" ${address.country === 'Canada' ? 'selected' : ''}>Canada</option>
+                        <option value="Australia" ${address.country === 'Australia' ? 'selected' : ''}>Australia</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-state-${addressId}">State</label>
+                    <select id="edit-state-${addressId}" required>
+                        <option value="">Select State</option>
+                        <option value="Kerala" ${address.state === 'Kerala' ? 'selected' : ''}>Kerala</option>
+                        <option value="Tamil Nadu" ${address.state === 'Tamil Nadu' ? 'selected' : ''}>Tamil Nadu</option>
+                        <option value="Karnataka" ${address.state === 'Karnataka' ? 'selected' : ''}>Karnataka</option>
+                        <option value="Maharashtra" ${address.state === 'Maharashtra' ? 'selected' : ''}>Maharashtra</option>
+                        <option value="Delhi" ${address.state === 'Delhi' ? 'selected' : ''}>Delhi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-city-${addressId}">City</label>
+                    <input type="text" id="edit-city-${addressId}" value="${address.city || ''}" placeholder="Enter city" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-phone-${addressId}">Phone</label>
+                    <input type="text" id="edit-phone-${addressId}" value="${address.phone || ''}" maxlength="10">
+                </div>
             </div>
             <div class="form-group">
                 <label for="edit-address-${addressId}">Address</label>
-                <textarea id="edit-address-${addressId}" rows="3">${address.address}</textarea>
-            </div>
-            <div class="form-group">
-                <label for="edit-phone-${addressId}">Phone</label>
-                <input type="text" id="edit-phone-${addressId}" value="${address.phone}" maxlength="10">
+                <textarea id="edit-address-${addressId}" rows="3">${address.address || ''}</textarea>
             </div>
             <div class="form-actions">
                 <button class="btn save-edit-address-btn" data-id="${addressId}">
@@ -609,15 +638,18 @@ function attachAddressEventListeners(addressId) {
     }, 100);
 }
 
-// Save new address to user's profile in Firestore
+// Save new address to user's profile in Firestore - UPDATED for new fields
 function saveNewAddressToProfile() {
     const label = document.getElementById('new-label').value.trim();
     const name = document.getElementById('new-name').value.trim();
     const address = document.getElementById('new-address').value.trim();
     const phone = document.getElementById('new-phone').value.trim();
     const pincode = document.getElementById('new-pincode').value.trim();
+    const city = document.getElementById('new-city').value.trim();
+    const state = document.getElementById('new-state').value;
+    const country = document.getElementById('new-country').value;
     
-    if (!label || !name || !address || !phone || !pincode) {
+    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
         alert('Please fill in all fields');
         return;
     }
@@ -649,6 +681,9 @@ function saveNewAddressToProfile() {
         address: address,
         phone: phone,
         pincode: pincode,
+        city: city,
+        state: state,
+        country: country,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         isDefault: false
     };
@@ -673,6 +708,9 @@ function saveNewAddressToProfile() {
             document.getElementById('new-address').value = '';
             document.getElementById('new-phone').value = '';
             document.getElementById('new-pincode').value = '';
+            document.getElementById('new-city').value = '';
+            document.getElementById('new-state').value = '';
+            document.getElementById('new-country').value = 'India';
             
             // Show success message
             showNotification('Address saved successfully!', 'success');
@@ -683,15 +721,18 @@ function saveNewAddressToProfile() {
         });
 }
 
-// Save edited address to Firestore
+// Save edited address to Firestore - UPDATED for new fields
 function saveEditedAddressToFirestore(addressId) {
     const label = document.getElementById(`edit-label-${addressId}`).value.trim();
     const name = document.getElementById(`edit-name-${addressId}`).value.trim();
     const address = document.getElementById(`edit-address-${addressId}`).value.trim();
     const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
     const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
+    const city = document.getElementById(`edit-city-${addressId}`).value.trim();
+    const state = document.getElementById(`edit-state-${addressId}`).value;
+    const country = document.getElementById(`edit-country-${addressId}`).value;
     
-    if (!label || !name || !address || !phone || !pincode) {
+    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
         alert('Please fill in all fields');
         return;
     }
@@ -702,6 +743,9 @@ function saveEditedAddressToFirestore(addressId) {
         address: address,
         phone: phone,
         pincode: pincode,
+        city: city,
+        state: state,
+        country: country,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     
