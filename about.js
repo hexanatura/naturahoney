@@ -48,15 +48,20 @@ function initAboutPageAnimations() {
     enhanceBannerAnimation();
 }
 
-// Enhance the banner animation with parallax effect
+// Modify the enhanceBannerAnimation function
 function enhanceBannerAnimation() {
     const banner = document.querySelector('.rectangle-banner');
     if (!banner) return;
 
+    // Remove any transform that might be applied
+    banner.style.transform = 'none';
+    
+    // Optional: Add a subtle effect that doesn't affect scrolling
     window.addEventListener('scroll', () => {
         const scrolled = window.pageYOffset;
-        const rate = scrolled * -0.5;
-        banner.style.transform = `translateY(${rate}px)`;
+        // Very subtle opacity change instead of movement
+        const opacity = Math.max(0.9, 1 - scrolled * 0.001);
+        banner.style.opacity = opacity;
     });
 }
 
@@ -289,3 +294,4 @@ if (typeof module !== 'undefined' && module.exports) {
         enhanceBannerAnimation
     };
 }
+
