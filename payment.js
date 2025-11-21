@@ -128,12 +128,31 @@ let originalTotal = 0;
 let appliedPromoCode = null;
 let addressUnsubscribe = null; // For real-time address updates
 
-// Helper function to safely set form field values
+// Enhanced helper function to safely set form field values (including select elements)
 function safeSetFormField(fieldId, value) {
     const field = document.getElementById(fieldId);
     if (field && value) {
-        field.value = value;
-        return true;
+        if (field.tagName === 'SELECT') {
+            // For select elements, find and set the option
+            const options = field.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === value) {
+                    field.selectedIndex = i;
+                    return true;
+                }
+            }
+            // If exact match not found, try case-insensitive match
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value.toLowerCase() === value.toLowerCase()) {
+                    field.selectedIndex = i;
+                    return true;
+                }
+            }
+        } else {
+            // For input and textarea elements
+            field.value = value;
+            return true;
+        }
     }
     return false;
 }
