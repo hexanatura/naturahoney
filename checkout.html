@@ -34,7 +34,6 @@ body {
   width: 100%;
   overflow-x: hidden;
 }
-
 /* Cart and Favorites Sidebars - Mobile & Tablet */
 @media (max-width: 1023px) {
   .cart-sidebar, .likes-sidebar {
@@ -89,21 +88,21 @@ body {
     max-height: 50vh !important;
   }
   
-  /* Cart Items - FIXED ALIGNMENT */
+  /* Cart Items - LARGER PRODUCT DETAILS */
   .cart-item, .like-item {
     display: flex !important;
     align-items: flex-start !important;
-    padding: 12px !important;
+    padding: 15px !important; /* Increased padding */
     margin-bottom: 15px !important;
-    gap: 12px !important;
+    gap: 15px !important; /* Increased gap */
     width: 100% !important;
   }
   
   .cart-item img, .like-item img {
-    width: 70px !important;
-    height: 70px !important;
+    width: 80px !important; /* Larger image */
+    height: 80px !important; /* Larger image */
     object-fit: cover !important;
-    border-radius: 8px !important;
+    border-radius: 10px !important;
     flex-shrink: 0 !important;
   }
   
@@ -113,14 +112,14 @@ body {
     flex-direction: column !important;
     justify-content: space-between !important;
     min-width: 0 !important;
-    gap: 8px !important;
+    gap: 10px !important; /* Increased gap */
   }
   
   .cart-item-title, .like-item-title {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
+    font-size: 1.1rem !important; /* Larger font */
+    font-weight: 700 !important; /* Bolder */
     color: #333 !important;
-    line-height: 1.3 !important;
+    line-height: 1.4 !important; /* Better line height */
     margin-bottom: 0 !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
@@ -131,18 +130,18 @@ body {
   }
   
   .cart-item-price, .like-item-price {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
+    font-size: 1.1rem !important; /* Larger font */
+    font-weight: 700 !important; /* Bolder */
     color: #5f2b27 !important;
     margin-bottom: 0 !important;
   }
   
-  /* Quantity Controls - FIXED ALIGNMENT */
+  /* Quantity Controls */
   .cart-item-controls, .like-item-actions {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 10px !important;
+    gap: 12px !important; /* Increased gap */
     width: 100% !important;
   }
   
@@ -151,37 +150,37 @@ body {
     align-items: center !important;
     background: #f5f5f5 !important;
     border-radius: 20px !important;
-    padding: 4px !important;
+    padding: 6px !important; /* Increased padding */
     flex-shrink: 0 !important;
   }
   
   .quantity-btn {
-    width: 26px !important;
-    height: 26px !important;
-    font-size: 12px !important;
+    width: 28px !important; /* Larger buttons */
+    height: 28px !important; /* Larger buttons */
+    font-size: 13px !important; /* Larger font */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
   
   .quantity-input {
-    width: 35px !important;
-    font-size: 0.9rem !important;
+    width: 40px !important; /* Wider input */
+    font-size: 1rem !important; /* Larger font */
     text-align: center !important;
-    margin: 0 5px !important;
+    margin: 0 6px !important; /* Increased margin */
   }
   
   /* Buttons */
   .add-to-cart-btn {
-    padding: 8px 16px !important;
-    font-size: 13px !important;
+    padding: 10px 18px !important; /* Larger padding */
+    font-size: 14px !important; /* Larger font */
     margin-right: 8px !important;
     flex: 1 !important;
   }
   
   .delete-item, .remove-like {
-    font-size: 16px !important;
-    padding: 4px !important;
+    font-size: 18px !important; /* Larger icon */
+    padding: 6px !important; /* Larger padding */
     flex-shrink: 0 !important;
   }
   
@@ -191,17 +190,17 @@ body {
   }
   
   .cart-subtotal, .cart-shipping, .cart-total {
-    font-size: 0.9rem !important;
+    font-size: 1rem !important; /* Larger font */
   }
   
   .cart-total {
-    font-size: 1.2rem !important;
+    font-size: 1.3rem !important; /* Larger font */
     margin: 12px 0 !important;
   }
   
   .checkout-btn {
-    padding: 14px !important;
-    font-size: 1rem !important;
+    padding: 16px !important; /* Larger padding */
+    font-size: 1.1rem !important; /* Larger font */
     margin-top: 8px !important;
   }
   
@@ -232,7 +231,7 @@ body {
   }
 }
 
-/* Mobile Specific Adjustments */
+/* Mobile Specific Adjustments - LARGER SIZES */
 @media (max-width: 767px) {
   .cart-sidebar, .likes-sidebar {
     height: 80vh !important;
@@ -255,55 +254,55 @@ body {
   }
   
   .cart-item, .like-item {
-    padding: 10px !important;
+    padding: 12px !important; /* Larger padding */
     margin-bottom: 12px !important;
-    gap: 10px !important;
+    gap: 12px !important; /* Larger gap */
   }
   
   .cart-item img, .like-item img {
-    width: 60px !important;
-    height: 60px !important;
+    width: 70px !important; /* Larger image */
+    height: 70px !important; /* Larger image */
   }
   
   .cart-item-title, .like-item-title {
-    font-size: 0.9rem !important;
-    line-height: 1.2 !important;
+    font-size: 1rem !important; /* Larger font */
+    line-height: 1.3 !important;
   }
   
   .cart-item-price, .like-item-price {
-    font-size: 0.9rem !important;
+    font-size: 1rem !important; /* Larger font */
   }
   
   .cart-item-details, .like-item-details {
-    gap: 6px !important;
+    gap: 8px !important; /* Larger gap */
   }
   
   .cart-item-controls, .like-item-actions {
-    gap: 8px !important;
+    gap: 10px !important; /* Larger gap */
   }
   
   .quantity-btn {
-    width: 24px !important;
-    height: 24px !important;
+    width: 26px !important; /* Larger buttons */
+    height: 26px !important; /* Larger buttons */
   }
   
   .quantity-input {
-    width: 30px !important;
-    font-size: 0.8rem !important;
+    width: 35px !important; /* Wider input */
+    font-size: 0.9rem !important; /* Larger font */
   }
   
   .add-to-cart-btn {
-    padding: 6px 12px !important;
-    font-size: 12px !important;
+    padding: 8px 16px !important; /* Larger padding */
+    font-size: 13px !important; /* Larger font */
   }
   
   .checkout-btn {
-    padding: 12px !important;
-    font-size: 0.9rem !important;
+    padding: 14px !important; /* Larger padding */
+    font-size: 1rem !important; /* Larger font */
   }
 }
 
-/* Extra Small Devices - FIXED VERTICAL LAYOUT */
+/* Extra Small Devices - LARGER SIZES */
 @media (max-width: 480px) {
   .cart-sidebar, .likes-sidebar {
     height: 75vh !important;
@@ -322,15 +321,15 @@ body {
   }
   
   .cart-item, .like-item {
-    flex-direction: row !important; /* Keep horizontal layout */
+    flex-direction: row !important;
     text-align: left !important;
-    padding: 8px !important;
-    gap: 8px !important;
+    padding: 10px !important; /* Larger padding */
+    gap: 10px !important; /* Larger gap */
   }
   
   .cart-item img, .like-item img {
-    width: 50px !important;
-    height: 50px !important;
+    width: 60px !important; /* Larger image */
+    height: 60px !important; /* Larger image */
     margin-right: 0 !important;
     margin-bottom: 0 !important;
   }
@@ -342,20 +341,34 @@ body {
   
   .cart-item-controls, .like-item-actions {
     justify-content: space-between !important;
-    margin-top: 5px !important;
+    margin-top: 6px !important; /* Increased margin */
   }
   
   .cart-item-title, .like-item-title {
-    font-size: 0.8rem !important;
+    font-size: 0.9rem !important; /* Larger font */
     -webkit-line-clamp: 2 !important;
   }
   
   .cart-item-price, .like-item-price {
-    font-size: 0.8rem !important;
+    font-size: 0.9rem !important; /* Larger font */
+  }
+  
+  .quantity-btn {
+    width: 24px !important; /* Larger buttons */
+    height: 24px !important; /* Larger buttons */
+  }
+  
+  .quantity-input {
+    width: 32px !important; /* Wider input */
+    font-size: 0.85rem !important; /* Larger font */
+  }
+  
+  .delete-item, .remove-like {
+    font-size: 16px !important; /* Larger icon */
   }
 }
 
-/* Landscape Orientation */
+/* Landscape Orientation - LARGER SIZES */
 @media (max-width: 1023px) and (orientation: landscape) {
   .cart-sidebar, .likes-sidebar {
     height: 95vh !important;
@@ -366,46 +379,78 @@ body {
   }
   
   .cart-item, .like-item {
-    padding: 8px !important;
-    gap: 8px !important;
+    padding: 10px !important; /* Larger padding */
+    gap: 10px !important; /* Larger gap */
   }
   
   .cart-item img, .like-item img {
-    width: 50px !important;
-    height: 50px !important;
+    width: 60px !important; /* Larger image */
+    height: 60px !important; /* Larger image */
   }
   
   .cart-item-title, .like-item-title {
-    font-size: 0.8rem !important;
+    font-size: 0.9rem !important; /* Larger font */
     -webkit-line-clamp: 1 !important;
   }
 }
 
-/* FIXED: Ensure proper flex behavior for cart items */
-.cart-item-details {
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-between !important;
-  flex: 1 !important;
-  min-width: 0 !important;
-}
-
-.cart-item-controls {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-  margin-top: auto !important;
-}
-
-/* FIXED: Prevent text overflow */
-.cart-item-title {
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  word-break: break-word !important;
+/* Tablet Specific Adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .cart-sidebar, .likes-sidebar {
+    width: 380px !important;
+    height: 100vh !important;
+    top: 0 !important;
+    bottom: auto !important;
+    border-radius: 0 !important;
+  }
+  
+  .cart-sidebar {
+    right: -380px !important;
+  }
+  
+  .cart-sidebar.active {
+    right: 0 !important;
+  }
+  
+  .likes-sidebar {
+    left: -380px !important;
+  }
+  
+  .likes-sidebar.active {
+    left: 0 !important;
+  }
+  
+  .cart-header, .likes-header {
+    border-radius: 0 !important;
+    padding: 25px 30px !important;
+  }
+  
+  .cart-content, .likes-content {
+    padding: 25px 30px !important;
+  }
+  
+  .cart-items, .likes-items {
+    max-height: 55vh !important;
+  }
+  
+  /* Even larger sizes for tablet */
+  .cart-item, .like-item {
+    padding: 16px !important; /* Larger padding */
+    gap: 16px !important; /* Larger gap */
+  }
+  
+  .cart-item img, .like-item img {
+    width: 85px !important; /* Larger image */
+    height: 85px !important; /* Larger image */
+  }
+  
+  .cart-item-title, .like-item-title {
+    font-size: 1.15rem !important; /* Larger font */
+  }
+  
+  .cart-item-price, .like-item-price {
+    font-size: 1.15rem !important; /* Larger font */
+  }
 }
     
 /* Default Address Checkbox - Fully Responsive */
