@@ -2242,6 +2242,7 @@ function validateCheckoutForm() {
 }
 
 // Process checkout
+// Process checkout - MODIFIED TO SAVE ADDRESS
 function processCheckout() {
     if (!validateCheckoutForm()) {
         return;
@@ -2256,6 +2257,7 @@ function processCheckout() {
     const state = document.getElementById('state').value;
     const zipCode = document.getElementById('zipCode').value;
     const phone = document.getElementById('phone').value;
+    const isDefaultAddress = document.getElementById('defaultAddress').checked;
 
     const orderData = {
         email: email,
@@ -2292,6 +2294,11 @@ function processCheckout() {
     // Add promo code if applied
     if (appliedPromoCode) {
         orderData.promoCode = appliedPromoCode;
+    }
+    
+    // Save address to profile if user is logged in and checkbox is checked
+    if (currentUser && isDefaultAddress) {
+        saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefaultAddress);
     }
     
     if (currentUser) {
