@@ -122,209 +122,6 @@ const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
 
-// ==================== SESSION-BASED ANALYTICS TRACKING ====================
-
-// Session management constants
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
-const SESSION_KEY = 'natura_session';
-const LAST_ACTIVITY_KEY = 'natura_last_activity';
-
-// Initialize or validate session
-function initializeSession() {
-    const now = Date.now();
-    const sessionData = getSessionData();
-    const lastActivity = getLastActivity();
-    
-    let isNewSession = false;
-    
-    // Check if session exists and is still valid
-    if (!sessionData || !lastActivity || (now - lastActivity > SESSION_TIMEOUT)) {
-        // Create new session
-        createNewSession();
-        isNewSession = true;
-        console.log('New session created');
-    } else {
-        // Update last activity for existing session
-        updateLastActivity();
-        console.log('Existing session continued');
-    }
-    
-    return isNewSession;
-}
-
-// Get session data from localStorage
-function getSessionData() {
-    try {
-        return JSON.parse(localStorage.getItem(SESSION_KEY));
-    } catch (error) {
-        console.error('Error reading session data:', error);
-        return null;
-    }
-}
-
-// Get last activity timestamp
-function getLastActivity() {
-    return parseInt(localStorage.getItem(LAST_ACTIVITY_KEY));
-}
-
-// Create new session
-function createNewSession() {
-    const sessionId = generateSessionId();
-    const sessionData = {
-        id: sessionId,
-        created: Date.now(),
-        pageCount: 0
-    };
-    
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-    updateLastActivity();
-}
-
-// Update last activity timestamp
-function updateLastActivity() {
-    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
-}
-
-// Generate unique session ID
-function generateSessionId() {
-    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
-// Track page visit with session management
-function trackPageVisit() {
-    const isNewSession = initializeSession();
-    const sessionData = getSessionData();
-    
-    if (isNewSession) {
-        // This is a new visit (new session)
-        sessionData.pageCount = 1;
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-        
-        console.log(`New visit tracked - Session: ${sessionData.id}`);
-        
-        // Track in Firebase for analytics
-        if (db) {
-            db.collection('analytics').add({
-                type: 'page_visit',
-                sessionId: sessionData.id,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                page: window.location.pathname,
-                userAgent: navigator.userAgent,
-                source: 'website',
-                isNewSession: true
-            }).catch(error => console.error("Error logging page visit:", error));
-        }
-    } else {
-        // This is a page view within existing session
-        sessionData.pageCount += 1;
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-        
-        console.log(`Page view in existing session - Total pages: ${sessionData.pageCount}`);
-        
-        // Track page view in Firebase (optional - for detailed analytics)
-        if (db) {
-            db.collection('analytics').add({
-                type: 'page_view',
-                sessionId: sessionData.id,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                page: window.location.pathname,
-                pageCount: sessionData.pageCount,
-                isNewSession: false
-            }).catch(error => console.error("Error logging page view:", error));
-        }
-    }
-    
-    // Update last activity for any page interaction
-    updateLastActivity();
-}
-
-// Track user activity to keep session alive
-function trackUserActivity() {
-    updateLastActivity();
-}
-
-// Set up activity listeners
-function setupActivityTracking() {
-    // Track various user activities
-    document.addEventListener('click', trackUserActivity);
-    document.addEventListener('scroll', trackUserActivity);
-    document.addEventListener('keypress', trackUserActivity);
-    document.addEventListener('mousemove', trackUserActivity);
-    document.addEventListener('touchstart', trackUserActivity);
-}
-
-// Track account creation with session context
-function trackAccountCreation(userId, email, provider = 'email') {
-    const sessionData = getSessionData();
-    
-    console.log(`Account creation tracked - User: ${email}, Session: ${sessionData?.id}`);
-    
-    // Track in Firebase
-    if (db) {
-        return db.collection('analytics').add({
-            type: 'account_created',
-            userId: userId,
-            email: email,
-            provider: provider,
-            sessionId: sessionData?.id,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    }
-    return Promise.resolve();
-}
-
-// Track cart additions with session context
-function trackCartAddition(productId, quantity, productName) {
-    const sessionData = getSessionData();
-    
-    if (db) {
-        db.collection('analytics').add({
-            type: 'cart_addition',
-            productId: productId,
-            productName: productName,
-            quantity: quantity,
-            userId: currentUser ? currentUser.uid : 'guest',
-            sessionId: sessionData?.id,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(error => console.error("Error logging cart addition:", error));
-    }
-}
-
-// Track product likes with session context
-function trackProductLike(productId, productName) {
-    const sessionData = getSessionData();
-    
-    if (db) {
-        db.collection('analytics').add({
-            type: 'product_like',
-            productId: productId,
-            productName: productName,
-            userId: currentUser ? currentUser.uid : 'guest',
-            sessionId: sessionData?.id,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(error => console.error("Error logging product like:", error));
-    }
-}
-
-// Track order creation with session context
-function trackOrderCreation(orderData) {
-    const sessionData = getSessionData();
-    
-    if (db) {
-        db.collection('analytics').add({
-            type: 'order_created',
-            orderId: orderData.id,
-            total: orderData.total,
-            items: orderData.items,
-            userId: currentUser ? currentUser.uid : 'guest',
-            sessionId: sessionData?.id,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(error => console.error("Error logging order:", error));
-    }
-}
-
-// ==================== EXISTING FUNCTIONALITY (UPDATED) ====================
-
 // Initialize Firebase Auth State Listener
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -332,18 +129,6 @@ auth.onAuthStateChanged((user) => {
         updateUIForUser(user);
         // Load profile data including addresses
         loadUserProfileData(user.uid);
-        
-        // Track user login with session context
-        const sessionData = getSessionData();
-        if (db) {
-            db.collection('analytics').add({
-                type: 'user_login',
-                userId: user.uid,
-                email: user.email,
-                sessionId: sessionData?.id,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(error => console.error("Error logging user login:", error));
-        }
     } else {
         currentUser = null;
         updateUIForGuest();
@@ -412,11 +197,11 @@ function loadUserProfileData(userId) {
                 userOrders = [];
                 
                 if (querySnapshot.empty) {
-                    ordersContainer.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-shopping-bag"></i> No orders yet
-                        </div>
-                    `;
+ordersContainer.innerHTML = `
+    <div class="empty-state">
+        <i class="fas fa-shopping-bag"></i> No orders yet
+    </div>
+`;
                     return;
                 }
                 
@@ -522,11 +307,11 @@ function loadUserAddresses(userId) {
                 addressesContainer.innerHTML = '';
                 
                 if (querySnapshot.empty) {
-                    addressesContainer.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-map-marker-alt"></i> No addresses saved
-                        </div>
-                    `;
+        addressesContainer.innerHTML = `
+    <div class="empty-state">
+        <i class="fas fa-map-marker-alt"></i> No addresses saved
+    </div>
+`;
                     return;
                 }
                 
@@ -565,6 +350,7 @@ function loadUserAddresses(userId) {
 }
 
 // Display address in profile with better UI
+// Display address in profile with NEW fields
 function displayAddress(addressId, address) {
     const addressesContainer = document.getElementById('addresses-container');
     if (!addressesContainer) {
@@ -1191,17 +977,13 @@ function updateLikeUI() {
     }
 }
 
-// Enhanced Add to likes with analytics
+// Add to likes with auto-open sidebar
 function addToLikes(productId) {
     if (!likedProducts.includes(productId)) {
         likedProducts.push(productId);
-        const product = products.find(p => p.id === productId);
         
         // Save ONLY to localStorage (no Firestore saving)
         localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
-        
-        // Track like in analytics
-        trackProductLike(productId, product?.name);
         
         updateLikeUI();
         
@@ -1340,10 +1122,9 @@ function updateCartUI() {
     }
 }
 
-// Enhanced Add to cart function with analytics
+// Enhanced Add to cart function with effects and auto-open sidebar
 function addToCart(productId, quantity = 1) {
     const existingItem = cartProducts.find(item => item.id === productId);
-    const product = products.find(p => p.id === productId);
     
     if (existingItem) {
         existingItem.quantity += quantity;
@@ -1353,9 +1134,6 @@ function addToCart(productId, quantity = 1) {
     
     // Save ONLY to localStorage (no Firestore saving)
     localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-    
-    // Track cart addition in analytics
-    trackCartAddition(productId, quantity, product?.name);
     
     updateCartUI();
     addCartVisualFeedback();
@@ -1503,7 +1281,7 @@ loginBtn.addEventListener('click', () => {
         });
 });
 
-// Enhanced Signup functionality with analytics tracking
+// Signup functionality
 signupBtn.addEventListener('click', () => {
     const name = signupForm.querySelector('input[type="text"]').value;
     const email = signupForm.querySelector('input[type="email"]').value;
@@ -1540,12 +1318,8 @@ signupBtn.addEventListener('click', () => {
                 return db.collection('users').doc(user.uid).set({
                     displayName: name,
                     email: email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-            }).then(() => {
-                // Track account creation in analytics
-                return trackAccountCreation(user.uid, email, 'email');
             });
         })
         .then(() => {
@@ -1582,7 +1356,7 @@ resetBtn.addEventListener('click', () => {
         });
 });
 
-// Enhanced Google login with analytics tracking
+// Google login
 googleLoginBtn.addEventListener('click', () => {
     // Check if we're in a supported environment
     if (window.location.protocol !== 'https:' && window.location.protocol !== 'http:' && !window.location.hostname.includes('localhost')) {
@@ -1596,29 +1370,15 @@ googleLoginBtn.addEventListener('click', () => {
         auth.signInWithPopup(provider)
             .then((result) => {
                 const user = result.user;
-                let isNewUser = result.additionalUserInfo.isNewUser;
                 
                 // Check if user exists in Firestore, if not create document (only for profile data)
                 return db.collection('users').doc(user.uid).get().then((doc) => {
                     if (!doc.exists) {
-                        isNewUser = true;
                         return db.collection('users').doc(user.uid).set({
                             displayName: user.displayName,
                             email: user.email,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                            provider: 'google'
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
-                    } else {
-                        // Update last login for existing user
-                        return db.collection('users').doc(user.uid).update({
-                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                }).then(() => {
-                    // Track account creation if it's a new user
-                    if (isNewUser) {
-                        return trackAccountCreation(user.uid, user.email, 'google');
                     }
                 });
             })
@@ -1724,7 +1484,6 @@ window.addEventListener('scroll', () => {
 // Initialize common functionality
 function initCommon() {
     loadGuestData();
-    setupActivityTracking(); // Setup activity tracking for session management
     
     // Initialize profile close button if it exists
     const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -1823,5 +1582,4 @@ function initCommon() {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
-    trackPageVisit(); // Track page visit with session management
 });
