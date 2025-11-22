@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Submissions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --border: #e2e8f0;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 100%);
+            color: var(--dark);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header-content p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+        }
+
+        /* Filters */
+        .filters-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        @media (min-width: 768px) {
+            .filters-container {
+                flex-direction: row;
+                gap: 20px;
+            }
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select {
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            background: var(--light);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Mobile Cards View */
+        .mobile-cards {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @media (max-width: 767px) {
+            .mobile-cards {
+                display: flex;
+            }
+        }
+
+        .submission-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .user-info-mobile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar-small {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .user-details-mobile {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .user-email {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .card-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-new {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-read {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .status-replied {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .card-subject {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .card-date {
+            color: var(--gray);
+            font-size: 0.8rem;
+            margin-bottom: 12px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        .view-btn {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+        }
+
+        .view-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .reply-btn {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+
+        .reply-btn:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .delete-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Table */
+        .table-container {
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            display: block;
+        }
+
+        @media (max-width: 767px) {
+            .table-container {
+                display: none;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        thead {
+            background: var(--light);
+        }
+
+        th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--dark);
+            font-family: 'Outfit', sans-serif;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        td {
+            padding: 16px 20px;
+            font-size: 0.9rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subject {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .date {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+
+        .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #cbd5e1;
+        }
+
+        .empty-state h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalAppear 0.4s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .contact-details {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 480px) {
+            .contact-details {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .detail-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message-group {
+            grid-column: 1 / -1;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            background: var(--light);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            border: 1px solid var(--border);
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+
+        .message-content {
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.7;
+        }
+
+        /* Reply Section */
+        .reply-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .reply-section h4 {
+            margin-bottom: 15px;
+            color: var(--dark);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .gmail-action {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .gmail-action p {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @media (min-width: 480px) {
+            .modal-footer {
+                flex-direction: row;
+                justify-content: flex-end;
+            }
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .btn-gmail {
+            background: #ea4335;
+            color: white;
+        }
+
+        .btn-gmail:hover {
+            background: #d33426;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(234, 67, 53, 0.3);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1100;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast i {
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
+
+        .toast-message {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <h1>Contact Submissions</h1>
+                <p>Manage and respond to customer inquiries</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Filters -->
+            <div class="filters-container">
+                <div class="filter-group">
+                    <span class="filter-label">Status</span>
+                    <select class="filter-select" id="status-filter">
+                        <option value="all">All Messages</option>
+                        <option value="new">New</option>
+                        <option value="read">Read</option>
+                        <option value="replied">Replied</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <span class="filter-label">Date Range</span>
+                    <select class="filter-select" id="date-filter">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Mobile Cards View -->
+            <div class="mobile-cards" id="mobile-cards">
+                <!-- Empty state for mobile -->
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No Messages Yet</h3>
+                    <p>Contact form submissions will appear here once users start submitting messages through your contact form.</p>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Contact</th>
+                            <th>Subject</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="submissions-table-body">
+                        <!-- Empty state for table -->
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <h3>No Messages Yet</h3>
+                                    <p>Contact form submissions will appear here once users start submitting messages through your contact form.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="submission-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Message Details</h3>
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="contact-details">
+                    <div class="detail-group">
+                        <span class="detail-label">Name</span>
+                        <div class="detail-value" id="detail-name">-</div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">Email</span>
+                        <div class="detail-value" id="detail-email">-</div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">Phone</span>
+                        <div class="detail-value" id="detail-phone">-</div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">Date</span>
+                        <div class="detail-value" id="detail-date">-</div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">Subject</span>
+                        <div class="detail-value" id="detail-subject">-</div>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <span class="detail-label">Status</span>
+                        <div class="detail-value" id="detail-status">-</div>
+                    </div>
+                    
+                    <div class="detail-group message-group">
+                        <span class="detail-label">Message</span>
+                        <div class="detail-value message-content" id="detail-message">-</div>
+                    </div>
+                </div>
+
+                <!-- Reply Section -->
+                <div class="reply-section">
+                    <h4>Send Reply</h4>
+                    <div class="gmail-action">
+                        <p>Click the button below to open Gmail and send a reply to this contact.</p>
+                        <a href="#" class="btn btn-gmail" id="gmail-reply-btn" target="_blank">
+                            <i class="fab fa-google"></i> Reply via Gmail
+                        </a>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--gray);">
+                        <i class="fas fa-info-circle"></i> Status will automatically update to "Replied" when you send the email
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="close-modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button class="btn btn-primary" id="mark-replied-btn">
+                    <i class="fas fa-check"></i> Mark as Replied
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span class="toast-message" id="toast-message">Status updated to Replied!</span>
+    </div>
+
+    <script>
+        // DOM Elements
+        const submissionsTableBody = document.getElementById('submissions-table-body');
+        const mobileCardsContainer = document.getElementById('mobile-cards');
+        const submissionModal = document.getElementById('submission-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const closeModalX = document.querySelector('.close-modal');
+        const statusFilter = document.getElementById('status-filter');
+        const dateFilter = document.getElementById('date-filter');
+        const gmailReplyBtn = document.getElementById('gmail-reply-btn');
+        const markRepliedBtn = document.getElementById('mark-replied-btn');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+
+        // Current state - empty array
+        let currentSubmissions = [];
+        let filteredSubmissions = [];
+        let currentSubmissionId = null;
+
+        // Initialize the page
+        function initDashboard() {
+            renderSubmissionsTable();
+            renderMobileCards();
+            setupEventListeners();
+        }
+
+        // Render submissions table
+        function renderSubmissionsTable() {
+            if (filteredSubmissions.length === 0) {
+                submissionsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h3>No Messages Yet</h3>
+                                <p>Contact form submissions will appear here once users start submitting messages through your contact form.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            submissionsTableBody.innerHTML = filteredSubmissions.map(submission => {
+                const initials = submission.name.split(' ').map(n => n[0]).join('');
+                return `
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar-small">${initials}</div>
+                            <div class="user-details">
+                                <div class="user-name">${submission.name}</div>
+                                <div class="user-email">${submission.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="subject">${submission.subject}</td>
+                    <td class="date">${formatDate(submission.date)}</td>
+                    <td><span class="status status-${submission.status}">${getStatusText(submission.status)}</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn view-btn" data-id="${submission.id}" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn reply-btn" data-id="${submission.id}" title="Reply via Gmail">
+                                <i class="fas fa-reply"></i>
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${submission.id}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        // Render mobile cards
+        function renderMobileCards() {
+            if (filteredSubmissions.length === 0) {
+                mobileCardsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No Messages Yet</h3>
+                        <p>Contact form submissions will appear here once users start submitting messages through your contact form.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            mobileCardsContainer.innerHTML = filteredSubmissions.map(submission => {
+                const initials = submission.name.split(' ').map(n => n[0]).join('');
+                return `
+                <div class="submission-card">
+                    <div class="card-header">
+                        <div class="user-info-mobile">
+                            <div class="user-avatar-small">${initials}</div>
+                            <div class="user-details-mobile">
+                                <div class="user-name">${submission.name}</div>
+                                <div class="user-email">${submission.email}</div>
+                            </div>
+                        </div>
+                        <span class="card-status status-${submission.status}">${getStatusText(submission.status)}</span>
+                    </div>
+                    <div class="card-subject">${submission.subject}</div>
+                    <div class="card-date">${formatDate(submission.date)}</div>
+                    <div class="card-actions">
+                        <button class="action-btn view-btn" data-id="${submission.id}" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn reply-btn" data-id="${submission.id}" title="Reply via Gmail">
+                            <i class="fas fa-reply"></i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${submission.id}" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Get status text for display
+        function getStatusText(status) {
+            const statusMap = {
+                'new': 'New',
+                'read': 'Read',
+                'replied': 'Replied'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // View submission details
+            submissionsTableBody.addEventListener('click', handleActionClick);
+            mobileCardsContainer.addEventListener('click', handleActionClick);
+
+            function handleActionClick(e) {
+                const viewBtn = e.target.closest('.view-btn');
+                if (viewBtn) {
+                    const submissionId = viewBtn.getAttribute('data-id');
+                    openSubmissionModal(submissionId);
+                }
+                
+                const replyBtn = e.target.closest('.reply-btn');
+                if (replyBtn) {
+                    const submissionId = replyBtn.getAttribute('data-id');
+                    openGmailReply(submissionId);
+                }
+                
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) {
+                    const submissionId = deleteBtn.getAttribute('data-id');
+                    if (confirm('Are you sure you want to delete this message?')) {
+                        deleteSubmission(submissionId);
+                    }
+                }
+            }
+
+            // Modal controls
+            closeModalBtn.addEventListener('click', closeModal);
+            closeModalX.addEventListener('click', closeModal);
+            submissionModal.addEventListener('click', function(e) {
+                if (e.target === submissionModal) {
+                    closeModal();
+                }
+            });
+
+            // Filter controls
+            statusFilter.addEventListener('change', applyFilters);
+            dateFilter.addEventListener('change', applyFilters);
+
+            // Mark as replied button
+            markRepliedBtn.addEventListener('click', function() {
+                if (currentSubmissionId) {
+                    updateSubmissionStatus(currentSubmissionId, 'replied');
+                    showToast('Status updated to Replied!');
+                    closeModal();
+                }
+            });
+        }
+
+        // Open submission modal
+        function openSubmissionModal(submissionId) {
+            const submission = currentSubmissions.find(s => s.id === submissionId);
+            if (!submission) return;
+
+            currentSubmissionId = submissionId;
+            
+            // Populate modal with submission data
+            document.getElementById('detail-name').textContent = submission.name;
+            document.getElementById('detail-email').textContent = submission.email;
+            document.getElementById('detail-phone').textContent = submission.phone || 'Not provided';
+            document.getElementById('detail-subject').textContent = submission.subject;
+            document.getElementById('detail-date').textContent = formatDate(submission.date);
+            document.getElementById('detail-status').textContent = getStatusText(submission.status);
+            document.getElementById('detail-message').textContent = submission.message;
+            
+            // Update Gmail link
+            const subject = encodeURIComponent(`Re: ${submission.subject}`);
+            const body = encodeURIComponent(`\n\n--- Original Message ---\nFrom: ${submission.name} <${submission.email}>\nSubject: ${submission.subject}\nDate: ${formatDate(submission.date)}\n\n${submission.message}`);
+            gmailReplyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${submission.email}&su=${subject}&body=${body}`;
+            
+            // Show modal
+            submissionModal.style.display = 'flex';
+            
+            // Auto-update status to 'read' if it's currently 'new'
+            if (submission.status === 'new') {
+                updateSubmissionStatus(submissionId, 'read');
+            }
+        }
+
+        // Open Gmail reply directly
+        function openGmailReply(submissionId) {
+            const submission = currentSubmissions.find(s => s.id === submissionId);
+            if (!submission) return;
+
+            // Update status to replied
+            updateSubmissionStatus(submissionId, 'replied');
+            
+            // Create Gmail URL
+            const subject = encodeURIComponent(`Re: ${submission.subject}`);
+            const body = encodeURIComponent(`\n\n--- Original Message ---\nFrom: ${submission.name} <${submission.email}>\nSubject: ${submission.subject}\nDate: ${formatDate(submission.date)}\n\n${submission.message}`);
+            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${submission.email}&su=${subject}&body=${body}`;
+            
+            // Open Gmail in new tab
+            window.open(gmailUrl, '_blank');
+            
+            // Show success message
+            showToast('Gmail opened for reply! Status updated to Replied.');
+        }
+
+        // Close modal
+        function closeModal() {
+            submissionModal.style.display = 'none';
+            currentSubmissionId = null;
+        }
+
+        // Apply filters
+        function applyFilters() {
+            let filtered = [...currentSubmissions];
+            
+            // Status filter
+            const statusValue = statusFilter.value;
+            if (statusValue !== 'all') {
+                filtered = filtered.filter(s => s.status === statusValue);
+            }
+            
+            // Date filter
+            const dateValue = dateFilter.value;
+            if (dateValue !== 'all') {
+                const now = new Date();
+                let startDate;
+                
+                switch(dateValue) {
+                    case 'today':
+                        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                        break;
+                    case 'week':
+                        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+                        break;
+                    case 'month':
+                        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                        break;
+                }
+                
+                filtered = filtered.filter(s => new Date(s.date) >= startDate);
+            }
+            
+            filteredSubmissions = filtered;
+            renderSubmissionsTable();
+            renderMobileCards();
+        }
+
+        // Update submission status
+        function updateSubmissionStatus(submissionId, newStatus) {
+            const submissionIndex = currentSubmissions.findIndex(s => s.id === submissionId);
+            if (submissionIndex === -1) return;
+            
+            currentSubmissions[submissionIndex].status = newStatus;
+            
+            // Update filtered list if needed
+            const filteredIndex = filteredSubmissions.findIndex(s => s.id === submissionId);
+            if (filteredIndex !== -1) {
+                filteredSubmissions[filteredIndex].status = newStatus;
+            }
+            
+            renderSubmissionsTable();
+            renderMobileCards();
+        }
+
+        // Delete submission
+        function deleteSubmission(submissionId) {
+            currentSubmissions = currentSubmissions.filter(s => s.id !== submissionId);
+            filteredSubmissions = filteredSubmissions.filter(s => s.id !== submissionId);
+            renderSubmissionsTable();
+            renderMobileCards();
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Function to add a new submission (for integration with your contact form)
+        function addNewSubmission(submissionData) {
+            const newSubmission = {
+                id: Date.now().toString(),
+                name: submissionData.name,
+                email: submissionData.email,
+                phone: submissionData.phone || '',
+                subject: submissionData.subject,
+                message: submissionData.message,
+                date: new Date().toISOString(),
+                status: 'new'
+            };
+            
+            currentSubmissions.unshift(newSubmission);
+            filteredSubmissions.unshift(newSubmission);
+            renderSubmissionsTable();
+            renderMobileCards();
+        }
+
+        // Initialize the page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Export function for integration with contact form
+        window.ContactDashboard = {
+            addNewSubmission
+        };
+    </script>
+</body>
+</html>
