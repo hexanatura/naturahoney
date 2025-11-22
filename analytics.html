@@ -513,17 +513,17 @@
             try {
                 console.log("Loading analytics data from Firebase...");
                 
-                // Load all data in parallel
-                await Promise.all([
-                    loadPageVisits(),
-                    loadCartData(),
-                    loadLikesData(),
-                    loadAccountsData(),
-                    loadOrdersData(),
-                    loadRevenueData(),
-                    loadRecentOrders(),
-                    loadPopularProducts()
-                ]);
+                // Load all data
+                await loadAccountsData();
+                await loadOrdersData();
+                await loadRevenueData();
+                await loadRecentOrders();
+                await loadPopularProducts();
+                
+                // Load localStorage data
+                loadPageVisits();
+                loadCartData();
+                loadLikesData();
                 
                 showRefreshIndicator();
                 
@@ -533,10 +533,9 @@
             }
         }
 
-        // Load page visits data
-        async function loadPageVisits() {
+        // Load page visits data from localStorage
+        function loadPageVisits() {
             try {
-                // Get from localStorage (tracked from main site)
                 const pageVisits = localStorage.getItem('naturaPageVisits');
                 const count = pageVisits ? parseInt(pageVisits) : 0;
                 document.getElementById('visitCount').textContent = count.toLocaleString();
@@ -547,27 +546,15 @@
             }
         }
 
-        // Load cart data
-        async function loadCartData() {
+        // Load cart data from localStorage
+        function loadCartData() {
             try {
                 let totalCartItems = 0;
-                
-                // Get guest cart from localStorage
                 const guestCart = localStorage.getItem('guestCart');
                 if (guestCart) {
                     const cartItems = JSON.parse(guestCart);
                     totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
                 }
-                
-                // Get user carts from Firestore
-                const cartsSnapshot = await db.collection('carts').get();
-                cartsSnapshot.forEach(doc => {
-                    const cart = doc.data();
-                    if (cart.items && Array.isArray(cart.items)) {
-                        totalCartItems += cart.items.reduce((total, item) => total + item.quantity, 0);
-                    }
-                });
-                
                 document.getElementById('cartCount').textContent = totalCartItems.toLocaleString();
                 console.log("Cart items:", totalCartItems);
             } catch (error) {
@@ -576,22 +563,15 @@
             }
         }
 
-        // Load likes data
-        async function loadLikesData() {
+        // Load likes data from localStorage
+        function loadLikesData() {
             try {
                 let totalLikes = 0;
-                
-                // Get guest likes from localStorage
                 const guestLikes = localStorage.getItem('guestLikes');
                 if (guestLikes) {
                     const likedProducts = JSON.parse(guestLikes);
                     totalLikes = likedProducts.length;
                 }
-                
-                // Get user likes from Firestore
-                const likesSnapshot = await db.collection('likes').get();
-                totalLikes += likesSnapshot.size;
-                
                 document.getElementById('likeCount').textContent = totalLikes.toLocaleString();
                 console.log("Total likes:", totalLikes);
             } catch (error) {
@@ -600,12 +580,11 @@
             }
         }
 
-        // Load accounts data
+        // Load accounts data from Firestore
         async function loadAccountsData() {
             try {
                 const usersSnapshot = await db.collection('users').get();
                 const userCount = usersSnapshot.size;
-                
                 document.getElementById('accountCount').textContent = userCount.toLocaleString();
                 console.log("User accounts:", userCount);
             } catch (error) {
@@ -614,12 +593,11 @@
             }
         }
 
-        // Load orders data
+        // Load orders data from Firestore
         async function loadOrdersData() {
             try {
                 const ordersSnapshot = await db.collection('orders').get();
                 const orderCount = ordersSnapshot.size;
-                
                 document.getElementById('orderCount').textContent = orderCount.toLocaleString();
                 console.log("Total orders:", orderCount);
             } catch (error) {
@@ -628,7 +606,7 @@
             }
         }
 
-        // Load revenue data
+        // Load revenue data from Firestore orders
         async function loadRevenueData() {
             try {
                 let totalRevenue = 0;
@@ -649,13 +627,10 @@
             }
         }
 
-        // Load recent orders
+        // Load recent orders from Firestore
         async function loadRecentOrders() {
             try {
-                const ordersSnapshot = await db.collection('orders')
-                    .orderBy('createdAt', 'desc')
-                    .limit(10)
-                    .get();
+                const ordersSnapshot = await db.collection('orders').get();
                 
                 const ordersContainer = document.getElementById('recentOrders');
                 ordersContainer.innerHTML = '';
@@ -673,8 +648,25 @@
                 const ordersList = document.createElement('div');
                 ordersList.className = 'data-list';
                 
+                // Convert to array and sort by date
+                const orders = [];
                 ordersSnapshot.forEach(doc => {
                     const order = doc.data();
+                    order.id = doc.id;
+                    orders.push(order);
+                });
+                
+                // Sort by creation date (newest first)
+                orders.sort((a, b) => {
+                    const dateA = a.createdAt ? (a.createdAt.seconds || a.createdAt) : 0;
+                    const dateB = b.createdAt ? (b.createdAt.seconds || b.createdAt) : 0;
+                    return dateB - dateA;
+                });
+                
+                // Take top 10
+                const recentOrders = orders.slice(0, 10);
+                
+                recentOrders.forEach(order => {
                     const orderItem = document.createElement('div');
                     orderItem.className = 'data-item';
                     
@@ -682,13 +674,20 @@
                         `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}` : 
                         'Guest Customer';
                     
-                    const orderDate = order.createdAt ? 
-                        new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 
-                        'Unknown Date';
+                    let orderDate = 'Unknown Date';
+                    if (order.createdAt) {
+                        if (order.createdAt.seconds) {
+                            orderDate = new Date(order.createdAt.seconds * 1000).toLocaleDateString();
+                        } else if (order.createdAt.toDate) {
+                            orderDate = order.createdAt.toDate().toLocaleDateString();
+                        } else {
+                            orderDate = new Date(order.createdAt).toLocaleDateString();
+                        }
+                    }
                     
                     orderItem.innerHTML = `
                         <div class="data-item-info">
-                            <div class="data-item-name">Order #${doc.id.substring(0, 8)}</div>
+                            <div class="data-item-name">Order #${order.id.substring(0, 8)}</div>
                             <div class="data-item-details">${customerName} • ${orderDate}</div>
                         </div>
                         <div class="data-item-value">₹${order.total || 0}</div>
@@ -704,16 +703,16 @@
                 document.getElementById('recentOrders').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-circle"></i>
-                        <p>Error loading orders</p>
+                        <p>No orders data available</p>
                     </div>
                 `;
             }
         }
 
-        // Load popular products
+        // Load popular products based on actual data
         async function loadPopularProducts() {
             try {
-                // Get your products array
+                // Your product data
                 const products = [
                     { id: 1, name: "Natura Agmark Honey", weight: "1Kg", price: 249, category: "crystal" },
                     { id: 2, name: "Natura Agmark Honey", weight: "500g", price: 449, category: "crystal" },
@@ -723,36 +722,40 @@
                     { id: 6, name: "Natura Agmark Honey - Premium Pet", weight: "500g", price: 329, category: "premium" }
                 ];
                 
-                // Get likes data
+                // Get sales data from orders
+                const productSales = {};
+                const ordersSnapshot = await db.collection('orders').get();
+                
+                ordersSnapshot.forEach(doc => {
+                    const order = doc.data();
+                    if (order.items && Array.isArray(order.items)) {
+                        order.items.forEach(item => {
+                            if (item.productId) {
+                                productSales[item.productId] = (productSales[item.productId] || 0) + (item.quantity || 1);
+                            }
+                        });
+                    }
+                });
+                
+                // Get likes from localStorage
                 const productLikes = {};
                 const guestLikes = JSON.parse(localStorage.getItem('guestLikes') || '[]');
                 guestLikes.forEach(productId => {
                     productLikes[productId] = (productLikes[productId] || 0) + 1;
                 });
                 
-                // Get sales data from orders
-                const productSales = {};
-                const ordersSnapshot = await db.collection('orders').get();
-                ordersSnapshot.forEach(doc => {
-                    const order = doc.data();
-                    if (order.items && Array.isArray(order.items)) {
-                        order.items.forEach(item => {
-                            productSales[item.productId] = (productSales[item.productId] || 0) + item.quantity;
-                        });
-                    }
-                });
-                
-                // Create product list with actual data
+                // Create product list with sales data
                 const productList = products.map(product => {
                     return {
-                        id: product.id,
                         name: `${product.name} - ${product.weight}`,
                         category: product.category,
                         price: product.price,
                         likes: productLikes[product.id] || 0,
                         sales: productSales[product.id] || 0
                     };
-                }).sort((a, b) => b.sales - a.sales).slice(0, 10);
+                }).filter(product => product.sales > 0)
+                  .sort((a, b) => b.sales - a.sales)
+                  .slice(0, 10);
                 
                 const productsContainer = document.getElementById('popularProducts');
                 productsContainer.innerHTML = '';
@@ -761,7 +764,8 @@
                     productsContainer.innerHTML = `
                         <div class="empty-state">
                             <i class="fas fa-box"></i>
-                            <p>No product data available</p>
+                            <p>No sales data available yet</p>
+                            <small>Products will appear here as they get sold</small>
                         </div>
                     `;
                     return;
@@ -792,7 +796,7 @@
                 document.getElementById('popularProducts').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-circle"></i>
-                        <p>Error loading products</p>
+                        <p>No product sales data available</p>
                     </div>
                 `;
             }
@@ -814,8 +818,8 @@
             statsGrid.innerHTML = `
                 <div class="empty-state" style="grid-column: 1 / -1;">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Unable to Load Data</h3>
-                    <p>Please check your Firebase configuration and try again.</p>
+                    <h3>Data Loading Issues</h3>
+                    <p>Some data may not be available. Check console for details.</p>
                     <button onclick="loadAnalyticsData()" style="margin-top: 16px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer;">Retry</button>
                 </div>
             `;
