@@ -838,121 +838,6 @@ function saveNewAddressToProfile() {
         });
 }
 
-// Display address in profile with NEW fields
-function displayAddress(addressId, address) {
-    const addressesContainer = document.getElementById('addresses-container');
-    if (!addressesContainer) {
-        console.error('Addresses container not found for displaying address');
-        return;
-    }
-    
-    // Remove loading or empty states if present
-    const loadingState = addressesContainer.querySelector('.loading, .empty-state, .error-state');
-    if (loadingState) {
-        loadingState.remove();
-    }
-    
-    const addressCard = document.createElement('div');
-    addressCard.className = 'address-card';
-    addressCard.innerHTML = `
-        <div class="address-header">
-            <h3>
-                ${address.label || 'Address'}
-                ${address.isDefault ? '<span class="default-badge">Default</span>' : ''}
-            </h3>
-            <span class="address-pincode">Pincode: ${address.pincode || 'N/A'}</span>
-        </div>
-        <div class="address-details">
-            <p><strong>${address.name || 'No name'}</strong></p>
-            <p><strong>Address:</strong> ${address.address || 'No address provided'}</p>
-            <p><strong>City:</strong> ${address.city || 'N/A'}</p>
-            <p><strong>State:</strong> ${address.state || 'N/A'}</p>
-            <p><strong>Country:</strong> ${address.country || 'India'}</p>
-            <p><strong>Phone:</strong> ${address.phone || 'N/A'}</p>
-        </div>
-        <div class="address-actions">
-            ${!address.isDefault ? `
-                <button class="btn btn-sm set-default-address-btn" data-id="${addressId}">
-                    <i class="fas fa-star"></i> Set Default
-                </button>
-            ` : ''}
-            <button class="btn btn-sm edit-address-btn" data-id="${addressId}">
-                <i class="fas fa-edit"></i> Edit
-            </button>
-            <button class="btn btn-sm btn-danger delete-address-btn" data-id="${addressId}">
-                <i class="fas fa-trash"></i> Delete
-            </button>
-        </div>
-        <div class="address-form edit-address-form" id="edit-address-form-${addressId}" style="display: none;">
-            <h4>Edit Address</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="edit-label-${addressId}">Address Label</label>
-                    <input type="text" id="edit-label-${addressId}" value="${address.label || ''}" placeholder="Home, Work, etc.">
-                </div>
-                <div class="form-group">
-                    <label for="edit-pincode-${addressId}">Pincode</label>
-                    <input type="text" id="edit-pincode-${addressId}" value="${address.pincode || ''}" maxlength="6">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="edit-name-${addressId}">Full Name</label>
-                <input type="text" id="edit-name-${addressId}" value="${address.name || ''}">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="edit-country-${addressId}">Country</label>
-                    <select id="edit-country-${addressId}" required>
-                        <option value="">Select Country</option>
-                        <option value="India" ${address.country === 'India' ? 'selected' : ''}>India</option>
-                        <option value="United States" ${address.country === 'United States' ? 'selected' : ''}>United States</option>
-                        <option value="United Kingdom" ${address.country === 'United Kingdom' ? 'selected' : ''}>United Kingdom</option>
-                        <option value="Canada" ${address.country === 'Canada' ? 'selected' : ''}>Canada</option>
-                        <option value="Australia" ${address.country === 'Australia' ? 'selected' : ''}>Australia</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit-state-${addressId}">State</label>
-                    <select id="edit-state-${addressId}" required>
-                        <option value="">Select State</option>
-                        <option value="Kerala" ${address.state === 'Kerala' ? 'selected' : ''}>Kerala</option>
-                        <option value="Tamil Nadu" ${address.state === 'Tamil Nadu' ? 'selected' : ''}>Tamil Nadu</option>
-                        <option value="Karnataka" ${address.state === 'Karnataka' ? 'selected' : ''}>Karnataka</option>
-                        <option value="Maharashtra" ${address.state === 'Maharashtra' ? 'selected' : ''}>Maharashtra</option>
-                        <option value="Delhi" ${address.state === 'Delhi' ? 'selected' : ''}>Delhi</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="edit-city-${addressId}">City</label>
-                    <input type="text" id="edit-city-${addressId}" value="${address.city || ''}" placeholder="Enter city" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-phone-${addressId}">Phone</label>
-                    <input type="text" id="edit-phone-${addressId}" value="${address.phone || ''}" maxlength="10">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="edit-address-${addressId}">Address</label>
-                <textarea id="edit-address-${addressId}" rows="3">${address.address || ''}</textarea>
-            </div>
-            <div class="form-actions">
-                <button class="btn save-edit-address-btn" data-id="${addressId}">
-                    <i class="fas fa-save"></i> Save Changes
-                </button>
-                <button class="btn btn-outline cancel-edit-address-btn" data-id="${addressId}">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-            </div>
-        </div>
-    `;
-    addressesContainer.appendChild(addressCard);
-    
-    // Add event listeners
-    attachAddressEventListeners(addressId);
-}
-
 // Delete address from Firestore
 function deleteAddressFromFirestore(addressId) {
     db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
@@ -1431,6 +1316,8 @@ function updateCartUI() {
     // INSTANTLY update checkout order summary if on checkout page
     if (document.querySelector('.checkout-section')) {
         updateOrderSummary();
+        // Also refresh promo codes when cart changes
+        refreshPromoCodes();
     }
 }
 
@@ -1891,59 +1778,32 @@ function initCommon() {
     }
 }
 
+// PROMO CODE FUNCTIONALITY - ENHANCED
+
 // Get active promo codes from Firebase
 function getActivePromoCodes() {
-  // This will be populated from Firebase
   return window.activePromoCodes || {};
 }
 
-// Load promo codes from Firebase
-function loadPromoCodesFromFirebase() {
-  return new Promise((resolve, reject) => {
-    db.collection('promoCodes')
-      .where('active', '==', true)
-      .where('validUntil', '>=', new Date())
-      .get()
-      .then((querySnapshot) => {
-        const promoCodes = {};
-        
-        querySnapshot.forEach((doc) => {
-          const promoData = doc.data();
-          promoCodes[doc.id] = {
-            ...promoData,
-            id: doc.id
-          };
-        });
-        
-        window.activePromoCodes = promoCodes;
-        resolve(promoCodes);
-      })
-      .catch((error) => {
-        console.error("Error loading promo codes:", error);
-        window.activePromoCodes = {};
-        resolve({}); // Return empty object instead of rejecting
-      });
-  });
-}
-
-// Display available promo codes from Firebase
+// Display available promo codes from Firebase with enhanced visual states
 function displayAvailablePromoCodes() {
+  const availablePromoCodesSection = document.querySelector('.available-promo-codes');
   const promoCodesGrid = document.getElementById('promoCodesGrid');
-  const noPromoCodes = document.getElementById('noPromoCodes');
   
-  if (!promoCodesGrid || !noPromoCodes) return;
+  if (!availablePromoCodesSection || !promoCodesGrid) return;
   
   const activePromoCodes = getActivePromoCodes();
   const availableCodes = Object.entries(activePromoCodes);
 
+  // Hide entire section if no promo codes available
   if (availableCodes.length === 0) {
-    promoCodesGrid.style.display = 'none';
-    noPromoCodes.style.display = 'block';
+    availablePromoCodesSection.style.display = 'none';
     return;
   }
 
+  // Show section and populate promo codes
+  availablePromoCodesSection.style.display = 'block';
   promoCodesGrid.innerHTML = '';
-  noPromoCodes.style.display = 'none';
 
   availableCodes.forEach(([code, details]) => {
     const discountText = details.type === 'percentage' 
@@ -1952,30 +1812,72 @@ function displayAvailablePromoCodes() {
       ? 'FREE SHIPPING'
       : `₹${details.value} OFF`;
     
+    // Check if promo code is applicable based on minimum order
+    const isApplicable = originalTotal >= (details.minOrder || 0);
+    const isAlreadyApplied = appliedPromoCode === code;
+    const isSelected = document.querySelector('.promo-input')?.value.toUpperCase() === code && appliedPromoCode !== code;
+    
     const promoCard = document.createElement('div');
     promoCard.className = 'promo-code-card';
     promoCard.setAttribute('data-code', code);
     
-    if (appliedPromoCode === code) {
-      promoCard.classList.add('active');
+    if (isAlreadyApplied) {
+      promoCard.classList.add('active', 'applied');
+    } else if (isSelected) {
+      promoCard.classList.add('selected');
+    } else if (!isApplicable) {
+      promoCard.classList.add('disabled');
     }
     
     promoCard.innerHTML = `
-      ${details.isPopular ? '<span class="promo-code-badge">Popular</span>' : ''}
       <div class="promo-code-header">
-        <i class="fas fa-tag promo-code-icon"></i>
+        <i class="fas fa-tag"></i>
         <div class="promo-code-value">${code}</div>
+        ${isAlreadyApplied ? '<div class="applied-badge"><i class="fas fa-check"></i> Applied</div>' : ''}
+        ${isSelected && !isAlreadyApplied ? '<div class="selected-badge"><i class="fas fa-hand-pointer"></i> Selected</div>' : ''}
       </div>
       <div class="promo-code-desc">${details.description || discountText}</div>
       <div class="promo-code-terms">${details.terms || `Min. order ₹${details.minOrder || 0}`}</div>
     `;
     
-    promoCard.addEventListener('click', () => {
-      applyPromoCodeFromCard(code);
-    });
+    // Make all applicable cards clickable (including already applied ones for removal)
+    if (isApplicable) {
+      promoCard.addEventListener('click', () => {
+        selectPromoCode(code);
+      });
+      promoCard.style.cursor = 'pointer';
+    } else {
+      promoCard.style.cursor = 'not-allowed';
+    }
     
     promoCodesGrid.appendChild(promoCard);
   });
+}
+
+// Select promo code (for manual entry prevention) with toggle behavior
+function selectPromoCode(code) {
+  const promoInput = document.querySelector('.promo-input');
+  
+  if (!promoInput) return;
+  
+  // If clicking the same code that's already applied, remove it
+  if (appliedPromoCode === code) {
+    removePromoCode();
+    return;
+  }
+  
+  // If clicking the same code that's selected but not applied, apply it
+  if (promoInput.value.toUpperCase() === code && appliedPromoCode !== code) {
+    applyPromoCode();
+    return;
+  }
+  
+  // Otherwise, select the new code
+  promoInput.value = code;
+  // Update visual state
+  refreshPromoCodes();
+  // Auto-apply the selected code
+  applyPromoCode();
 }
 
 // Apply promo code from card click
@@ -1987,13 +1889,48 @@ function applyPromoCodeFromCard(code) {
   applyPromoCode();
 }
 
-// Apply promo code
+// Load promo codes from Firebase
+function loadPromoCodesFromFirebase() {
+  return new Promise((resolve, reject) => {
+    db.collection('promoCodes')
+      .where('active', '==', true)
+      .get()
+      .then((querySnapshot) => {
+        const promoCodes = {};
+        const now = new Date();
+        
+        querySnapshot.forEach((doc) => {
+          const promoData = doc.data();
+          
+          // Filter in JavaScript for better compatibility
+          const isValid = !promoData.validUntil || new Date(promoData.validUntil) >= now;
+          const showOnCheckout = promoData.showOnCheckout !== false; // Default to true
+          
+          if (isValid && showOnCheckout) {
+            promoCodes[doc.id] = {
+              ...promoData,
+              id: doc.id
+            };
+          }
+        });
+        
+        window.activePromoCodes = promoCodes;
+        resolve(promoCodes);
+      })
+      .catch((error) => {
+        console.error("Error loading promo codes:", error);
+        window.activePromoCodes = {};
+        resolve({});
+      });
+  });
+}
+
+// Apply promo code with enhanced validation
 function applyPromoCode() {
   const promoInput = document.querySelector('.promo-input');
-  const promoSuccess = document.getElementById('promoSuccess');
-  const promoError = document.getElementById('promoError');
+  const applyBtn = document.querySelector('.apply-btn');
   
-  if (!promoInput || !promoSuccess || !promoError) return;
+  if (!promoInput) return;
   
   const promoCode = promoInput.value.trim().toUpperCase();
   
@@ -2006,61 +1943,197 @@ function applyPromoCode() {
   
   const activePromoCodes = getActivePromoCodes();
   
-  if (activePromoCodes[promoCode]) {
-    const promoDetails = activePromoCodes[promoCode];
-    
-    // Check if promo code is active
-    if (!promoDetails.active) {
-      showPromoError('This promo code is no longer active');
-      return;
-    }
-    
-    // Check validity date
-    if (promoDetails.validUntil && new Date(promoDetails.validUntil) < new Date()) {
-      showPromoError('This promo code has expired');
-      return;
-    }
-    
-    // Check minimum order value
-    if (originalTotal < (promoDetails.minOrder || 0)) {
-      showPromoError(`Minimum order value of ₹${promoDetails.minOrder} required for this promo code`);
-      return;
-    }
-    
-    // Calculate discount based on type
-    let discountValue = 0;
-    
-    if (promoDetails.type === 'percentage') {
-      discountValue = Math.round(originalTotal * (promoDetails.value / 100));
-      // Apply maximum discount if specified
-      if (promoDetails.maxDiscount && discountValue > promoDetails.maxDiscount) {
-        discountValue = promoDetails.maxDiscount;
-      }
-    } else if (promoDetails.type === 'fixed') {
-      discountValue = promoDetails.value;
-    } else if (promoDetails.type === 'shipping') {
-      discountValue = 0; // Free shipping is handled separately in UI
-    }
-    
-    currentDiscount = discountValue;
-    appliedPromoCode = promoCode;
-    updateTotals();
-    
-    // Update promo cards UI
-    displayAvailablePromoCodes();
-    
-    let successMessage = `Promo code "${promoCode}" applied successfully!`;
-    if (promoDetails.type === 'shipping') {
-      successMessage += ' Free shipping applied.';
-    } else if (discountValue > 0) {
-      successMessage += ` ₹${discountValue} discount applied.`;
-    }
-    
-    showPromoSuccess(successMessage);
+  // Check if the entered code matches any available promo code
+  const matchingCode = Object.keys(activePromoCodes).find(code => code === promoCode);
+  
+  if (!matchingCode) {
+    showPromoError('Invalid promo code. Please select from available codes below.');
+    // Clear invalid input
     promoInput.value = '';
-  } else {
-    showPromoError('Invalid promo code. Please try again.');
+    refreshPromoCodes();
+    return;
   }
+  
+  const promoDetails = activePromoCodes[matchingCode];
+  
+  // Check if promo code is active
+  if (!promoDetails.active) {
+    showPromoError('This promo code is no longer active');
+    promoInput.value = '';
+    refreshPromoCodes();
+    return;
+  }
+  
+  // Check validity date
+  if (promoDetails.validUntil && new Date(promoDetails.validUntil) < new Date()) {
+    showPromoError('This promo code has expired');
+    promoInput.value = '';
+    refreshPromoCodes();
+    return;
+  }
+  
+  // Check minimum order value
+  if (originalTotal < (promoDetails.minOrder || 0)) {
+    showPromoError(`Minimum order value of ₹${promoDetails.minOrder} required for this promo code`);
+    promoInput.value = '';
+    refreshPromoCodes();
+    return;
+  }
+  
+  // Calculate discount based on type
+  let discountValue = 0;
+  
+  if (promoDetails.type === 'percentage') {
+    discountValue = Math.round(originalTotal * (promoDetails.value / 100));
+    // Apply maximum discount if specified
+    if (promoDetails.maxDiscount && discountValue > promoDetails.maxDiscount) {
+      discountValue = promoDetails.maxDiscount;
+    }
+  } else if (promoDetails.type === 'fixed') {
+    discountValue = promoDetails.value;
+  } else if (promoDetails.type === 'shipping') {
+    discountValue = 0; // Free shipping is handled separately in UI
+  }
+  
+  currentDiscount = discountValue;
+  appliedPromoCode = promoCode;
+  updateTotals();
+  
+  // Update promo cards UI
+  refreshPromoCodes();
+  
+  let successMessage = `Promo code "${promoCode}" applied successfully!`;
+  if (promoDetails.type === 'shipping') {
+    successMessage += ' Free shipping applied.';
+  } else if (discountValue > 0) {
+    successMessage += ` ₹${discountValue} discount applied.`;
+  }
+  
+  showPromoSuccess(successMessage);
+  
+  // Disable apply button and input after successful application
+  if (applyBtn) {
+    applyBtn.disabled = true;
+    applyBtn.style.opacity = '0.6';
+    applyBtn.style.cursor = 'not-allowed';
+  }
+  
+  promoInput.disabled = true;
+  promoInput.style.backgroundColor = '#f5f5f5';
+  promoInput.style.cursor = 'not-allowed';
+}
+
+// Refresh promo codes when cart changes
+function refreshPromoCodes() {
+  if (document.getElementById('promoCodesGrid')) {
+    displayAvailablePromoCodes();
+  }
+}
+
+// Remove promo code
+function removePromoCode() {
+  currentDiscount = 0;
+  appliedPromoCode = null;
+  
+  const promoInput = document.querySelector('.promo-input');
+  const applyBtn = document.querySelector('.apply-btn');
+  
+  if (promoInput) {
+    promoInput.value = '';
+    promoInput.disabled = false;
+    promoInput.style.backgroundColor = '';
+    promoInput.style.cursor = '';
+  }
+  
+  if (applyBtn) {
+    applyBtn.disabled = false;
+    applyBtn.style.opacity = '1';
+    applyBtn.style.cursor = 'pointer';
+  }
+  
+  updateTotals();
+  refreshPromoCodes();
+  showPromoSuccess('Promo code removed successfully!');
+}
+
+// Show promo success message
+function showPromoSuccess(message) {
+  // Remove any existing messages first
+  hideAllPromoMessages();
+  
+  const successDiv = document.createElement('div');
+  successDiv.className = 'promo-message promo-success';
+  successDiv.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <span>${message}</span>
+      ${appliedPromoCode ? `<button onclick="removePromoCode()" style="background: none; border: none; color: #155724; cursor: pointer; font-size: 12px; text-decoration: underline;">Remove</button>` : ''}
+    </div>
+  `;
+  
+  const promoCodeSection = document.querySelector('.promo-code');
+  // Insert after promo input group
+  const promoInputGroup = promoCodeSection.querySelector('.promo-input-group');
+  promoInputGroup.parentNode.insertBefore(successDiv, promoInputGroup.nextSibling);
+  
+  if (!appliedPromoCode) {
+    setTimeout(() => {
+      successDiv.remove();
+    }, 5000);
+  }
+}
+
+// Show promo error message
+function showPromoError(message) {
+  // Remove any existing messages first
+  hideAllPromoMessages();
+  
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'promo-message promo-error';
+  errorDiv.textContent = message;
+  
+  const promoCodeSection = document.querySelector('.promo-code');
+  // Insert after promo input group
+  const promoInputGroup = promoCodeSection.querySelector('.promo-input-group');
+  promoInputGroup.parentNode.insertBefore(errorDiv, promoInputGroup.nextSibling);
+  
+  setTimeout(() => {
+    errorDiv.remove();
+  }, 5000);
+}
+
+// Hide all promo messages
+function hideAllPromoMessages() {
+  const messages = document.querySelectorAll('.promo-message');
+  messages.forEach(msg => msg.remove());
+}
+
+// Update totals including discount with promo code display
+function updateTotals() {
+  const subtotalElement = document.getElementById('subtotal');
+  const totalElement = document.getElementById('total');
+  const discountRow = document.getElementById('discountRow');
+  const discountAmount = document.getElementById('discountAmount');
+  
+  if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
+  
+  const newTotal = originalTotal - currentDiscount;
+  
+  subtotalElement.textContent = `₹${originalTotal}`;
+  
+  if (currentDiscount > 0 && appliedPromoCode) {
+    discountRow.style.display = 'flex';
+    discountAmount.textContent = `-₹${currentDiscount}`;
+    discountAmount.style.color = '#27ae60';
+  } else {
+    discountRow.style.display = 'none';
+    currentDiscount = 0;
+    appliedPromoCode = null;
+  }
+  
+  totalElement.textContent = `₹${newTotal}`;
+  
+  // Refresh promo codes display when totals change
+  refreshPromoCodes();
 }
 
 // Initialize checkout page
@@ -2180,55 +2253,6 @@ function updateOrderSummary() {
     updateTotals();
 }
 
-// Update totals including discount with promo code display
-function updateTotals() {
-    const subtotalElement = document.getElementById('subtotal');
-    const totalElement = document.getElementById('total');
-    const discountRow = document.getElementById('discountRow');
-    const discountAmount = document.getElementById('discountAmount');
-    const promoDisplay = document.getElementById('promoDisplay');
-    
-    if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
-    
-    const newTotal = originalTotal - currentDiscount;
-    
-    subtotalElement.textContent = `₹${originalTotal}`;
-    
-    if (currentDiscount > 0 && appliedPromoCode) {
-        discountRow.style.display = 'flex';
-        discountAmount.textContent = `-₹${currentDiscount}`;
-        discountAmount.style.color = '#27ae60'; // Green color for discount
-        
-        // Create or update promo code display under subtotal
-        if (!promoDisplay) {
-            const promoDisplayElement = document.createElement('div');
-            promoDisplayElement.id = 'promoDisplay';
-            promoDisplayElement.style.color = '#27ae60';
-            promoDisplayElement.style.fontSize = '14px';
-            promoDisplayElement.style.marginTop = '5px';
-            promoDisplayElement.style.fontWeight = '500';
-            promoDisplayElement.innerHTML = `Promo code <strong>${appliedPromoCode}</strong> applied: ₹${currentDiscount} OFF`;
-            
-            // Insert after subtotal
-            const subtotalRow = document.querySelector('.subtotal-row');
-            if (subtotalRow) {
-                subtotalRow.parentNode.insertBefore(promoDisplayElement, subtotalRow.nextSibling);
-            }
-        } else {
-            promoDisplay.innerHTML = `Promo code <strong>${appliedPromoCode}</strong> applied: ₹${currentDiscount} OFF`;
-            promoDisplay.style.display = 'block';
-        }
-    } else {
-        discountRow.style.display = 'none';
-        // Hide promo display if no promo code applied
-        if (promoDisplay) {
-            promoDisplay.style.display = 'none';
-        }
-    }
-    
-    totalElement.textContent = `₹${newTotal}`;
-}
-
 // Setup event listeners for checkout page
 function setupCheckoutEventListeners() {
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
@@ -2267,6 +2291,20 @@ function setupCheckoutEventListeners() {
                 applyPromoCode();
             }
         });
+        
+        // Prevent manual entry of unavailable codes
+        promoInput.addEventListener('input', function(e) {
+            const value = e.target.value.toUpperCase();
+            const activePromoCodes = getActivePromoCodes();
+            const availableCodes = Object.keys(activePromoCodes);
+            
+            // If user tries to type something that doesn't match available codes, show error
+            if (value && !availableCodes.some(code => code.startsWith(value))) {
+                showPromoError('Please select from available promo codes below');
+            } else {
+                hideAllPromoMessages();
+            }
+        });
     }
 
     if (checkoutBtnMain) {
@@ -2294,51 +2332,6 @@ function setupCheckoutEventListeners() {
         input.addEventListener('input', clearFieldError);
     });
 }
-
-
-
-// Show promo success message
-function showPromoSuccess(message) {
-    const promoSuccess = document.getElementById('promoSuccess');
-    const promoError = document.getElementById('promoError');
-    
-    if (!promoSuccess || !promoError) return;
-    
-    promoSuccess.textContent = message;
-    promoSuccess.style.display = 'block';
-    promoError.style.display = 'none';
-    
-    setTimeout(() => {
-        promoSuccess.style.display = 'none';
-    }, 5000);
-}
-
-// Show promo error message
-function showPromoError(message) {
-    const promoSuccess = document.getElementById('promoSuccess');
-    const promoError = document.getElementById('promoError');
-    
-    if (!promoSuccess || !promoError) return;
-    
-    promoError.textContent = message;
-    promoError.style.display = 'block';
-    promoSuccess.style.display = 'none';
-    
-    setTimeout(() => {
-        promoError.style.display = 'none';
-    }, 5000);
-}
-
-// Hide all promo messages
-function hideAllPromoMessages() {
-    const promoSuccess = document.getElementById('promoSuccess');
-    const promoError = document.getElementById('promoError');
-    
-    if (promoSuccess) promoSuccess.style.display = 'none';
-    if (promoError) promoError.style.display = 'none';
-}
-
-
 
 // Validate form field
 function validateField(e) {
@@ -2452,7 +2445,6 @@ function validateCheckoutForm() {
     return isValid;
 }
 
-// Process checkout
 // Process checkout - MODIFIED TO SAVE ADDRESS
 function processCheckout() {
     if (!validateCheckoutForm()) {
@@ -2637,6 +2629,62 @@ function showOrderSuccess(orderData) {
         window.location.href = 'index.html';
     }, 3000);
 }
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+        notification.style.backgroundColor = '#27ae60';
+    } else if (type === 'error') {
+        notification.style.backgroundColor = '#e74c3c';
+    } else {
+        notification.style.backgroundColor = '#3498db';
+    }
+    
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 5000);
+}
+
+// Add CSS for notifications
+const notificationStyles = document.createElement('style');
+notificationStyles.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(notificationStyles);
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
