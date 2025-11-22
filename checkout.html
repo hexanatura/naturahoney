@@ -34,6 +34,155 @@ body {
   width: 100%;
   overflow-x: hidden;
 }
+
+/* Available Promo Codes Section */
+.available-promo-codes {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  display: none;
+}
+
+/* Title */
+.promo-section-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 15px;
+  color: #5f2b27;
+  margin-bottom: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.promo-section-title i {
+  color: #e7d90f;
+}
+
+/* Vertical stacked cards */
+.promo-codes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+}
+
+/* Card – dashed border */
+.promo-code-card {
+  background: white;
+  border: 2px dashed #5f2b27;
+  border-radius: 10px;
+  padding: 12px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.promo-code-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(95, 43, 39, 0.15);
+  border-style: solid;
+}
+
+/* ACTIVE STATE – LIGHT GOLDEN FADE */
+.promo-code-card.active {
+  background: linear-gradient(135deg, #FFF8D6, #FFEAA7); /* soft pale gold fade */
+  color: #4a3d20;                                        /* warm dark gold text */
+  border: 2px solid #F5D67B;                             /* light gold border */
+}
+
+/* Header */
+.promo-code-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.promo-code-icon {
+  font-size: 14px;
+  color: #e7d90f;
+}
+
+.promo-code-card.active .promo-code-icon {
+  color: #a67c00; /* muted gold */
+}
+
+/* Coupon value */
+.promo-code-value {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  background: rgba(231, 217, 15, 0.1);
+  padding: 3px 10px;
+  border-radius: 20px;
+  width: fit-content;
+  color: #0a8a0a; /* your green */
+}
+
+/* Active coupon value */
+.promo-code-card.active .promo-code-value {
+  background: rgba(255, 255, 255, 0.35);
+  color: #4a3d20; /* darker gold text */
+}
+
+/* Full description */
+.promo-code-desc {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.35;
+}
+
+.promo-code-card.active .promo-code-desc {
+  color: #4a3d20;
+}
+
+/* Terms */
+.promo-code-terms {
+  font-size: 11px;
+  font-style: italic;
+  color: #888;
+  line-height: 1.3;
+}
+
+.promo-code-card.active .promo-code-terms {
+  color: #4a3d20;
+}
+
+/* No promo message */
+.no-promo-codes {
+  text-align: center;
+  padding: 25px 15px;
+  color: #777;
+}
+
+.no-promo-codes i {
+  font-size: 36px;
+  margin-bottom: 8px;
+  color: #e0e0e0;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .promo-code-card {
+    padding: 10px;
+  }
+
+  .promo-code-value {
+    font-size: 13px;
+  }
+
+  .promo-code-desc {
+    font-size: 11px;
+  }
+}
+
+
 /* Cart and Favorites Sidebars - Mobile & Tablet */
 @media (max-width: 1023px) {
   .cart-sidebar, .likes-sidebar {
@@ -4461,14 +4610,20 @@ footer a:hover {
 <!-- Promo Code -->
 <div class="promo-code">
   <div class="promo-input-group">
-    <input type="text" class="promo-input" placeholder="Promo Code">
+    <input type="text" class="promo-input" placeholder="Select or type promo code">
     <button class="apply-btn">Apply</button>
   </div>
-  <div class="promo-message promo-success" id="promoSuccess">
-    Promo code applied successfully!
-  </div>
-  <div class="promo-message promo-error" id="promoError">
-    Invalid promo code. Please try again.
+  
+  <!-- Promo messages will appear here -->
+  
+  <!-- Available Promo Codes Display -->
+  <div class="available-promo-codes">
+    <h3 class="promo-section-title">
+      <i class="fas fa-tags"></i> Available Promo Codes
+    </h3>
+    <div class="promo-codes-grid" id="promoCodesGrid">
+      <!-- Promo codes will be dynamically loaded from Firebase -->
+    </div>
   </div>
 </div>
 
