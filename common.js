@@ -122,36 +122,142 @@ const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
 
-// ==================== ANALYTICS TRACKING FUNCTIONS ====================
+// ==================== SESSION-BASED ANALYTICS TRACKING ====================
 
-// Track page visits
-function trackPageVisit() {
-    let pageVisits = localStorage.getItem('naturaPageVisits');
-    pageVisits = pageVisits ? parseInt(pageVisits) + 1 : 1;
-    localStorage.setItem('naturaPageVisits', pageVisits);
+// Session management constants
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+const SESSION_KEY = 'natura_session';
+const LAST_ACTIVITY_KEY = 'natura_last_activity';
+
+// Initialize or validate session
+function initializeSession() {
+    const now = Date.now();
+    const sessionData = getSessionData();
+    const lastActivity = getLastActivity();
     
-    console.log(`Page visit tracked: ${pageVisits}`);
+    let isNewSession = false;
     
-    // Also track in Firebase for analytics (optional)
-    if (db) {
-        db.collection('analytics').add({
-            type: 'page_visit',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            page: window.location.pathname,
-            userAgent: navigator.userAgent,
-            source: 'website'
-        }).catch(error => console.error("Error logging page visit:", error));
+    // Check if session exists and is still valid
+    if (!sessionData || !lastActivity || (now - lastActivity > SESSION_TIMEOUT)) {
+        // Create new session
+        createNewSession();
+        isNewSession = true;
+        console.log('New session created');
+    } else {
+        // Update last activity for existing session
+        updateLastActivity();
+        console.log('Existing session continued');
+    }
+    
+    return isNewSession;
+}
+
+// Get session data from localStorage
+function getSessionData() {
+    try {
+        return JSON.parse(localStorage.getItem(SESSION_KEY));
+    } catch (error) {
+        console.error('Error reading session data:', error);
+        return null;
     }
 }
 
-// Track account creation
-function trackAccountCreation(userId, email, provider = 'email') {
-    // Track in localStorage
-    let accountsCreated = localStorage.getItem('naturaAccountsCreated');
-    accountsCreated = accountsCreated ? parseInt(accountsCreated) + 1 : 1;
-    localStorage.setItem('naturaAccountsCreated', accountsCreated);
+// Get last activity timestamp
+function getLastActivity() {
+    return parseInt(localStorage.getItem(LAST_ACTIVITY_KEY));
+}
+
+// Create new session
+function createNewSession() {
+    const sessionId = generateSessionId();
+    const sessionData = {
+        id: sessionId,
+        created: Date.now(),
+        pageCount: 0
+    };
     
-    console.log(`Account creation tracked: ${accountsCreated} - User: ${email}`);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    updateLastActivity();
+}
+
+// Update last activity timestamp
+function updateLastActivity() {
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+}
+
+// Generate unique session ID
+function generateSessionId() {
+    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Track page visit with session management
+function trackPageVisit() {
+    const isNewSession = initializeSession();
+    const sessionData = getSessionData();
+    
+    if (isNewSession) {
+        // This is a new visit (new session)
+        sessionData.pageCount = 1;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+        
+        console.log(`New visit tracked - Session: ${sessionData.id}`);
+        
+        // Track in Firebase for analytics
+        if (db) {
+            db.collection('analytics').add({
+                type: 'page_visit',
+                sessionId: sessionData.id,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                page: window.location.pathname,
+                userAgent: navigator.userAgent,
+                source: 'website',
+                isNewSession: true
+            }).catch(error => console.error("Error logging page visit:", error));
+        }
+    } else {
+        // This is a page view within existing session
+        sessionData.pageCount += 1;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+        
+        console.log(`Page view in existing session - Total pages: ${sessionData.pageCount}`);
+        
+        // Track page view in Firebase (optional - for detailed analytics)
+        if (db) {
+            db.collection('analytics').add({
+                type: 'page_view',
+                sessionId: sessionData.id,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                page: window.location.pathname,
+                pageCount: sessionData.pageCount,
+                isNewSession: false
+            }).catch(error => console.error("Error logging page view:", error));
+        }
+    }
+    
+    // Update last activity for any page interaction
+    updateLastActivity();
+}
+
+// Track user activity to keep session alive
+function trackUserActivity() {
+    updateLastActivity();
+}
+
+// Set up activity listeners
+function setupActivityTracking() {
+    // Track various user activities
+    document.addEventListener('click', trackUserActivity);
+    document.addEventListener('scroll', trackUserActivity);
+    document.addEventListener('keypress', trackUserActivity);
+    document.addEventListener('mousemove', trackUserActivity);
+    document.addEventListener('touchstart', trackUserActivity);
+}
+
+// Track account creation with session context
+function trackAccountCreation(userId, email, provider = 'email') {
+    const sessionData = getSessionData();
+    
+    console.log(`Account creation tracked - User: ${email}, Session: ${sessionData?.id}`);
     
     // Track in Firebase
     if (db) {
@@ -160,14 +266,17 @@ function trackAccountCreation(userId, email, provider = 'email') {
             userId: userId,
             email: email,
             provider: provider,
+            sessionId: sessionData?.id,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
     return Promise.resolve();
 }
 
-// Track cart additions
+// Track cart additions with session context
 function trackCartAddition(productId, quantity, productName) {
+    const sessionData = getSessionData();
+    
     if (db) {
         db.collection('analytics').add({
             type: 'cart_addition',
@@ -175,26 +284,32 @@ function trackCartAddition(productId, quantity, productName) {
             productName: productName,
             quantity: quantity,
             userId: currentUser ? currentUser.uid : 'guest',
+            sessionId: sessionData?.id,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(error => console.error("Error logging cart addition:", error));
     }
 }
 
-// Track product likes
+// Track product likes with session context
 function trackProductLike(productId, productName) {
+    const sessionData = getSessionData();
+    
     if (db) {
         db.collection('analytics').add({
             type: 'product_like',
             productId: productId,
             productName: productName,
             userId: currentUser ? currentUser.uid : 'guest',
+            sessionId: sessionData?.id,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(error => console.error("Error logging product like:", error));
     }
 }
 
-// Track order creation
+// Track order creation with session context
 function trackOrderCreation(orderData) {
+    const sessionData = getSessionData();
+    
     if (db) {
         db.collection('analytics').add({
             type: 'order_created',
@@ -202,6 +317,7 @@ function trackOrderCreation(orderData) {
             total: orderData.total,
             items: orderData.items,
             userId: currentUser ? currentUser.uid : 'guest',
+            sessionId: sessionData?.id,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(error => console.error("Error logging order:", error));
     }
@@ -217,12 +333,14 @@ auth.onAuthStateChanged((user) => {
         // Load profile data including addresses
         loadUserProfileData(user.uid);
         
-        // Track user login
+        // Track user login with session context
+        const sessionData = getSessionData();
         if (db) {
             db.collection('analytics').add({
                 type: 'user_login',
                 userId: user.uid,
                 email: user.email,
+                sessionId: sessionData?.id,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(error => console.error("Error logging user login:", error));
         }
@@ -1606,6 +1724,7 @@ window.addEventListener('scroll', () => {
 // Initialize common functionality
 function initCommon() {
     loadGuestData();
+    setupActivityTracking(); // Setup activity tracking for session management
     
     // Initialize profile close button if it exists
     const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -1704,5 +1823,5 @@ function initCommon() {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
-    trackPageVisit(); // Track page visit on load
+    trackPageVisit(); // Track page visit with session management
 });
