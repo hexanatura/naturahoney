@@ -35,113 +35,164 @@ body {
   overflow-x: hidden;
 }
 
-/* Available Promo Codes Styles */
+/* Available Promo Codes Section */
 .available-promo-codes {
-  margin-top: 20px;
-  padding: 15px;
+  margin: 25px 0;
+  padding: 20px;
   background: #f8f9fa;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e9ecef;
 }
 
-.available-promo-codes h4 {
+.promo-section-title {
   font-family: 'Unbounded', sans-serif;
   font-size: 16px;
   color: #5f2b27;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
   text-align: center;
-}
-
-.promo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.promo-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px;
+  justify-content: center;
+  gap: 8px;
+}
+
+.promo-section-title i {
+  color: #e7d90f;
+}
+
+.promo-codes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.promo-code-card {
   background: white;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: 2px dashed #5f2b27;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.promo-item:hover {
-  border-color: #5f2b27;
+.promo-code-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(95, 43, 39, 0.1);
+  box-shadow: 0 4px 12px rgba(95, 43, 39, 0.15);
+  border-style: solid;
 }
 
-.promo-item.applied {
-  background: #d4edda;
-  border-color: #c3e6cb;
+.promo-code-card.active {
+  background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
+  color: white;
+  border-color: #5f2b27;
 }
 
-.promo-item.disabled {
-  background: #f8f9fa;
-  border-color: #dee2e6;
-  opacity: 0.6;
+.promo-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.promo-code-icon {
+  font-size: 16px;
+  color: #e7d90f;
+}
+
+.promo-code-card.active .promo-code-icon {
+  color: #FFD700;
+}
+
+.promo-code-value {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+  background: rgba(231, 217, 15, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.promo-code-card.active .promo-code-value {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.promo-code-desc {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.promo-code-card.active .promo-code-desc {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.promo-code-terms {
+  font-size: 10px;
+  color: #999;
+  font-style: italic;
+}
+
+.promo-code-card.active .promo-code-terms {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .promo-code-badge {
-  background: #5f2b27;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #e74c3c;
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-family: 'Unbounded', sans-serif;
-  font-size: 12px;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
   font-weight: 600;
 }
 
-.promo-description {
-  flex: 1;
-  margin: 0 12px;
+.no-promo-codes {
+  text-align: center;
+  padding: 30px 20px;
+  color: #777;
+}
+
+.no-promo-codes i {
+  font-size: 40px;
+  margin-bottom: 10px;
+  color: #e0e0e0;
+}
+
+.no-promo-codes p {
   font-size: 14px;
-  color: #333;
-  font-family: 'Quicksand', sans-serif;
+  margin: 0;
 }
 
-.select-promo-btn {
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-family: 'Unbounded', sans-serif;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.select-promo-btn:hover {
-  background: #218838;
-}
-
-.promo-item.applied .select-promo-btn {
-  background: #6c757d;
-  cursor: not-allowed;
-}
-
-.promo-item.disabled .select-promo-btn {
-  background: #6c757d;
-  cursor: not-allowed;
-}
-
-/* Remove the discount row from order summary */
-#discountRow {
-  display: none !important;
-}
-
-/* Promo Display in Order Summary */
-.promo-display {
-  color: #27ae60;
-  font-size: 14px;
-  margin-top: 5px;
-  font-weight: 500;
-  text-align: right;
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  .available-promo-codes {
+    padding: 15px;
+    margin: 20px 0;
+  }
+  
+  .promo-codes-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .promo-code-card {
+    padding: 12px;
+  }
+  
+  .promo-code-value {
+    font-size: 16px;
+  }
 }
 
 /* Cart and Favorites Sidebars - Mobile & Tablet */
@@ -4574,20 +4625,15 @@ footer a:hover {
     <input type="text" class="promo-input" placeholder="Promo Code">
     <button class="apply-btn">Apply</button>
   </div>
-  
-  <!-- DYNAMIC PROMO CODES SECTION -->
-  <div class="available-promo-codes" id="availablePromoCodes" style="display: none;">
-    <h4>Available Offers:</h4>
-    <div class="promo-list" id="promoList">
-      <!-- Promo codes will be loaded dynamically here -->
-    </div>
+<!-- Available Promo Codes Display -->
+<div class="available-promo-codes">
+  <h3 class="promo-section-title">Available Promo Codes</h3>
+  <div class="promo-codes-grid" id="promoCodesGrid">
+    <!-- Promo codes will be dynamically loaded from Firebase -->
   </div>
-  
-  <div class="promo-message promo-success" id="promoSuccess">
-    Promo code applied successfully!
-  </div>
-  <div class="promo-error" id="promoError">
-    Invalid promo code. Please try again.
+  <div class="no-promo-codes" id="noPromoCodes">
+    <i class="fas fa-tag"></i>
+    <p>No promo codes available at the moment</p>
   </div>
 </div>
 
