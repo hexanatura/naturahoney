@@ -1785,7 +1785,6 @@ function getActivePromoCodes() {
   return window.activePromoCodes || {};
 }
 
-// Display available promo codes from Firebase with enhanced visual states
 function displayAvailablePromoCodes() {
   const availablePromoCodesSection = document.querySelector('.available-promo-codes');
   const promoCodesGrid = document.getElementById('promoCodesGrid');
@@ -1795,13 +1794,11 @@ function displayAvailablePromoCodes() {
   const activePromoCodes = getActivePromoCodes();
   const availableCodes = Object.entries(activePromoCodes);
 
-  // Hide entire section if no promo codes available
   if (availableCodes.length === 0) {
     availablePromoCodesSection.style.display = 'none';
     return;
   }
 
-  // Show section and populate promo codes
   availablePromoCodesSection.style.display = 'block';
   promoCodesGrid.innerHTML = '';
 
@@ -1812,7 +1809,6 @@ function displayAvailablePromoCodes() {
       ? 'FREE SHIPPING'
       : `₹${details.value} OFF`;
     
-    // Check if promo code is applicable based on minimum order
     const isApplicable = originalTotal >= (details.minOrder || 0);
     const isAlreadyApplied = appliedPromoCode === code;
     const isSelected = document.querySelector('.promo-input')?.value.toUpperCase() === code && appliedPromoCode !== code;
@@ -1821,10 +1817,9 @@ function displayAvailablePromoCodes() {
     promoCard.className = 'promo-code-card';
     promoCard.setAttribute('data-code', code);
     
-    if (isAlreadyApplied) {
-      promoCard.classList.add('active', 'applied');
-    } else if (isSelected) {
-      promoCard.classList.add('selected');
+    // Show as active if either applied OR selected
+    if (isAlreadyApplied || isSelected) {
+      promoCard.classList.add('active');
     } else if (!isApplicable) {
       promoCard.classList.add('disabled');
     }
@@ -1833,14 +1828,12 @@ function displayAvailablePromoCodes() {
       <div class="promo-code-header">
         <i class="fas fa-tag"></i>
         <div class="promo-code-value">${code}</div>
-        ${isAlreadyApplied ? '<div class="applied-badge"><i class="fas fa-check"></i> Applied</div>' : ''}
-        ${isSelected && !isAlreadyApplied ? '<div class="selected-badge"><i class="fas fa-hand-pointer"></i> Selected</div>' : ''}
+        ${(isAlreadyApplied || isSelected) ? '<div class="applied-badge"><i class="fas fa-check"></i> Applied</div>' : ''}
       </div>
       <div class="promo-code-desc">${details.description || discountText}</div>
       <div class="promo-code-terms">${details.terms || `Min. order ₹${details.minOrder || 0}`}</div>
     `;
     
-    // Make all applicable cards clickable (including already applied ones for removal)
     if (isApplicable) {
       promoCard.addEventListener('click', () => {
         selectPromoCode(code);
