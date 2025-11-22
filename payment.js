@@ -1,4 +1,3 @@
-// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
     authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -9,19 +8,16 @@ const firebaseConfig = {
     measurementId: "G-MQGKK9709H"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Global State variables
 let currentUser = null;
 let likedProducts = [];
 let cartProducts = [];
 let userOrders = [];
 let currentModalView = 'login';
 
-// Product data (common across pages)
 const products = [
     { 
         id: 1, 
@@ -73,7 +69,6 @@ const products = [
     }
 ];
 
-// DOM Elements (common across pages)
 const notificationBar = document.getElementById('notificationBar');
 const navBar = document.getElementById('navBar');
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -88,7 +83,6 @@ const userDropdown = document.getElementById('userDropdown');
 const profileLink = document.getElementById('profileLink');
 const logoutLink = document.getElementById('logoutLink');
 
-// Sidebars and Modals
 const likesSidebar = document.getElementById('likesSidebar');
 const closeLikes = document.getElementById('closeLikes');
 const likesItems = document.getElementById('likesItems');
