@@ -1891,6 +1891,192 @@ function initCommon() {
     }
 }
 
+// Get active promo codes from Firebase
+function getActivePromoCodes() {
+  // This will be populated from Firebase
+  return window.activePromoCodes || {};
+}
+
+// Load promo codes from Firebase
+function loadPromoCodesFromFirebase() {
+  return new Promise((resolve, reject) => {
+    db.collection('promoCodes')
+      .where('active', '==', true)
+      .where('validUntil', '>=', new Date())
+      .get()
+      .then((querySnapshot) => {
+        const promoCodes = {};
+        
+        querySnapshot.forEach((doc) => {
+          const promoData = doc.data();
+          promoCodes[doc.id] = {
+            ...promoData,
+            id: doc.id
+          };
+        });
+        
+        window.activePromoCodes = promoCodes;
+        resolve(promoCodes);
+      })
+      .catch((error) => {
+        console.error("Error loading promo codes:", error);
+        window.activePromoCodes = {};
+        resolve({}); // Return empty object instead of rejecting
+      });
+  });
+}
+
+// Display available promo codes from Firebase
+function displayAvailablePromoCodes() {
+  const promoCodesGrid = document.getElementById('promoCodesGrid');
+  const noPromoCodes = document.getElementById('noPromoCodes');
+  
+  if (!promoCodesGrid || !noPromoCodes) return;
+  
+  const activePromoCodes = getActivePromoCodes();
+  const availableCodes = Object.entries(activePromoCodes);
+
+  if (availableCodes.length === 0) {
+    promoCodesGrid.style.display = 'none';
+    noPromoCodes.style.display = 'block';
+    return;
+  }
+
+  promoCodesGrid.innerHTML = '';
+  noPromoCodes.style.display = 'none';
+
+  availableCodes.forEach(([code, details]) => {
+    const discountText = details.type === 'percentage' 
+      ? `${details.value}% OFF` 
+      : details.type === 'shipping'
+      ? 'FREE SHIPPING'
+      : `₹${details.value} OFF`;
+    
+    const promoCard = document.createElement('div');
+    promoCard.className = 'promo-code-card';
+    promoCard.setAttribute('data-code', code);
+    
+    if (appliedPromoCode === code) {
+      promoCard.classList.add('active');
+    }
+    
+    promoCard.innerHTML = `
+      ${details.isPopular ? '<span class="promo-code-badge">Popular</span>' : ''}
+      <div class="promo-code-header">
+        <i class="fas fa-tag promo-code-icon"></i>
+        <div class="promo-code-value">${code}</div>
+      </div>
+      <div class="promo-code-desc">${details.description || discountText}</div>
+      <div class="promo-code-terms">${details.terms || `Min. order ₹${details.minOrder || 0}`}</div>
+    `;
+    
+    promoCard.addEventListener('click', () => {
+      applyPromoCodeFromCard(code);
+    });
+    
+    promoCodesGrid.appendChild(promoCard);
+  });
+}
+
+// Apply promo code from card click
+function applyPromoCodeFromCard(code) {
+  const promoInput = document.querySelector('.promo-input');
+  if (promoInput) {
+    promoInput.value = code;
+  }
+  applyPromoCode();
+}
+
+// Apply promo code
+function applyPromoCode() {
+  const promoInput = document.querySelector('.promo-input');
+  const promoSuccess = document.getElementById('promoSuccess');
+  const promoError = document.getElementById('promoError');
+  
+  if (!promoInput || !promoSuccess || !promoError) return;
+  
+  const promoCode = promoInput.value.trim().toUpperCase();
+  
+  if (promoCode === '') {
+    showPromoError('Please enter a promo code');
+    return;
+  }
+  
+  hideAllPromoMessages();
+  
+  const activePromoCodes = getActivePromoCodes();
+  
+  if (activePromoCodes[promoCode]) {
+    const promoDetails = activePromoCodes[promoCode];
+    
+    // Check if promo code is active
+    if (!promoDetails.active) {
+      showPromoError('This promo code is no longer active');
+      return;
+    }
+    
+    // Check validity date
+    if (promoDetails.validUntil && new Date(promoDetails.validUntil) < new Date()) {
+      showPromoError('This promo code has expired');
+      return;
+    }
+    
+    // Check minimum order value
+    if (originalTotal < (promoDetails.minOrder || 0)) {
+      showPromoError(`Minimum order value of ₹${promoDetails.minOrder} required for this promo code`);
+      return;
+    }
+    
+    // Calculate discount based on type
+    let discountValue = 0;
+    
+    if (promoDetails.type === 'percentage') {
+      discountValue = Math.round(originalTotal * (promoDetails.value / 100));
+      // Apply maximum discount if specified
+      if (promoDetails.maxDiscount && discountValue > promoDetails.maxDiscount) {
+        discountValue = promoDetails.maxDiscount;
+      }
+    } else if (promoDetails.type === 'fixed') {
+      discountValue = promoDetails.value;
+    } else if (promoDetails.type === 'shipping') {
+      discountValue = 0; // Free shipping is handled separately in UI
+    }
+    
+    currentDiscount = discountValue;
+    appliedPromoCode = promoCode;
+    updateTotals();
+    
+    // Update promo cards UI
+    displayAvailablePromoCodes();
+    
+    let successMessage = `Promo code "${promoCode}" applied successfully!`;
+    if (promoDetails.type === 'shipping') {
+      successMessage += ' Free shipping applied.';
+    } else if (discountValue > 0) {
+      successMessage += ` ₹${discountValue} discount applied.`;
+    }
+    
+    showPromoSuccess(successMessage);
+    promoInput.value = '';
+  } else {
+    showPromoError('Invalid promo code. Please try again.');
+  }
+}
+
+// Initialize checkout page
+async function initCheckoutPage() {
+  updateOrderSummary();
+  setupCheckoutEventListeners();
+  updateCheckoutUI();
+  
+  // Load and display promo codes from Firebase
+  try {
+    await loadPromoCodesFromFirebase();
+    displayAvailablePromoCodes();
+  } catch (error) {
+    console.error('Failed to load promo codes:', error);
+  }
+}
 
 // Handle quantity change in checkout - FIXED VERSION
 function handleCheckoutQuantityChange(e) {
@@ -2109,120 +2295,7 @@ function setupCheckoutEventListeners() {
     });
 }
 
-// Apply promo code (for manual input)
-function applyPromoCode() {
-  const promoInput = document.querySelector('.promo-input');
-  const promoSuccess = document.getElementById('promoSuccess');
-  const promoError = document.getElementById('promoError');
-  
-  if (!promoInput || !promoSuccess || !promoError) return;
-  
-  const promoCode = promoInput.value.trim().toUpperCase();
-  
-  if (promoCode === '') {
-    showPromoError('Please enter a promo code');
-    return;
-  }
-  
-  hideAllPromoMessages();
-  
-  // Check if promo code exists in Firestore
-  checkAndApplyPromoCode(promoCode);
-}
 
-// Check promo code in Firestore and apply it
-function checkAndApplyPromoCode(promoCode) {
-  if (!db) {
-    showPromoError('Database connection error. Please try again.');
-    return;
-  }
-
-  const now = new Date();
-  
-  db.collection('promoCodes')
-    .where('code', '==', promoCode)
-    .where('isActive', '==', true)
-    .where('validFrom', '<=', now)
-    .where('validUntil', '>=', now)
-    .get()
-    .then((querySnapshot) => {
-      if (querySnapshot.empty) {
-        showPromoError('Invalid promo code. Please try again.');
-        return;
-      }
-      
-      const doc = querySnapshot.docs[0];
-      const promoData = doc.data();
-      
-      // Check if promo code has usage limits
-      if (promoData.maxUses && promoData.usedCount >= promoData.maxUses) {
-        showPromoError('This promo code has reached its usage limit.');
-        return;
-      }
-      
-      // Check minimum order amount
-      if (originalTotal < (promoData.minOrderAmount || 0)) {
-        showPromoError(`Minimum order amount of ₹${promoData.minOrderAmount} required for this offer.`);
-        return;
-      }
-      
-      // Calculate discount
-      let actualDiscount;
-      if (promoData.discountType === 'percentage') {
-        actualDiscount = Math.round(originalTotal * (promoData.discountValue / 100));
-      } else {
-        actualDiscount = promoData.discountValue;
-      }
-      
-      // Apply the discount
-      currentDiscount = actualDiscount;
-      appliedPromoCode = promoCode;
-      
-      // Update UI
-      updateTotals();
-      
-      // Update the promo item visually if it exists in the list
-      updatePromoItemVisual(promoCode);
-      
-      // Clear input
-      document.querySelector('.promo-input').value = '';
-      
-      showPromoSuccess(`Promo code "${promoCode}" applied successfully! ₹${actualDiscount} discount applied.`);
-      
-      // Increment usage count
-      incrementPromoCodeUsage(promoCode);
-    })
-    .catch((error) => {
-      console.error("Error checking promo code:", error);
-      showPromoError('Error applying promo code. Please try again.');
-    });
-}
-
-// Update promo item visual state when applied via manual input
-function updatePromoItemVisual(promoCode) {
-  const promoItems = document.querySelectorAll('.promo-item');
-  promoItems.forEach(item => {
-    if (item.getAttribute('data-code') === promoCode) {
-      // Remove applied state from all items
-      document.querySelectorAll('.promo-item').forEach(i => {
-        i.classList.remove('applied');
-        const btn = i.querySelector('.select-promo-btn');
-        if (btn && !btn.disabled) {
-          btn.textContent = 'Apply';
-          btn.style.background = '#28a745';
-        }
-      });
-      
-      // Apply state to current item
-      item.classList.add('applied');
-      const appliedBtn = item.querySelector('.select-promo-btn');
-      if (appliedBtn) {
-        appliedBtn.textContent = 'Applied';
-        appliedBtn.style.background = '#6c757d';
-      }
-    }
-  });
-}
 
 // Show promo success message
 function showPromoSuccess(message) {
@@ -2553,209 +2626,6 @@ function processPayment(orderData) {
             }
         }
     }, 2000);
-}
-
-// Firestore structure for promo codes
-// Collection: 'promoCodes'
-// Document structure:
-// {
-//   code: "WELCOME10",
-//   description: "Get 10% off on your first order",
-//   discountType: "percentage", // or "fixed"
-//   discountValue: 10, // 10% or ₹10
-//   minOrderAmount: 0,
-//   maxUses: 100,
-//   usedCount: 0,
-//   isActive: true,
-//   validFrom: timestamp,
-//   validUntil: timestamp,
-//   createdAt: timestamp
-// }
-
-// Load available promo codes from Firestore
-function loadAvailablePromoCodes() {
-  if (!db) {
-    console.log('Firestore not available for promo codes');
-    return;
-  }
-
-  const now = new Date();
-  
-  db.collection('promoCodes')
-    .where('isActive', '==', true)
-    .where('validFrom', '<=', now)
-    .where('validUntil', '>=', now)
-    .get()
-    .then((querySnapshot) => {
-      const availablePromoCodes = [];
-      
-      querySnapshot.forEach((doc) => {
-        const promoData = doc.data();
-        // Check if promo code has usage limits
-        if (promoData.maxUses && promoData.usedCount >= promoData.maxUses) {
-          return; // Skip if max uses reached
-        }
-        availablePromoCodes.push({
-          id: doc.id,
-          ...promoData
-        });
-      });
-      
-      displayPromoCodes(availablePromoCodes);
-    })
-    .catch((error) => {
-      console.error("Error loading promo codes:", error);
-    });
-}
-
-// Display available promo codes in the UI
-function displayPromoCodes(promoList) {
-  const availablePromoCodes = document.getElementById('availablePromoCodes');
-  const promoListContainer = document.getElementById('promoList');
-  
-  if (!availablePromoCodes || !promoListContainer) return;
-  
-  if (promoList.length === 0) {
-    availablePromoCodes.style.display = 'none';
-    return;
-  }
-  
-  promoListContainer.innerHTML = '';
-  
-  promoList.forEach(promo => {
-    const promoItem = document.createElement('div');
-    promoItem.className = 'promo-item';
-    promoItem.setAttribute('data-code', promo.code);
-    promoItem.setAttribute('data-discount-type', promo.discountType);
-    promoItem.setAttribute('data-discount-value', promo.discountValue);
-    promoItem.setAttribute('data-min-amount', promo.minOrderAmount || 0);
-    
-    // Check if promo is applicable to current order
-    const isApplicable = originalTotal >= (promo.minOrderAmount || 0);
-    if (!isApplicable) {
-      promoItem.classList.add('disabled');
-    }
-    
-    let discountText = '';
-    if (promo.discountType === 'percentage') {
-      discountText = `Get ${promo.discountValue}% off`;
-    } else {
-      discountText = `Get ₹${promo.discountValue} off`;
-    }
-    
-    if (promo.minOrderAmount > 0) {
-      discountText += ` on orders above ₹${promo.minOrderAmount}`;
-    }
-    
-    promoItem.innerHTML = `
-      <span class="promo-code-badge">${promo.code}</span>
-      <span class="promo-description">${promo.description || discountText}</span>
-      <button class="select-promo-btn" ${!isApplicable ? 'disabled' : ''}>
-        ${!isApplicable ? 'Not Applicable' : 'Apply'}
-      </button>
-    `;
-    
-    promoListContainer.appendChild(promoItem);
-  });
-  
-  availablePromoCodes.style.display = 'block';
-  setupPromoCodeSelection();
-}
-
-// Handle promo code selection
-function setupPromoCodeSelection() {
-  document.querySelectorAll('.select-promo-btn:not(:disabled)').forEach(button => {
-    button.addEventListener('click', function() {
-      const promoItem = this.closest('.promo-item');
-      const promoCode = promoItem.getAttribute('data-code');
-      const discountType = promoItem.getAttribute('data-discount-type');
-      const discountValue = parseInt(promoItem.getAttribute('data-discount-value'));
-      const minAmount = parseInt(promoItem.getAttribute('data-min-amount'));
-      
-      applySelectedPromoCode(promoCode, discountType, discountValue, minAmount, promoItem);
-    });
-  });
-}
-
-// Apply selected promo code
-function applySelectedPromoCode(promoCode, discountType, discountValue, minAmount, promoItem) {
-  // Validate minimum order amount
-  if (originalTotal < minAmount) {
-    showPromoError(`Minimum order amount of ₹${minAmount} required for this offer.`);
-    return;
-  }
-  
-  // Calculate actual discount
-  let actualDiscount;
-  if (discountType === 'percentage') {
-    actualDiscount = Math.round(originalTotal * (discountValue / 100));
-  } else {
-    actualDiscount = discountValue;
-  }
-  
-  // Apply the discount
-  currentDiscount = actualDiscount;
-  appliedPromoCode = promoCode;
-  
-  // Update UI
-  updateTotals();
-  
-  // Visual feedback
-  document.querySelectorAll('.promo-item').forEach(item => {
-    item.classList.remove('applied');
-    const btn = item.querySelector('.select-promo-btn');
-    if (btn && !btn.disabled) {
-      btn.textContent = 'Apply';
-      btn.style.background = '#28a745';
-    }
-  });
-  
-  promoItem.classList.add('applied');
-  const appliedBtn = promoItem.querySelector('.select-promo-btn');
-  appliedBtn.textContent = 'Applied';
-  appliedBtn.style.background = '#6c757d';
-  
-  showPromoSuccess(`Promo code "${promoCode}" applied successfully! ₹${actualDiscount} discount applied.`);
-  
-  // Increment usage count in Firestore
-  incrementPromoCodeUsage(promoCode);
-}
-
-// Increment promo code usage count
-function incrementPromoCodeUsage(promoCode) {
-  if (!db) return;
-  
-  // Find the promo code document and increment usedCount
-  db.collection('promoCodes')
-    .where('code', '==', promoCode)
-    .get()
-    .then((querySnapshot) => {
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        const currentCount = doc.data().usedCount || 0;
-        
-        return db.collection('promoCodes').doc(doc.id).update({
-          usedCount: currentCount + 1
-        });
-      }
-    })
-    .catch((error) => {
-      console.error("Error updating promo code usage:", error);
-    });
-}
-
-// Update the getActivePromoCodes function to check Firestore
-function getActivePromoCodes() {
-  // This is now handled by loadAvailablePromoCodes
-  return {};
-}
-
-// Update the initCheckoutPage function
-function initCheckoutPage() {
-  updateOrderSummary();
-  setupCheckoutEventListeners();
-  updateCheckoutUI();
-  loadAvailablePromoCodes(); // Load promo codes from Firestore
 }
 
 // Show order success message
