@@ -122,6 +122,93 @@ const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
 
+// ==================== ANALYTICS TRACKING FUNCTIONS ====================
+
+// Track page visits
+function trackPageVisit() {
+    let pageVisits = localStorage.getItem('naturaPageVisits');
+    pageVisits = pageVisits ? parseInt(pageVisits) + 1 : 1;
+    localStorage.setItem('naturaPageVisits', pageVisits);
+    
+    console.log(`Page visit tracked: ${pageVisits}`);
+    
+    // Also track in Firebase for analytics (optional)
+    if (db) {
+        db.collection('analytics').add({
+            type: 'page_visit',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            page: window.location.pathname,
+            userAgent: navigator.userAgent,
+            source: 'website'
+        }).catch(error => console.error("Error logging page visit:", error));
+    }
+}
+
+// Track account creation
+function trackAccountCreation(userId, email, provider = 'email') {
+    // Track in localStorage
+    let accountsCreated = localStorage.getItem('naturaAccountsCreated');
+    accountsCreated = accountsCreated ? parseInt(accountsCreated) + 1 : 1;
+    localStorage.setItem('naturaAccountsCreated', accountsCreated);
+    
+    console.log(`Account creation tracked: ${accountsCreated} - User: ${email}`);
+    
+    // Track in Firebase
+    if (db) {
+        return db.collection('analytics').add({
+            type: 'account_created',
+            userId: userId,
+            email: email,
+            provider: provider,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+    return Promise.resolve();
+}
+
+// Track cart additions
+function trackCartAddition(productId, quantity, productName) {
+    if (db) {
+        db.collection('analytics').add({
+            type: 'cart_addition',
+            productId: productId,
+            productName: productName,
+            quantity: quantity,
+            userId: currentUser ? currentUser.uid : 'guest',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(error => console.error("Error logging cart addition:", error));
+    }
+}
+
+// Track product likes
+function trackProductLike(productId, productName) {
+    if (db) {
+        db.collection('analytics').add({
+            type: 'product_like',
+            productId: productId,
+            productName: productName,
+            userId: currentUser ? currentUser.uid : 'guest',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(error => console.error("Error logging product like:", error));
+    }
+}
+
+// Track order creation
+function trackOrderCreation(orderData) {
+    if (db) {
+        db.collection('analytics').add({
+            type: 'order_created',
+            orderId: orderData.id,
+            total: orderData.total,
+            items: orderData.items,
+            userId: currentUser ? currentUser.uid : 'guest',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(error => console.error("Error logging order:", error));
+    }
+}
+
+// ==================== EXISTING FUNCTIONALITY (UPDATED) ====================
+
 // Initialize Firebase Auth State Listener
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -129,6 +216,16 @@ auth.onAuthStateChanged((user) => {
         updateUIForUser(user);
         // Load profile data including addresses
         loadUserProfileData(user.uid);
+        
+        // Track user login
+        if (db) {
+            db.collection('analytics').add({
+                type: 'user_login',
+                userId: user.uid,
+                email: user.email,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(error => console.error("Error logging user login:", error));
+        }
     } else {
         currentUser = null;
         updateUIForGuest();
@@ -197,11 +294,11 @@ function loadUserProfileData(userId) {
                 userOrders = [];
                 
                 if (querySnapshot.empty) {
-ordersContainer.innerHTML = `
-    <div class="empty-state">
-        <i class="fas fa-shopping-bag"></i> No orders yet
-    </div>
-`;
+                    ordersContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-shopping-bag"></i> No orders yet
+                        </div>
+                    `;
                     return;
                 }
                 
@@ -307,11 +404,11 @@ function loadUserAddresses(userId) {
                 addressesContainer.innerHTML = '';
                 
                 if (querySnapshot.empty) {
-        addressesContainer.innerHTML = `
-    <div class="empty-state">
-        <i class="fas fa-map-marker-alt"></i> No addresses saved
-    </div>
-`;
+                    addressesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-map-marker-alt"></i> No addresses saved
+                        </div>
+                    `;
                     return;
                 }
                 
@@ -350,7 +447,6 @@ function loadUserAddresses(userId) {
 }
 
 // Display address in profile with better UI
-// Display address in profile with NEW fields
 function displayAddress(addressId, address) {
     const addressesContainer = document.getElementById('addresses-container');
     if (!addressesContainer) {
@@ -977,13 +1073,17 @@ function updateLikeUI() {
     }
 }
 
-// Add to likes with auto-open sidebar
+// Enhanced Add to likes with analytics
 function addToLikes(productId) {
     if (!likedProducts.includes(productId)) {
         likedProducts.push(productId);
+        const product = products.find(p => p.id === productId);
         
         // Save ONLY to localStorage (no Firestore saving)
         localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
+        
+        // Track like in analytics
+        trackProductLike(productId, product?.name);
         
         updateLikeUI();
         
@@ -1122,9 +1222,10 @@ function updateCartUI() {
     }
 }
 
-// Enhanced Add to cart function with effects and auto-open sidebar
+// Enhanced Add to cart function with analytics
 function addToCart(productId, quantity = 1) {
     const existingItem = cartProducts.find(item => item.id === productId);
+    const product = products.find(p => p.id === productId);
     
     if (existingItem) {
         existingItem.quantity += quantity;
@@ -1134,6 +1235,9 @@ function addToCart(productId, quantity = 1) {
     
     // Save ONLY to localStorage (no Firestore saving)
     localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+    
+    // Track cart addition in analytics
+    trackCartAddition(productId, quantity, product?.name);
     
     updateCartUI();
     addCartVisualFeedback();
@@ -1281,7 +1385,7 @@ loginBtn.addEventListener('click', () => {
         });
 });
 
-// Signup functionality
+// Enhanced Signup functionality with analytics tracking
 signupBtn.addEventListener('click', () => {
     const name = signupForm.querySelector('input[type="text"]').value;
     const email = signupForm.querySelector('input[type="email"]').value;
@@ -1318,8 +1422,12 @@ signupBtn.addEventListener('click', () => {
                 return db.collection('users').doc(user.uid).set({
                     displayName: name,
                     email: email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
                 });
+            }).then(() => {
+                // Track account creation in analytics
+                return trackAccountCreation(user.uid, email, 'email');
             });
         })
         .then(() => {
@@ -1356,7 +1464,7 @@ resetBtn.addEventListener('click', () => {
         });
 });
 
-// Google login
+// Enhanced Google login with analytics tracking
 googleLoginBtn.addEventListener('click', () => {
     // Check if we're in a supported environment
     if (window.location.protocol !== 'https:' && window.location.protocol !== 'http:' && !window.location.hostname.includes('localhost')) {
@@ -1370,15 +1478,29 @@ googleLoginBtn.addEventListener('click', () => {
         auth.signInWithPopup(provider)
             .then((result) => {
                 const user = result.user;
+                let isNewUser = result.additionalUserInfo.isNewUser;
                 
                 // Check if user exists in Firestore, if not create document (only for profile data)
                 return db.collection('users').doc(user.uid).get().then((doc) => {
                     if (!doc.exists) {
+                        isNewUser = true;
                         return db.collection('users').doc(user.uid).set({
                             displayName: user.displayName,
                             email: user.email,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                            provider: 'google'
                         });
+                    } else {
+                        // Update last login for existing user
+                        return db.collection('users').doc(user.uid).update({
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }).then(() => {
+                    // Track account creation if it's a new user
+                    if (isNewUser) {
+                        return trackAccountCreation(user.uid, user.email, 'google');
                     }
                 });
             })
@@ -1582,5 +1704,5 @@ function initCommon() {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
+    trackPageVisit(); // Track page visit on load
 });
-
