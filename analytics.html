@@ -8,11 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
     <style>
         :root {
             --primary: #1a3a27;
@@ -43,84 +41,12 @@
             background-color: #f8fafc;
             color: var(--dark);
             line-height: 1.6;
-            overflow-x: hidden;
         }
 
         .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            width: 280px;
-            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: white;
-            padding: 24px 0;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 1000;
-            transition: var(--transition);
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar-header {
-            padding: 0 24px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 24px;
-        }
-
-        .sidebar-header h2 {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .sidebar-header h2 i {
-            color: var(--secondary);
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 4px;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 14px 24px;
-            color: rgba(255, 255, 255, 0.85);
-            text-decoration: none;
-            transition: var(--transition);
-            border-left: 4px solid transparent;
-            font-weight: 500;
-        }
-
-        .sidebar-menu a:hover, .sidebar-menu a.active {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-left-color: var(--secondary);
-        }
-
-        .sidebar-menu a i {
-            margin-right: 12px;
-            width: 20px;
-            text-align: center;
-            font-size: 1.1rem;
-        }
-
-        /* Main Content Styles */
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
-            padding: 24px;
-            transition: var(--transition);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
         .header {
@@ -157,12 +83,6 @@
             background: white;
             font-weight: 500;
             cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .date-filter select:focus {
-            outline: none;
-            border-color: var(--primary);
         }
 
         .user-info {
@@ -185,13 +105,12 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 1.1rem;
         }
 
         /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
             margin-bottom: 32px;
         }
@@ -284,153 +203,79 @@
             color: var(--dark);
         }
 
-        .stat-info .change {
+        .stat-info .description {
             font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            font-weight: 500;
+            color: var(--gray);
         }
 
-        .change.positive {
-            color: var(--success);
-        }
-
-        .change.negative {
-            color: var(--danger);
-        }
-
-        /* Charts Section */
-        .charts-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .chart-container {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 24px;
-            box-shadow: var(--box-shadow);
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .chart-header h3 {
-            color: var(--primary);
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-
-        .chart-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .chart-actions select {
-            padding: 8px 12px;
-            border: 1px solid var(--gray-light);
-            border-radius: 6px;
-            background: white;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .chart {
-            height: 320px;
-            width: 100%;
-        }
-
-        /* Tables Section */
-        .tables-row {
+        /* Data Sections */
+        .data-sections {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
             margin-bottom: 32px;
         }
 
-        .table-container {
+        .data-section {
             background: white;
             border-radius: var(--border-radius);
             padding: 24px;
             box-shadow: var(--box-shadow);
         }
 
-        .table-header {
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--gray-light);
         }
 
-        .table-header h3 {
+        .section-header h3 {
             color: var(--primary);
             font-size: 1.3rem;
             font-weight: 600;
         }
 
-        .table-header a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9rem;
+        .data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
             transition: var(--transition);
         }
 
-        .table-header a:hover {
-            color: var(--primary-light);
+        .data-item:hover {
+            background: #f1f5f9;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .data-item-info {
+            flex: 1;
         }
 
-        th, td {
-            padding: 14px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--gray-light);
+        .data-item-name {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 4px;
         }
 
-        th {
-            background-color: rgba(26, 58, 39, 0.03);
+        .data-item-details {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .data-item-value {
+            font-weight: 600;
             color: var(--primary);
-            font-weight: 600;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        tr:hover {
-            background-color: rgba(26, 58, 39, 0.02);
-        }
-
-        .status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .status.completed {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .status.pending {
-            background-color: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-        }
-
-        .status.cancelled {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
         }
 
         /* Footer */
@@ -457,88 +302,19 @@
             margin-right: 12px;
         }
 
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .charts-row, .tables-row {
-                grid-template-columns: 1fr;
-            }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
         }
 
-        @media (max-width: 992px) {
-            .sidebar {
-                width: 80px;
-            }
-            
-            .sidebar-header h2 span, .sidebar-menu a span {
-                display: none;
-            }
-            
-            .sidebar-menu a {
-                justify-content: center;
-                padding: 16px;
-            }
-            
-            .sidebar-menu a i {
-                margin-right: 0;
-            }
-            
-            .main-content {
-                margin-left: 80px;
-            }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: var(--gray-light);
         }
 
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.active {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 16px;
-            }
-            
-            .menu-toggle {
-                display: block;
-            }
-
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 16px;
-            }
-
-            .header-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
-
-        /* Toggle button for mobile */
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--primary);
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 6px;
-            transition: var(--transition);
-        }
-
-        .menu-toggle:hover {
-            background: var(--gray-light);
-        }
-
-        /* Data refresh indicator */
+        /* Refresh indicator */
         .refresh-indicator {
             position: fixed;
             bottom: 20px;
@@ -563,262 +339,145 @@
             transform: translateY(0);
         }
 
-        /* Data Cards */
-        .data-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            margin-bottom: 32px;
-        }
+        @media (max-width: 768px) {
+            .data-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
 
-        .data-card {
-            background: white;
-            border-radius: var(--border-radius);
-            padding: 24px;
-            box-shadow: var(--box-shadow);
-        }
-
-        .data-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .data-card-header h3 {
-            color: var(--primary);
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .data-card-content {
-            min-height: 200px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--gray);
-        }
-
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 16px;
-            color: var(--gray-light);
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2><i class="fas fa-chart-line"></i> <span>Analytics</span></h2>
+        <div class="header">
+            <h1>Analytics Dashboard</h1>
+            <div class="header-actions">
+                <div class="date-filter">
+                    <select id="timeRange">
+                        <option value="all">All Time</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d" selected>Last 30 Days</option>
+                        <option value="90d">Last 90 Days</option>
+                    </select>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <div>Analytics Viewer</div>
+                        <small>Public Access</small>
+                    </div>
+                </div>
             </div>
-            <ul class="sidebar-menu">
-                <li><a href="#" class="active"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
-                <li><a href="#"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
-                <li><a href="#"><i class="fas fa-users"></i> <span>Customers</span></a></li>
-                <li><a href="#"><i class="fas fa-box"></i> <span>Products</span></a></li>
-                <li><a href="#"><i class="fas fa-chart-bar"></i> <span>Reports</span></a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
-            </ul>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="header">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1>Analytics Dashboard</h1>
-                <div class="header-actions">
-                    <div class="date-filter">
-                        <select id="timeRange">
-                            <option value="7d">Last 7 Days</option>
-                            <option value="30d" selected>Last 30 Days</option>
-                            <option value="90d">Last 90 Days</option>
-                            <option value="1y">Last Year</option>
-                        </select>
-                    </div>
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div>
-                            <div>Analytics Viewer</div>
-                            <small>Public Access</small>
-                        </div>
-                    </div>
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon visits">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Page Visits</h3>
+                    <div class="value" id="visitCount">0</div>
+                    <div class="description">Total website visits</div>
                 </div>
             </div>
+            <div class="stat-card">
+                <div class="stat-icon carts">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Cart Added</h3>
+                    <div class="value" id="cartCount">0</div>
+                    <div class="description">Products added to cart</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon likes">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Products Liked</h3>
+                    <div class="value" id="likeCount">0</div>
+                    <div class="description">Total product likes</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon accounts">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Accounts Created</h3>
+                    <div class="value" id="accountCount">0</div>
+                    <div class="description">User registrations</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orders">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Orders Placed</h3>
+                    <div class="value" id="orderCount">0</div>
+                    <div class="description">Completed orders</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon revenue">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Revenue</h3>
+                    <div class="value" id="revenueCount">₹0</div>
+                    <div class="description">Total revenue generated</div>
+                </div>
+            </div>
+        </div>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon visits">
-                        <i class="fas fa-eye"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Page Visits</h3>
-                        <div class="value" id="visitCount">0</div>
-                        <div class="change" id="visitChange">
-                            <i class="fas fa-minus"></i> <span>0%</span> from last period
-                        </div>
-                    </div>
+        <!-- Data Sections -->
+        <div class="data-sections">
+            <div class="data-section">
+                <div class="section-header">
+                    <h3>Recent Orders</h3>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon carts">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Cart Added</h3>
-                        <div class="value" id="cartCount">0</div>
-                        <div class="change" id="cartChange">
-                            <i class="fas fa-minus"></i> <span>0%</span> from last period
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon likes">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Products Liked</h3>
-                        <div class="value" id="likeCount">0</div>
-                        <div class="change" id="likeChange">
-                            <i class="fas fa-minus"></i> <span>0%</span> from last period
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon accounts">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Accounts Created</h3>
-                        <div class="value" id="accountCount">0</div>
-                        <div class="change" id="accountChange">
-                            <i class="fas fa-minus"></i> <span>0%</span> from last period
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon orders">
-                        <i class="fas fa-shopping-bag"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Orders Placed</h3>
-                        <div class="value" id="orderCount">0</div>
-                        <div class="change" id="orderChange">
-                            <i class="fas fa-minus"></i> <span>0%</span> from last period
-                        </div>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon revenue">
-                        <i class="fas fa-rupee-sign"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>Revenue</h3>
-                        <div class="value" id="revenueCount">₹0</div>
-                        <div class="change" id="revenueChange">
-                            <i class="fas fa-minus"></i> <span>0%</span> from last period
-                        </div>
+                <div id="recentOrders">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Loading orders...</span>
                     </div>
                 </div>
             </div>
+            <div class="data-section">
+                <div class="section-header">
+                    <h3>Popular Products</h3>
+                </div>
+                <div id="popularProducts">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Loading products...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            <!-- Charts Section -->
-            <div class="charts-row">
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <h3>User Activity Overview</h3>
-                        <div class="chart-actions">
-                            <select id="chartType">
-                                <option value="line">Line Chart</option>
-                                <option value="area">Area Chart</option>
-                                <option value="column">Column Chart</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="activityChart" class="chart">
-                        <div class="loading">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading chart data...</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-header">
-                        <h3>Conversion Funnel</h3>
-                    </div>
-                    <div id="funnelChart" class="chart">
-                        <div class="loading">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading funnel data...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Data Cards -->
-            <div class="data-cards">
-                <div class="data-card">
-                    <div class="data-card-header">
-                        <h3>Top Products</h3>
-                    </div>
-                    <div class="data-card-content" id="topProductsCard">
-                        <div class="loading">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading products...</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="data-card">
-                    <div class="data-card-header">
-                        <h3>Recent Activity</h3>
-                    </div>
-                    <div class="data-card-content" id="recentActivityCard">
-                        <div class="loading">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading activity...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tables Section -->
-            <div class="tables-row">
-                <div class="table-container">
-                    <div class="table-header">
-                        <h3>Recent Orders</h3>
-                        <a href="#">View All</a>
-                    </div>
-                    <div id="recentOrders">
-                        <div class="loading">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading orders...</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <div class="table-header">
-                        <h3>Customer Insights</h3>
-                        <a href="#">View All</a>
-                    </div>
-                    <div id="customerInsights">
-                        <div class="loading">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading insights...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer">
-                <p>Natura Honey Analytics Dashboard &copy; 2023 | Data updates in real-time</p>
-            </div>
+        <div class="footer">
+            <p>Natura Honey Analytics Dashboard &copy; 2023 | Data updates in real-time</p>
         </div>
     </div>
 
@@ -843,88 +502,29 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Global variables
-        let analyticsData = {
-            visits: 0,
-            carts: 0,
-            likes: 0,
-            accounts: 0,
-            orders: 0,
-            revenue: 0
-        };
-
-        let previousPeriodData = {
-            visits: 0,
-            carts: 0,
-            likes: 0,
-            accounts: 0,
-            orders: 0,
-            revenue: 0
-        };
-
-        // Initialize Google Charts
-        google.charts.load('current', {'packages':['corechart', 'bar']});
-        google.charts.setOnLoadCallback(initializeDashboard);
-
         // Initialize the dashboard
-        function initializeDashboard() {
+        document.addEventListener('DOMContentLoaded', function() {
             loadAnalyticsData();
             setupEventListeners();
-        }
+        });
 
         // Load all analytics data from Firebase
         async function loadAnalyticsData() {
             try {
-                // Reset all data
-                analyticsData = {
-                    visits: 0,
-                    carts: 0,
-                    likes: 0,
-                    accounts: 0,
-                    orders: 0,
-                    revenue: 0
-                };
-
-                previousPeriodData = {
-                    visits: 0,
-                    carts: 0,
-                    likes: 0,
-                    accounts: 0,
-                    orders: 0,
-                    revenue: 0
-                };
-
-                // Load page visits from localStorage (tracked from your main site)
-                await loadPageVisits();
+                console.log("Loading analytics data from Firebase...");
                 
-                // Load cart data from localStorage and Firestore
-                await loadCartData();
+                // Load all data in parallel
+                await Promise.all([
+                    loadPageVisits(),
+                    loadCartData(),
+                    loadLikesData(),
+                    loadAccountsData(),
+                    loadOrdersData(),
+                    loadRevenueData(),
+                    loadRecentOrders(),
+                    loadPopularProducts()
+                ]);
                 
-                // Load likes data from localStorage and Firestore
-                await loadLikesData();
-                
-                // Load accounts data from Firestore
-                await loadAccountsData();
-                
-                // Load orders data from Firestore
-                await loadOrdersData();
-                
-                // Load revenue data from orders
-                await loadRevenueData();
-                
-                // Update UI with loaded data
-                updateStatsUI();
-                
-                // Draw charts with real data
-                drawCharts();
-                
-                // Load additional data
-                loadRecentOrders();
-                loadTopProductsCard();
-                loadRecentActivity();
-                loadCustomerInsights();
-                
-                // Show refresh indicator
                 showRefreshIndicator();
                 
             } catch (error) {
@@ -936,353 +536,132 @@
         // Load page visits data
         async function loadPageVisits() {
             try {
-                // Get page visits from localStorage (tracked from your main site)
+                // Get from localStorage (tracked from main site)
                 const pageVisits = localStorage.getItem('naturaPageVisits');
-                if (pageVisits) {
-                    analyticsData.visits = parseInt(pageVisits);
-                }
-                
-                // Get previous period data
-                const prevVisits = localStorage.getItem('naturaPrevPageVisits');
-                if (prevVisits) {
-                    previousPeriodData.visits = parseInt(prevVisits);
-                }
+                const count = pageVisits ? parseInt(pageVisits) : 0;
+                document.getElementById('visitCount').textContent = count.toLocaleString();
+                console.log("Page visits:", count);
             } catch (error) {
                 console.error("Error loading page visits:", error);
+                document.getElementById('visitCount').textContent = "0";
             }
         }
 
         // Load cart data
         async function loadCartData() {
             try {
-                // Get cart data from localStorage
+                let totalCartItems = 0;
+                
+                // Get guest cart from localStorage
                 const guestCart = localStorage.getItem('guestCart');
                 if (guestCart) {
                     const cartItems = JSON.parse(guestCart);
-                    analyticsData.carts = cartItems.reduce((total, item) => total + item.quantity, 0);
+                    totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
                 }
                 
-                // Get previous cart data
-                const prevCart = localStorage.getItem('prevGuestCart');
-                if (prevCart) {
-                    const prevCartItems = JSON.parse(prevCart);
-                    previousPeriodData.carts = prevCartItems.reduce((total, item) => total + item.quantity, 0);
-                }
-                
-                // Also try to get cart data from Firestore for logged-in users
+                // Get user carts from Firestore
                 const cartsSnapshot = await db.collection('carts').get();
-                if (!cartsSnapshot.empty) {
-                    cartsSnapshot.forEach(doc => {
-                        const cart = doc.data();
-                        if (cart.items) {
-                            analyticsData.carts += cart.items.reduce((total, item) => total + item.quantity, 0);
-                        }
-                    });
-                }
+                cartsSnapshot.forEach(doc => {
+                    const cart = doc.data();
+                    if (cart.items && Array.isArray(cart.items)) {
+                        totalCartItems += cart.items.reduce((total, item) => total + item.quantity, 0);
+                    }
+                });
+                
+                document.getElementById('cartCount').textContent = totalCartItems.toLocaleString();
+                console.log("Cart items:", totalCartItems);
             } catch (error) {
                 console.error("Error loading cart data:", error);
+                document.getElementById('cartCount').textContent = "0";
             }
         }
 
         // Load likes data
         async function loadLikesData() {
             try {
-                // Get likes data from localStorage
+                let totalLikes = 0;
+                
+                // Get guest likes from localStorage
                 const guestLikes = localStorage.getItem('guestLikes');
                 if (guestLikes) {
                     const likedProducts = JSON.parse(guestLikes);
-                    analyticsData.likes = likedProducts.length;
+                    totalLikes = likedProducts.length;
                 }
                 
-                // Get previous likes data
-                const prevLikes = localStorage.getItem('prevGuestLikes');
-                if (prevLikes) {
-                    const prevLikedProducts = JSON.parse(prevLikes);
-                    previousPeriodData.likes = prevLikedProducts.length;
-                }
-                
-                // Also try to get likes data from Firestore for logged-in users
+                // Get user likes from Firestore
                 const likesSnapshot = await db.collection('likes').get();
-                if (!likesSnapshot.empty) {
-                    analyticsData.likes += likesSnapshot.size;
-                }
+                totalLikes += likesSnapshot.size;
+                
+                document.getElementById('likeCount').textContent = totalLikes.toLocaleString();
+                console.log("Total likes:", totalLikes);
             } catch (error) {
                 console.error("Error loading likes data:", error);
+                document.getElementById('likeCount').textContent = "0";
             }
         }
 
         // Load accounts data
         async function loadAccountsData() {
             try {
-                // Get user accounts data from Firestore
                 const usersSnapshot = await db.collection('users').get();
-                analyticsData.accounts = usersSnapshot.size;
+                const userCount = usersSnapshot.size;
                 
-                // Calculate previous period (users created before current period)
-                const timeRange = document.getElementById('timeRange').value;
-                const periodStart = getPeriodStartDate(timeRange);
-                
-                const prevUsersSnapshot = await db.collection('users')
-                    .where('createdAt', '<', periodStart)
-                    .get();
-                previousPeriodData.accounts = prevUsersSnapshot.size;
+                document.getElementById('accountCount').textContent = userCount.toLocaleString();
+                console.log("User accounts:", userCount);
             } catch (error) {
                 console.error("Error loading accounts data:", error);
+                document.getElementById('accountCount').textContent = "0";
             }
         }
 
         // Load orders data
         async function loadOrdersData() {
             try {
-                // Get orders data from Firestore
                 const ordersSnapshot = await db.collection('orders').get();
-                analyticsData.orders = ordersSnapshot.size;
+                const orderCount = ordersSnapshot.size;
                 
-                // Calculate previous period (orders created before current period)
-                const timeRange = document.getElementById('timeRange').value;
-                const periodStart = getPeriodStartDate(timeRange);
-                
-                const prevOrdersSnapshot = await db.collection('orders')
-                    .where('createdAt', '<', periodStart)
-                    .get();
-                previousPeriodData.orders = prevOrdersSnapshot.size;
+                document.getElementById('orderCount').textContent = orderCount.toLocaleString();
+                console.log("Total orders:", orderCount);
             } catch (error) {
                 console.error("Error loading orders data:", error);
+                document.getElementById('orderCount').textContent = "0";
             }
         }
 
         // Load revenue data
         async function loadRevenueData() {
             try {
-                // Get revenue data from orders
                 let totalRevenue = 0;
                 const ordersSnapshot = await db.collection('orders').get();
                 
                 ordersSnapshot.forEach(doc => {
                     const order = doc.data();
-                    if (order.total) {
+                    if (order.total && typeof order.total === 'number') {
                         totalRevenue += order.total;
                     }
                 });
-                analyticsData.revenue = totalRevenue;
                 
-                // Calculate previous period revenue
-                const timeRange = document.getElementById('timeRange').value;
-                const periodStart = getPeriodStartDate(timeRange);
-                
-                let prevRevenue = 0;
-                const prevOrdersSnapshot = await db.collection('orders')
-                    .where('createdAt', '<', periodStart)
-                    .get();
-                
-                prevOrdersSnapshot.forEach(doc => {
-                    const order = doc.data();
-                    if (order.total) {
-                        prevRevenue += order.total;
-                    }
-                });
-                previousPeriodData.revenue = prevRevenue;
+                document.getElementById('revenueCount').textContent = '₹' + totalRevenue.toLocaleString();
+                console.log("Total revenue:", totalRevenue);
             } catch (error) {
                 console.error("Error loading revenue data:", error);
+                document.getElementById('revenueCount').textContent = "₹0";
             }
         }
 
-        // Get period start date based on selected time range
-        function getPeriodStartDate(timeRange) {
-            const now = new Date();
-            const periodStart = new Date();
-            
-            switch(timeRange) {
-                case '7d':
-                    periodStart.setDate(now.getDate() - 7);
-                    break;
-                case '30d':
-                    periodStart.setDate(now.getDate() - 30);
-                    break;
-                case '90d':
-                    periodStart.setDate(now.getDate() - 90);
-                    break;
-                case '1y':
-                    periodStart.setFullYear(now.getFullYear() - 1);
-                    break;
-                default:
-                    periodStart.setDate(now.getDate() - 30);
-            }
-            
-            return periodStart;
-        }
-
-        // Update stats UI with animation
-        function updateStatsUI() {
-            // Animate counting up for each stat
-            Object.keys(analyticsData).forEach(stat => {
-                const element = document.getElementById(`${stat}Count`);
-                if (element) {
-                    animateValue(element, 0, analyticsData[stat], 1500, stat === 'revenue');
-                }
-                
-                // Calculate and display percentage change
-                const changeElement = document.getElementById(`${stat}Change`);
-                if (changeElement) {
-                    const change = calculatePercentageChange(analyticsData[stat], previousPeriodData[stat]);
-                    const changeSpan = changeElement.querySelector('span');
-                    changeSpan.textContent = `${Math.abs(change)}%`;
-                    
-                    // Update color and icon based on change
-                    if (change > 0) {
-                        changeElement.className = 'change positive';
-                        changeElement.querySelector('i').className = 'fas fa-arrow-up';
-                    } else if (change < 0) {
-                        changeElement.className = 'change negative';
-                        changeElement.querySelector('i').className = 'fas fa-arrow-down';
-                    } else {
-                        changeElement.className = 'change';
-                        changeElement.querySelector('i').className = 'fas fa-minus';
-                    }
-                }
-            });
-        }
-
-        // Calculate percentage change
-        function calculatePercentageChange(current, previous) {
-            if (previous === 0) {
-                return current > 0 ? 100 : 0;
-            }
-            return Math.round(((current - previous) / previous) * 100);
-        }
-
-        // Animate value counting up
-        function animateValue(element, start, end, duration, isCurrency = false) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                
-                // Format numbers with commas
-                const value = Math.floor(progress * (end - start) + start);
-                if (isCurrency) {
-                    element.innerHTML = '₹' + value.toLocaleString('en-IN');
-                } else {
-                    element.innerHTML = value.toLocaleString('en-IN');
-                }
-                
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        // Draw all charts
-        function drawCharts() {
-            drawActivityChart();
-            drawFunnelChart();
-        }
-
-        // Draw Activity Chart with real data
-        function drawActivityChart() {
-            // For now, we'll create a simple chart with the actual data
-            // In a real implementation, you would query time-series data from Firestore
-            const data = new google.visualization.DataTable();
-            data.addColumn('string', 'Metric');
-            data.addColumn('number', 'Current Period');
-            data.addColumn('number', 'Previous Period');
-            
-            data.addRows([
-                ['Visits', analyticsData.visits, previousPeriodData.visits],
-                ['Carts', analyticsData.carts, previousPeriodData.carts],
-                ['Likes', analyticsData.likes, previousPeriodData.likes],
-                ['Accounts', analyticsData.accounts, previousPeriodData.accounts],
-                ['Orders', analyticsData.orders, previousPeriodData.orders]
-            ]);
-
-            const chartType = document.getElementById('chartType').value;
-            let chart;
-            
-            if (chartType === 'line') {
-                chart = new google.visualization.LineChart(document.getElementById('activityChart'));
-            } else if (chartType === 'area') {
-                chart = new google.visualization.AreaChart(document.getElementById('activityChart'));
-            } else {
-                chart = new google.visualization.ColumnChart(document.getElementById('activityChart'));
-            }
-
-            const options = {
-                title: 'Performance Comparison',
-                legend: { position: 'bottom' },
-                colors: ['#1a3a27', '#d4af37'],
-                backgroundColor: 'transparent',
-                chartArea: { width: '85%', height: '75%' },
-                hAxis: { 
-                    textStyle: { color: '#6c757d' }
-                },
-                vAxis: { 
-                    textStyle: { color: '#6c757d' }
-                },
-                titleTextStyle: {
-                    color: '#1a3a27',
-                    fontSize: 16,
-                    bold: true
-                }
-            };
-
-            chart.draw(data, options);
-        }
-
-        // Draw Funnel Chart with real data
-        function drawFunnelChart() {
-            const data = google.visualization.arrayToDataTable([
-                ['Stage', 'Users', { role: 'style' }],
-                ['Visits', analyticsData.visits, '#1a3a27'],
-                ['Cart Added', analyticsData.carts, '#d4af37'],
-                ['Account Created', analyticsData.accounts, '#3b82f6'],
-                ['Orders Placed', analyticsData.orders, '#10b981']
-            ]);
-
-            const options = {
-                title: 'Conversion Funnel',
-                legend: { position: 'none' },
-                bar: { groupWidth: '70%' },
-                backgroundColor: 'transparent',
-                vAxis: { 
-                    title: 'Number of Users',
-                    minValue: 0,
-                    textStyle: { color: '#6c757d' }
-                },
-                hAxis: {
-                    textStyle: { color: '#6c757d' }
-                },
-                titleTextStyle: {
-                    color: '#1a3a27',
-                    fontSize: 16,
-                    bold: true
-                }
-            };
-
-            const chart = new google.visualization.ColumnChart(document.getElementById('funnelChart'));
-            chart.draw(data, options);
-        }
-
-        // Load Recent Orders Table
+        // Load recent orders
         async function loadRecentOrders() {
             try {
                 const ordersSnapshot = await db.collection('orders')
                     .orderBy('createdAt', 'desc')
-                    .limit(5)
+                    .limit(10)
                     .get();
                 
-                const orders = [];
-                ordersSnapshot.forEach(doc => {
-                    const order = doc.data();
-                    order.id = doc.id;
-                    orders.push(order);
-                });
+                const ordersContainer = document.getElementById('recentOrders');
+                ordersContainer.innerHTML = '';
                 
-                const tableBody = document.getElementById('recentOrders');
-                tableBody.innerHTML = '';
-                
-                if (orders.length === 0) {
-                    tableBody.innerHTML = `
+                if (ordersSnapshot.empty) {
+                    ordersContainer.innerHTML = `
                         <div class="empty-state">
                             <i class="fas fa-shopping-bag"></i>
                             <p>No orders found</p>
@@ -1291,42 +670,34 @@
                     return;
                 }
                 
-                const table = document.createElement('table');
-                const thead = document.createElement('thead');
-                thead.innerHTML = `
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                    </tr>
-                `;
-                table.appendChild(thead);
+                const ordersList = document.createElement('div');
+                ordersList.className = 'data-list';
                 
-                const tbody = document.createElement('tbody');
-                orders.forEach(order => {
-                    const row = document.createElement('tr');
+                ordersSnapshot.forEach(doc => {
+                    const order = doc.data();
+                    const orderItem = document.createElement('div');
+                    orderItem.className = 'data-item';
+                    
                     const customerName = order.shippingAddress ? 
                         `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}` : 
-                        'Unknown Customer';
+                        'Guest Customer';
                     
                     const orderDate = order.createdAt ? 
                         new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 
-                        'N/A';
+                        'Unknown Date';
                     
-                    row.innerHTML = `
-                        <td>${order.id.substring(0, 8)}</td>
-                        <td>${customerName}</td>
-                        <td>${orderDate}</td>
-                        <td>₹${order.total || 0}</td>
-                        <td><span class="status ${order.status || 'pending'}">${(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}</span></td>
+                    orderItem.innerHTML = `
+                        <div class="data-item-info">
+                            <div class="data-item-name">Order #${doc.id.substring(0, 8)}</div>
+                            <div class="data-item-details">${customerName} • ${orderDate}</div>
+                        </div>
+                        <div class="data-item-value">₹${order.total || 0}</div>
                     `;
-                    tbody.appendChild(row);
+                    
+                    ordersList.appendChild(orderItem);
                 });
                 
-                table.appendChild(tbody);
-                tableBody.appendChild(table);
+                ordersContainer.appendChild(ordersList);
                 
             } catch (error) {
                 console.error("Error loading recent orders:", error);
@@ -1339,10 +710,10 @@
             }
         }
 
-        // Load Top Products Card
-        async function loadTopProductsCard() {
+        // Load popular products
+        async function loadPopularProducts() {
             try {
-                // Get products from your existing products array
+                // Get your products array
                 const products = [
                     { id: 1, name: "Natura Agmark Honey", weight: "1Kg", price: 249, category: "crystal" },
                     { id: 2, name: "Natura Agmark Honey", weight: "500g", price: 449, category: "crystal" },
@@ -1352,21 +723,19 @@
                     { id: 6, name: "Natura Agmark Honey - Premium Pet", weight: "500g", price: 329, category: "premium" }
                 ];
                 
-                // Get likes data for each product
+                // Get likes data
                 const productLikes = {};
                 const guestLikes = JSON.parse(localStorage.getItem('guestLikes') || '[]');
-                
                 guestLikes.forEach(productId => {
                     productLikes[productId] = (productLikes[productId] || 0) + 1;
                 });
                 
-                // Get order data for each product
+                // Get sales data from orders
                 const productSales = {};
                 const ordersSnapshot = await db.collection('orders').get();
-                
                 ordersSnapshot.forEach(doc => {
                     const order = doc.data();
-                    if (order.items) {
+                    if (order.items && Array.isArray(order.items)) {
                         order.items.forEach(item => {
                             productSales[item.productId] = (productSales[item.productId] || 0) + item.quantity;
                         });
@@ -1376,19 +745,20 @@
                 // Create product list with actual data
                 const productList = products.map(product => {
                     return {
+                        id: product.id,
                         name: `${product.name} - ${product.weight}`,
                         category: product.category,
                         price: product.price,
                         likes: productLikes[product.id] || 0,
                         sales: productSales[product.id] || 0
                     };
-                }).sort((a, b) => b.sales - a.sales).slice(0, 4);
+                }).sort((a, b) => b.sales - a.sales).slice(0, 10);
                 
-                const cardContent = document.getElementById('topProductsCard');
-                cardContent.innerHTML = '';
+                const productsContainer = document.getElementById('popularProducts');
+                productsContainer.innerHTML = '';
                 
                 if (productList.length === 0) {
-                    cardContent.innerHTML = `
+                    productsContainer.innerHTML = `
                         <div class="empty-state">
                             <i class="fas fa-box"></i>
                             <p>No product data available</p>
@@ -1397,188 +767,32 @@
                     return;
                 }
                 
-                const list = document.createElement('div');
-                list.style.display = 'flex';
-                list.style.flexDirection = 'column';
-                list.style.gap = '12px';
+                const productsList = document.createElement('div');
+                productsList.className = 'data-list';
                 
-                productList.forEach((product, index) => {
-                    const item = document.createElement('div');
-                    item.style.display = 'flex';
-                    item.style.justifyContent = 'space-between';
-                    item.style.alignItems = 'center';
-                    item.style.padding = '12px';
-                    item.style.backgroundColor = index % 2 === 0 ? '#f8fafc' : 'white';
-                    item.style.borderRadius = '8px';
+                productList.forEach(product => {
+                    const productItem = document.createElement('div');
+                    productItem.className = 'data-item';
                     
-                    item.innerHTML = `
-                        <div>
-                            <div style="font-weight: 600; color: var(--primary);">${product.name}</div>
-                            <div style="font-size: 0.85rem; color: var(--gray);">${product.category} • ₹${product.price}</div>
+                    productItem.innerHTML = `
+                        <div class="data-item-info">
+                            <div class="data-item-name">${product.name}</div>
+                            <div class="data-item-details">${product.category} • ₹${product.price} • ${product.likes} likes</div>
                         </div>
-                        <div style="text-align: right;">
-                            <div style="font-weight: 600;">${product.sales} sales</div>
-                            <div style="font-size: 0.85rem; color: var(--danger);"><i class="fas fa-heart"></i> ${product.likes}</div>
-                        </div>
+                        <div class="data-item-value">${product.sales} sold</div>
                     `;
                     
-                    list.appendChild(item);
+                    productsList.appendChild(productItem);
                 });
                 
-                cardContent.appendChild(list);
+                productsContainer.appendChild(productsList);
                 
             } catch (error) {
-                console.error("Error loading top products:", error);
-                document.getElementById('topProductsCard').innerHTML = `
+                console.error("Error loading popular products:", error);
+                document.getElementById('popularProducts').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-circle"></i>
                         <p>Error loading products</p>
-                    </div>
-                `;
-            }
-        }
-
-        // Load Recent Activity
-        async function loadRecentActivity() {
-            try {
-                // Get recent orders for activity feed
-                const ordersSnapshot = await db.collection('orders')
-                    .orderBy('createdAt', 'desc')
-                    .limit(5)
-                    .get();
-                
-                const activities = [];
-                ordersSnapshot.forEach(doc => {
-                    const order = doc.data();
-                    activities.push({
-                        action: 'Order Placed',
-                        user: order.shippingAddress ? 
-                            `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}` : 
-                            'Unknown Customer',
-                        time: order.createdAt ? 
-                            new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 
-                            'Recently',
-                        amount: `₹${order.total || 0}`
-                    });
-                });
-                
-                const cardContent = document.getElementById('recentActivityCard');
-                cardContent.innerHTML = '';
-                
-                if (activities.length === 0) {
-                    cardContent.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-bell"></i>
-                            <p>No recent activity</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const list = document.createElement('div');
-                list.style.display = 'flex';
-                list.style.flexDirection = 'column';
-                list.style.gap = '12px';
-                
-                activities.forEach((activity, index) => {
-                    const item = document.createElement('div');
-                    item.style.display = 'flex';
-                    item.style.justifyContent = 'space-between';
-                    item.style.alignItems = 'center';
-                    item.style.padding = '12px';
-                    item.style.backgroundColor = index % 2 === 0 ? '#f8fafc' : 'white';
-                    item.style.borderRadius = '8px';
-                    
-                    item.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--success); display: flex; align-items: center; justify-content: center; color: white;">
-                                <i class="fas fa-shopping-bag"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; color: var(--primary);">${activity.action}</div>
-                                <div style="font-size: 0.85rem; color: var(--gray);">by ${activity.user} • ${activity.time}</div>
-                            </div>
-                        </div>
-                        <div style="font-weight: 600; color: var(--primary);">${activity.amount}</div>
-                    `;
-                    
-                    list.appendChild(item);
-                });
-                
-                cardContent.appendChild(list);
-                
-            } catch (error) {
-                console.error("Error loading recent activity:", error);
-                document.getElementById('recentActivityCard').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Error loading activity</p>
-                    </div>
-                `;
-            }
-        }
-
-        // Load Customer Insights
-        function loadCustomerInsights() {
-            try {
-                // Calculate insights from actual data
-                const avgOrderValue = analyticsData.orders > 0 ? 
-                    Math.round(analyticsData.revenue / analyticsData.orders) : 0;
-                
-                const conversionRate = analyticsData.visits > 0 ? 
-                    ((analyticsData.orders / analyticsData.visits) * 100).toFixed(1) : 0;
-                
-                const cartAbandonmentRate = analyticsData.carts > 0 ? 
-                    ((analyticsData.carts - analyticsData.orders) / analyticsData.carts * 100).toFixed(1) : 0;
-                
-                const insights = [
-                    { metric: 'Average Order Value', value: `₹${avgOrderValue}`, change: calculatePercentageChange(avgOrderValue, previousPeriodData.revenue / (previousPeriodData.orders || 1)) },
-                    { metric: 'Conversion Rate', value: `${conversionRate}%`, change: 0 },
-                    { metric: 'Cart Abandonment', value: `${cartAbandonmentRate}%`, change: 0 }
-                ];
-                
-                const tableBody = document.getElementById('customerInsights');
-                tableBody.innerHTML = '';
-                
-                const table = document.createElement('table');
-                const thead = document.createElement('thead');
-                thead.innerHTML = `
-                    <tr>
-                        <th>Metric</th>
-                        <th>Value</th>
-                        <th>Change</th>
-                    </tr>
-                `;
-                table.appendChild(thead);
-                
-                const tbody = document.createElement('tbody');
-                insights.forEach(insight => {
-                    const row = document.createElement('tr');
-                    const isPositive = insight.change > 0;
-                    const isNegative = insight.change < 0;
-                    
-                    row.innerHTML = `
-                        <td>${insight.metric}</td>
-                        <td style="font-weight: 600;">${insight.value}</td>
-                        <td>
-                            <span class="change ${isPositive ? 'positive' : isNegative ? 'negative' : ''}">
-                                <i class="fas fa-${isPositive ? 'arrow-up' : isNegative ? 'arrow-down' : 'minus'}"></i>
-                                ${isPositive || isNegative ? Math.abs(insight.change) + '%' : '0%'}
-                            </span>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                
-                table.appendChild(tbody);
-                tableBody.appendChild(table);
-                
-            } catch (error) {
-                console.error("Error loading customer insights:", error);
-                document.getElementById('customerInsights').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Error loading insights</p>
                     </div>
                 `;
             }
@@ -1609,23 +823,13 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Handle menu toggle for mobile
-            document.getElementById('menuToggle').addEventListener('click', function() {
-                document.querySelector('.sidebar').classList.toggle('active');
-            });
-            
             // Handle time range change
             document.getElementById('timeRange').addEventListener('change', function() {
                 loadAnalyticsData();
             });
             
-            // Handle chart type change
-            document.getElementById('chartType').addEventListener('change', function() {
-                drawActivityChart();
-            });
-            
-            // Refresh data every 5 minutes
-            setInterval(loadAnalyticsData, 300000);
+            // Refresh data every 2 minutes
+            setInterval(loadAnalyticsData, 120000);
         }
     </script>
 </body>
