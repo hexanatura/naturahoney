@@ -299,10 +299,20 @@
               <input id="pv-limit" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
             </div>
 
-            <div class="col" style="display:flex;align-items:center;gap:8px">
-              <input id="pv-active" type="checkbox" checked>
-              <label class="muted">Active</label>
-            </div>
+         <div class="col" style="display:flex;align-items:center;gap:8px">
+  <input id="pv-active" type="checkbox" checked>
+  <label class="muted">Active</label>
+</div>
+
+<div class="col" style="display:flex;align-items:center;gap:8px">
+  <input id="pv-popular" type="checkbox">
+  <label class="muted">Mark as Popular</label>
+</div>
+
+<div class="col" style="display:flex;align-items:center;gap:8px">
+  <input id="pv-checkout" type="checkbox" checked>
+  <label class="muted">Show on Checkout</label>
+</div>
           </div>
 
           <div style="margin-top:12px">
@@ -482,6 +492,10 @@
             <td>
               <div style="font-weight:600">${escapeHtml(getValueDisplay(p))}</div>
               <div class="muted">${escapeHtml(p.description || '')}</div>
+              <div style="display:flex;gap:8px;margin-top:6px">
+  ${p.isPopular ? '<span class="tag">Popular</span>' : ''}
+  ${p.showOnCheckout ? '<span class="tag">Checkout</span>' : ''}
+</div>
             </td>
             <td class="muted">${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</td>
             <td><span class="status-pill ${getStatusClass(p)}">${getStatusText(p)}</span></td>
@@ -573,11 +587,15 @@
           limitField.value = promo.usageLimit ?? '';
           termsField.value = promo.terms || '';
           activeField.checked = promo.active !== false;
+          document.getElementById('pv-popular').checked = promo.isPopular === true;
+document.getElementById('pv-checkout').checked = promo.showOnCheckout !== false;
         } else {
           document.getElementById('pv-modal-title').textContent = 'Create Promo Code';
           form.reset();
           idField.value = '';
           activeField.checked = true;
+          document.getElementById('pv-popular').checked = false;
+document.getElementById('pv-checkout').checked = true;
         }
         modalBg.classList.add('show');
       }
@@ -587,20 +605,21 @@
         ev.preventDefault();
         const code = (codeField.value || '').trim().toUpperCase();
         if (!code) { showToast('Enter promo code', true); return; }
-        const data = {
-          type: typeField.value || 'fixed',
-          value: typeField.value === 'shipping' ? 0 : parseFloat(valueField.value || 0),
-          maxDiscount: maxField.value ? parseFloat(maxField.value) : null,
-          minOrder: minField.value ? parseFloat(minField.value) : 0,
-          description: descField.value || '',
-          terms: termsField.value || '',
-          validUntil: untilField.value || null,
-          usageLimit: limitField.value ? parseInt(limitField.value) : 0,
-          active: !!activeField.checked,
-          isPopular: false,
-          showOnCheckout: true,
-          updatedAt: (window.firebase && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : null
-        };
+       const data = {
+  type: typeField.value || 'fixed',
+  value: typeField.value === 'shipping' ? 0 : parseFloat(valueField.value || 0),
+  maxDiscount: maxField.value ? parseFloat(maxField.value) : null,
+  minOrder: minField.value ? parseFloat(minField.value) : 0,
+  description: descField.value || '',
+  terms: termsField.value || '',
+  validUntil: untilField.value || null,
+  usageLimit: limitField.value ? parseInt(limitField.value) : 0,
+  active: !!activeField.checked,
+  isPopular: document.getElementById('pv-popular').checked,
+  showOnCheckout: document.getElementById('pv-checkout').checked,
+  updatedAt: (window.firebase && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : null
+};
+
 
         // create or update
         try {
