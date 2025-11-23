@@ -1217,6 +1217,10 @@
     <div class="menu-icon"><i class="fas fa-envelope"></i></div>
     <div class="menu-text">Messages</div>
 </div>
+<div class="menu-item" id="menuPromo">
+    <div class="menu-icon"><i class="fas fa-tags"></i></div>
+    <div class="menu-text">Promo Codes</div>
+</div>
                 <div class="menu-item">
                     <div class="menu-icon">
                         <i class="fas fa-cog"></i>
@@ -1605,11 +1609,43 @@ function loadMessagesPage() {
         });
 }
 
+function loadPromoPage() {
+    const dynamic = document.getElementById("dynamicPage");
+
+    // hide dashboard body
+    document.getElementById("dashboardBody").style.display = "none";
+
+    fetch("promo-codes.html")
+        .then(res => res.text())
+        .then(html => {
+            dynamic.innerHTML = html;
+
+            // execute scripts inside loaded file
+            const scripts = dynamic.querySelectorAll("script");
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+                if (oldScript.src) newScript.src = oldScript.src;
+                else newScript.textContent = oldScript.textContent;
+                document.body.appendChild(newScript);
+                oldScript.remove();
+            });
+        })
+        .catch(err => {
+            dynamic.innerHTML = "<p style='padding:20px;color:red;'>Failed to load Promo Codes page.</p>";
+            console.error(err);
+        });
+}
+
+
 function initDashboard() {
     setupEventListeners();
     updateDateWidget();
     initCalendar();
     setupMobileMenu();
+    
+    const promoItem = document.getElementById("menuPromo");
+if (promoItem) promoItem.addEventListener("click", loadPromoPage);
+
     const msgItem = document.getElementById("menuMessages");
     if (msgItem) msgItem.addEventListener("click", loadMessagesPage);
 }
