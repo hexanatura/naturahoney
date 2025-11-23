@@ -445,8 +445,10 @@ let currentSubmissions = [];
 let filteredSubmissions = [];
 let currentSubmissionId = null;
 
+document.addEventListener("DOMContentLoaded", () => {
     loadSubmissions();
     setupListeners();
+});
 
 
 function loadSubmissions() {
