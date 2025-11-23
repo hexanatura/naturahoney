@@ -1326,7 +1326,8 @@
                     </div>
                 </div>
             </div>
-
+    
+    <div id="dashboardBody">
             <div class="welcome-calendar-section">
                 <!-- Welcome Section -->
                 <div class="welcome-section fade-in">
@@ -1570,6 +1571,7 @@
                     </div>
                 </div>
             </div>
+</div>
         </div>
         <div id="dynamicPage"></div>
     </div>
@@ -1580,7 +1582,7 @@ function loadMessagesPage() {
     const main = document.getElementById("mainContent");
     const dynamic = document.getElementById("dynamicPage");
 
-    main.style.display = "none";
+ document.getElementById("dashboardBody").style.display = "none";
 
     fetch("contact-submissions.html")
         .then(res => res.text())
