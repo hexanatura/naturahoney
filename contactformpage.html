@@ -1573,134 +1573,93 @@
         </div>
         <div id="dynamicPage"></div>
     </div>
+
 <script>
 
-document.getElementById("menuMessages").addEventListener("click", function () {
+function loadMessagesPage() {
     const main = document.getElementById("mainContent");
     const dynamic = document.getElementById("dynamicPage");
 
     main.style.display = "none";
-    dynamic.innerHTML = "Loading...";
 
     fetch("contact-submissions.html")
         .then(res => res.text())
         .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-
-            dynamic.innerHTML = doc.body.innerHTML;
-
-            const scripts = doc.querySelectorAll("script");
-            loadScriptsSequentially(scripts, 0);
+            dynamic.innerHTML = html;
+            const scripts = dynamic.querySelectorAll("script");
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                document.body.appendChild(newScript);
+                oldScript.remove();
+            });
         })
-        .catch(() => {
+        .catch(err => {
             dynamic.innerHTML = "<p style='padding:20px;color:red;'>Failed to load Messages page.</p>";
+            console.error(err);
         });
-});
-
-function loadScriptsSequentially(scripts, index) {
-    if (index >= scripts.length) return;
-
-    const oldScript = scripts[index];
-    const newScript = document.createElement("script");
-
-    if (oldScript.src) {
-        newScript.src = oldScript.src;
-        newScript.onload = () => loadScriptsSequentially(scripts, index + 1);
-        document.body.appendChild(newScript);
-    } else {
-        newScript.textContent = oldScript.textContent;
-        document.body.appendChild(newScript);
-        loadScriptsSequentially(scripts, index + 1);
-    }
 }
-
-document.addEventListener('DOMContentLoaded', initDashboard);
 
 function initDashboard() {
     setupEventListeners();
     updateDateWidget();
     initCalendar();
     setupMobileMenu();
+    const msgItem = document.getElementById("menuMessages");
+    if (msgItem) msgItem.addEventListener("click", loadMessagesPage);
 }
 
 function setupEventListeners() {
     const menuItems = document.querySelectorAll('.menu-item');
     menuItems.forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function () {
             menuItems.forEach(i => i.classList.remove('active'));
             this.classList.add('active');
-
-            if (window.innerWidth <= 992) {
-                closeMobileMenu();
-            }
+            if (window.innerWidth <= 992) closeMobileMenu();
         });
     });
 
-    document.getElementById('prev-month').addEventListener('click', function() {
+    document.getElementById('prev-month').addEventListener('click', function () {
         currentMonth--;
-        if (currentMonth < 0) {
-            currentMonth = 11;
-            currentYear--;
-        }
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
         renderCalendar(currentMonth, currentYear);
     });
 
-    document.getElementById('next-month').addEventListener('click', function() {
+    document.getElementById('next-month').addEventListener('click', function () {
         currentMonth++;
-        if (currentMonth > 11) {
-            currentMonth = 0;
-            currentYear++;
-        }
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
         renderCalendar(currentMonth, currentYear);
     });
 }
 
 function setupMobileMenu() {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
-
     mobileMenuBtn.addEventListener('click', toggleMobileMenu);
     sidebarOverlay.addEventListener('click', closeMobileMenu);
-
-    const menuLinks = document.querySelectorAll('.menu-item');
-    menuLinks.forEach(link => {
-        link.addEventListener('click', closeMobileMenu);
-    });
 }
 
 function toggleMobileMenu() {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-    sidebar.classList.toggle('active');
-    sidebarOverlay.classList.toggle('active');
+    document.getElementById('sidebar').classList.toggle('active');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
 }
 
 function closeMobileMenu() {
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-    sidebar.classList.remove('active');
-    sidebarOverlay.classList.remove('active');
+    document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('sidebarOverlay').classList.remove('active');
 }
 
 function updateDateWidget() {
     const now = new Date();
-
-    const dayNumber = now.getDate();
-    document.getElementById('current-day').textContent = dayNumber;
-
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dayName = dayNames[now.getDay()];
-    document.getElementById('current-day-name').textContent = dayName + ',';
-
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'];
-    const monthName = monthNames[now.getMonth()];
-    const year = now.getFullYear();
-    document.getElementById('current-month-year').textContent = `${monthName} ${year}`;
+    document.getElementById('current-day').textContent = now.getDate();
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    document.getElementById('current-day-name').textContent = dayNames[now.getDay()] + ",";
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('current-month-year').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
 }
 
 let currentDate = new Date();
@@ -1712,15 +1671,12 @@ function initCalendar() {
 }
 
 function renderCalendar(month, year) {
-    const monthNames = ["January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"];
-
+    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const daysInPrevMonth = new Date(year, month, 0).getDate();
-
     const calendarDays = document.getElementById('calendar-days');
     calendarDays.innerHTML = '';
 
@@ -1736,7 +1692,6 @@ function renderCalendar(month, year) {
         const d = document.createElement('div');
         d.className = 'calendar-day';
         d.textContent = i;
-
         if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
             d.classList.add('today');
         }
@@ -1753,7 +1708,10 @@ function renderCalendar(month, year) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', initDashboard);
+
 </script>
+
 
 </body>
 </html>
