@@ -19,7 +19,7 @@
   margin:24px auto;
   padding:20px;
   width:100%;
-  overflow-x:auto;       /* ✅ prevents cutoff */
+  overflow-x:auto;
 }
 
 .page-title{
@@ -73,13 +73,13 @@
   box-shadow:var(--shadow);
   overflow:hidden;
   margin-bottom:22px;
-  overflow-x:auto;        /* ✅ allow scroll instead of hiding */
+  overflow-x:auto;
 }
 
 table{
   width:100%;
   border-collapse:collapse;
-  min-width:650px;       /* ✅ reduced from 900 to prevent blocking */
+  min-width:650px;
 }
 
 thead{
@@ -286,7 +286,6 @@ tr:hover{
   opacity:1
 }
 
-/* NEW RESPONSIVE FIX — MAKES MESSAGES ALWAYS VISIBLE */
 @media(max-width:1024px){
   .table-container{
     display:block !important;
@@ -314,18 +313,16 @@ tr:hover{
 </style>
 
 <div class="page-container fade-in">
-
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
     <div>
-        <div class="page-title">Contact Submissions</div>
-        <div class="page-subtitle">Manage and respond to customer inquiries</div>
+      <div class="page-title">Contact Submissions</div>
+      <div class="page-subtitle">Manage and respond to customer inquiries</div>
     </div>
-    <!-- Add this test button -->
-    <button onclick="addTestData()" style="padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;">
+    <button id="testDataBtn" style="padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;">
         Add Test Data
     </button>
-</div>
-  
+  </div>
+
   <div class="filters-bar">
     <div class="filter-group">
       <div class="filter-label">Status</div>
@@ -360,7 +357,10 @@ tr:hover{
       </thead>
       <tbody id="submissions-table-body">
         <tr>
-          <td colspan="5" style="text-align:center;padding:36px;color:var(--gray)">Loading...</td>
+          <td colspan="5" style="text-align:center;padding:40px;color:#666;">
+            <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
+            <p>Loading messages...</p>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -377,27 +377,19 @@ tr:hover{
       <button id="close-modal" class="btn-secondary btn"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
-
       <div class="detail-label">Name</div>
       <div id="detail-name" class="detail-value">-</div>
-
       <div class="detail-label">Email</div>
       <div id="detail-email" class="detail-value">-</div>
-
       <div class="detail-label">Phone</div>
       <div id="detail-phone" class="detail-value">-</div>
-
       <div class="detail-label">Subject</div>
       <div id="detail-subject" class="detail-value">-</div>
-
       <div class="detail-label">Status</div>
       <div id="detail-status" class="detail-value">-</div>
-
       <div class="detail-label">Message</div>
       <div id="detail-message" class="detail-value message-box">-</div>
-
     </div>
-
     <div class="modal-footer">
       <button id="close-modal-2" class="btn-secondary btn">Close</button>
       <button id="gmail-reply-btn" class="btn btn-secondary">Reply via Gmail</button>
@@ -410,102 +402,142 @@ tr:hover{
   <div id="toast-message">Updated</div>
 </div>
 
+<!-- FIREBASE + SCRIPT -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script>
-// Firebase Config
-const firebaseConfig = {
-    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
-    projectId: "hexahoney-96aed",
-    storageBucket: "hexahoney-96aed.firebasestorage.app",
-    messagingSenderId: "700458850837",
-    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-    measurementId: "G-MQGKK9709H"
-};
+// Wait for Firebase to load completely
+let firebaseLoaded = false;
+let db = null;
 
-// Initialize Firebase
-let db;
-try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    console.log("✅ Firebase initialized successfully");
-} catch (error) {
-    console.error("❌ Firebase initialization error:", error);
-    showError("Failed to initialize database connection");
+function initializeFirebase() {
+    console.log("🚀 Initializing Firebase...");
+    
+    // Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+        authDomain: "hexahoney-96aed.firebaseapp.com",
+        projectId: "hexahoney-96aed",
+        storageBucket: "hexahoney-96aed.firebasestorage.app",
+        messagingSenderId: "700458850837",
+        appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+        measurementId: "G-MQGKK9709H"
+    };
+
+    try {
+        // Check if Firebase is available
+        if (typeof firebase === 'undefined') {
+            throw new Error('Firebase SDK not loaded');
+        }
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        firebaseLoaded = true;
+        
+        console.log("✅ Firebase initialized successfully");
+        return true;
+    } catch (error) {
+        console.error("❌ Firebase initialization error:", error);
+        showError("Firebase failed to load: " + error.message);
+        return false;
+    }
 }
 
-const submissionsTableBody = document.getElementById("submissions-table-body");
-const mobileCardsContainer = document.getElementById("mobile-cards");
-const submissionModal = document.getElementById("submission-modal");
-
-const closeModalBtn = document.getElementById("close-modal");
-const closeModalBtn2 = document.getElementById("close-modal-2");
-
-const gmailReplyBtn = document.getElementById("gmail-reply-btn");
-const statusFilter = document.getElementById("status-filter");
-const dateFilter = document.getElementById("date-filter");
-
-const toast = document.getElementById("toast");
-const toastMessage = document.getElementById("toast-message");
-
+// Global variables
 let currentSubmissions = [];
 let filteredSubmissions = [];
 let currentSubmissionId = null;
 
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("🚀 DOM loaded, starting application...");
-    initializeApp();
+// DOM elements (will be initialized after DOM is loaded)
+let submissionsTableBody, mobileCardsContainer, submissionModal;
+let closeModalBtn, closeModalBtn2, gmailReplyBtn;
+let statusFilter, dateFilter, toast, toastMessage, testDataBtn;
+
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("📄 DOM loaded, initializing application...");
+    
+    // Initialize DOM elements
+    initializeDOMElements();
+    
+    // Initialize Firebase
+    if (initializeFirebase()) {
+        // Firebase loaded successfully, start the app
+        initializeApp();
+    } else {
+        showError("Failed to initialize database. Please refresh the page.");
+    }
 });
 
-function initializeApp() {
-    // Show loading state
-    showLoadingState();
+function initializeDOMElements() {
+    submissionsTableBody = document.getElementById("submissions-table-body");
+    mobileCardsContainer = document.getElementById("mobile-cards");
+    submissionModal = document.getElementById("submission-modal");
+    closeModalBtn = document.getElementById("close-modal");
+    closeModalBtn2 = document.getElementById("close-modal-2");
+    gmailReplyBtn = document.getElementById("gmail-reply-btn");
+    statusFilter = document.getElementById("status-filter");
+    dateFilter = document.getElementById("date-filter");
+    toast = document.getElementById("toast");
+    toastMessage = document.getElementById("toast-message");
+    testDataBtn = document.getElementById("testDataBtn");
     
-    // Setup event listeners first
+    console.log("✅ DOM elements initialized");
+}
+
+function initializeApp() {
+    console.log("🚀 Starting application...");
+    
+    // Setup event listeners
     setupListeners();
     
-    // Then load data with a small delay to ensure DOM is ready
-    setTimeout(() => {
-        loadSubmissions();
-    }, 100);
+    // Load submissions
+    loadSubmissions();
 }
 
 function showLoadingState() {
-    submissionsTableBody.innerHTML = `
-        <tr><td colspan="5" style="text-align:center;padding:40px;color:#666;">
-            <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
-            <p>Loading messages...</p>
-        </td></tr>
-    `;
+    if (submissionsTableBody) {
+        submissionsTableBody.innerHTML = `
+            <tr><td colspan="5" style="text-align:center;padding:40px;color:#666;">
+                <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
+                <p>Loading messages...</p>
+            </td></tr>
+        `;
+    }
     
-    mobileCardsContainer.innerHTML = `
-        <div class="card" style="text-align:center;padding:30px;">
-            <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
-            <p>Loading messages...</p>
-        </div>
-    `;
+    if (mobileCardsContainer) {
+        mobileCardsContainer.innerHTML = `
+            <div class="card" style="text-align:center;padding:30px;">
+                <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
+                <p>Loading messages...</p>
+            </div>
+        `;
+    }
 }
 
 function showError(message) {
-    submissionsTableBody.innerHTML = `
-        <tr><td colspan="5" style="text-align:center;padding:40px;color:red;">
-            <i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:10px;"></i>
-            <p>${message}</p>
-            <button onclick="loadSubmissions()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
-                Retry
-            </button>
-        </td></tr>
-    `;
+    console.error("❌ Error:", message);
+    
+    if (submissionsTableBody) {
+        submissionsTableBody.innerHTML = `
+            <tr><td colspan="5" style="text-align:center;padding:40px;color:red;">
+                <i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:10px;"></i>
+                <p>${message}</p>
+                <button onclick="window.location.reload()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
+                    Retry
+                </button>
+            </td></tr>
+        `;
+    }
 }
 
 function loadSubmissions() {
     console.log("📥 Loading submissions from Firestore...");
     
-    if (!db) {
-        showError("Database not initialized");
+    if (!firebaseLoaded || !db) {
+        showError("Database not initialized. Please refresh the page.");
         return;
     }
 
@@ -535,7 +567,6 @@ function loadSubmissions() {
                 if (item.timestamp && typeof item.timestamp.toDate === 'function') {
                     item.date = item.timestamp.toDate().toISOString();
                 } else if (item.timestamp) {
-                    // If timestamp exists but not as Firestore timestamp
                     item.date = new Date(item.timestamp).toISOString();
                 } else {
                     item.date = new Date().toISOString();
@@ -564,29 +595,34 @@ function loadSubmissions() {
 }
 
 function showNoDataMessage() {
-    submissionsTableBody.innerHTML = `
-        <tr><td colspan="5" style="text-align:center;padding:60px 40px;color:#666;">
-            <i class="fas fa-inbox" style="font-size:48px;color:#ddd;margin-bottom:15px;"></i>
-            <h3 style="margin-bottom:10px;font-weight:500;">No messages yet</h3>
-            <p style="color:#888;max-width:400px;margin:0 auto;">
-                Customer messages from your contact form will appear here.
-                Make sure your contact form is submitting to the "contactSubmissions" collection.
-            </p>
-        </td></tr>
-    `;
+    if (submissionsTableBody) {
+        submissionsTableBody.innerHTML = `
+            <tr><td colspan="5" style="text-align:center;padding:60px 40px;color:#666;">
+                <i class="fas fa-inbox" style="font-size:48px;color:#ddd;margin-bottom:15px;"></i>
+                <h3 style="margin-bottom:10px;font-weight:500;">No messages yet</h3>
+                <p style="color:#888;max-width:400px;margin:0 auto;">
+                    No contact form submissions found. Messages will appear here when customers contact you.
+                </p>
+            </td></tr>
+        `;
+    }
     
-    mobileCardsContainer.innerHTML = `
-        <div class="card" style="text-align:center;padding:40px 20px;">
-            <i class="fas fa-inbox" style="font-size:48px;color:#ddd;margin-bottom:15px;"></i>
-            <h3 style="margin-bottom:10px;font-weight:500;">No messages yet</h3>
-            <p style="color:#888;">
-                Customer messages will appear here once they start coming in.
-            </p>
-        </div>
-    `;
+    if (mobileCardsContainer) {
+        mobileCardsContainer.innerHTML = `
+            <div class="card" style="text-align:center;padding:40px 20px;">
+                <i class="fas fa-inbox" style="font-size:48px;color:#ddd;margin-bottom:15px;"></i>
+                <h3 style="margin-bottom:10px;font-weight:500;">No messages yet</h3>
+                <p style="color:#888;">
+                    Customer messages will appear here once they start coming in.
+                </p>
+            </div>
+        `;
+    }
 }
 
 function renderTable() {
+    if (!submissionsTableBody) return;
+    
     if (filteredSubmissions.length === 0) {
         showNoDataMessage();
         return;
@@ -628,6 +664,8 @@ function renderTable() {
 }
 
 function renderMobileCards() {
+    if (!mobileCardsContainer) return;
+    
     if (filteredSubmissions.length === 0) {
         showNoDataMessage();
         return;
@@ -648,10 +686,8 @@ function renderMobileCards() {
                 </div>
                 <span class="status status-${s.status}">${formatStatus(s.status)}</span>
             </div>
-
             <div style="font-weight:500;margin:8px 0;">${s.subject}</div>
             <div style="font-size:.8rem;color:#666">${formatDate(s.date)}</div>
-
             <div class="card-row" style="justify-content:flex-end;margin-top:8px;">
                 <button class="action-btn view-btn" data-id="${s.id}" title="View">
                     <i class="fas fa-eye"></i>
@@ -671,27 +707,37 @@ function setupListeners() {
     console.log("🔧 Setting up event listeners...");
     
     // Table actions
-    submissionsTableBody.addEventListener("click", handleActions);
-    mobileCardsContainer.addEventListener("click", handleActions);
+    if (submissionsTableBody) {
+        submissionsTableBody.addEventListener("click", handleActions);
+    }
+    if (mobileCardsContainer) {
+        mobileCardsContainer.addEventListener("click", handleActions);
+    }
 
     // Modal
-    closeModalBtn.addEventListener("click", closeModal);
-    closeModalBtn2.addEventListener("click", closeModal);
+    if (closeModalBtn) closeModalBtn.addEventListener("click", closeModal);
+    if (closeModalBtn2) closeModalBtn2.addEventListener("click", closeModal);
 
-    submissionModal.addEventListener("click", function (e) {
-        if (e.target === submissionModal) closeModal();
-    });
+    if (submissionModal) {
+        submissionModal.addEventListener("click", function (e) {
+            if (e.target === submissionModal) closeModal();
+        });
+    }
 
-    document.querySelector(".modal-content").addEventListener("click", function (e) {
-        e.stopPropagation();
-    });
+    const modalContent = document.querySelector(".modal-content");
+    if (modalContent) {
+        modalContent.addEventListener("click", function (e) {
+            e.stopPropagation();
+        });
+    }
 
     // Buttons
-    gmailReplyBtn.addEventListener("click", replyEmail);
+    if (gmailReplyBtn) gmailReplyBtn.addEventListener("click", replyEmail);
+    if (testDataBtn) testDataBtn.addEventListener("click", addTestData);
 
     // Filters
-    statusFilter.addEventListener("change", applyFilters);
-    dateFilter.addEventListener("change", applyFilters);
+    if (statusFilter) statusFilter.addEventListener("change", applyFilters);
+    if (dateFilter) dateFilter.addEventListener("change", applyFilters);
     
     console.log("✅ Event listeners setup complete");
 }
@@ -853,19 +899,27 @@ function formatStatus(s) {
 }
 
 function showToast(msg) {
-    toastMessage.textContent = msg;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
+    if (toast && toastMessage) {
+        toastMessage.textContent = msg;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3000);
+    }
 }
 
-// Add test data function for debugging
 function addTestData() {
+    if (!firebaseLoaded || !db) {
+        showError("Database not ready. Please wait...");
+        return;
+    }
+
+    console.log("🧪 Adding test data...");
+    
     const testData = {
         name: "Test Customer",
         email: "test@example.com",
         phone: "+1234567890",
-        subject: "Test Inquiry About Products",
-        message: "Hello, I'm interested in your honey products. Can you tell me more about the different varieties you offer and their prices?",
+        subject: "Test Inquiry About Honey Products",
+        message: "Hello, I'm interested in your honey products. Can you tell me more about the different varieties you offer and their prices? I'm particularly interested in organic options.",
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         status: "new"
     };
@@ -873,16 +927,18 @@ function addTestData() {
     db.collection("contactSubmissions").add(testData)
         .then((docRef) => {
             console.log("✅ Test data added with ID:", docRef.id);
-            showToast("Test message added!");
-            loadSubmissions(); // Reload to show the new data
+            showToast("Test message added successfully!");
+            // Reload to show the new data
+            loadSubmissions();
         })
         .catch((error) => {
             console.error("❌ Error adding test data:", error);
-            showToast("Error adding test data");
+            showToast("Error adding test data: " + error.message);
         });
 }
 
-// Expose to global scope for debugging
+// Make functions available globally for debugging
 window.addTestData = addTestData;
 window.loadSubmissions = loadSubmissions;
+window.firebaseApp = firebase;
 </script>
