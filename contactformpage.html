@@ -1573,11 +1573,9 @@
         </div>
         <div id="dynamicPage"></div>
     </div>
+<script>
 
-    <script>
-    
-   document.getElementById("menuMessages").addEventListener("click", function () {
-
+function loadMessagesPage() {
     const main = document.getElementById("mainContent");
     const dynamic = document.getElementById("dynamicPage");
 
@@ -1586,11 +1584,7 @@
     fetch("contact-submissions.html")
         .then(res => res.text())
         .then(html => {
-
-            // Inject HTML
             dynamic.innerHTML = html;
-
-            // Execute all scripts in the loaded HTML
             const scripts = dynamic.querySelectorAll("script");
             scripts.forEach(oldScript => {
                 const newScript = document.createElement("script");
@@ -1602,175 +1596,120 @@
                 document.body.appendChild(newScript);
                 oldScript.remove();
             });
-
         })
         .catch(err => {
             dynamic.innerHTML = "<p style='padding:20px;color:red;'>Failed to load Messages page.</p>";
             console.error(err);
         });
+}
 
-});
-        // Initialize the page
-        function initDashboard() {
-            setupEventListeners();
-            updateDateWidget();
-            initCalendar();
-            setupMobileMenu();
+function initDashboard() {
+    setupEventListeners();
+    updateDateWidget();
+    initCalendar();
+    setupMobileMenu();
+    const msgItem = document.getElementById("menuMessages");
+    if (msgItem) msgItem.addEventListener("click", loadMessagesPage);
+}
+
+function setupEventListeners() {
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function () {
+            menuItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            if (window.innerWidth <= 992) closeMobileMenu();
+        });
+    });
+
+    document.getElementById('prev-month').addEventListener('click', function () {
+        currentMonth--;
+        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+        renderCalendar(currentMonth, currentYear);
+    });
+
+    document.getElementById('next-month').addEventListener('click', function () {
+        currentMonth++;
+        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+        renderCalendar(currentMonth, currentYear);
+    });
+}
+
+function setupMobileMenu() {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    sidebarOverlay.addEventListener('click', closeMobileMenu);
+}
+
+function toggleMobileMenu() {
+    document.getElementById('sidebar').classList.toggle('active');
+    document.getElementById('sidebarOverlay').classList.toggle('active');
+}
+
+function closeMobileMenu() {
+    document.getElementById('sidebar').classList.remove('active');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+}
+
+function updateDateWidget() {
+    const now = new Date();
+    document.getElementById('current-day').textContent = now.getDate();
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    document.getElementById('current-day-name').textContent = dayNames[now.getDay()] + ",";
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    document.getElementById('current-month-year').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+}
+
+let currentDate = new Date();
+let currentMonth = currentDate.getMonth();
+let currentYear = currentDate.getFullYear();
+
+function initCalendar() {
+    renderCalendar(currentMonth, currentYear);
+}
+
+function renderCalendar(month, year) {
+    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    const calendarDays = document.getElementById('calendar-days');
+    calendarDays.innerHTML = '';
+
+    for (let i = firstDay - 1; i >= 0; i--) {
+        const d = document.createElement('div');
+        d.className = 'calendar-day other-month';
+        d.textContent = daysInPrevMonth - i;
+        calendarDays.appendChild(d);
+    }
+
+    const today = new Date();
+    for (let i = 1; i <= daysInMonth; i++) {
+        const d = document.createElement('div');
+        d.className = 'calendar-day';
+        d.textContent = i;
+        if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+            d.classList.add('today');
         }
+        calendarDays.appendChild(d);
+    }
 
-        // Setup event listeners
-        function setupEventListeners() {
-            // Menu item clicks
-            const menuItems = document.querySelectorAll('.menu-item');
-            menuItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    menuItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Close mobile menu after selection
-                    if (window.innerWidth <= 992) {
-                        closeMobileMenu();
-                    }
-                });
-            });
+    const totalCells = 42;
+    const remaining = totalCells - (firstDay + daysInMonth);
+    for (let i = 1; i <= remaining; i++) {
+        const d = document.createElement('div');
+        d.className = 'calendar-day other-month';
+        d.textContent = i;
+        calendarDays.appendChild(d);
+    }
+}
 
-            // Calendar navigation
-            document.getElementById('prev-month').addEventListener('click', function() {
-                currentMonth--;
-                if (currentMonth < 0) {
-                    currentMonth = 11;
-                    currentYear--;
-                }
-                renderCalendar(currentMonth, currentYear);
-            });
+document.addEventListener('DOMContentLoaded', initDashboard);
 
-            document.getElementById('next-month').addEventListener('click', function() {
-                currentMonth++;
-                if (currentMonth > 11) {
-                    currentMonth = 0;
-                    currentYear++;
-                }
-                renderCalendar(currentMonth, currentYear);
-            });
-        }
+</script>
 
-        // Mobile menu functionality
-        function setupMobileMenu() {
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-            
-            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-            sidebarOverlay.addEventListener('click', closeMobileMenu);
-            
-            // Close menu when clicking on a link
-            const menuLinks = document.querySelectorAll('.menu-item');
-            menuLinks.forEach(link => {
-                link.addEventListener('click', closeMobileMenu);
-            });
-        }
-        
-        function toggleMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-            
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-        }
-        
-        function closeMobileMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-            
-            sidebar.classList.remove('active');
-            sidebarOverlay.classList.remove('active');
-        }
-
-        // Update the date widget with real-time data
-        function updateDateWidget() {
-            const now = new Date();
-            
-            // Day number (1-31)
-            const dayNumber = now.getDate();
-            document.getElementById('current-day').textContent = dayNumber;
-            
-            // Day name (Mon, Tue, etc.)
-            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const dayName = dayNames[now.getDay()];
-            document.getElementById('current-day-name').textContent = dayName + ',';
-            
-            // Month and year
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'];
-            const monthName = monthNames[now.getMonth()];
-            const year = now.getFullYear();
-            document.getElementById('current-month-year').textContent = `${monthName} ${year}`;
-        }
-
-        // Calendar functionality
-        let currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
-
-        function initCalendar() {
-            renderCalendar(currentMonth, currentYear);
-        }
-
-        function renderCalendar(month, year) {
-            const monthNames = ["January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ];
-
-            // Update month and year display
-            document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
-
-            // Get first day of month and number of days
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const daysInPrevMonth = new Date(year, month, 0).getDate();
-
-            // Clear previous calendar
-            const calendarDays = document.getElementById('calendar-days');
-            calendarDays.innerHTML = '';
-
-            // Add days from previous month
-            for (let i = firstDay - 1; i >= 0; i--) {
-                const dayElement = document.createElement('div');
-                dayElement.className = 'calendar-day other-month';
-                dayElement.textContent = daysInPrevMonth - i;
-                calendarDays.appendChild(dayElement);
-            }
-
-            // Add days from current month
-            const today = new Date();
-            for (let i = 1; i <= daysInMonth; i++) {
-                const dayElement = document.createElement('div');
-                dayElement.className = 'calendar-day';
-                dayElement.textContent = i;
-
-                // Highlight today
-                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                    dayElement.classList.add('today');
-                }
-
-                calendarDays.appendChild(dayElement);
-            }
-
-            // Calculate remaining days to fill the grid (6 rows)
-            const totalCells = 42; // 6 rows * 7 days
-            const remainingCells = totalCells - (firstDay + daysInMonth);
-
-            // Add days from next month
-            for (let i = 1; i <= remainingCells; i++) {
-                const dayElement = document.createElement('div');
-                dayElement.className = 'calendar-day other-month';
-                dayElement.textContent = i;
-                calendarDays.appendChild(dayElement);
-            }
-        }
-
-        // Initialize the page when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initDashboard);
-    </script>
 </body>
 </html>
