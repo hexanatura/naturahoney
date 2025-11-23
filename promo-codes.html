@@ -1,6 +1,101 @@
 <!-- promo-codes.html — dashboard-styled promo UI (component, no <html>/<body>) -->
 <div class="promo-view fade-in">
   <style>
+
+    @media (max-width: 1024px) {
+  .promo-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  .promo-card.filter-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .promo-search {
+    min-width: 100%;
+    max-width: 100%;
+  }
+  .promo-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .promo-card .table-wrapper {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .promo-title {
+    font-size: 1.1rem;
+  }
+  .promo-sub {
+    font-size: 0.85rem;
+  }
+  .promo-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  .promo-card.filter-row {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .filter-select {
+    width: 100%;
+  }
+  .promo-search {
+    width: 100%;
+  }
+  .promo-modal .modal-body form > div {
+    flex-direction: column !important;
+    width: 100%;
+  }
+  #pv-value,
+  #pv-max,
+  #pv-limit,
+  #pv-min,
+  #pv-until {
+    width: 100% !important;
+  }
+  #pv-active,
+  #pv-popular,
+  #pv-checkout {
+    transform: scale(1.1);
+  }
+}
+
+@media (max-width: 480px) {
+  .promo-view {
+    padding: 14px;
+  }
+  .promo-title {
+    font-size: 1rem;
+  }
+  .promo-card {
+    padding: 12px;
+  }
+  .promo-table td,
+  .promo-table th {
+    padding: 8px 10px;
+  }
+  .promo-modal {
+    width: calc(100% - 20px);
+    margin: 0 10px;
+  }
+  .promo-modal .modal-header,
+  .promo-modal .modal-footer,
+  .promo-modal .modal-body {
+    padding: 12px;
+  }
+  input,
+  select,
+  textarea {
+    font-size: 0.9rem;
+  }
+  .mobile-cards .promo-card {
+    padding: 12px;
+  }
+}
     /* Scoped styles — reuses dashboard root variables */
     .promo-view { padding: 22px; background: transparent; min-height: 100vh; }
 
