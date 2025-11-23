@@ -203,7 +203,6 @@ tr:hover{background:rgba(0,0,0,0.03)}
 
 <script>
 function initContactPage() {
-    console.log("Contact page initialized");
 
     const submissionsTableBody = document.getElementById("submissions-table-body");
     const mobileCardsContainer = document.getElementById("mobile-cards");
@@ -226,55 +225,43 @@ function initContactPage() {
     loadSubmissions();
     setupListeners();
 
-
     function loadSubmissions() {
-        submissionsTableBody.innerHTML = `
-            <tr><td colspan="5" style="text-align:center;padding:36px;color:#666;">
-                Loading...
-            </td></tr>`;
-
         db.collection("contactSubmissions")
             .orderBy("timestamp", "desc")
             .get()
-            .then((snapshot) => {
-
+            .then(snapshot => {
                 currentSubmissions = [];
 
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    data.id = doc.id;
-                    data.date = data.timestamp?.toDate
-                        ? data.timestamp.toDate().toISOString()
+                snapshot.forEach(doc => {
+                    const item = doc.data();
+                    item.id = doc.id;
+                    item.date = item.timestamp?.toDate
+                        ? item.timestamp.toDate().toISOString()
                         : new Date().toISOString();
-                    if (!data.status) data.status = "new";
-                    currentSubmissions.push(data);
+
+                    if (!item.status) item.status = "new";
+                    currentSubmissions.push(item);
                 });
 
                 filteredSubmissions = [...currentSubmissions];
 
                 renderTable();
                 renderMobileCards();
-            })
-            .catch(err => {
-                submissionsTableBody.innerHTML = `
-                <tr><td colspan="5" style="padding:36px;text-align:center;color:red;">
-                    Failed to load data
-                </td></tr>`;
-                console.error(err);
             });
     }
-
 
     function renderTable() {
         if (filteredSubmissions.length === 0) {
             submissionsTableBody.innerHTML = `
                 <tr><td colspan="5" style="text-align:center;padding:40px;color:#666;">
-                    No messages
-                </td></tr>`;
+                    <i class="fas fa-inbox" style="font-size:50px;color:#ccc;"></i>
+                    <p>No messages</p>
+                </td></tr>
+            `;
             return;
         }
 
-        submissionsTableBody.innerHTML = filteredSubmissions.map((s) => {
+        submissionsTableBody.innerHTML = filteredSubmissions.map(s => {
             const initials = s.name ? s.name.split(" ").map(n => n[0]).join("") : "?";
 
             return `
@@ -293,24 +280,27 @@ function initContactPage() {
                 <td><span class="status status-${s.status}">${formatStatus(s.status)}</span></td>
                 <td>
                     <div class="actions">
-                        <button class="action-btn view-btn" data-id="${s.id}">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn reply-btn" data-id="${s.id}">
-                            <i class="fas fa-reply"></i>
-                        </button>
-                        <button class="action-btn delete-btn" data-id="${s.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <button class="action-btn view-btn" data-id="${s.id}"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn reply-btn" data-id="${s.id}"><i class="fas fa-reply"></i></button>
+                        <button class="action-btn delete-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button>
                     </div>
                 </td>
             </tr>`;
         }).join("");
     }
 
-
     function renderMobileCards() {
-        mobileCardsContainer.innerHTML = filteredSubmissions.map((s) => {
+        if (filteredSubmissions.length === 0) {
+            mobileCardsContainer.innerHTML = `
+                <div class="card" style="text-align:center;">
+                    <i class="fas fa-inbox" style="font-size:50px;color:#ccc;"></i>
+                    <p>No messages</p>
+                </div>
+            `;
+            return;
+        }
+
+        mobileCardsContainer.innerHTML = filteredSubmissions.map(s => {
             const initials = s.name ? s.name.split(" ").map(n => n[0]).join("") : "?";
 
             return `
@@ -330,20 +320,13 @@ function initContactPage() {
                 <div style="font-size:.8rem;color:#666">${formatDate(s.date)}</div>
 
                 <div class="card-row" style="justify-content:flex-end;">
-                    <button class="action-btn view-btn" data-id="${s.id}">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="action-btn reply-btn" data-id="${s.id}">
-                        <i class="fas fa-reply"></i>
-                    </button>
-                    <button class="action-btn delete-btn" data-id="${s.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button class="action-btn view-btn" data-id="${s.id}"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn reply-btn" data-id="${s.id}"><i class="fas fa-reply"></i></button>
+                    <button class="action-btn delete-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button>
                 </div>
             </div>`;
         }).join("");
     }
-
 
     function setupListeners() {
         submissionsTableBody.addEventListener("click", handleActions);
@@ -356,28 +339,21 @@ function initContactPage() {
             if (e.target === submissionModal) closeModal();
         });
 
-        gmailReplyBtn.addEventListener("click", () => {
-            if (currentSubmissionId) replyEmailDirect(currentSubmissionId);
-        });
+        gmailReplyBtn.addEventListener("click", replyEmail);
 
         statusFilter.addEventListener("change", applyFilters);
         dateFilter.addEventListener("change", applyFilters);
     }
 
-
     function handleActions(e) {
-        const id =
-            e.target.closest(".view-btn")?.dataset.id ||
-            e.target.closest(".reply-btn")?.dataset.id ||
-            e.target.closest(".delete-btn")?.dataset.id;
+        const view = e.target.closest(".view-btn");
+        const reply = e.target.closest(".reply-btn");
+        const del = e.target.closest(".delete-btn");
 
-        if (!id) return;
-
-        if (e.target.closest(".view-btn")) return openModal(id);
-        if (e.target.closest(".reply-btn")) return replyEmailDirect(id);
-        if (e.target.closest(".delete-btn")) return deleteSubmission(id);
+        if (view) openModal(view.dataset.id);
+        if (reply) replyEmailDirect(reply.dataset.id);
+        if (del) deleteSubmission(del.dataset.id);
     }
-
 
     function openModal(id) {
         const s = currentSubmissions.find(x => x.id === id);
@@ -397,12 +373,15 @@ function initContactPage() {
         if (s.status === "new") updateStatus(id, "read");
     }
 
-
     function closeModal() {
         submissionModal.style.display = "none";
         currentSubmissionId = null;
     }
 
+    function replyEmail() {
+        if (!currentSubmissionId) return;
+        replyEmailDirect(currentSubmissionId);
+    }
 
     function replyEmailDirect(id) {
         const s = currentSubmissions.find(x => x.id === id);
@@ -419,12 +398,11 @@ function initContactPage() {
             s.message
         );
 
-        window.open(
-            `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(s.email)}&su=${sub}&body=${body}`,
-            "_blank"
-        );
-    }
+        const url =
+            `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(s.email)}&su=${sub}&body=${body}`;
 
+        window.open(url, "_blank");
+    }
 
     function deleteSubmission(id) {
         if (!confirm("Delete this message?")) return;
@@ -439,15 +417,12 @@ function initContactPage() {
         });
     }
 
-
     function applyFilters() {
         let list = [...currentSubmissions];
 
-        // status
         if (statusFilter.value !== "all")
             list = list.filter(s => s.status === statusFilter.value);
 
-        // date range
         if (dateFilter.value !== "all") {
             const now = new Date();
             let start;
@@ -468,31 +443,26 @@ function initContactPage() {
         renderMobileCards();
     }
 
-
     function updateStatus(id, status) {
         db.collection("contactSubmissions").doc(id).update({
             status,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        const a = currentSubmissions.find(x => x.id === id);
-        if (a) a.status = status;
+        const idx = currentSubmissions.findIndex(s => s.id === id);
+        if (idx !== -1) currentSubmissions[idx].status = status;
 
-        const b = filteredSubmissions.find(x => x.id === id);
-        if (b) b.status = status;
+        const idx2 = filteredSubmissions.findIndex(s => s.id === id);
+        if (idx2 !== -1) filteredSubmissions[idx2].status = status;
 
         renderTable();
         renderMobileCards();
     }
 
-
     function formatDate(d) {
         return new Date(d).toLocaleString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit"
+            month: "short", day: "numeric", year: "numeric",
+            hour: "2-digit", minute: "2-digit"
         });
     }
 
