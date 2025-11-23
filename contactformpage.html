@@ -1576,19 +1576,33 @@
 
     <script>
     
-    document.getElementById("menuMessages").addEventListener("click", function () {
+   document.getElementById("menuMessages").addEventListener("click", function () {
 
     const main = document.getElementById("mainContent");
     const dynamic = document.getElementById("dynamicPage");
 
-    // Hide dashboard content
     main.style.display = "none";
 
-    // Load contact page
     fetch("contact-submissions.html")
         .then(res => res.text())
         .then(html => {
+
+            // Inject HTML
             dynamic.innerHTML = html;
+
+            // Execute all scripts in the loaded HTML
+            const scripts = dynamic.querySelectorAll("script");
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                document.body.appendChild(newScript);
+                oldScript.remove();
+            });
+
         })
         .catch(err => {
             dynamic.innerHTML = "<p style='padding:20px;color:red;'>Failed to load Messages page.</p>";
