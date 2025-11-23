@@ -104,6 +104,31 @@ function initContactForm() {
     }
 }
 
+// Contact Form Submission
+function submitContactForm(event) {
+    event.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        subject: document.getElementById('subject').value,
+        message: document.getElementById('message').value,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'new'
+    };
+    
+    db.collection('contactSubmissions').add(formData)
+        .then((docRef) => {
+            alert('Message sent successfully! We will get back to you soon.');
+            document.getElementById('contactForm').reset();
+        })
+        .catch((error) => {
+            console.error("Error sending message:", error);
+            alert('Error sending message. Please try again.');
+        });
+}
+
 // Handle contact form submission with better error handling
 function handleContactFormSubmission() {
     if (!contactForm) return;
@@ -626,3 +651,4 @@ window.ContactPage = {
     handleContactFormSubmission,
     validateContactForm
 };
+
