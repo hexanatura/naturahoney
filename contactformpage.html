@@ -1574,6 +1574,28 @@
 </div>
 <div id="dynamicPage"></div>
 </div>
+        
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+    authDomain: "hexahoney-96aed.firebaseapp.com",
+    projectId: "hexahoney-96aed",
+    storageBucket: "hexahoney-96aed.firebasestorage.app",
+    messagingSenderId: "700458850837",
+    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+    measurementId: "G-MQGKK9709H"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+window.db = firebase.firestore();
+window.auth = firebase.auth();
+</script>
+
 
 <script>
 
