@@ -843,351 +843,454 @@
     </div>
 
     <script>
-        // DOM Elements
-        const submissionsTableBody = document.getElementById('submissions-table-body');
-        const mobileCardsContainer = document.getElementById('mobile-cards');
-        const submissionModal = document.getElementById('submission-modal');
-        const closeModalBtn = document.getElementById('close-modal');
-        const closeModalX = document.querySelector('.close-modal');
-        const statusFilter = document.getElementById('status-filter');
-        const dateFilter = document.getElementById('date-filter');
-        const gmailReplyBtn = document.getElementById('gmail-reply-btn');
-        const markRepliedBtn = document.getElementById('mark-replied-btn');
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
+ // Firebase Configuration for Submissions Page
+const firebaseConfig = {
+    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+    authDomain: "hexahoney-96aed.firebaseapp.com",
+    projectId: "hexahoney-96aed",
+    storageBucket: "hexahoney-96aed.firebasestorage.app",
+    messagingSenderId: "700458850837",
+    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+    measurementId: "G-MQGKK9709H"
+};
 
-        // Current state - empty array
-        let currentSubmissions = [];
-        let filteredSubmissions = [];
-        let currentSubmissionId = null;
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-        // Initialize the page
-        function initDashboard() {
-            renderSubmissionsTable();
-            renderMobileCards();
+// DOM Elements
+const submissionsTableBody = document.getElementById('submissions-table-body');
+const mobileCardsContainer = document.getElementById('mobile-cards');
+const submissionModal = document.getElementById('submission-modal');
+const closeModalBtn = document.getElementById('close-modal');
+const closeModalX = document.querySelector('.close-modal');
+const statusFilter = document.getElementById('status-filter');
+const dateFilter = document.getElementById('date-filter');
+const gmailReplyBtn = document.getElementById('gmail-reply-btn');
+const markRepliedBtn = document.getElementById('mark-replied-btn');
+const toast = document.getElementById('toast');
+const toastMessage = document.getElementById('toast-message');
+
+// Current state
+let currentSubmissions = [];
+let filteredSubmissions = [];
+let currentSubmissionId = null;
+
+// Initialize the page
+function initDashboard() {
+    // Check if user is authenticated and is admin
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            // Check if user is admin (you might want to implement proper admin check)
+            loadSubmissions();
             setupEventListeners();
+        } else {
+            // Redirect to login or show access denied
+            showAccessDenied();
         }
+    });
+}
 
-        // Render submissions table
-        function renderSubmissionsTable() {
-            if (filteredSubmissions.length === 0) {
-                submissionsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5">
-                            <div class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <h3>No Messages Yet</h3>
-                                <p>Contact form submissions will appear here once users start submitting messages through your contact form.</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+// Show access denied message
+function showAccessDenied() {
+    const accessDeniedHTML = `
+        <div class="empty-state">
+            <i class="fas fa-shield-alt"></i>
+            <h3>Access Denied</h3>
+            <p>Please log in with an admin account to view contact submissions.</p>
+            <button class="btn btn-primary" onclick="window.location.href='index.html'">
+                <i class="fas fa-home"></i> Go to Homepage
+            </button>
+        </div>
+    `;
+    
+    submissionsTableBody.innerHTML = `<tr><td colspan="5">${accessDeniedHTML}</td></tr>`;
+    mobileCardsContainer.innerHTML = accessDeniedHTML;
+}
+
+// Load submissions from Firebase
+function loadSubmissions() {
+    console.log('Loading submissions from Firebase...');
+    
+    db.collection('contactSubmissions')
+        .orderBy('timestamp', 'desc')
+        .get()
+        .then((querySnapshot) => {
+            console.log('Found submissions:', querySnapshot.size);
+            currentSubmissions = [];
+            
+            if (querySnapshot.empty) {
+                renderSubmissionsTable();
+                renderMobileCards();
                 return;
             }
+            
+            querySnapshot.forEach((doc) => {
+                const submission = doc.data();
+                submission.id = doc.id;
+                // Convert Firestore timestamp to Date if needed
+                if (submission.timestamp && submission.timestamp.toDate) {
+                    submission.date = submission.timestamp.toDate().toISOString();
+                } else if (submission.timestamp) {
+                    submission.date = submission.timestamp;
+                } else {
+                    submission.date = new Date().toISOString();
+                }
+                
+                // Ensure status exists
+                if (!submission.status) {
+                    submission.status = 'new';
+                }
+                
+                currentSubmissions.push(submission);
+            });
+            
+            filteredSubmissions = [...currentSubmissions];
+            renderSubmissionsTable();
+            renderMobileCards();
+        })
+        .catch((error) => {
+            console.error("Error loading submissions:", error);
+            showErrorState(error);
+        });
+}
 
-            submissionsTableBody.innerHTML = filteredSubmissions.map(submission => {
-                const initials = submission.name.split(' ').map(n => n[0]).join('');
-                return `
-                <tr>
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar-small">${initials}</div>
-                            <div class="user-details">
-                                <div class="user-name">${submission.name}</div>
-                                <div class="user-email">${submission.email}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="subject">${submission.subject}</td>
-                    <td class="date">${formatDate(submission.date)}</td>
-                    <td><span class="status status-${submission.status}">${getStatusText(submission.status)}</span></td>
-                    <td>
-                        <div class="actions">
-                            <button class="action-btn view-btn" data-id="${submission.id}" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn reply-btn" data-id="${submission.id}" title="Reply via Gmail">
-                                <i class="fas fa-reply"></i>
-                            </button>
-                            <button class="action-btn delete-btn" data-id="${submission.id}" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                `;
-            }).join('');
-        }
+// Show error state
+function showErrorState(error) {
+    const errorHTML = `
+        <div class="empty-state">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Error Loading Submissions</h3>
+            <p>${error.message}</p>
+            <button class="btn btn-primary" onclick="loadSubmissions()">
+                <i class="fas fa-redo"></i> Try Again
+            </button>
+        </div>
+    `;
+    
+    submissionsTableBody.innerHTML = `<tr><td colspan="5">${errorHTML}</td></tr>`;
+    mobileCardsContainer.innerHTML = errorHTML;
+}
 
-        // Render mobile cards
-        function renderMobileCards() {
-            if (filteredSubmissions.length === 0) {
-                mobileCardsContainer.innerHTML = `
+// Render submissions table
+function renderSubmissionsTable() {
+    if (filteredSubmissions.length === 0) {
+        submissionsTableBody.innerHTML = `
+            <tr>
+                <td colspan="5">
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <h3>No Messages Yet</h3>
                         <p>Contact form submissions will appear here once users start submitting messages through your contact form.</p>
                     </div>
-                `;
-                return;
-            }
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
-            mobileCardsContainer.innerHTML = filteredSubmissions.map(submission => {
-                const initials = submission.name.split(' ').map(n => n[0]).join('');
-                return `
-                <div class="submission-card">
-                    <div class="card-header">
-                        <div class="user-info-mobile">
-                            <div class="user-avatar-small">${initials}</div>
-                            <div class="user-details-mobile">
-                                <div class="user-name">${submission.name}</div>
-                                <div class="user-email">${submission.email}</div>
-                            </div>
-                        </div>
-                        <span class="card-status status-${submission.status}">${getStatusText(submission.status)}</span>
-                    </div>
-                    <div class="card-subject">${submission.subject}</div>
-                    <div class="card-date">${formatDate(submission.date)}</div>
-                    <div class="card-actions">
-                        <button class="action-btn view-btn" data-id="${submission.id}" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn reply-btn" data-id="${submission.id}" title="Reply via Gmail">
-                            <i class="fas fa-reply"></i>
-                        </button>
-                        <button class="action-btn delete-btn" data-id="${submission.id}" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
+    submissionsTableBody.innerHTML = filteredSubmissions.map(submission => {
+        const initials = submission.name.split(' ').map(n => n[0]).join('');
+        return `
+        <tr>
+            <td>
+                <div class="user-info">
+                    <div class="user-avatar-small">${initials}</div>
+                    <div class="user-details">
+                        <div class="user-name">${submission.name}</div>
+                        <div class="user-email">${submission.email}</div>
                     </div>
                 </div>
-                `;
-            }).join('');
+            </td>
+            <td class="subject">${submission.subject}</td>
+            <td class="date">${formatDate(submission.date)}</td>
+            <td><span class="status status-${submission.status}">${getStatusText(submission.status)}</span></td>
+            <td>
+                <div class="actions">
+                    <button class="action-btn view-btn" data-id="${submission.id}" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn reply-btn" data-id="${submission.id}" title="Reply via Gmail">
+                        <i class="fas fa-reply"></i>
+                    </button>
+                    <button class="action-btn delete-btn" data-id="${submission.id}" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        `;
+    }).join('');
+}
+
+// Render mobile cards
+function renderMobileCards() {
+    if (filteredSubmissions.length === 0) {
+        mobileCardsContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>No Messages Yet</h3>
+                <p>Contact form submissions will appear here once users start submitting messages through your contact form.</p>
+            </div>
+        `;
+        return;
+    }
+
+    mobileCardsContainer.innerHTML = filteredSubmissions.map(submission => {
+        const initials = submission.name.split(' ').map(n => n[0]).join('');
+        return `
+        <div class="submission-card">
+            <div class="card-header">
+                <div class="user-info-mobile">
+                    <div class="user-avatar-small">${initials}</div>
+                    <div class="user-details-mobile">
+                        <div class="user-name">${submission.name}</div>
+                        <div class="user-email">${submission.email}</div>
+                    </div>
+                </div>
+                <span class="card-status status-${submission.status}">${getStatusText(submission.status)}</span>
+            </div>
+            <div class="card-subject">${submission.subject}</div>
+            <div class="card-date">${formatDate(submission.date)}</div>
+            <div class="card-actions">
+                <button class="action-btn view-btn" data-id="${submission.id}" title="View Details">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn reply-btn" data-id="${submission.id}" title="Reply via Gmail">
+                    <i class="fas fa-reply"></i>
+                </button>
+                <button class="action-btn delete-btn" data-id="${submission.id}" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+// Format date for display
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Get status text for display
+function getStatusText(status) {
+    const statusMap = {
+        'new': 'New',
+        'read': 'Read',
+        'replied': 'Replied'
+    };
+    return statusMap[status] || status;
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // View submission details
+    submissionsTableBody.addEventListener('click', handleActionClick);
+    mobileCardsContainer.addEventListener('click', handleActionClick);
+
+    function handleActionClick(e) {
+        const viewBtn = e.target.closest('.view-btn');
+        if (viewBtn) {
+            const submissionId = viewBtn.getAttribute('data-id');
+            openSubmissionModal(submissionId);
         }
-
-        // Format date for display
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric',
-                year: 'numeric'
-            });
+        
+        const replyBtn = e.target.closest('.reply-btn');
+        if (replyBtn) {
+            const submissionId = replyBtn.getAttribute('data-id');
+            openGmailReply(submissionId);
         }
-
-        // Get status text for display
-        function getStatusText(status) {
-            const statusMap = {
-                'new': 'New',
-                'read': 'Read',
-                'replied': 'Replied'
-            };
-            return statusMap[status] || status;
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // View submission details
-            submissionsTableBody.addEventListener('click', handleActionClick);
-            mobileCardsContainer.addEventListener('click', handleActionClick);
-
-            function handleActionClick(e) {
-                const viewBtn = e.target.closest('.view-btn');
-                if (viewBtn) {
-                    const submissionId = viewBtn.getAttribute('data-id');
-                    openSubmissionModal(submissionId);
-                }
-                
-                const replyBtn = e.target.closest('.reply-btn');
-                if (replyBtn) {
-                    const submissionId = replyBtn.getAttribute('data-id');
-                    openGmailReply(submissionId);
-                }
-                
-                const deleteBtn = e.target.closest('.delete-btn');
-                if (deleteBtn) {
-                    const submissionId = deleteBtn.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this message?')) {
-                        deleteSubmission(submissionId);
-                    }
-                }
+        
+        const deleteBtn = e.target.closest('.delete-btn');
+        if (deleteBtn) {
+            const submissionId = deleteBtn.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this message?')) {
+                deleteSubmission(submissionId);
             }
-
-            // Modal controls
-            closeModalBtn.addEventListener('click', closeModal);
-            closeModalX.addEventListener('click', closeModal);
-            submissionModal.addEventListener('click', function(e) {
-                if (e.target === submissionModal) {
-                    closeModal();
-                }
-            });
-
-            // Filter controls
-            statusFilter.addEventListener('change', applyFilters);
-            dateFilter.addEventListener('change', applyFilters);
-
-            // Mark as replied button
-            markRepliedBtn.addEventListener('click', function() {
-                if (currentSubmissionId) {
-                    updateSubmissionStatus(currentSubmissionId, 'replied');
-                    showToast('Status updated to Replied!');
-                    closeModal();
-                }
-            });
         }
+    }
 
-        // Open submission modal
-        function openSubmissionModal(submissionId) {
-            const submission = currentSubmissions.find(s => s.id === submissionId);
-            if (!submission) return;
-
-            currentSubmissionId = submissionId;
-            
-            // Populate modal with submission data
-            document.getElementById('detail-name').textContent = submission.name;
-            document.getElementById('detail-email').textContent = submission.email;
-            document.getElementById('detail-phone').textContent = submission.phone || 'Not provided';
-            document.getElementById('detail-subject').textContent = submission.subject;
-            document.getElementById('detail-date').textContent = formatDate(submission.date);
-            document.getElementById('detail-status').textContent = getStatusText(submission.status);
-            document.getElementById('detail-message').textContent = submission.message;
-            
-            // Update Gmail link
-            const subject = encodeURIComponent(`Re: ${submission.subject}`);
-            const body = encodeURIComponent(`\n\n--- Original Message ---\nFrom: ${submission.name} <${submission.email}>\nSubject: ${submission.subject}\nDate: ${formatDate(submission.date)}\n\n${submission.message}`);
-            gmailReplyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${submission.email}&su=${subject}&body=${body}`;
-            
-            // Show modal
-            submissionModal.style.display = 'flex';
-            
-            // Auto-update status to 'read' if it's currently 'new'
-            if (submission.status === 'new') {
-                updateSubmissionStatus(submissionId, 'read');
-            }
+    // Modal controls
+    closeModalBtn.addEventListener('click', closeModal);
+    closeModalX.addEventListener('click', closeModal);
+    submissionModal.addEventListener('click', function(e) {
+        if (e.target === submissionModal) {
+            closeModal();
         }
+    });
 
-        // Open Gmail reply directly
-        function openGmailReply(submissionId) {
-            const submission = currentSubmissions.find(s => s.id === submissionId);
-            if (!submission) return;
+    // Filter controls
+    statusFilter.addEventListener('change', applyFilters);
+    dateFilter.addEventListener('change', applyFilters);
 
-            // Update status to replied
-            updateSubmissionStatus(submissionId, 'replied');
-            
-            // Create Gmail URL
-            const subject = encodeURIComponent(`Re: ${submission.subject}`);
-            const body = encodeURIComponent(`\n\n--- Original Message ---\nFrom: ${submission.name} <${submission.email}>\nSubject: ${submission.subject}\nDate: ${formatDate(submission.date)}\n\n${submission.message}`);
-            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${submission.email}&su=${subject}&body=${body}`;
-            
-            // Open Gmail in new tab
-            window.open(gmailUrl, '_blank');
-            
-            // Show success message
-            showToast('Gmail opened for reply! Status updated to Replied.');
+    // Mark as replied button
+    markRepliedBtn.addEventListener('click', function() {
+        if (currentSubmissionId) {
+            updateSubmissionStatus(currentSubmissionId, 'replied');
+            showToast('Status updated to Replied!');
+            closeModal();
         }
+    });
+}
 
-        // Close modal
-        function closeModal() {
-            submissionModal.style.display = 'none';
-            currentSubmissionId = null;
+// Open submission modal
+function openSubmissionModal(submissionId) {
+    const submission = currentSubmissions.find(s => s.id === submissionId);
+    if (!submission) return;
+
+    currentSubmissionId = submissionId;
+    
+    // Populate modal with submission data
+    document.getElementById('detail-name').textContent = submission.name;
+    document.getElementById('detail-email').textContent = submission.email;
+    document.getElementById('detail-phone').textContent = submission.phone || 'Not provided';
+    document.getElementById('detail-subject').textContent = submission.subject;
+    document.getElementById('detail-date').textContent = formatDate(submission.date);
+    document.getElementById('detail-status').textContent = getStatusText(submission.status);
+    document.getElementById('detail-message').textContent = submission.message;
+    
+    // Update Gmail link
+    const subject = encodeURIComponent(`Re: ${submission.subject}`);
+    const body = encodeURIComponent(`\n\n--- Original Message ---\nFrom: ${submission.name} <${submission.email}>\nSubject: ${submission.subject}\nDate: ${formatDate(submission.date)}\n\n${submission.message}`);
+    gmailReplyBtn.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${submission.email}&su=${subject}&body=${body}`;
+    
+    // Show modal
+    submissionModal.style.display = 'flex';
+    
+    // Auto-update status to 'read' if it's currently 'new'
+    if (submission.status === 'new') {
+        updateSubmissionStatus(submissionId, 'read');
+    }
+}
+
+// Open Gmail reply directly
+function openGmailReply(submissionId) {
+    const submission = currentSubmissions.find(s => s.id === submissionId);
+    if (!submission) return;
+
+    // Update status to replied
+    updateSubmissionStatus(submissionId, 'replied');
+    
+    // Create Gmail URL
+    const subject = encodeURIComponent(`Re: ${submission.subject}`);
+    const body = encodeURIComponent(`\n\n--- Original Message ---\nFrom: ${submission.name} <${submission.email}>\nSubject: ${submission.subject}\nDate: ${formatDate(submission.date)}\n\n${submission.message}`);
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${submission.email}&su=${subject}&body=${body}`;
+    
+    // Open Gmail in new tab
+    window.open(gmailUrl, '_blank');
+    
+    // Show success message
+    showToast('Gmail opened for reply! Status updated to Replied.');
+}
+
+// Close modal
+function closeModal() {
+    submissionModal.style.display = 'none';
+    currentSubmissionId = null;
+}
+
+// Apply filters
+function applyFilters() {
+    let filtered = [...currentSubmissions];
+    
+    // Status filter
+    const statusValue = statusFilter.value;
+    if (statusValue !== 'all') {
+        filtered = filtered.filter(s => s.status === statusValue);
+    }
+    
+    // Date filter
+    const dateValue = dateFilter.value;
+    if (dateValue !== 'all') {
+        const now = new Date();
+        let startDate;
+        
+        switch(dateValue) {
+            case 'today':
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                break;
+            case 'week':
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+                break;
+            case 'month':
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                break;
         }
+        
+        filtered = filtered.filter(s => new Date(s.date) >= startDate);
+    }
+    
+    filteredSubmissions = filtered;
+    renderSubmissionsTable();
+    renderMobileCards();
+}
 
-        // Apply filters
-        function applyFilters() {
-            let filtered = [...currentSubmissions];
-            
-            // Status filter
-            const statusValue = statusFilter.value;
-            if (statusValue !== 'all') {
-                filtered = filtered.filter(s => s.status === statusValue);
-            }
-            
-            // Date filter
-            const dateValue = dateFilter.value;
-            if (dateValue !== 'all') {
-                const now = new Date();
-                let startDate;
-                
-                switch(dateValue) {
-                    case 'today':
-                        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                        break;
-                    case 'week':
-                        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-                        break;
-                    case 'month':
-                        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-                        break;
-                }
-                
-                filtered = filtered.filter(s => new Date(s.date) >= startDate);
-            }
-            
-            filteredSubmissions = filtered;
-            renderSubmissionsTable();
-            renderMobileCards();
+// Update submission status in Firebase
+function updateSubmissionStatus(submissionId, newStatus) {
+    db.collection('contactSubmissions').doc(submissionId).update({
+        status: newStatus,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+        // Update local state
+        const submissionIndex = currentSubmissions.findIndex(s => s.id === submissionId);
+        if (submissionIndex === -1) return;
+        
+        currentSubmissions[submissionIndex].status = newStatus;
+        
+        // Update filtered list if needed
+        const filteredIndex = filteredSubmissions.findIndex(s => s.id === submissionId);
+        if (filteredIndex !== -1) {
+            filteredSubmissions[filteredIndex].status = newStatus;
         }
+        
+        renderSubmissionsTable();
+        renderMobileCards();
+    })
+    .catch((error) => {
+        console.error("Error updating status:", error);
+        showToast('Error updating status: ' + error.message);
+    });
+}
 
-        // Update submission status
-        function updateSubmissionStatus(submissionId, newStatus) {
-            const submissionIndex = currentSubmissions.findIndex(s => s.id === submissionId);
-            if (submissionIndex === -1) return;
-            
-            currentSubmissions[submissionIndex].status = newStatus;
-            
-            // Update filtered list if needed
-            const filteredIndex = filteredSubmissions.findIndex(s => s.id === submissionId);
-            if (filteredIndex !== -1) {
-                filteredSubmissions[filteredIndex].status = newStatus;
-            }
-            
-            renderSubmissionsTable();
-            renderMobileCards();
-        }
+// Delete submission from Firebase
+function deleteSubmission(submissionId) {
+    db.collection('contactSubmissions').doc(submissionId).delete()
+    .then(() => {
+        // Update local state
+        currentSubmissions = currentSubmissions.filter(s => s.id !== submissionId);
+        filteredSubmissions = filteredSubmissions.filter(s => s.id !== submissionId);
+        renderSubmissionsTable();
+        renderMobileCards();
+        showToast('Submission deleted successfully!');
+    })
+    .catch((error) => {
+        console.error("Error deleting submission:", error);
+        showToast('Error deleting submission: ' + error.message);
+    });
+}
 
-        // Delete submission
-        function deleteSubmission(submissionId) {
-            currentSubmissions = currentSubmissions.filter(s => s.id !== submissionId);
-            filteredSubmissions = filteredSubmissions.filter(s => s.id !== submissionId);
-            renderSubmissionsTable();
-            renderMobileCards();
-        }
+// Show toast notification
+function showToast(message) {
+    toastMessage.textContent = message;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
 
-        // Show toast notification
-        function showToast(message) {
-            toastMessage.textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-
-        // Function to add a new submission (for integration with your contact form)
-        function addNewSubmission(submissionData) {
-            const newSubmission = {
-                id: Date.now().toString(),
-                name: submissionData.name,
-                email: submissionData.email,
-                phone: submissionData.phone || '',
-                subject: submissionData.subject,
-                message: submissionData.message,
-                date: new Date().toISOString(),
-                status: 'new'
-            };
-            
-            currentSubmissions.unshift(newSubmission);
-            filteredSubmissions.unshift(newSubmission);
-            renderSubmissionsTable();
-            renderMobileCards();
-        }
-
-        // Initialize the page when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initDashboard);
-
-        // Export function for integration with contact form
-        window.ContactDashboard = {
-            addNewSubmission
-        };
+// Initialize the page when DOM is loaded
+document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
 </html>
