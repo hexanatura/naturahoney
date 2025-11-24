@@ -301,12 +301,6 @@ tr:hover{
 }
 
 /* RESPONSIVE DESIGN */
-@media(max-width:1200px){
-  .page-container{
-    padding:15px;
-  }
-}
-
 @media(max-width:1024px){
   .table-container{
     display:none !important;
@@ -427,25 +421,6 @@ tr:hover{
     left:10px;
     bottom:10px;
     max-width:none;
-  }
-}
-
-@media(max-width:360px){
-  .page-title{
-    font-size:1.3rem;
-  }
-  
-  .card{
-    padding:10px;
-  }
-  
-  .actions{
-    gap:4px;
-  }
-  
-  .action-btn{
-    width:30px;
-    height:30px;
   }
 }
 
@@ -585,44 +560,30 @@ tr:hover{
   <div id="toast-message">Updated</div>
 </div>
 
-<script>class ContactSubmissionsManager {
+<script>
+// Simple Contact Manager that works with your dashboard setup
+class ContactSubmissionsManager {
     constructor() {
         this.currentSubmissions = [];
         this.filteredSubmissions = [];
         this.currentSubmissionId = null;
-        this.db = null;
-        this.initialized = false;
         this.initialize();
     }
 
     initialize() {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.setup());
-        } else {
-            this.setup();
-        }
-    }
-
-    setup() {
-        if (!window.db) {
-            this.showError("Firebase is not ready. Refresh the dashboard.");
-            return;
-        }
-
-        this.db = window.db;
-        this.initialized = true;
-        this.startApplication();
-    }
-
-    startApplication() {
+        console.log('Contact Manager Initializing...');
         this.setupEventListeners();
         this.loadSubmissions();
     }
 
     setupEventListeners() {
+        // Test data button
         const testBtn = document.getElementById('testDataBtn');
-        if (testBtn) testBtn.addEventListener('click', () => this.addTestData());
+        if (testBtn) {
+            testBtn.addEventListener('click', () => this.addTestData());
+        }
 
+        // Modal close buttons
         const closeModalBtn = document.getElementById('close-modal');
         const closeModalBtn2 = document.getElementById('close-modal-2');
         const gmailReplyBtn = document.getElementById('gmail-reply-btn');
@@ -631,6 +592,7 @@ tr:hover{
         if (closeModalBtn2) closeModalBtn2.addEventListener('click', () => this.closeModal());
         if (gmailReplyBtn) gmailReplyBtn.addEventListener('click', () => this.replyEmail());
 
+        // Modal backdrop click
         const modal = document.getElementById('submission-modal');
         if (modal) {
             modal.addEventListener('click', (e) => {
@@ -638,27 +600,23 @@ tr:hover{
             });
         }
 
+        // Filters
         const statusFilter = document.getElementById('status-filter');
         const dateFilter = document.getElementById('date-filter');
 
         if (statusFilter) statusFilter.addEventListener('change', () => this.applyFilters());
         if (dateFilter) dateFilter.addEventListener('change', () => this.applyFilters());
 
-        const tableBody = document.getElementById('submissions-table-body');
-        const mobileCards = document.getElementById('mobile-cards');
+        // Event delegation for action buttons
+        document.addEventListener('click', (e) => {
+            const viewBtn = e.target.closest('.view-btn');
+            const replyBtn = e.target.closest('.reply-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
 
-        if (tableBody) tableBody.addEventListener('click', (e) => this.handleAction(e));
-        if (mobileCards) mobileCards.addEventListener('click', (e) => this.handleAction(e));
-    }
-
-    handleAction(e) {
-        const viewBtn = e.target.closest('.view-btn');
-        const replyBtn = e.target.closest('.reply-btn');
-        const deleteBtn = e.target.closest('.delete-btn');
-
-        if (viewBtn) this.openModal(viewBtn.dataset.id);
-        if (replyBtn) this.replyEmailDirect(replyBtn.dataset.id);
-        if (deleteBtn) this.deleteSubmission(deleteBtn.dataset.id);
+            if (viewBtn) this.openModal(viewBtn.dataset.id);
+            if (replyBtn) this.replyEmailDirect(replyBtn.dataset.id);
+            if (deleteBtn) this.deleteSubmission(deleteBtn.dataset.id);
+        });
     }
 
     showLoadingState() {
@@ -667,10 +625,12 @@ tr:hover{
 
         if (tableBody) {
             tableBody.innerHTML = `
-                <tr><td colspan="5" style="text-align:center;padding:40px;color:#666;">
-                    <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
-                    <p>Loading messages...</p>
-                </td></tr>`;
+                <tr>
+                    <td colspan="5" style="text-align:center;padding:40px;color:#666;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
+                        <p>Loading messages...</p>
+                    </td>
+                </tr>`;
         }
 
         if (mobileCards) {
@@ -688,13 +648,15 @@ tr:hover{
 
         if (tableBody) {
             tableBody.innerHTML = `
-                <tr><td colspan="5" style="text-align:center;padding:40px;color:red;">
-                    <i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:10px;"></i>
-                    <p>${message}</p>
-                    <button onclick="contactManager.loadSubmissions()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
-                        Retry
-                    </button>
-                </td></tr>`;
+                <tr>
+                    <td colspan="5" style="text-align:center;padding:40px;color:red;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:10px;"></i>
+                        <p>${message}</p>
+                        <button onclick="contactManager.loadSubmissions()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
+                            Retry
+                        </button>
+                    </td>
+                </tr>`;
         }
 
         if (mobileCards) {
@@ -710,50 +672,68 @@ tr:hover{
     }
 
     loadSubmissions() {
-        if (!this.initialized || !this.db) {
-            this.showError("Database not initialized.");
+        console.log('Loading submissions...');
+        
+        // Check if Firebase is available
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            this.showError("Firebase is not available. Please refresh the dashboard.");
             return;
         }
 
         this.showLoadingState();
 
-        this.db.collection("contactSubmissions")
-            .orderBy("timestamp", "desc")
-            .get()
-            .then((snapshot) => {
-                this.currentSubmissions = [];
+        try {
+            const db = firebase.firestore();
+            
+            db.collection("contactSubmissions")
+                .orderBy("timestamp", "desc")
+                .get()
+                .then((snapshot) => {
+                    console.log('Firestore response received:', snapshot.size, 'documents');
+                    this.currentSubmissions = [];
 
-                if (snapshot.empty) {
-                    this.showNoDataMessage();
-                    return;
-                }
-
-                snapshot.forEach((doc) => {
-                    const item = doc.data();
-                    item.id = doc.id;
-
-                    if (item.timestamp && item.timestamp.toDate) {
-                        item.date = item.timestamp.toDate().toISOString();
-                    } else {
-                        item.date = new Date().toISOString();
+                    if (snapshot.empty) {
+                        this.showNoDataMessage();
+                        return;
                     }
 
-                    if (!item.status) item.status = "new";
-                    if (!item.name) item.name = "Unknown";
-                    if (!item.email) item.email = "No email provided";
-                    if (!item.subject) item.subject = "No subject";
-                    if (!item.message) item.message = "No message content";
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const submission = {
+                            id: doc.id,
+                            name: data.name || 'Unknown',
+                            email: data.email || 'No email',
+                            phone: data.phone || 'Not provided',
+                            subject: data.subject || 'No subject',
+                            message: data.message || 'No message',
+                            status: data.status || 'new',
+                            date: data.timestamp ? this.formatFirebaseTimestamp(data.timestamp) : new Date().toISOString()
+                        };
+                        this.currentSubmissions.push(submission);
+                    });
 
-                    this.currentSubmissions.push(item);
+                    this.filteredSubmissions = [...this.currentSubmissions];
+                    this.renderTable();
+                    this.renderMobileCards();
+                    
+                    console.log('Successfully loaded', this.currentSubmissions.length, 'submissions');
+                })
+                .catch((error) => {
+                    console.error('Firestore error:', error);
+                    this.showError("Failed to load messages: " + error.message);
                 });
 
-                this.filteredSubmissions = [...this.currentSubmissions];
-                this.renderTable();
-                this.renderMobileCards();
-            })
-            .catch((error) => {
-                this.showError("Database Error: " + error.message);
-            });
+        } catch (error) {
+            console.error('Error loading submissions:', error);
+            this.showError("Error loading messages: " + error.message);
+        }
+    }
+
+    formatFirebaseTimestamp(timestamp) {
+        if (timestamp && timestamp.toDate) {
+            return timestamp.toDate().toISOString();
+        }
+        return new Date().toISOString();
     }
 
     showNoDataMessage() {
@@ -762,13 +742,15 @@ tr:hover{
 
         if (tableBody) {
             tableBody.innerHTML = `
-                <tr><td colspan="5" style="text-align:center;padding:60px 40px;color:#666;">
-                    <i class="fas fa-inbox" style="font-size:48px;color:#ddd;margin-bottom:15px;"></i>
-                    <h3 style="margin-bottom:10px;font-weight:500;">No messages yet</h3>
-                    <p style="color:#888;max-width:400px;margin:0 auto;">
-                        No contact form submissions found.
-                    </p>
-                </td></tr>`;
+                <tr>
+                    <td colspan="5" style="text-align:center;padding:60px 40px;color:#666;">
+                        <i class="fas fa-inbox" style="font-size:48px;color:#ddd;margin-bottom:15px;"></i>
+                        <h3 style="margin-bottom:10px;font-weight:500;">No messages yet</h3>
+                        <p style="color:#888;max-width:400px;margin:0 auto;">
+                            No contact form submissions found. Customer messages will appear here when they contact you.
+                        </p>
+                    </td>
+                </tr>`;
         }
 
         if (mobileCards) {
@@ -776,7 +758,7 @@ tr:hover{
                 <div class="card" style="text-align:center;padding:40px 20px;">
                     <i class="fas fa-inbox" style="font-size:48px;color:#ddd;margin-bottom:15px;"></i>
                     <h3 style="margin-bottom:10px;font-weight:500;">No messages yet</h3>
-                    <p style="color:#888;">Customer messages will appear here.</p>
+                    <p style="color:#888;">Customer messages will appear here when they contact you.</p>
                 </div>`;
         }
     }
@@ -790,32 +772,39 @@ tr:hover{
             return;
         }
 
-        tableBody.innerHTML = this.filteredSubmissions.map((s) => {
-            const initials = s.name.split(" ").map(n => n[0] || '').join("").toUpperCase();
-            const shortSubject = s.subject.length > 50 ? s.subject.substring(0, 50) + '...' : s.subject;
+        tableBody.innerHTML = this.filteredSubmissions.map((submission) => {
+            const initials = this.getInitials(submission.name);
+            const shortSubject = submission.subject.length > 50 ? 
+                submission.subject.substring(0, 50) + '...' : submission.subject;
 
             return `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="avatar">${initials}</div>
-                        <div>
-                            <div style="font-weight:600;">${s.name}</div>
-                            <div style="font-size:.8rem;color:#666">${s.email}</div>
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="avatar">${initials}</div>
+                            <div>
+                                <div style="font-weight:600;">${this.escapeHtml(submission.name)}</div>
+                                <div style="font-size:.8rem;color:#666">${this.escapeHtml(submission.email)}</div>
+                            </div>
                         </div>
-                    </div>
-                </td>
-                <td>${shortSubject}</td>
-                <td style="white-space:nowrap;">${this.formatDate(s.date)}</td>
-                <td><span class="status status-${s.status}">${this.formatStatus(s.status)}</span></td>
-                <td>
-                    <div class="actions">
-                        <button class="action-btn view-btn" data-id="${s.id}"><i class="fas fa-eye"></i></button>
-                        <button class="action-btn reply-btn" data-id="${s.id}"><i class="fas fa-reply"></i></button>
-                        <button class="action-btn delete-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>`;
+                    </td>
+                    <td>${this.escapeHtml(shortSubject)}</td>
+                    <td style="white-space:nowrap;">${this.formatDate(submission.date)}</td>
+                    <td><span class="status status-${submission.status}">${this.formatStatus(submission.status)}</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn view-btn" data-id="${submission.id}" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn reply-btn" data-id="${submission.id}" title="Reply">
+                                <i class="fas fa-reply"></i>
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${submission.id}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
         }).join("");
     }
 
@@ -828,51 +817,62 @@ tr:hover{
             return;
         }
 
-        mobileCards.innerHTML = this.filteredSubmissions.map((s) => {
-            const initials = s.name.split(" ").map(n => n[0] || '').join("").toUpperCase();
+        mobileCards.innerHTML = this.filteredSubmissions.map((submission) => {
+            const initials = this.getInitials(submission.name);
 
             return `
-            <div class="card">
-                <div class="card-row">
-                    <div class="user-info">
-                        <div class="avatar">${initials}</div>
-                        <div>
-                            <div style="font-weight:600;">${s.name}</div>
-                            <div style="font-size:.8rem;color:#666">${s.email}</div>
+                <div class="card">
+                    <div class="card-row">
+                        <div class="user-info">
+                            <div class="avatar">${initials}</div>
+                            <div>
+                                <div style="font-weight:600;">${this.escapeHtml(submission.name)}</div>
+                                <div style="font-size:.8rem;color:#666">${this.escapeHtml(submission.email)}</div>
+                            </div>
                         </div>
+                        <span class="status status-${submission.status}">${this.formatStatus(submission.status)}</span>
                     </div>
-                    <span class="status status-${s.status}">${this.formatStatus(s.status)}</span>
-                </div>
-                <div style="font-weight:500;margin:8px 0;">${s.subject}</div>
-                <div style="font-size:.8rem;color:#666">${this.formatDate(s.date)}</div>
-                <div class="card-row" style="justify-content:flex-end;margin-top:8px;">
-                    <button class="action-btn view-btn" data-id="${s.id}"><i class="fas fa-eye"></i></button>
-                    <button class="action-btn reply-btn" data-id="${s.id}"><i class="fas fa-reply"></i></button>
-                    <button class="action-btn delete-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>`;
+                    <div style="font-weight:500;margin:8px 0;">${this.escapeHtml(submission.subject)}</div>
+                    <div style="font-size:.8rem;color:#666">${this.formatDate(submission.date)}</div>
+                    <div class="card-row" style="justify-content:flex-end;margin-top:8px;">
+                        <button class="action-btn view-btn" data-id="${submission.id}" title="View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn reply-btn" data-id="${submission.id}" title="Reply">
+                            <i class="fas fa-reply"></i>
+                        </button>
+                        <button class="action-btn delete-btn" data-id="${submission.id}" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
         }).join("");
     }
 
     openModal(id) {
-        const s = this.currentSubmissions.find(x => x.id === id);
-        if (!s) return;
+        const submission = this.currentSubmissions.find(s => s.id === id);
+        if (!submission) {
+            this.showToast("Message not found");
+            return;
+        }
 
         this.currentSubmissionId = id;
 
-        const message = s.message || '';
-        const displayMessage = message.length > 1000 ? message.substring(0, 1000) + '...' : message;
+        // Populate modal with submission data
+        document.getElementById("detail-name").textContent = submission.name;
+        document.getElementById("detail-email").textContent = submission.email;
+        document.getElementById("detail-phone").textContent = submission.phone;
+        document.getElementById("detail-subject").textContent = submission.subject;
+        document.getElementById("detail-status").textContent = this.formatStatus(submission.status);
+        document.getElementById("detail-message").textContent = submission.message;
 
-        document.getElementById("detail-name").textContent = s.name;
-        document.getElementById("detail-email").textContent = s.email;
-        document.getElementById("detail-phone").textContent = s.phone || "Not provided";
-        document.getElementById("detail-subject").textContent = s.subject;
-        document.getElementById("detail-status").textContent = this.formatStatus(s.status);
-        document.getElementById("detail-message").textContent = displayMessage;
-
+        // Show modal
         document.getElementById("submission-modal").style.display = "flex";
 
-        if (s.status === "new") this.updateStatus(id, "read");
+        // Update status to "read" if it's new
+        if (submission.status === "new") {
+            this.updateStatus(id, "read");
+        }
     }
 
     closeModal() {
@@ -886,141 +886,235 @@ tr:hover{
     }
 
     replyEmailDirect(id) {
-        const s = this.currentSubmissions.find(x => x.id === id);
-        if (!s) return;
+        const submission = this.currentSubmissions.find(s => s.id === id);
+        if (!submission) return;
 
+        // Update status to "replied"
         this.updateStatus(id, "replied");
 
-        const sub = encodeURIComponent("Re: " + s.subject);
+        // Create Gmail compose URL
+        const subject = encodeURIComponent("Re: " + submission.subject);
         const body = encodeURIComponent(
-            "Hello " + s.name + ",\n\n" +
-            "Thank you for your message.\n\n" +
-            "--- Original Message ---\n" +
-            s.message
+            `Hello ${submission.name},\n\n` +
+            `Thank you for contacting us regarding: "${submission.subject}"\n\n` +
+            `We have received your message and will get back to you shortly.\n\n` +
+            `Best regards,\nYour Team\n\n` +
+            `--- Original Message ---\n` +
+            `${submission.message}`
         );
 
-        const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(s.email)}&su=${sub}&body=${body}`;
-        window.open(url, "_blank");
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(submission.email)}&su=${subject}&body=${body}`;
+        
+        // Open Gmail in new tab
+        window.open(gmailUrl, "_blank");
+        this.showToast("Opening Gmail to reply...");
     }
 
     deleteSubmission(id) {
-        if (!confirm("Are you sure you want to delete this message?")) return;
+        if (!confirm("Are you sure you want to delete this message? This action cannot be undone.")) {
+            return;
+        }
 
-        this.db.collection("contactSubmissions").doc(id).delete()
+        try {
+            const db = firebase.firestore();
+            
+            db.collection("contactSubmissions").doc(id).delete()
+                .then(() => {
+                    // Remove from local arrays
+                    this.currentSubmissions = this.currentSubmissions.filter(s => s.id !== id);
+                    this.filteredSubmissions = this.filteredSubmissions.filter(s => s.id !== id);
+                    
+                    // Re-render
+                    this.renderTable();
+                    this.renderMobileCards();
+                    
+                    this.showToast("Message deleted successfully");
+                })
+                .catch((error) => {
+                    console.error("Error deleting submission:", error);
+                    this.showToast("Error deleting message: " + error.message);
+                });
+        } catch (error) {
+            console.error("Error deleting submission:", error);
+            this.showToast("Error deleting message: " + error.message);
+        }
+    }
+
+    updateStatus(id, newStatus) {
+        try {
+            const db = firebase.firestore();
+            
+            db.collection("contactSubmissions").doc(id).update({
+                status: newStatus,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
             .then(() => {
-                this.currentSubmissions = this.currentSubmissions.filter(s => s.id !== id);
-                this.filteredSubmissions = this.filteredSubmissions.filter(s => s.id !== id);
+                // Update local data
+                const submission = this.currentSubmissions.find(s => s.id === id);
+                if (submission) {
+                    submission.status = newStatus;
+                }
+                
+                const filteredSubmission = this.filteredSubmissions.find(s => s.id === id);
+                if (filteredSubmission) {
+                    filteredSubmission.status = newStatus;
+                }
+                
+                // Re-render
                 this.renderTable();
                 this.renderMobileCards();
-                this.showToast("Message deleted successfully.");
+                
+                this.showToast(`Status updated to ${this.formatStatus(newStatus)}`);
             })
             .catch((error) => {
-                this.showToast("Error deleting message: " + error.message);
+                console.error("Error updating status:", error);
+                this.showToast("Error updating status: " + error.message);
             });
+        } catch (error) {
+            console.error("Error updating status:", error);
+            this.showToast("Error updating status: " + error.message);
+        }
     }
 
     applyFilters() {
-        let list = [...this.currentSubmissions];
-
         const statusFilter = document.getElementById('status-filter');
         const dateFilter = document.getElementById('date-filter');
+        
+        const statusValue = statusFilter ? statusFilter.value : 'all';
+        const dateValue = dateFilter ? dateFilter.value : 'all';
 
-        if (statusFilter && statusFilter.value !== "all") {
-            list = list.filter(s => s.status === statusFilter.value);
+        let filtered = [...this.currentSubmissions];
+
+        // Apply status filter
+        if (statusValue !== 'all') {
+            filtered = filtered.filter(s => s.status === statusValue);
         }
 
-        if (dateFilter && dateFilter.value !== "all") {
+        // Apply date filter
+        if (dateValue !== 'all') {
             const now = new Date();
-            let start;
+            let startDate;
 
-            if (dateFilter.value === "today") {
-                start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            } else if (dateFilter.value === "week") {
-                start = new Date(now - 7 * 86400000);
-            } else if (dateFilter.value === "month") {
-                start = new Date(now - 30 * 86400000);
+            switch (dateValue) {
+                case 'today':
+                    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    break;
+                case 'week':
+                    startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    break;
+                case 'month':
+                    startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                    break;
+                default:
+                    startDate = null;
             }
 
-            list = list.filter(s => new Date(s.date) >= start);
+            if (startDate) {
+                filtered = filtered.filter(s => new Date(s.date) >= startDate);
+            }
         }
 
-        this.filteredSubmissions = list;
+        this.filteredSubmissions = filtered;
         this.renderTable();
         this.renderMobileCards();
     }
 
-    updateStatus(id, status) {
-        this.db.collection("contactSubmissions").doc(id).update({
-            status,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-            const idx = this.currentSubmissions.findIndex(s => s.id === id);
-            if (idx !== -1) this.currentSubmissions[idx].status = status;
-
-            const idx2 = this.filteredSubmissions.findIndex(s => s.id === id);
-            if (idx2 !== -1) this.filteredSubmissions[idx2].status = status;
-
-            this.renderTable();
-            this.renderMobileCards();
-        });
-    }
-
     addTestData() {
-        if (!this.initialized || !this.db) {
-            this.showError("Database not ready.");
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+            this.showToast("Firebase not available");
             return;
         }
 
-        const testData = {
-            name: "Test Customer",
-            email: "test@example.com",
-            phone: "+1234567890",
-            subject: "Test Inquiry About Honey Products",
-            message: "Hello, I’m interested in your honey products.",
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            status: "new"
-        };
-
-        this.db.collection("contactSubmissions").add(testData)
-            .then(() => {
-                this.showToast("Test message added.");
-                this.loadSubmissions();
-            })
-            .catch((error) => {
-                this.showToast("Error: " + error.message);
-            });
-    }
-
-    formatDate(d) {
         try {
-            return new Date(d).toLocaleString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-            });
-        } catch {
-            return "Invalid date";
+            const db = firebase.firestore();
+            
+            const testData = {
+                name: "Test Customer",
+                email: "test@example.com",
+                phone: "+1234567890",
+                subject: "Test Inquiry About Products",
+                message: "Hello, I'm interested in learning more about your products. Could you please send me more information?",
+                status: "new",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection("contactSubmissions").add(testData)
+                .then(() => {
+                    this.showToast("Test message added successfully");
+                    this.loadSubmissions(); // Reload to show the new message
+                })
+                .catch((error) => {
+                    console.error("Error adding test data:", error);
+                    this.showToast("Error adding test message: " + error.message);
+                });
+        } catch (error) {
+            console.error("Error adding test data:", error);
+            this.showToast("Error adding test message: " + error.message);
         }
     }
 
-    formatStatus(s) {
-        return s.charAt(0).toUpperCase() + s.slice(1);
+    // Utility functions
+    getInitials(name) {
+        return name.split(' ')
+            .map(part => part.charAt(0))
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
     }
 
-    showToast(msg) {
+    formatDate(dateString) {
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (error) {
+            return 'Invalid date';
+        }
+    }
+
+    formatStatus(status) {
+        return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    showToast(message) {
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toast-message');
 
         if (toast && toastMessage) {
-            toastMessage.textContent = msg;
-            toast.classList.add("show");
-            setTimeout(() => toast.classList.remove("show"), 3000);
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
     }
 }
 
-const contactManager = new ContactSubmissionsManager();
-window.contactManager = contactManager;
+// Initialize the contact manager when the page loads
+let contactManager;
+
+function initializeContactPage() {
+    console.log('Initializing contact page...');
+    contactManager = new ContactSubmissionsManager();
+    window.contactManager = contactManager;
+}
+
+// Start the page when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeContactPage);
+} else {
+    initializeContactPage();
+}
 </script>
