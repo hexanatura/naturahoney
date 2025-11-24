@@ -1607,26 +1607,39 @@ function loadMessagesPage() {
         .then(html => {
             dynamic.innerHTML = html;
 
-            // run scripts AFTER HTML is placed + Firebase is ready
             const scripts = [...dynamic.querySelectorAll("script")];
-            scripts.forEach(s => {
-                const tag = document.createElement("script");
 
-                if (s.src) tag.src = s.src;
-                else tag.textContent = s.textContent;
+            function runScripts() {
+                scripts.forEach(s => {
+                    const tag = document.createElement("script");
 
-                tag.onload = () => {
-                    if (!window.db) console.error("Firebase not ready");
-                };
+                    if (s.src) tag.src = s.src;
+                    else tag.textContent = s.textContent;
 
-                document.body.appendChild(tag);
-                s.remove();
-            });
+                    document.body.appendChild(tag);
+                    s.remove();
+                });
+            }
+
+            if (!window.db) {
+                console.warn("Waiting for Firebase...");
+                const wait = setInterval(() => {
+                    if (window.db) {
+                        clearInterval(wait);
+                        console.log("Firebase ready → executing scripts");
+                        runScripts();
+                    }
+                }, 50);
+            } else {
+                // Already ready
+                runScripts();
+            }
         })
         .catch(err => {
             showLoadError("Messages", dynamic, err);
         });
 }
+
 
 function showLoadError(pageName, container, error) {
     console.error(error);
