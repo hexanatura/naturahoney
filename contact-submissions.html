@@ -586,7 +586,6 @@ tr:hover{
 </div>
 
 <script>
-
 class ContactSubmissionsManager {
     constructor() {
         this.currentSubmissions = [];
@@ -978,7 +977,7 @@ class ContactSubmissionsManager {
             email: "test@example.com",
             phone: "+1234567890",
             subject: "Test Inquiry About Honey Products",
-            message: "Hello, I'm interested in your honey products.",
+            message: "Hello, I’m interested in your honey products.",
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             status: "new"
         };
@@ -1022,19 +1021,11 @@ class ContactSubmissionsManager {
         }
     }
 }
-  let contactManager = null;
 
-function initContactPage() {
-    if (contactManager) return; // Already initialized
+ let contactManager;
     
-    contactManager = new ContactSubmissionsManager();
-    window.contactManager = contactManager;
-}
-
-// 3. FINALLY initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initContactPage);
-} else {
-    initContactPage();
-}
+    document.addEventListener('DOMContentLoaded', function() {
+        contactManager = new ContactSubmissionsManager();
+        window.contactManager = contactManager;
+    });
 </script>
