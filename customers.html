@@ -1,431 +1,330 @@
-
-  <!-- Fonts & icons (matches dashboard) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+<!-- customers.html — Dashboard-styled Customers page (full page fragment) -->
+<div class="customers-view fade-in" style="padding:22px; font-family:Inter, sans-serif; color:var(--dark);">
   <style>
-    :root{
-      --primary:#000;
-      --secondary:#fff;
-      --dark:#000;
-      --light:#f5f5f5;
-      --gray:#666;
-      --border:#e6e6e6;
-      --card-bg: rgba(255,255,255,0.95);
-      --shadow: 0 6px 18px rgba(0,0,0,0.06);
-      --radius: 12px;
+    /* light scoped styles to match dashboard */
+    .customers-top { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+    .customers-title { font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:700; color:var(--dark); }
+    .customers-sub { font-size:0.9rem; color:var(--gray); margin-top:4px; }
+
+    .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .card { background:var(--card-bg); border-radius:12px; box-shadow:var(--shadow); padding:12px; border:1px solid var(--border); }
+    .filter-select, .search-box { padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:transparent; min-width:180px; font-size:0.95rem; }
+
+    .search-box { display:flex; gap:8px; align-items:center; min-width:220px; max-width:420px; padding:8px 10px; }
+    .search-box input { border:0; outline:none; background:transparent; width:100%; font-size:0.95rem; }
+
+    .btn-primary { background:var(--dark); color:var(--secondary); border-radius:10px; padding:9px 14px; border:none; cursor:pointer; font-weight:700; }
+    .btn-ghost { background:transparent; border:1px solid var(--border); padding:8px 12px; border-radius:8px; cursor:pointer; }
+
+    .table-card { margin-top:14px; background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; border:1px solid var(--border); }
+    .table-wrapper { overflow:auto; }
+    .customers-table { width:100%; border-collapse:collapse; min-width:900px; font-size:0.95rem; }
+    .customers-table thead th { text-align:left; padding:12px 16px; font-weight:700; color:var(--dark); border-bottom:1px solid var(--border); background:transparent; white-space:nowrap; }
+    .customers-table td { padding:12px 16px; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--dark); }
+
+    .muted { color:var(--gray); font-size:0.9rem; }
+
+    .action-btn { border-radius:8px; border:0; padding:8px; cursor:pointer; background:transparent; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:0.95rem; }
+    .action-btn .fa-eye { color:var(--dark); }
+
+    /* Mobile cards */
+    .mobile-cards { display:none; gap:12px; margin-top:12px; }
+    .cust-card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; border:1px solid var(--border); }
+    .cust-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .cust-name { font-weight:600; color:var(--dark); }
+    .cust-meta { color:var(--gray); font-size:0.85rem; }
+
+    @media (max-width:1023px) {
+      .table-wrapper { display:none; }
+      .mobile-cards { display:flex; flex-direction:column; }
+    }
+    @media (min-width:1024px) {
+      .table-wrapper { display:block; }
     }
 
-    *{box-sizing:border-box}
-    body{font-family:Inter, sans-serif;color:var(--dark);margin:0;background:transparent}
-    .customers-view{padding:22px;min-height:100vh;background:transparent;color:var(--dark)}
-    .customers-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
-    .customers-title{font-family:Outfit, sans-serif;font-weight:700;font-size:1.15rem}
-    .customers-sub{color:var(--gray);font-size:0.9rem;margin-top:4px}
-
-    .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .card{background:var(--card-bg);padding:12px;border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border)}
-    .filters{display:flex;gap:8px;align-items:center}
-    .filter, .search-box {padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:transparent;min-width:160px}
-    .search-box{display:flex;gap:8px;align-items:center;min-width:240px;max-width:420px}
-    .search-box input{border:0;outline:none;background:transparent;width:100%}
-    .btn {border-radius:10px;padding:8px 12px;border:0;cursor:pointer}
-    .btn-primary {background:var(--dark);color:var(--secondary);font-weight:700}
-    .btn-ghost {background:transparent;border:1px solid var(--border)}
-
-    .table-card{margin-top:14px;background:var(--card-bg);border-radius:var(--radius);padding:12px;border:1px solid var(--border);box-shadow:var(--shadow)}
-    .table-wrapper{overflow:auto}
-    table.customers-table{width:100%;border-collapse:collapse;min-width:900px;font-size:0.95rem}
-    table.customers-table th{padding:12px 16px;text-align:left;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap}
-    table.customers-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
-    .muted{color:var(--gray);font-size:0.9rem}
-
-    .avatar {width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;font-weight:700;margin-right:10px}
-
-    .mobile-cards{display:none;gap:12px;margin-top:12px}
-    .customer-card{background:var(--card-bg);border-radius:var(--radius);padding:12px;border:1px solid var(--border);box-shadow:var(--shadow)}
-    .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-    .customer-name{font-weight:600}
-    .card-meta{color:var(--gray);font-size:0.85rem}
-
-    @media (max-width:1023px){
-      .table-wrapper{display:none}
-      .mobile-cards{display:flex;flex-direction:column}
-    }
-
-    /* modal */
-    .modal-bg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,0.6);z-index:1200}
-    .modal-bg.show{display:flex}
-    .modal{width:100%;max-width:680px;border-radius:12px;background:var(--card-bg);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
-    .modal .modal-header{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
-    .modal .modal-body{padding:16px}
-    .modal .modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-
-    .empty-state{text-align:center;padding:36px 12px;color:var(--gray)}
-    .empty-state i{font-size:3rem;color:#cbd5e1;margin-bottom:8px}
-
-    /* toast */
-    .toast{position:fixed;right:22px;bottom:22px;padding:12px 16px;background:var(--card-bg);border:1px solid var(--border);box-shadow:var(--shadow);z-index:1400;border-left:4px solid #10b981;display:none;align-items:center;gap:8px}
-    .toast.show{display:flex}
+    /* Modal */
+    .modal-bg { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background: rgba(15,23,42,0.6); z-index:1200; }
+    .modal-bg.show { display:flex; }
+    .modal { width:100%; max-width:720px; border-radius:12px; overflow:hidden; background:var(--card-bg); box-shadow:var(--shadow); border:1px solid var(--border); }
+    .modal .modal-header { padding:14px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
+    .modal .modal-body { padding:16px; max-height:60vh; overflow:auto; }
+    .modal .modal-footer { padding:12px 16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
+    .empty-state { text-align:center; padding:36px 12px; color:var(--gray); }
+    .toast { position:fixed; bottom:22px; right:22px; padding:12px 16px; background:var(--card-bg); border:1px solid var(--border); box-shadow:var(--shadow); z-index:1400; border-left:4px solid #10b981; }
   </style>
-</head>
-<body>
-  <div class="customers-view fade-in">
-    <div class="customers-top">
-      <div>
-        <div class="customers-title">Customers</div>
-        <div class="customers-sub muted">All registered users</div>
-      </div>
 
-      <div class="controls">
-        <div class="card filters">
-          <select id="cust-status" class="filter">
-            <option value="all">All Users</option>
-            <option value="active">Active</option>
-            <option value="disabled">Disabled</option>
-          </select>
-
-          <div class="search-box">
-            <i class="fas fa-search muted"></i>
-            <input id="cust-search" placeholder="Search name, email, mobile">
-          </div>
-        </div>
-
-        <button id="cust-refresh" class="btn btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-        <button id="cust-export" class="btn btn-primary" title="Export CSV"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
-      </div>
+  <div class="customers-top">
+    <div>
+      <div class="customers-title">Customers</div>
+      <div class="customers-sub muted">All registered users</div>
     </div>
 
-    <div class="table-card">
-      <div class="table-wrapper">
-        <table class="customers-table" aria-label="Customers table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Email</th>
-              <th>Mobile</th>
-              <th>Address</th>
-              <th>Joined</th>
-              <th style="text-align:right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="cust-tbody">
-            <tr><td colspan="6" class="muted">Loading customers…</td></tr>
-          </tbody>
-        </table>
+    <div class="controls">
+      <div class="card" style="display:flex;gap:10px;align-items:center">
+        <div class="search-box">
+          <i class="fas fa-search muted"></i>
+          <input id="cust-search" placeholder="Search name, email, phone">
+        </div>
+        <select id="cust-sort" class="filter-select">
+          <option value="new">Newest</option>
+          <option value="old">Oldest</option>
+        </select>
       </div>
 
-      <div class="mobile-cards" id="cust-cards"></div>
+      <button id="cust-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+      <button id="cust-export" class="btn-primary"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
     </div>
-
-    <!-- modal -->
-    <div class="modal-bg" id="cust-modal-bg" role="dialog" aria-hidden="true">
-      <div class="modal" role="document">
-        <div class="modal-header">
-          <div style="font-weight:700" id="cust-modal-title">Customer Details</div>
-          <button id="cust-modal-close" class="btn btn-ghost"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="modal-body" id="cust-modal-body">
-          <!-- dynamic -->
-        </div>
-
-        <div class="modal-footer">
-          <button id="cust-modal-close-2" class="btn btn-ghost">Close</button>
-          <button id="cust-copy-email" class="btn btn-primary"><i class="fas fa-copy" style="margin-right:8px"></i> Copy Email</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="cust-toast" class="toast"><i class="fas fa-check-circle"></i><div id="cust-toast-text">Saved</div></div>
   </div>
 
-  <!-- Firebase SDKs are expected to be loaded by parent dashboard.
-       We'll safely use firebase if available. -->
-  <script>
-  (function(){
-    // firebase config (same as your dashboard)
-    const cfg = {
-      apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-      authDomain: "hexahoney-96aed.firebaseapp.com",
-      projectId: "hexahoney-96aed",
-      storageBucket: "hexahoney-96aed.firebasestorage.app",
-      messagingSenderId: "700458850837",
-      appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-      measurementId: "G-MQGKK9709H"
-    };
-
-    // Initialize Firebase only if firebase exists and not already initialized
-    try {
-      if (window.firebase && !firebase.apps?.length) {
-        firebase.initializeApp(cfg);
-      }
-    } catch(e) {
-      console.warn('Firebase init issue (safe to ignore if dashboard already initialized):', e);
-    }
-
-    // Firestore reference — use existing window.db if parent set it
-    const db = window.db || (window.firebase ? firebase.firestore() : null);
-
-    // DOM refs
-    const tbody = document.getElementById('cust-tbody');
-    const cards = document.getElementById('cust-cards');
-    const statusFilter = document.getElementById('cust-status');
-    const searchInput = document.getElementById('cust-search');
-    const refreshBtn = document.getElementById('cust-refresh');
-    const exportBtn = document.getElementById('cust-export');
-
-    const modalBg = document.getElementById('cust-modal-bg');
-    const modalBody = document.getElementById('cust-modal-body');
-    const modalTitle = document.getElementById('cust-modal-title');
-    const modalClose = document.getElementById('cust-modal-close');
-    const modalClose2 = document.getElementById('cust-modal-close-2');
-    const copyEmailBtn = document.getElementById('cust-copy-email');
-
-    const toast = document.getElementById('cust-toast');
-    const toastText = document.getElementById('cust-toast-text');
-
-    let customers = [];
-    let filtered = [];
-    let currentCustomerId = null;
-    let unsubscribe = null;
-
-    // helpers
-    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function shortId(id){ return id ? id.toString().substring(0,8) : '—'; }
-    function fmtDate(ts){
-      if(!ts) return 'N/A';
-      try {
-        const d = (typeof ts === 'number') ? new Date(ts) : (ts.toDate ? ts.toDate() : new Date(ts));
-        return d.toLocaleDateString();
-      } catch(e){ return 'N/A'; }
-    }
-    function showToast(msg, isError){
-      toastText.textContent = msg;
-      toast.style.borderLeft = isError ? '4px solid #ef4444' : '4px solid #10b981';
-      toast.querySelector('i').className = isError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
-      toast.classList.add('show');
-      setTimeout(()=> toast.classList.remove('show'), 2800);
-    }
-
-    // load customers
-    function loadCustomers(){
-      if (!db) {
-        tbody.innerHTML = `<tr><td colspan="6" class="muted">Firestore not available</td></tr>`;
-        cards.innerHTML = `<div class="customer-card"><div class="muted">No data</div></div>`;
-        return;
-      }
-
-      // unsubscribe previous snapshot if any
-      if (unsubscribe) unsubscribe();
-
-      tbody.innerHTML = '<tr><td colspan="6" class="muted">Loading users…</td></tr>';
-      cards.innerHTML = '';
-
-      // listen to /users collection
-      unsubscribe = db.collection('users').orderBy('fullName','asc')
-        .onSnapshot(qs => {
-          customers = [];
-          qs.forEach(doc => {
-            customers.push({ id: doc.id, ...doc.data() });
-          });
-          applyFilters();
-        }, err => {
-          console.error('users load error', err);
-          showToast('Error loading users', true);
-          tbody.innerHTML = '<tr><td colspan="6" class="muted">Error loading users</td></tr>';
-          cards.innerHTML = '<div class="customer-card"><div class="muted">Error</div></div>';
-        });
-    }
-
-    function renderList(list){
-      if (!list || !list.length){
-        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-user-friends"></i><h3>No users found</h3><p class="muted">Users will appear here.</p></div></td></tr>';
-        cards.innerHTML = '<div class="customer-card"><div class="muted">No users for mobile view</div></div>';
-        return;
-      }
-
-      // table rows
-      tbody.innerHTML = list.map(u => {
-        const name = escapeHtml(u.fullName || (u.displayName || 'User'));
-        const email = escapeHtml(u.email || '—');
-        const mobile = escapeHtml(u.mobile || '—');
-        const addr = [u.addressLine, u.city, u.state, u.pincode].filter(Boolean).join(', ');
-        const joined = fmtDate(u.createdAt);
-        const initials = (name || 'U').split(' ').map(s=>s[0]||'').join('').substring(0,2).toUpperCase();
-
-        return `
-          <tr data-id="${escapeHtml(u.id)}">
-            <td>
-              <div style="display:flex;align-items:center;gap:8px;min-width:0">
-                <div class="avatar">${escapeHtml(initials)}</div>
-                <div style="min-width:0">
-                  <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-                </div>
-              </div>
-            </td>
-            <td class="muted">${email}</td>
-            <td class="muted">${mobile}</td>
-            <td class="muted" style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(addr || '—')}</td>
-            <td class="muted">${joined}</td>
-            <td style="text-align:right">
-              <button class="btn btn-ghost view-btn" data-id="${escapeHtml(u.id)}" title="View"><i class="fas fa-eye"></i></button>
-            </td>
+  <div class="table-card">
+    <div class="table-wrapper">
+      <table class="customers-table" aria-label="Customers table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th style="text-align:right">Actions</th>
           </tr>
-        `;
-      }).join('');
+        </thead>
+        <tbody id="cust-tbody">
+          <tr><td colspan="5" class="muted">Loading users…</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-      // mobile cards
-      cards.innerHTML = list.map(u=>{
-        const name = escapeHtml(u.fullName || (u.displayName || 'User'));
-        const email = escapeHtml(u.email || '—');
-        const mobile = escapeHtml(u.mobile || '—');
-        const addr = [u.addressLine, u.city].filter(Boolean).join(', ');
-        const joined = fmtDate(u.createdAt);
-        const initials = (name || 'U').split(' ').map(s=>s[0]||'').join('').substring(0,2).toUpperCase();
+    <div class="mobile-cards" id="cust-cards"></div>
+  </div>
 
-        return `
-          <div class="customer-card">
-            <div class="card-header">
-              <div>
-                <div style="display:flex;align-items:center;gap:10px">
-                  <div class="avatar">${initials}</div>
-                  <div>
-                    <div class="customer-name">${name}</div>
-                    <div class="card-meta muted">${email}</div>
+  <!-- modal -->
+  <div class="modal-bg" id="cust-modal-bg" role="dialog" aria-hidden="true">
+    <div class="modal" role="document">
+      <div class="modal-header">
+        <div style="font-weight:700" id="cust-modal-title">Customer Details</div>
+        <button id="cust-modal-close" class="btn-ghost"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="modal-body" id="cust-modal-body">
+        <!-- populated dynamically -->
+      </div>
+
+      <div class="modal-footer">
+        <button id="cust-modal-cancel" class="btn-ghost">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cust-toast" style="display:none" class="toast"><i style="margin-right:8px" class="fas fa-check-circle"></i><span id="cust-toast-message"></span></div>
+
+  <script>
+    (function () {
+      // DOM refs
+      const tbody = document.getElementById('cust-tbody');
+      const cards = document.getElementById('cust-cards');
+      const modalBg = document.getElementById('cust-modal-bg');
+      const modalClose = document.getElementById('cust-modal-close');
+      const modalCancel = document.getElementById('cust-modal-cancel');
+      const modalBody = document.getElementById('cust-modal-body');
+      const searchInput = document.getElementById('cust-search');
+      const sortSelect = document.getElementById('cust-sort');
+      const refreshBtn = document.getElementById('cust-refresh');
+      const exportBtn = document.getElementById('cust-export');
+      const toast = document.getElementById('cust-toast');
+      const toastMessage = document.getElementById('cust-toast-message');
+
+      let users = [];
+      let filtered = [];
+
+      // safe getter for firestore instance created in parent page
+      function getDB() {
+        return window.db || (window.firebase && firebase.firestore && firebase.firestore());
+      }
+
+      function showToast(msg, isError) {
+        toastMessage.textContent = msg;
+        toast.style.borderLeftColor = isError ? '#ef4444' : '#10b981';
+        toast.style.display = 'block';
+        setTimeout(()=> toast.style.display = 'none', 3000);
+      }
+
+      function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+      function shortId(id){ return id ? id.toString().substring(0,8) : '—'; }
+      function formatAddress(a){
+        if(!a) return '—';
+        const parts = [a.addressLine, a.city, a.state, a.pincode].filter(Boolean);
+        return parts.join(', ');
+      }
+
+      document.addEventListener('DOMContentLoaded', function(){
+        loadUsers();
+        attachUI();
+      });
+
+      function attachUI(){
+        modalClose.addEventListener('click', closeModal);
+        modalCancel.addEventListener('click', closeModal);
+        document.addEventListener('click', function(e){
+          if (e.target === modalBg) closeModal();
+        });
+
+        refreshBtn.addEventListener('click', function(){ loadUsers(); showToast('Refreshing users...'); });
+        exportBtn.addEventListener('click', function(){ exportCSV(filtered.length ? filtered : users); });
+
+        searchInput.addEventListener('input', function(){ setTimeout(applyFilters, 120); });
+        sortSelect.addEventListener('change', applyFilters);
+      }
+
+      function loadUsers() {
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading users…</td></tr>';
+        cards.innerHTML = '';
+
+        const db = getDB();
+        if (!db) {
+          tbody.innerHTML = '<tr><td colspan="5" class="muted">Firebase not initialized on parent page.</td></tr>';
+          return;
+        }
+
+        // try to read users; use get() for a snapshot once
+        db.collection('users').orderBy('createdAt','desc').get()
+          .then(qs => {
+            users = [];
+            qs.forEach(doc => {
+              users.push({ id: doc.id, ...doc.data() });
+            });
+            applyFilters();
+          })
+          .catch(err => {
+            console.error('users load error', err);
+            if (err && err.code === 'permission-denied') {
+              tbody.innerHTML = '<tr><td colspan="5" class="muted">Permission denied: your Firestore rules prevent reading users. For testing, temporarily allow reads or sign in as an admin.</td></tr>';
+            } else {
+              tbody.innerHTML = '<tr><td colspan="5" class="muted">Error loading users</td></tr>';
+            }
+            showToast('Error loading users', true);
+          });
+      }
+
+      function applyFilters() {
+        const q = (searchInput.value || '').trim().toLowerCase();
+        const sort = sortSelect.value;
+
+        let list = users.slice();
+
+        if (q) {
+          list = list.filter(u => {
+            const full = ((u.fullName||'') + ' ' + (u.email||'') + ' ' + (u.mobile||'')).toLowerCase();
+            return full.includes(q);
+          });
+        }
+
+        if (sort === 'old') list = list.reverse();
+
+        filtered = list;
+        renderList(filtered);
+      }
+
+      function renderList(list) {
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-user-friends"></i><h3>No users found</h3><p class="muted">Try adjusting your filters</p></div></td></tr>';
+          cards.innerHTML = '<div class="cust-card"><div class="muted">No customers for mobile view</div></div>';
+          return;
+        }
+
+        tbody.innerHTML = list.map(u => {
+          return `
+            <tr data-id="${escapeHtml(u.id)}">
+              <td>
+                <div style="display:flex;gap:10px;align-items:center">
+                  <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
+                    ${escapeHtml(((u.fullName||'')||'U').slice(0,2).toUpperCase())}
+                  </div>
+                  <div style="min-width:0">
+                    <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(u.fullName || 'No name')}</div>
+                    <div class="muted" style="font-size:0.85rem">${escapeHtml(u.email || 'No email')}</div>
                   </div>
                 </div>
-              </div>
-              <div class="card-meta muted">${joined}</div>
-            </div>
+              </td>
+              <td class="muted">${escapeHtml(u.email||'')}</td>
+              <td class="muted">${escapeHtml(u.mobile||'')}</td>
+              <td class="muted">${escapeHtml(formatAddress(u))}</td>
+              <td style="text-align:right">
+                <button class="action-btn" data-action="view" data-id="${escapeHtml(u.id)}" title="View"><i class="fas fa-eye"></i></button>
+              </td>
+            </tr>
+          `;
+        }).join('');
 
-            <div style="margin:8px 0">
-              <div class="muted">Mobile</div>
-              <div style="font-weight:700">${mobile}</div>
-            </div>
-
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div style="color:var(--gray);font-size:0.9rem">${escapeHtml(addr || '—')}</div>
-              <div>
-                <button class="btn btn-ghost view-btn" data-id="${escapeHtml(u.id)}"><i class="fas fa-eye"></i></button>
+        cards.innerHTML = list.map(u => {
+          return `
+            <div class="cust-card">
+              <div class="cust-header">
+                <div>
+                  <div class="cust-name">${escapeHtml(u.fullName || 'No name')}</div>
+                  <div class="cust-meta muted">${escapeHtml(u.email || 'No email')}</div>
+                </div>
+                <div class="cust-meta muted">₹ &nbsp;${escapeHtml(u.mobile || '')}</div>
+              </div>
+              <div class="muted" style="margin-bottom:8px">${escapeHtml(formatAddress(u))}</div>
+              <div style="display:flex;gap:8px">
+                <button class="action-btn" data-action="view" data-id="${escapeHtml(u.id)}"><i class="fas fa-eye"></i></button>
               </div>
             </div>
+          `;
+        }).join('');
+
+        attachRowListeners();
+      }
+
+      function attachRowListeners() {
+        // table
+        tbody.querySelectorAll('button').forEach(btn => btn.addEventListener('click', handleAction));
+        // cards
+        cards.querySelectorAll('button').forEach(btn => btn.addEventListener('click', handleAction));
+      }
+
+      function handleAction(e) {
+        const act = e.currentTarget.getAttribute('data-action');
+        const id = e.currentTarget.getAttribute('data-id');
+        if (!act || !id) return;
+        const user = users.find(x => x.id === id);
+        if (act === 'view') openModal(user || { id });
+      }
+
+      function openModal(user) {
+        if (!user) return;
+        modalBody.innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr;gap:10px">
+            <div><div class="muted">User ID</div><div style="font-weight:700">${escapeHtml(user.id)}</div></div>
+            <div><div class="muted">Full Name</div><div>${escapeHtml(user.fullName||'')}</div></div>
+            <div><div class="muted">Email</div><div>${escapeHtml(user.email||'')}</div></div>
+            <div><div class="muted">Phone</div><div>${escapeHtml(user.mobile||'')}</div></div>
+            <div><div class="muted">Address Line</div><div>${escapeHtml(user.addressLine||'')}</div></div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1"><div class="muted">City</div><div>${escapeHtml(user.city||'')}</div></div>
+              <div style="flex:1"><div class="muted">State</div><div>${escapeHtml(user.state||'')}</div></div>
+              <div style="flex:1"><div class="muted">Pincode</div><div>${escapeHtml(user.pincode||'')}</div></div>
+            </div>
+            <div><div class="muted">Created</div><div>${user.createdAt ? new Date(user.createdAt).toLocaleString() : '—'}</div></div>
           </div>
         `;
-      }).join('');
-
-      attachListeners();
-    }
-
-    function attachListeners(){
-      // view buttons (table & cards)
-      document.querySelectorAll('.view-btn').forEach(b=>b.addEventListener('click', e=>{
-        const id = e.currentTarget.getAttribute('data-id');
-        openModal(customers.find(x=>x.id===id));
-      }));
-    }
-
-    function openModal(user){
-      if(!user) return;
-      currentCustomerId = user.id;
-      modalTitle.textContent = user.fullName || user.displayName || 'User';
-      const addrParts = [];
-      if (user.addressLine) addrParts.push(user.addressLine);
-      if (user.city) addrParts.push(user.city);
-      if (user.state) addrParts.push(user.state);
-      if (user.pincode) addrParts.push(user.pincode);
-      const addressText = addrParts.length ? addrParts.join(', ') : 'No address provided';
-
-      modalBody.innerHTML = `
-        <div style="display:grid;gap:10px">
-          <div><div class="muted">Full name</div><div style="font-weight:700">${escapeHtml(user.fullName || user.displayName || '—')}</div></div>
-          <div><div class="muted">Email</div><div>${escapeHtml(user.email || '—')}</div></div>
-          <div><div class="muted">Mobile</div><div>${escapeHtml(user.mobile || '—')}</div></div>
-          <div><div class="muted">Address</div><div>${escapeHtml(addressText)}</div></div>
-          <div><div class="muted">Joined</div><div>${fmtDate(user.createdAt)}</div></div>
-          <div><div class="muted">Raw ID</div><div style="font-family:monospace">${escapeHtml(user.id)}</div></div>
-        </div>
-      `;
-      modalBg.classList.add('show');
-    }
-
-    function closeModal(){
-      modalBg.classList.remove('show');
-      currentCustomerId = null;
-    }
-
-    // filtering/search
-    function applyFilters(){
-      const st = statusFilter.value;
-      const q = (searchInput.value || '').trim().toLowerCase();
-
-      let list = customers.slice();
-
-      if (st !== 'all') {
-        // only apply if you store some 'status' on user doc
-        list = list.filter(u => (u.status||'').toLowerCase() === st);
+        modalBg.classList.add('show');
       }
 
-      if (q) {
-        list = list.filter(u=>{
-          const name = (u.fullName||'').toLowerCase();
-          const email = (u.email||'').toLowerCase();
-          const mobile = (u.mobile||'').toLowerCase();
-          return name.includes(q) || email.includes(q) || mobile.includes(q) || (u.id||'').toLowerCase().includes(q);
+      function closeModal() { modalBg.classList.remove('show'); }
+
+      function exportCSV(list){
+        if (!list || !list.length) { showToast('No users to export', true); return; }
+        const rows = [['User ID','Full Name','Email','Phone','Address','City','State','Pincode']];
+        list.forEach(u => {
+          rows.push([u.id, u.fullName||'', u.email||'', u.mobile||'', formatAddress(u), u.city||'', u.state||'', u.pincode||'']);
         });
+        const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'customers.csv'; a.click(); URL.revokeObjectURL(url);
+        showToast('Export started');
       }
 
-      filtered = list;
-      renderList(filtered);
-    }
-
-    // export CSV
-    function exportCSV(list){
-      if (!list || !list.length){ showToast('No users to export', true); return; }
-      const rows = [['Full name','Email','Mobile','Address','City','State','Pincode','Joined','ID']];
-      list.forEach(u=>{
-        rows.push([
-          u.fullName || '',
-          u.email || '',
-          u.mobile || '',
-          u.addressLine || '',
-          u.city || '',
-          u.state || '',
-          u.pincode || '',
-          fmtDate(u.createdAt),
-          u.id || ''
-        ]);
-      });
-      const csv = rows.map(r => r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], {type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'customers.csv'; a.click(); URL.revokeObjectURL(url);
-      showToast('Export started');
-    }
-
-    // events
-    searchInput.addEventListener('input', ()=> setTimeout(applyFilters,120));
-    statusFilter.addEventListener('change', applyFilters);
-    refreshBtn.addEventListener('click', ()=> { loadCustomers(); showToast('Refreshing users...'); });
-    exportBtn.addEventListener('click', ()=> exportCSV(filtered.length ? filtered : customers));
-
-    modalClose.addEventListener('click', closeModal);
-    modalClose2.addEventListener('click', closeModal);
-    modalBg.addEventListener('click', e => { if (e.target === modalBg) closeModal(); });
-
-    copyEmailBtn.addEventListener('click', ()=>{
-      if (!currentCustomerId) { showToast('No user selected', true); return; }
-      const u = customers.find(x=>x.id===currentCustomerId);
-      if (!u || !u.email) { showToast('No email to copy', true); return; }
-      navigator.clipboard?.writeText(u.email).then(()=> showToast('Email copied') ).catch(()=> showToast('Copy failed', true));
-    });
-
-    // initial load
-    loadCustomers();
-
-    // cleanup when fragment removed (optional)
-    window.__cleanupCustomers = function(){ if (unsubscribe) unsubscribe(); };
-  })();
+    })();
   </script>
