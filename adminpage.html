@@ -1615,30 +1615,76 @@ function loadMessagesPage() {
     const dynamic = document.getElementById("dynamicPage");
     const dashboard = document.getElementById("dashboardBody");
 
-    // Hide dashboard, show messages page
+    // Show loading state immediately
     dashboard.style.display = "none";
     dynamic.style.display = "block";
     dynamic.style.width = "100%";
+    dynamic.innerHTML = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 50vh;">
+            <div style="text-align: center;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: #666; margin-bottom: 20px;"></i>
+                <p style="color: #666;">Loading Messages...</p>
+            </div>
+        </div>
+    `;
 
     fetch("contact-submissions.html")
-        .then(r => r.text())
+        .then(r => {
+            if (!r.ok) throw new Error('Failed to load page');
+            return r.text();
+        })
         .then(html => {
             dynamic.innerHTML = html;
 
-            const scripts = [...dynamic.querySelectorAll("script")];
-            scripts.forEach(s => {
-                const tag = document.createElement("script");
-                if (s.src) {
-                    tag.src = s.src + "?v=" + Date.now();
-                } else {
-                    tag.textContent = s.textContent;
-                }
-                document.body.appendChild(tag);
-                s.remove();
-            });
+            // Wait a bit for DOM to update before processing scripts
+            setTimeout(() => {
+                const scripts = [...dynamic.querySelectorAll("script")];
+                
+                scripts.forEach(s => {
+                    const tag = document.createElement("script");
+                    
+                    if (s.src) {
+                        tag.src = s.src;
+                        tag.onload = () => console.log('Script loaded:', s.src);
+                        tag.onerror = () => console.error('Script failed:', s.src);
+                    } else {
+                        // For inline scripts, wrap in try-catch and ensure Firebase is available
+                        const scriptContent = s.textContent;
+                        tag.textContent = `
+                            try {
+                                if (typeof firebase !== 'undefined' && window.db) {
+                                    ${scriptContent}
+                                } else {
+                                    console.error('Firebase not available');
+                                    // Retry after a short delay
+                                    setTimeout(() => {
+                                        try { ${scriptContent} } 
+                                        catch(e) { console.error('Retry failed:', e) }
+                                    }, 500);
+                                }
+                            } catch(error) {
+                                console.error('Script error:', error);
+                            }
+                        `;
+                    }
+                    
+                    document.body.appendChild(tag);
+                    s.remove();
+                });
+            }, 100);
         })
         .catch(err => {
-            dynamic.innerHTML = "Failed to load Messages page";
+            console.error('Error loading messages page:', err);
+            dynamic.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: #b00020;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                    <h3 style="margin-bottom: 10px;">Failed to load Messages</h3>
+                    <p style="color: #666; margin-bottom: 20px;">${err.message}</p>
+                    <button onclick="loadMessagesPage()" 
+                        style="padding: 10px 18px; background: black; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        Retry
+                    </button>
+                </div>`;
         });
 }
 
@@ -1817,4 +1863,3 @@ document.addEventListener('DOMContentLoaded', initDashboard);
 </script>
 </body>
 </html>
-
