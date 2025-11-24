@@ -1615,6 +1615,11 @@ function loadMessagesPage() {
     const dynamic = document.getElementById("dynamicPage");
     const dashboard = document.getElementById("dashboardBody");
 
+    // Clear any existing contact manager to prevent conflicts
+    if (window.contactManager) {
+        window.contactManager = null;
+    }
+
     // Show loading state immediately
     dashboard.style.display = "none";
     dynamic.style.display = "block";
@@ -1636,42 +1641,22 @@ function loadMessagesPage() {
         .then(html => {
             dynamic.innerHTML = html;
 
-            // Wait a bit for DOM to update before processing scripts
-            setTimeout(() => {
-                const scripts = [...dynamic.querySelectorAll("script")];
-                
-                scripts.forEach(s => {
-                    const tag = document.createElement("script");
+            // Find and process the script tag
+            const scripts = dynamic.querySelectorAll('script');
+            scripts.forEach(script => {
+                if (script.src.includes('contact-submissions.js')) {
+                    // Remove the existing script
+                    script.remove();
                     
-                    if (s.src) {
-                        tag.src = s.src;
-                        tag.onload = () => console.log('Script loaded:', s.src);
-                        tag.onerror = () => console.error('Script failed:', s.src);
-                    } else {
-                        // For inline scripts, wrap in try-catch and ensure Firebase is available
-                        const scriptContent = s.textContent;
-                        tag.textContent = `
-                            try {
-                                if (typeof firebase !== 'undefined' && window.db) {
-                                    ${scriptContent}
-                                } else {
-                                    console.error('Firebase not available');
-                                    // Retry after a short delay
-                                    setTimeout(() => {
-                                        try { ${scriptContent} } 
-                                        catch(e) { console.error('Retry failed:', e) }
-                                    }, 500);
-                                }
-                            } catch(error) {
-                                console.error('Script error:', error);
-                            }
-                        `;
-                    }
+                    // Create a new script with cache busting
+                    const newScript = document.createElement('script');
+                    newScript.src = script.src + '?v=' + Date.now();
+                    newScript.onload = () => console.log('Contact script loaded successfully');
+                    newScript.onerror = (e) => console.error('Failed to load contact script:', e);
                     
-                    document.body.appendChild(tag);
-                    s.remove();
-                });
-            }, 100);
+                    document.body.appendChild(newScript);
+                }
+            });
         })
         .catch(err => {
             console.error('Error loading messages page:', err);
