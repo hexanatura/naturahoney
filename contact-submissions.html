@@ -1022,10 +1022,6 @@ class ContactSubmissionsManager {
     }
 }
 
- let contactManager;
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        contactManager = new ContactSubmissionsManager();
-        window.contactManager = contactManager;
-    });
+const contactManager = new ContactSubmissionsManager();
+window.contactManager = contactManager;
 </script>
