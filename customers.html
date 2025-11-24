@@ -273,12 +273,15 @@
 
         <div class="customers-search">
           <i class="fas fa-search muted"></i>
-          <input id="cv-search" placeholder="Search customers by name or email">
+          <input id="cv-search" placeholder="Search customers by name, email, or phone">
         </div>
       </div>
 
       <button id="cv-export" class="btn-ghost">
         <i class="fas fa-download" style="margin-right:8px"></i> Export
+      </button>
+      <button id="cv-refresh" class="btn-ghost">
+        <i class="fas fa-sync-alt" style="margin-right:8px"></i> Refresh
       </button>
     </div>
   </div>
@@ -292,6 +295,7 @@
             <th>Customer</th>
             <th>Contact</th>
             <th>Registration</th>
+            <th>Last Login</th>
             <th>Orders</th>
             <th>Status</th>
             <th style="text-align:right">Actions</th>
@@ -299,7 +303,7 @@
         </thead>
         <tbody id="cv-tbody">
           <tr>
-            <td colspan="6" class="muted">Loading customers...</td>
+            <td colspan="7" class="muted">Loading customers...</td>
           </tr>
         </tbody>
       </table>
@@ -349,27 +353,11 @@
 
   <script>
     (function() {
-      // Initialize Firebase if not already initialized
-      function initializeFirebase() {
-        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-          const firebaseConfig = {
-            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-            authDomain: "hexahoney-96aed.firebaseapp.com",
-            projectId: "hexahoney-96aed",
-            storageBucket: "hexahoney-96aed.firebasestorage.app",
-            messagingSenderId: "700458850837",
-            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-            measurementId: "G-MQGKK9709H"
-          };
-          firebase.initializeApp(firebaseConfig);
-        }
-        return typeof firebase !== 'undefined' ? firebase.firestore() : null;
-      }
-
       // DOM Elements
       const tbody = document.getElementById('cv-tbody');
       const cards = document.getElementById('cv-cards');
       const exportBtn = document.getElementById('cv-export');
+      const refreshBtn = document.getElementById('cv-refresh');
       const modalBg = document.getElementById('cv-modal-bg');
       const modalClose = document.getElementById('cv-modal-close');
       const closeBtn = document.getElementById('cv-close');
@@ -384,10 +372,14 @@
 
       let customers = [];
       let lastDeleteId = null;
+      let autoRefreshTimer = null;
+      let autoRefreshAttempts = 0;
+      const MAX_AUTO_REFRESH_ATTEMPTS = 3;
 
       // Event Listeners
       function setupEventListeners() {
         exportBtn.addEventListener('click', exportCustomers);
+        refreshBtn.addEventListener('click', manualRefresh);
         modalClose.addEventListener('click', closeModal);
         closeBtn.addEventListener('click', closeModal);
         searchInput.addEventListener('input', applyFilters);
@@ -398,30 +390,94 @@
         document.getElementById('cv-confirm-close').addEventListener('click', () => confirmBg.classList.remove('show'));
 
         confirmOk.addEventListener('click', deleteCustomer);
+
+        // Event delegation for action buttons
+        document.addEventListener('click', (e) => {
+          const viewBtn = e.target.closest('[data-action="view"]');
+          const deleteBtn = e.target.closest('[data-action="delete"]');
+
+          if (viewBtn) showCustomerDetails(viewBtn.dataset.id);
+          if (deleteBtn) confirmDelete(deleteBtn.dataset.id);
+        });
+      }
+
+      function manualRefresh() {
+        clearAutoRefresh();
+        showToast("Refreshing customers...");
+        startLoadingWithAutoRefresh();
+      }
+
+      function startLoadingWithAutoRefresh() {
+        showLoadingState();
+        autoRefreshAttempts = 0;
+        loadCustomers();
+        
+        // Set timeout for auto-refresh if loading fails
+        autoRefreshTimer = setTimeout(() => {
+          silentAutoRefresh();
+        }, 8000);
+      }
+
+      function silentAutoRefresh() {
+        autoRefreshAttempts++;
+        
+        if (autoRefreshAttempts <= MAX_AUTO_REFRESH_ATTEMPTS) {
+          console.log(`Silent auto-refresh attempt ${autoRefreshAttempts}/${MAX_AUTO_REFRESH_ATTEMPTS}`);
+          loadCustomers();
+          
+          // Set next auto-refresh if still needed
+          autoRefreshTimer = setTimeout(() => {
+            silentAutoRefresh();
+          }, 8000);
+        } else {
+          console.log('Max auto-refresh attempts reached');
+          showError("Unable to load customers after multiple attempts. Please check your connection.");
+        }
+      }
+
+      function clearAutoRefresh() {
+        if (autoRefreshTimer) {
+          clearTimeout(autoRefreshTimer);
+          autoRefreshTimer = null;
+        }
       }
 
       // Load Customers
       function loadCustomers() {
-        const db = initializeFirebase();
-        
-        if (!db) {
-          showError('Firebase not available');
+        if (typeof firebase === 'undefined' || !firebase.firestore) {
+          showError('Firebase is not available');
           return;
         }
 
-        tbody.innerHTML = '<tr><td colspan="6" class="muted">Loading customers...</td></tr>';
-        cards.innerHTML = '';
+        const db = firebase.firestore();
+        
+        showLoadingState();
 
         db.collection('users').get()
           .then((querySnapshot) => {
             customers = [];
             querySnapshot.forEach((doc) => {
               const customerData = doc.data();
-              customers.push({
+              const customer = {
                 id: doc.id,
-                ...customerData
-              });
+                // Handle different possible field names for user data
+                name: customerData.name || customerData.displayName || customerData.fullName || 'Unknown',
+                email: customerData.email || 'No email',
+                phone: customerData.phone || customerData.phoneNumber || customerData.mobile || 'Not provided',
+                // Handle different timestamp formats
+                createdAt: customerData.createdAt || customerData.creationTime || customerData.signupDate || null,
+                lastLoginAt: customerData.lastLoginAt || customerData.lastSignInTime || customerData.lastActive || null,
+                // Status and orders
+                active: customerData.active !== false, // Default to true if not specified
+                orders: customerData.orders || [],
+                // Additional fields that might exist
+                address: customerData.address || customerData.shippingAddress || null,
+                photoURL: customerData.photoURL || null
+              };
+              customers.push(customer);
             });
+            
+            clearAutoRefresh();
             
             if (customers.length === 0) {
               showNoCustomers();
@@ -431,7 +487,10 @@
           })
           .catch((error) => {
             console.error('Error loading customers:', error);
-            showError('Failed to load customers: ' + error.message);
+            // Let auto-refresh handle the error silently
+            if (autoRefreshAttempts >= MAX_AUTO_REFRESH_ATTEMPTS) {
+              showError('Failed to load customers: ' + error.message);
+            }
           });
       }
 
@@ -448,20 +507,24 @@
             <td>
               <div class="customer-info">
                 <div class="customer-avatar">
-                  <i class="fas fa-user"></i>
+                  ${customer.photoURL ? 
+                    `<img src="${escapeHtml(customer.photoURL)}" alt="${escapeHtml(customer.name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : 
+                    `<i class="fas fa-user"></i>`
+                  }
                 </div>
                 <div>
-                  <div style="font-weight:700">${escapeHtml(customer.name || 'Unknown')}</div>
+                  <div style="font-weight:700">${escapeHtml(customer.name)}</div>
                   <div class="muted">ID: ${escapeHtml(customer.id.substring(0, 8))}</div>
                 </div>
               </div>
             </td>
             <td>
-              <div style="font-weight:600">${escapeHtml(customer.email || 'No email')}</div>
-              <div class="muted">${escapeHtml(customer.phone || 'No phone')}</div>
+              <div style="font-weight:600">${escapeHtml(customer.email)}</div>
+              <div class="muted">${escapeHtml(customer.phone)}</div>
             </td>
             <td class="muted">${formatDate(customer.createdAt)}</td>
-            <td>${customer.orders ? customer.orders.length : 0}</td>
+            <td class="muted">${formatDate(customer.lastLoginAt)}</td>
+            <td>${Array.isArray(customer.orders) ? customer.orders.length : 0}</td>
             <td><span class="status-pill ${getStatusClass(customer)}">${getStatusText(customer)}</span></td>
             <td style="text-align:right">
               <button class="action-btn" data-action="view" data-id="${customer.id}" title="View Details">
@@ -480,11 +543,14 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <div class="customer-info">
                 <div class="customer-avatar">
-                  <i class="fas fa-user"></i>
+                  ${customer.photoURL ? 
+                    `<img src="${escapeHtml(customer.photoURL)}" alt="${escapeHtml(customer.name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : 
+                    `<i class="fas fa-user"></i>`
+                  }
                 </div>
                 <div>
-                  <div style="font-weight:700">${escapeHtml(customer.name || 'Unknown')}</div>
-                  <div class="muted">${escapeHtml(customer.email || 'No email')}</div>
+                  <div style="font-weight:700">${escapeHtml(customer.name)}</div>
+                  <div class="muted">${escapeHtml(customer.email)}</div>
                 </div>
               </div>
               <div>
@@ -493,11 +559,13 @@
                 </span>
               </div>
             </div>
-            <div class="muted" style="margin-bottom:8px">
-              Registered: ${formatDate(customer.createdAt)}
+            <div class="muted" style="margin-bottom:4px">
+              <div>Phone: ${escapeHtml(customer.phone)}</div>
+              <div>Registered: ${formatDate(customer.createdAt)}</div>
+              <div>Last Login: ${formatDate(customer.lastLoginAt)}</div>
             </div>
-            <div style="display:flex;justify-content:space-between;gap:8px">
-              <div class="muted">Orders: ${customer.orders ? customer.orders.length : 0}</div>
+            <div style="display:flex;justify-content:space-between;gap:8px;margin-top:8px">
+              <div class="muted">Orders: ${Array.isArray(customer.orders) ? customer.orders.length : 0}</div>
               <div style="display:flex;gap:6px">
                 <button class="action-btn" data-action="view" data-id="${customer.id}">
                   <i class="fas fa-eye"></i>
@@ -509,61 +577,41 @@
             </div>
           </div>
         `).join('');
-
-        // Attach event listeners to action buttons
-        attachActionListeners();
       }
 
-      function attachActionListeners() {
-        // Table actions
-        tbody.querySelectorAll('button[data-action]').forEach(btn => {
-          btn.addEventListener('click', handleAction);
-        });
-        
-        // Mobile card actions
-        cards.querySelectorAll('button[data-action]').forEach(btn => {
-          btn.addEventListener('click', handleAction);
-        });
-      }
-
-      function handleAction(e) {
-        const action = e.currentTarget.getAttribute('data-action');
-        const id = e.currentTarget.getAttribute('data-id');
-        const customer = customers.find(c => c.id === id);
-        
-        if (!customer) return;
-
-        if (action === 'view') {
-          showCustomerDetails(customer);
-        } else if (action === 'delete') {
-          confirmDelete(customer);
+      function showCustomerDetails(customerId) {
+        const customer = customers.find(c => c.id === customerId);
+        if (!customer) {
+          showToast("Customer not found");
+          return;
         }
-      }
 
-      function showCustomerDetails(customer) {
         document.getElementById('cv-modal-title').textContent = 'Customer Details';
         
         customerDetails.innerHTML = `
           <div class="col">
             <div class="customer-info" style="margin-bottom: 16px;">
               <div class="customer-avatar" style="width: 60px; height: 60px;">
-                <i class="fas fa-user" style="font-size: 1.5rem;"></i>
+                ${customer.photoURL ? 
+                  `<img src="${escapeHtml(customer.photoURL)}" alt="${escapeHtml(customer.name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : 
+                  `<i class="fas fa-user" style="font-size: 1.5rem;"></i>`
+                }
               </div>
               <div>
-                <div style="font-weight:700; font-size: 1.2rem;">${escapeHtml(customer.name || 'Unknown')}</div>
-                <div class="muted">ID: ${escapeHtml(customer.id)}</div>
+                <div style="font-weight:700; font-size: 1.2rem;">${escapeHtml(customer.name)}</div>
+                <div class="muted">User ID: ${escapeHtml(customer.id)}</div>
               </div>
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
               <div class="col">
-                <label class="muted">Email</label>
-                <div>${escapeHtml(customer.email || 'No email')}</div>
+                <label class="muted">Email Address</label>
+                <div>${escapeHtml(customer.email)}</div>
               </div>
               
               <div class="col">
-                <label class="muted">Phone</label>
-                <div>${escapeHtml(customer.phone || 'No phone')}</div>
+                <label class="muted">Phone Number</label>
+                <div>${escapeHtml(customer.phone)}</div>
               </div>
               
               <div class="col">
@@ -578,11 +626,11 @@
               
               <div class="col">
                 <label class="muted">Total Orders</label>
-                <div>${customer.orders ? customer.orders.length : 0}</div>
+                <div>${Array.isArray(customer.orders) ? customer.orders.length : 0}</div>
               </div>
               
               <div class="col">
-                <label class="muted">Status</label>
+                <label class="muted">Account Status</label>
                 <div><span class="status-pill ${getStatusClass(customer)}">${getStatusText(customer)}</span></div>
               </div>
             </div>
@@ -599,16 +647,19 @@
         modalBg.classList.add('show');
       }
 
-      function confirmDelete(customer) {
-        lastDeleteId = customer.id;
-        confirmMsg.textContent = `Delete customer "${customer.name || 'Unknown'}"? This cannot be undone.`;
+      function confirmDelete(customerId) {
+        const customer = customers.find(c => c.id === customerId);
+        if (!customer) return;
+        
+        lastDeleteId = customerId;
+        confirmMsg.textContent = `Delete customer "${customer.name}"? This cannot be undone.`;
         confirmBg.classList.add('show');
       }
 
       function deleteCustomer() {
         if (!lastDeleteId) return;
         
-        const db = initializeFirebase();
+        const db = firebase.firestore();
         if (!db) {
           showToast('Firebase not available', true);
           return;
@@ -636,9 +687,9 @@
         // Apply search filter
         if (searchTerm) {
           filtered = filtered.filter(customer => 
-            (customer.name || '').toLowerCase().includes(searchTerm) ||
-            (customer.email || '').toLowerCase().includes(searchTerm) ||
-            (customer.phone || '').includes(searchTerm)
+            customer.name.toLowerCase().includes(searchTerm) ||
+            customer.email.toLowerCase().includes(searchTerm) ||
+            customer.phone.includes(searchTerm)
           );
         }
 
@@ -661,7 +712,7 @@
             return aTime - bTime;
           });
         } else if (sort === 'name') {
-          filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+          filtered.sort((a, b) => a.name.localeCompare(b.name));
         }
 
         renderCustomers(filtered);
@@ -673,13 +724,14 @@
           return;
         }
 
-        const headers = ['Name', 'Email', 'Phone', 'Registration Date', 'Orders', 'Status'];
+        const headers = ['Name', 'Email', 'Phone', 'Registration Date', 'Last Login', 'Orders', 'Status'];
         const csvData = customers.map(customer => [
-          customer.name || 'Unknown',
-          customer.email || '',
-          customer.phone || '',
+          customer.name,
+          customer.email,
+          customer.phone,
           formatDate(customer.createdAt),
-          customer.orders ? customer.orders.length : 0,
+          formatDate(customer.lastLoginAt),
+          Array.isArray(customer.orders) ? customer.orders.length : 0,
           getStatusText(customer)
         ]);
         
@@ -722,17 +774,26 @@
       }
 
       function getTimestamp(dateField) {
-        if (!dateField) return Date.now();
+        if (!dateField) return 0;
         if (dateField.seconds) return dateField.seconds * 1000;
         if (dateField.toDate) return dateField.toDate().getTime();
-        return new Date(dateField).getTime();
+        if (typeof dateField === 'string') return new Date(dateField).getTime();
+        if (typeof dateField === 'number') return dateField;
+        return 0;
       }
 
       function formatDate(dateField) {
-        if (!dateField) return 'Unknown';
+        if (!dateField) return 'Never';
         try {
           const date = getTimestamp(dateField);
-          return new Date(date).toLocaleDateString();
+          if (date === 0) return 'Never';
+          return new Date(date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
         } catch (e) {
           return 'Invalid Date';
         }
@@ -744,10 +805,15 @@
         return div.innerHTML;
       }
 
+      function showLoadingState() {
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading customers...</td></tr>';
+        cards.innerHTML = '<div class="customers-card" style="text-align:center;padding:30px;">Loading customers...</div>';
+      }
+
       function showNoCustomers() {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div style="text-align: center; padding: 40px;">
                 <div class="muted" style="font-size: 1.1rem; margin-bottom: 8px;">No customers found</div>
                 <div class="muted">There are no customers in the database yet.</div>
@@ -765,13 +831,17 @@
       }
 
       function showError(message) {
+        clearAutoRefresh();
         tbody.innerHTML = `
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div style="text-align: center; padding: 40px; color: #ef4444;">
                 <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 16px;"></i>
                 <div style="font-weight: 600; margin-bottom: 8px;">Error Loading Customers</div>
                 <div class="muted">${message}</div>
+                <button onclick="manualRefresh()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
+                  Try Again
+                </button>
               </div>
             </td>
           </tr>
@@ -804,7 +874,7 @@
 
       // Initialize
       setupEventListeners();
-      loadCustomers();
+      startLoadingWithAutoRefresh();
     })();
   </script>
 </div>
