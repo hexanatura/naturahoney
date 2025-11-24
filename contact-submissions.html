@@ -585,7 +585,25 @@ tr:hover{
   <div id="toast-message">Updated</div>
 </div>
 
-<script>class ContactSubmissionsManager {
+<script>
+// One-time initialization
+let contactManager = null;
+
+function initContactPage() {
+    if (contactManager) return; // Already initialized
+    
+    contactManager = new ContactSubmissionsManager();
+    window.contactManager = contactManager;
+}
+
+// Wait for everything to be ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initContactPage);
+} else {
+    initContactPage();
+}
+
+class ContactSubmissionsManager {
     constructor() {
         this.currentSubmissions = [];
         this.filteredSubmissions = [];
@@ -976,7 +994,7 @@ tr:hover{
             email: "test@example.com",
             phone: "+1234567890",
             subject: "Test Inquiry About Honey Products",
-            message: "Hello, I’m interested in your honey products.",
+            message: "Hello, I'm interested in your honey products.",
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             status: "new"
         };
@@ -1020,6 +1038,4 @@ tr:hover{
         }
     }
 }
-
-const contactManager = new ContactSubmissionsManager();
-window.contactManager = contactManager;</script>
+</script>
