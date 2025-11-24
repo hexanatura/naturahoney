@@ -1579,35 +1579,69 @@
 <div id="dynamicPage"></div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
 <script>
+var firebaseConfig = {
+    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+    authDomain: "hexahoney-96aed.firebaseapp.com",
+    projectId: "hexahoney-96aed",
+    storageBucket: "hexahoney-96aed.firebasestorage.app",
+    messagingSenderId: "700458850837",
+    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+    measurementId: "G-MQGKK9709H"
+};
+firebase.initializeApp(firebaseConfig);
+
+// IMPORTANT: expose it globally for fragment scripts
+window.db = firebase.firestore();
 
 function loadMessagesPage() {
-    const main = document.getElementById("mainContent");
     const dynamic = document.getElementById("dynamicPage");
-
- document.getElementById("dashboardBody").style.display = "none";
+    document.getElementById("dashboardBody").style.display = "none";
 
     fetch("contact-submissions.html")
-        .then(res => res.text())
+        .then(r => r.text())
         .then(html => {
             dynamic.innerHTML = html;
-            const scripts = dynamic.querySelectorAll("script");
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement("script");
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                } else {
-                    newScript.textContent = oldScript.textContent;
-                }
-                document.body.appendChild(newScript);
-                oldScript.remove();
+
+            // run scripts AFTER HTML is placed + Firebase is ready
+            const scripts = [...dynamic.querySelectorAll("script")];
+            scripts.forEach(s => {
+                const tag = document.createElement("script");
+
+                if (s.src) tag.src = s.src;
+                else tag.textContent = s.textContent;
+
+                tag.onload = () => {
+                    if (!window.db) console.error("Firebase not ready");
+                };
+
+                document.body.appendChild(tag);
+                s.remove();
             });
         })
         .catch(err => {
-            dynamic.innerHTML = "<p style='padding:20px;color:red;'>Failed to load Messages page.</p>";
-            console.error(err);
+            showLoadError("Messages", dynamic, err);
         });
 }
+
+function showLoadError(pageName, container, error) {
+    console.error(error);
+    container.innerHTML = `
+    <div style="padding:40px;text-align:center;color:#b00020;">
+        <i class="fas fa-exclamation-circle" style="font-size:32px;margin-bottom:10px;"></i>
+        <h3 style="margin-bottom:10px;">Failed to load ${pageName} page</h3>
+        <p style="color:#666;margin-bottom:20px;">${error.message || "Unknown error"}</p>
+        <button onclick="location.reload()" 
+            style="padding:10px 18px;background:black;color:white;border:none;border-radius:6px;cursor:pointer;">
+            Reload Dashboard
+        </button>
+    </div>`;
+}
+
 
 function loadPromoPage() {
     const dynamic = document.getElementById("dynamicPage");
@@ -1620,15 +1654,27 @@ function loadPromoPage() {
         .then(html => {
             dynamic.innerHTML = html;
 
-            // execute scripts inside loaded file
-            const scripts = dynamic.querySelectorAll("script");
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement("script");
-                if (oldScript.src) newScript.src = oldScript.src;
-                else newScript.textContent = oldScript.textContent;
-                document.body.appendChild(newScript);
-                oldScript.remove();
-            });
+          const scripts = dynamic.querySelectorAll("script");
+
+scripts.forEach(oldScript => {
+    const newScript = document.createElement("script");
+    
+    newScript.onload = () => {
+        // Guarantee Firebase is ready before fragment script runs
+        if (window.db) {
+            console.log("Fragment script executed AFTER Firebase loaded");
+        } else {
+            console.error("Firebase STILL not loaded — check main dashboard");
+        }
+    };
+
+    if (oldScript.src) newScript.src = oldScript.src;
+    else newScript.textContent = oldScript.textContent;
+
+    document.body.appendChild(newScript);
+    oldScript.remove();
+});
+
         })
         .catch(err => {
             dynamic.innerHTML = "<p style='padding:20px;color:red;'>Failed to load Promo Codes page.</p>";
