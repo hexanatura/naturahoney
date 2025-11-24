@@ -1718,17 +1718,20 @@ function loadCustomersPage() {
             const scripts = [...dynamic.querySelectorAll("script")];
             scripts.forEach(s => {
                 const tag = document.createElement("script");
-                if (s.src) tag.src = s.src + "?v=" + Date.now();
-                else tag.textContent = s.textContent;
+                if (s.src) {
+                    tag.src = s.src + "?v=" + Date.now();
+                } else {
+                    tag.textContent = s.textContent;
+                }
                 document.body.appendChild(tag);
                 s.remove();
             });
         })
         .catch(err => {
             dynamic.innerHTML = "Failed to load Customers page";
+            console.error("Error loading customers page:", err);
         });
 }
-
 
 
 function showDashboard() {
@@ -1774,15 +1777,13 @@ function setupEventListeners() {
                 case 'Promo Codes':
                     loadPromoPage();
                     break;
-case 'Orders':
-    loadOrdersPage();
-    break;
-    case 'Customers':
-    loadCustomersPage();
-    break;
-
+                case 'Orders':
+                    loadOrdersPage();
+                    break;
+                case 'Customers':
+                    loadCustomersPage(); // This is the important line
+                    break;
                 default:
-                    // For other menu items that don't have separate pages yet
                     showDashboard();
                     break;
             }
@@ -1790,6 +1791,7 @@ case 'Orders':
             if (window.innerWidth <= 992) closeMobileMenu();
         });
     });
+    
 
     document.getElementById('prev-month').addEventListener('click', function () {
         currentMonth--;
