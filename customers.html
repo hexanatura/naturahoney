@@ -1,327 +1,810 @@
-<!-- customers.html — Dashboard-styled Customers page (full page fragment) -->
-<div class="customers-view fade-in" style="padding:22px; font-family:Inter, sans-serif; color:var(--dark);">
+<!-- customers.html -->
+<div class="customers-view fade-in">
   <style>
-    /* light scoped styles to match dashboard */
-    .customers-top { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
-    .customers-title { font-family:'Outfit',sans-serif; font-size:1.2rem; font-weight:700; color:var(--dark); }
-    .customers-sub { font-size:0.9rem; color:var(--gray); margin-top:4px; }
-
-    .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .card { background:var(--card-bg); border-radius:12px; box-shadow:var(--shadow); padding:12px; border:1px solid var(--border); }
-    .filter-select, .search-box { padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:transparent; min-width:180px; font-size:0.95rem; }
-
-    .search-box { display:flex; gap:8px; align-items:center; min-width:220px; max-width:420px; padding:8px 10px; }
-    .search-box input { border:0; outline:none; background:transparent; width:100%; font-size:0.95rem; }
-
-    .btn-primary { background:var(--dark); color:var(--secondary); border-radius:10px; padding:9px 14px; border:none; cursor:pointer; font-weight:700; }
-    .btn-ghost { background:transparent; border:1px solid var(--border); padding:8px 12px; border-radius:8px; cursor:pointer; }
-
-    .table-card { margin-top:14px; background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; border:1px solid var(--border); }
-    .table-wrapper { overflow:auto; }
-    .customers-table { width:100%; border-collapse:collapse; min-width:900px; font-size:0.95rem; }
-    .customers-table thead th { text-align:left; padding:12px 16px; font-weight:700; color:var(--dark); border-bottom:1px solid var(--border); background:transparent; white-space:nowrap; }
-    .customers-table td { padding:12px 16px; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--dark); }
-
-    .muted { color:var(--gray); font-size:0.9rem; }
-
-    .action-btn { border-radius:8px; border:0; padding:8px; cursor:pointer; background:transparent; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:0.95rem; }
-    .action-btn .fa-eye { color:var(--dark); }
-
-    /* Mobile cards */
-    .mobile-cards { display:none; gap:12px; margin-top:12px; }
-    .cust-card { background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; border:1px solid var(--border); }
-    .cust-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .cust-name { font-weight:600; color:var(--dark); }
-    .cust-meta { color:var(--gray); font-size:0.85rem; }
-
-    @media (max-width:1023px) {
-      .table-wrapper { display:none; }
-      .mobile-cards { display:flex; flex-direction:column; }
+    .customers-view { padding: 22px; background: transparent; min-height: 100vh; }
+    
+    .customers-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
     }
-    @media (min-width:1024px) {
-      .table-wrapper { display:block; }
+    
+    .customers-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--dark);
     }
-
-    /* Modal */
-    .modal-bg { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background: rgba(15,23,42,0.6); z-index:1200; }
-    .modal-bg.show { display:flex; }
-    .modal { width:100%; max-width:720px; border-radius:12px; overflow:hidden; background:var(--card-bg); box-shadow:var(--shadow); border:1px solid var(--border); }
-    .modal .modal-header { padding:14px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
-    .modal .modal-body { padding:16px; max-height:60vh; overflow:auto; }
-    .modal .modal-footer { padding:12px 16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
-    .empty-state { text-align:center; padding:36px 12px; color:var(--gray); }
-    .toast { position:fixed; bottom:22px; right:22px; padding:12px 16px; background:var(--card-bg); border:1px solid var(--border); box-shadow:var(--shadow); z-index:1400; border-left:4px solid #10b981; }
+    
+    .customers-sub {
+      font-size: 0.9rem;
+      color: var(--gray);
+      margin-top: 4px;
+    }
+    
+    .customers-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .customers-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+    
+    .filter-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .filter-select, .customers-search {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-size: 0.95rem;
+      min-width: 160px;
+    }
+    
+    .customers-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      min-width: 260px;
+      max-width: 420px;
+    }
+    
+    .customers-search input {
+      border: 0;
+      outline: none;
+      background: transparent;
+      width: 100%;
+      font-size: 0.95rem;
+    }
+    
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .btn-primary {
+      background: var(--dark);
+      color: var(--secondary);
+      border-radius: 10px;
+      padding: 9px 14px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    
+    .customers-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      min-width: 900px;
+      font-size: 0.95rem;
+    }
+    
+    .customers-table thead th {
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--dark);
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+    }
+    
+    .customers-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+      background: transparent;
+    }
+    
+    .customers-table tbody tr:hover { background: rgba(0,0,0,0.02); }
+    .customers-table td { padding: 12px 16px; vertical-align: middle; color: var(--dark); }
+    
+    .tag {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      background: rgba(0,0,0,0.03);
+    }
+    
+    .status-pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+    
+    .status-active { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.18); }
+    .status-inactive { background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.12); }
+    .status-new { background: rgba(59,130,246,0.12); color: #3b82f6; border: 1px solid rgba(59,130,246,0.18); }
+    
+    .action-btn {
+      border-radius: 8px;
+      border: 0;
+      padding: 8px;
+      cursor: pointer;
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+    
+    .action-btn .fa-eye { color: var(--dark); }
+    .action-btn .fa-trash { color: #ef4444; }
+    
+    .mobile-cards { display: none; gap: 12px; margin-top: 12px; }
+    
+    @media (max-width: 1023px) {
+      .table-wrapper { display: none; }
+      .mobile-cards { display: flex; flex-direction: column; }
+    }
+    
+    @media (min-width: 1024px) {
+      .table-wrapper { display: block; }
+    }
+    
+    .customers-modal-bg {
+      position: fixed; 
+      inset: 0; 
+      display: none; 
+      align-items: center; 
+      justify-content: center;
+      background: rgba(15,23,42,0.6); 
+      z-index: 1200;
+    }
+    
+    .customers-modal-bg.show { display: flex; }
+    
+    .customers-modal {
+      width: 100%; 
+      max-width: 560px; 
+      border-radius: var(--radius); 
+      overflow: hidden;
+      background: var(--card-bg); 
+      box-shadow: var(--shadow); 
+      border: 1px solid var(--border);
+    }
+    
+    .customers-modal .modal-header {
+      padding: 14px 16px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      background: transparent;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .customers-modal .modal-body { padding: 16px; }
+    
+    .customers-modal .modal-footer { 
+      padding: 12px 16px; 
+      border-top: 1px solid var(--border); 
+      display: flex; 
+      justify-content: flex-end; 
+      gap: 8px; 
+    }
+    
+    .muted { color: var(--gray); font-size: 0.9rem; }
+    .flex { display: flex; gap: 10px; align-items: center; }
+    .col { display: flex; flex-direction: column; gap: 8px; }
+    
+    .customer-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #000000 0%, #333333 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1rem;
+      margin-right: 10px;
+    }
+    
+    .customer-info {
+      display: flex;
+      align-items: center;
+    }
+    
+    @media (max-width: 768px) {
+      .customers-top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .customers-controls {
+        width: 100%;
+      }
+      
+      .filter-row {
+        width: 100%;
+      }
+      
+      .customers-search {
+        min-width: 100%;
+      }
+    }
   </style>
 
+  <!-- Header Section -->
   <div class="customers-top">
     <div>
       <div class="customers-title">Customers</div>
-      <div class="customers-sub muted">All registered users</div>
+      <div class="customers-sub muted">View and manage all registered customers</div>
     </div>
 
-    <div class="controls">
-      <div class="card" style="display:flex;gap:10px;align-items:center">
-        <div class="search-box">
-          <i class="fas fa-search muted"></i>
-          <input id="cust-search" placeholder="Search name, email, phone">
-        </div>
-        <select id="cust-sort" class="filter-select">
-          <option value="new">Newest</option>
-          <option value="old">Oldest</option>
+    <div class="customers-controls">
+      <div class="customers-card filter-row">
+        <select id="cv-status" class="filter-select">
+          <option value="all">All status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="new">New</option>
         </select>
+
+        <select id="cv-sort" class="filter-select">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="name">Name A-Z</option>
+        </select>
+
+        <div class="customers-search">
+          <i class="fas fa-search muted"></i>
+          <input id="cv-search" placeholder="Search customers by name or email">
+        </div>
       </div>
 
-      <button id="cust-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-      <button id="cust-export" class="btn-primary"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
+      <button id="cv-export" class="btn-ghost">
+        <i class="fas fa-download" style="margin-right:8px"></i> Export
+      </button>
     </div>
   </div>
 
-  <div class="table-card">
+  <!-- Customers Table -->
+  <div class="customers-card">
     <div class="table-wrapper">
       <table class="customers-table" aria-label="Customers table">
         <thead>
           <tr>
-            <th>User</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Address</th>
+            <th>Customer</th>
+            <th>Contact</th>
+            <th>Registration</th>
+            <th>Orders</th>
+            <th>Status</th>
             <th style="text-align:right">Actions</th>
           </tr>
         </thead>
-        <tbody id="cust-tbody">
-          <tr><td colspan="5" class="muted">Loading users…</td></tr>
+        <tbody id="cv-tbody">
+          <tr>
+            <td colspan="6" class="muted">Loading customers...</td>
+          </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="mobile-cards" id="cust-cards"></div>
+    <div class="mobile-cards" id="cv-cards"></div>
   </div>
 
-  <!-- modal -->
-  <div class="modal-bg" id="cust-modal-bg" role="dialog" aria-hidden="true">
-    <div class="modal" role="document">
+  <!-- Customer Details Modal -->
+  <div class="customers-modal-bg" id="cv-modal-bg">
+    <div class="customers-modal">
       <div class="modal-header">
-        <div style="font-weight:700" id="cust-modal-title">Customer Details</div>
-        <button id="cust-modal-close" class="btn-ghost"><i class="fas fa-times"></i></button>
+        <div style="font-weight:700" id="cv-modal-title">Customer Details</div>
+        <button id="cv-modal-close" class="btn-ghost">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
-
-      <div class="modal-body" id="cust-modal-body">
-        <!-- populated dynamically -->
+      <div class="modal-body">
+        <div id="cv-customer-details">
+          <!-- Customer details will be populated here -->
+        </div>
       </div>
-
       <div class="modal-footer">
-        <button id="cust-modal-cancel" class="btn-ghost">Close</button>
+        <button id="cv-close" class="btn-primary">Close</button>
       </div>
     </div>
   </div>
 
-  <div id="cust-toast" style="display:none" class="toast"><i style="margin-right:8px" class="fas fa-check-circle"></i><span id="cust-toast-message"></span></div>
+  <!-- Delete Confirmation Modal -->
+  <div class="customers-modal-bg" id="cv-confirm-bg">
+    <div class="customers-modal" style="max-width:420px">
+      <div class="modal-header">
+        <div style="font-weight:700">Confirm</div>
+        <button id="cv-confirm-close" class="btn-ghost">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="cv-confirm-msg">Are you sure?</div>
+      </div>
+      <div class="modal-footer">
+        <button id="cv-confirm-cancel" class="btn-ghost">Cancel</button>
+        <button id="cv-confirm-ok" class="btn-primary">Delete</button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    (function () {
-      // DOM refs
-      const tbody = document.getElementById('cust-tbody');
-      const cards = document.getElementById('cust-cards');
-      const modalBg = document.getElementById('cust-modal-bg');
-      const modalClose = document.getElementById('cust-modal-close');
-      const modalCancel = document.getElementById('cust-modal-cancel');
-      const modalBody = document.getElementById('cust-modal-body');
-      const searchInput = document.getElementById('cust-search');
-      const sortSelect = document.getElementById('cust-sort');
-      const refreshBtn = document.getElementById('cust-refresh');
-      const exportBtn = document.getElementById('cust-export');
-      const toast = document.getElementById('cust-toast');
-      const toastMessage = document.getElementById('cust-toast-message');
-
-      let users = [];
-      let filtered = [];
-
-      // safe getter for firestore instance created in parent page
-      function getDB() {
-        return window.db || (window.firebase && firebase.firestore && firebase.firestore());
+    (function() {
+      // Initialize Firebase if not already initialized
+      function initializeFirebase() {
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+          const firebaseConfig = {
+            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+            authDomain: "hexahoney-96aed.firebaseapp.com",
+            projectId: "hexahoney-96aed",
+            storageBucket: "hexahoney-96aed.firebasestorage.app",
+            messagingSenderId: "700458850837",
+            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+            measurementId: "G-MQGKK9709H"
+          };
+          firebase.initializeApp(firebaseConfig);
+        }
+        return typeof firebase !== 'undefined' ? firebase.firestore() : null;
       }
 
-      function showToast(msg, isError) {
-        toastMessage.textContent = msg;
-        toast.style.borderLeftColor = isError ? '#ef4444' : '#10b981';
-        toast.style.display = 'block';
-        setTimeout(()=> toast.style.display = 'none', 3000);
-      }
+      // DOM Elements
+      const tbody = document.getElementById('cv-tbody');
+      const cards = document.getElementById('cv-cards');
+      const exportBtn = document.getElementById('cv-export');
+      const modalBg = document.getElementById('cv-modal-bg');
+      const modalClose = document.getElementById('cv-modal-close');
+      const closeBtn = document.getElementById('cv-close');
+      const searchInput = document.getElementById('cv-search');
+      const statusFilter = document.getElementById('cv-status');
+      const sortFilter = document.getElementById('cv-sort');
+      const confirmBg = document.getElementById('cv-confirm-bg');
+      const confirmMsg = document.getElementById('cv-confirm-msg');
+      const confirmOk = document.getElementById('cv-confirm-ok');
+      const confirmCancel = document.getElementById('cv-confirm-cancel');
+      const customerDetails = document.getElementById('cv-customer-details');
 
-      function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-      function shortId(id){ return id ? id.toString().substring(0,8) : '—'; }
-      function formatAddress(a){
-        if(!a) return '—';
-        const parts = [a.addressLine, a.city, a.state, a.pincode].filter(Boolean);
-        return parts.join(', ');
-      }
+      let customers = [];
+      let lastDeleteId = null;
 
-      document.addEventListener('DOMContentLoaded', function(){
-        loadUsers();
-        attachUI();
-      });
-
-      function attachUI(){
+      // Event Listeners
+      function setupEventListeners() {
+        exportBtn.addEventListener('click', exportCustomers);
         modalClose.addEventListener('click', closeModal);
-        modalCancel.addEventListener('click', closeModal);
-        document.addEventListener('click', function(e){
-          if (e.target === modalBg) closeModal();
-        });
+        closeBtn.addEventListener('click', closeModal);
+        searchInput.addEventListener('input', applyFilters);
+        statusFilter.addEventListener('change', applyFilters);
+        sortFilter.addEventListener('change', applyFilters);
 
-        refreshBtn.addEventListener('click', function(){ loadUsers(); showToast('Refreshing users...'); });
-        exportBtn.addEventListener('click', function(){ exportCSV(filtered.length ? filtered : users); });
+        confirmCancel.addEventListener('click', () => confirmBg.classList.remove('show'));
+        document.getElementById('cv-confirm-close').addEventListener('click', () => confirmBg.classList.remove('show'));
 
-        searchInput.addEventListener('input', function(){ setTimeout(applyFilters, 120); });
-        sortSelect.addEventListener('change', applyFilters);
+        confirmOk.addEventListener('click', deleteCustomer);
       }
 
-      function loadUsers() {
-        tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading users…</td></tr>';
+      // Load Customers
+      function loadCustomers() {
+        const db = initializeFirebase();
+        
+        if (!db) {
+          showError('Firebase not available');
+          return;
+        }
+
+        tbody.innerHTML = '<tr><td colspan="6" class="muted">Loading customers...</td></tr>';
         cards.innerHTML = '';
 
-        const db = getDB();
-        if (!db) {
-          tbody.innerHTML = '<tr><td colspan="5" class="muted">Firebase not initialized on parent page.</td></tr>';
-          return;
-        }
-
-        // try to read users; use get() for a snapshot once
-db.collection('users').get()
-  .then(qs => {
-    users = [];
-    qs.forEach(doc => {
-      users.push({ id: doc.id, ...doc.data() });
-    });
-    applyFilters();
-  })
-  .catch(err => {
-    console.error('users load error', err);
-    tbody.innerHTML = '<tr><td colspan="5" class="muted">Error loading users</td></tr>';
-    showToast('Error loading users', true);
-  });
-
-      }
-
-      function applyFilters() {
-        const q = (searchInput.value || '').trim().toLowerCase();
-        const sort = sortSelect.value;
-
-        let list = users.slice();
-
-        if (q) {
-          list = list.filter(u => {
-            const full = ((u.fullName||'') + ' ' + (u.email||'') + ' ' + (u.mobile||'')).toLowerCase();
-            return full.includes(q);
+        db.collection('users').get()
+          .then((querySnapshot) => {
+            customers = [];
+            querySnapshot.forEach((doc) => {
+              const customerData = doc.data();
+              customers.push({
+                id: doc.id,
+                ...customerData
+              });
+            });
+            
+            if (customers.length === 0) {
+              showNoCustomers();
+            } else {
+              applyFilters();
+            }
+          })
+          .catch((error) => {
+            console.error('Error loading customers:', error);
+            showError('Failed to load customers: ' + error.message);
           });
-        }
-
-        if (sort === 'old') list = list.reverse();
-
-        filtered = list;
-        renderList(filtered);
       }
 
-      function renderList(list) {
+      // Render Customers
+      function renderCustomers(list) {
         if (!list.length) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-user-friends"></i><h3>No users found</h3><p class="muted">Try adjusting your filters</p></div></td></tr>';
-          cards.innerHTML = '<div class="cust-card"><div class="muted">No customers for mobile view</div></div>';
+          showNoCustomers();
           return;
         }
 
-        tbody.innerHTML = list.map(u => {
-          return `
-            <tr data-id="${escapeHtml(u.id)}">
-              <td>
-                <div style="display:flex;gap:10px;align-items:center">
-                  <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
-                    ${escapeHtml(((u.fullName||'')||'U').slice(0,2).toUpperCase())}
-                  </div>
-                  <div style="min-width:0">
-                    <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(u.fullName || 'No name')}</div>
-                    <div class="muted" style="font-size:0.85rem">${escapeHtml(u.email || 'No email')}</div>
-                  </div>
+        // Table view
+        tbody.innerHTML = list.map(customer => `
+          <tr data-id="${customer.id}">
+            <td>
+              <div class="customer-info">
+                <div class="customer-avatar">
+                  <i class="fas fa-user"></i>
                 </div>
-              </td>
-              <td class="muted">${escapeHtml(u.email||'')}</td>
-              <td class="muted">${escapeHtml(u.mobile||'')}</td>
-              <td class="muted">${escapeHtml(formatAddress(u))}</td>
-              <td style="text-align:right">
-                <button class="action-btn" data-action="view" data-id="${escapeHtml(u.id)}" title="View"><i class="fas fa-eye"></i></button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-
-        cards.innerHTML = list.map(u => {
-          return `
-            <div class="cust-card">
-              <div class="cust-header">
                 <div>
-                  <div class="cust-name">${escapeHtml(u.fullName || 'No name')}</div>
-                  <div class="cust-meta muted">${escapeHtml(u.email || 'No email')}</div>
+                  <div style="font-weight:700">${escapeHtml(customer.name || 'Unknown')}</div>
+                  <div class="muted">ID: ${escapeHtml(customer.id.substring(0, 8))}</div>
                 </div>
-                <div class="cust-meta muted">₹ &nbsp;${escapeHtml(u.mobile || '')}</div>
               </div>
-              <div class="muted" style="margin-bottom:8px">${escapeHtml(formatAddress(u))}</div>
-              <div style="display:flex;gap:8px">
-                <button class="action-btn" data-action="view" data-id="${escapeHtml(u.id)}"><i class="fas fa-eye"></i></button>
+            </td>
+            <td>
+              <div style="font-weight:600">${escapeHtml(customer.email || 'No email')}</div>
+              <div class="muted">${escapeHtml(customer.phone || 'No phone')}</div>
+            </td>
+            <td class="muted">${formatDate(customer.createdAt)}</td>
+            <td>${customer.orders ? customer.orders.length : 0}</td>
+            <td><span class="status-pill ${getStatusClass(customer)}">${getStatusText(customer)}</span></td>
+            <td style="text-align:right">
+              <button class="action-btn" data-action="view" data-id="${customer.id}" title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="action-btn" data-action="delete" data-id="${customer.id}" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+        // Mobile cards view
+        cards.innerHTML = list.map(customer => `
+          <div class="customers-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div class="customer-info">
+                <div class="customer-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div>
+                  <div style="font-weight:700">${escapeHtml(customer.name || 'Unknown')}</div>
+                  <div class="muted">${escapeHtml(customer.email || 'No email')}</div>
+                </div>
+              </div>
+              <div>
+                <span class="status-pill ${getStatusClass(customer)}" style="font-size:0.75rem;padding:6px 10px">
+                  ${getStatusText(customer)}
+                </span>
               </div>
             </div>
-          `;
-        }).join('');
+            <div class="muted" style="margin-bottom:8px">
+              Registered: ${formatDate(customer.createdAt)}
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:8px">
+              <div class="muted">Orders: ${customer.orders ? customer.orders.length : 0}</div>
+              <div style="display:flex;gap:6px">
+                <button class="action-btn" data-action="view" data-id="${customer.id}">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn" data-action="delete" data-id="${customer.id}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
 
-        attachRowListeners();
+        // Attach event listeners to action buttons
+        attachActionListeners();
       }
 
-      function attachRowListeners() {
-        // table
-        tbody.querySelectorAll('button').forEach(btn => btn.addEventListener('click', handleAction));
-        // cards
-        cards.querySelectorAll('button').forEach(btn => btn.addEventListener('click', handleAction));
+      function attachActionListeners() {
+        // Table actions
+        tbody.querySelectorAll('button[data-action]').forEach(btn => {
+          btn.addEventListener('click', handleAction);
+        });
+        
+        // Mobile card actions
+        cards.querySelectorAll('button[data-action]').forEach(btn => {
+          btn.addEventListener('click', handleAction);
+        });
       }
 
       function handleAction(e) {
-        const act = e.currentTarget.getAttribute('data-action');
+        const action = e.currentTarget.getAttribute('data-action');
         const id = e.currentTarget.getAttribute('data-id');
-        if (!act || !id) return;
-        const user = users.find(x => x.id === id);
-        if (act === 'view') openModal(user || { id });
+        const customer = customers.find(c => c.id === id);
+        
+        if (!customer) return;
+
+        if (action === 'view') {
+          showCustomerDetails(customer);
+        } else if (action === 'delete') {
+          confirmDelete(customer);
+        }
       }
 
-      function openModal(user) {
-        if (!user) return;
-        modalBody.innerHTML = `
-          <div style="display:grid;grid-template-columns:1fr;gap:10px">
-            <div><div class="muted">User ID</div><div style="font-weight:700">${escapeHtml(user.id)}</div></div>
-            <div><div class="muted">Full Name</div><div>${escapeHtml(user.fullName||'')}</div></div>
-            <div><div class="muted">Email</div><div>${escapeHtml(user.email||'')}</div></div>
-            <div><div class="muted">Phone</div><div>${escapeHtml(user.mobile||'')}</div></div>
-            <div><div class="muted">Address Line</div><div>${escapeHtml(user.addressLine||'')}</div></div>
-            <div style="display:flex;gap:8px">
-              <div style="flex:1"><div class="muted">City</div><div>${escapeHtml(user.city||'')}</div></div>
-              <div style="flex:1"><div class="muted">State</div><div>${escapeHtml(user.state||'')}</div></div>
-              <div style="flex:1"><div class="muted">Pincode</div><div>${escapeHtml(user.pincode||'')}</div></div>
+      function showCustomerDetails(customer) {
+        document.getElementById('cv-modal-title').textContent = 'Customer Details';
+        
+        customerDetails.innerHTML = `
+          <div class="col">
+            <div class="customer-info" style="margin-bottom: 16px;">
+              <div class="customer-avatar" style="width: 60px; height: 60px;">
+                <i class="fas fa-user" style="font-size: 1.5rem;"></i>
+              </div>
+              <div>
+                <div style="font-weight:700; font-size: 1.2rem;">${escapeHtml(customer.name || 'Unknown')}</div>
+                <div class="muted">ID: ${escapeHtml(customer.id)}</div>
+              </div>
             </div>
-            <div><div class="muted">Created</div><div>${user.createdAt ? new Date(user.createdAt).toLocaleString() : '—'}</div></div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+              <div class="col">
+                <label class="muted">Email</label>
+                <div>${escapeHtml(customer.email || 'No email')}</div>
+              </div>
+              
+              <div class="col">
+                <label class="muted">Phone</label>
+                <div>${escapeHtml(customer.phone || 'No phone')}</div>
+              </div>
+              
+              <div class="col">
+                <label class="muted">Registration Date</label>
+                <div>${formatDate(customer.createdAt)}</div>
+              </div>
+              
+              <div class="col">
+                <label class="muted">Last Login</label>
+                <div>${formatDate(customer.lastLoginAt)}</div>
+              </div>
+              
+              <div class="col">
+                <label class="muted">Total Orders</label>
+                <div>${customer.orders ? customer.orders.length : 0}</div>
+              </div>
+              
+              <div class="col">
+                <label class="muted">Status</label>
+                <div><span class="status-pill ${getStatusClass(customer)}">${getStatusText(customer)}</span></div>
+              </div>
+            </div>
+            
+            ${customer.address ? `
+            <div class="col" style="margin-top: 16px;">
+              <label class="muted">Address</label>
+              <div>${escapeHtml(customer.address)}</div>
+            </div>
+            ` : ''}
           </div>
         `;
+        
         modalBg.classList.add('show');
       }
 
-      function closeModal() { modalBg.classList.remove('show'); }
-
-      function exportCSV(list){
-        if (!list || !list.length) { showToast('No users to export', true); return; }
-        const rows = [['User ID','Full Name','Email','Phone','Address','City','State','Pincode']];
-        list.forEach(u => {
-          rows.push([u.id, u.fullName||'', u.email||'', u.mobile||'', formatAddress(u), u.city||'', u.state||'', u.pincode||'']);
-        });
-        const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'customers.csv'; a.click(); URL.revokeObjectURL(url);
-        showToast('Export started');
+      function confirmDelete(customer) {
+        lastDeleteId = customer.id;
+        confirmMsg.textContent = `Delete customer "${customer.name || 'Unknown'}"? This cannot be undone.`;
+        confirmBg.classList.add('show');
       }
 
+      function deleteCustomer() {
+        if (!lastDeleteId) return;
+        
+        const db = initializeFirebase();
+        if (!db) {
+          showToast('Firebase not available', true);
+          return;
+        }
+
+        db.collection('users').doc(lastDeleteId).delete()
+          .then(() => {
+            showToast('Customer deleted successfully');
+            confirmBg.classList.remove('show');
+            loadCustomers(); // Reload the list
+          })
+          .catch(error => {
+            console.error('Error deleting customer:', error);
+            showToast('Delete failed: ' + error.message, true);
+          });
+      }
+
+      function applyFilters() {
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const status = statusFilter.value;
+        const sort = sortFilter.value;
+
+        let filtered = [...customers];
+
+        // Apply search filter
+        if (searchTerm) {
+          filtered = filtered.filter(customer => 
+            (customer.name || '').toLowerCase().includes(searchTerm) ||
+            (customer.email || '').toLowerCase().includes(searchTerm) ||
+            (customer.phone || '').includes(searchTerm)
+          );
+        }
+
+        // Apply status filter
+        if (status !== 'all') {
+          filtered = filtered.filter(customer => getStatusText(customer).toLowerCase() === status);
+        }
+
+        // Apply sorting
+        if (sort === 'newest') {
+          filtered.sort((a, b) => {
+            const aTime = getTimestamp(a.createdAt);
+            const bTime = getTimestamp(b.createdAt);
+            return bTime - aTime;
+          });
+        } else if (sort === 'oldest') {
+          filtered.sort((a, b) => {
+            const aTime = getTimestamp(a.createdAt);
+            const bTime = getTimestamp(b.createdAt);
+            return aTime - bTime;
+          });
+        } else if (sort === 'name') {
+          filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        }
+
+        renderCustomers(filtered);
+      }
+
+      function exportCustomers() {
+        if (customers.length === 0) {
+          showToast('No customers to export', true);
+          return;
+        }
+
+        const headers = ['Name', 'Email', 'Phone', 'Registration Date', 'Orders', 'Status'];
+        const csvData = customers.map(customer => [
+          customer.name || 'Unknown',
+          customer.email || '',
+          customer.phone || '',
+          formatDate(customer.createdAt),
+          customer.orders ? customer.orders.length : 0,
+          getStatusText(customer)
+        ]);
+        
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += headers.join(",") + "\n";
+        csvData.forEach(row => {
+          csvContent += row.map(field => `"${field}"`).join(",") + "\n";
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "customers.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast('Customers exported to CSV');
+      }
+
+      function closeModal() {
+        modalBg.classList.remove('show');
+      }
+
+      // Helper functions
+      function getStatusClass(customer) {
+        if (customer.active === false) return 'status-inactive';
+        const createdDate = getTimestamp(customer.createdAt);
+        const daysSinceCreation = (Date.now() - createdDate) / (1000 * 60 * 60 * 24);
+        if (daysSinceCreation < 30) return 'status-new';
+        return 'status-active';
+      }
+
+      function getStatusText(customer) {
+        if (customer.active === false) return 'Inactive';
+        const createdDate = getTimestamp(customer.createdAt);
+        const daysSinceCreation = (Date.now() - createdDate) / (1000 * 60 * 60 * 24);
+        if (daysSinceCreation < 30) return 'New';
+        return 'Active';
+      }
+
+      function getTimestamp(dateField) {
+        if (!dateField) return Date.now();
+        if (dateField.seconds) return dateField.seconds * 1000;
+        if (dateField.toDate) return dateField.toDate().getTime();
+        return new Date(dateField).getTime();
+      }
+
+      function formatDate(dateField) {
+        if (!dateField) return 'Unknown';
+        try {
+          const date = getTimestamp(dateField);
+          return new Date(date).toLocaleDateString();
+        } catch (e) {
+          return 'Invalid Date';
+        }
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function showNoCustomers() {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div style="text-align: center; padding: 40px;">
+                <div class="muted" style="font-size: 1.1rem; margin-bottom: 8px;">No customers found</div>
+                <div class="muted">There are no customers in the database yet.</div>
+              </div>
+            </td>
+          </tr>
+        `;
+        cards.innerHTML = `
+          <div class="customers-card">
+            <div style="text-align: center; padding: 20px;">
+              <div class="muted">No customers found</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function showError(message) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div style="text-align: center; padding: 40px; color: #ef4444;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 16px;"></i>
+                <div style="font-weight: 600; margin-bottom: 8px;">Error Loading Customers</div>
+                <div class="muted">${message}</div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+
+      function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          padding: 12px 20px;
+          background: ${isError ? '#fef2f2' : 'var(--card-bg)'};
+          border: 1px solid ${isError ? '#fecaca' : 'var(--border)'};
+          border-left: 4px solid ${isError ? '#ef4444' : '#10b981'};
+          border-radius: 8px;
+          box-shadow: var(--shadow);
+          z-index: 10000;
+          font-weight: 500;
+          color: var(--dark);
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+          document.body.removeChild(toast);
+        }, 3000);
+      }
+
+      // Initialize
+      setupEventListeners();
+      loadCustomers();
     })();
   </script>
+</div>
