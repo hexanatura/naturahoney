@@ -586,22 +586,6 @@ tr:hover{
 </div>
 
 <script>
-// One-time initialization
-let contactManager = null;
-
-function initContactPage() {
-    if (contactManager) return; // Already initialized
-    
-    contactManager = new ContactSubmissionsManager();
-    window.contactManager = contactManager;
-}
-
-// Wait for everything to be ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initContactPage);
-} else {
-    initContactPage();
-}
 
 class ContactSubmissionsManager {
     constructor() {
@@ -1037,5 +1021,20 @@ class ContactSubmissionsManager {
             setTimeout(() => toast.classList.remove("show"), 3000);
         }
     }
+}
+  let contactManager = null;
+
+function initContactPage() {
+    if (contactManager) return; // Already initialized
+    
+    contactManager = new ContactSubmissionsManager();
+    window.contactManager = contactManager;
+}
+
+// 3. FINALLY initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initContactPage);
+} else {
+    initContactPage();
 }
 </script>
