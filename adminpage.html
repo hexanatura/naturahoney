@@ -1593,6 +1593,9 @@ var firebaseConfig = {
     appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
     measurementId: "G-MQGKK9709H"
 };
+const dynamicPage = document.getElementById("dynamicPage");
+dynamicPage.style.display = "none";
+
 firebase.initializeApp(firebaseConfig);
 
 // IMPORTANT: expose it globally for fragment scripts
@@ -1600,7 +1603,10 @@ window.db = firebase.firestore();
 
 function loadMessagesPage() {
     const dynamic = document.getElementById("dynamicPage");
-    document.getElementById("dashboardBody").style.display = "none";
+    const dashboard = document.getElementById("dashboardBody");
+
+    dashboard.style.display = "none";
+    dynamic.style.display = "block";
 
     fetch("contact-submissions.html")
         .then(r => r.text())
@@ -1609,37 +1615,23 @@ function loadMessagesPage() {
 
             const scripts = [...dynamic.querySelectorAll("script")];
 
-            function runScripts() {
-                scripts.forEach(s => {
-                    const tag = document.createElement("script");
+            scripts.forEach(s => {
+                const tag = document.createElement("script");
 
-                    if (s.src) tag.src = s.src;
-                    else tag.textContent = s.textContent;
+                if (s.src) {
+                    tag.src = s.src + "?v=" + Date.now();
+                } else {
+                    tag.textContent = s.textContent;
+                }
 
-                    document.body.appendChild(tag);
-                    s.remove();
-                });
-            }
-
-            if (!window.db) {
-                console.warn("Waiting for Firebase...");
-                const wait = setInterval(() => {
-                    if (window.db) {
-                        clearInterval(wait);
-                        console.log("Firebase ready → executing scripts");
-                        runScripts();
-                    }
-                }, 50);
-            } else {
-                // Already ready
-                runScripts();
-            }
+                document.body.appendChild(tag);
+                s.remove();
+            });
         })
         .catch(err => {
-            showLoadError("Messages", dynamic, err);
+            dynamic.innerHTML = "Failed to load Messages page";
         });
 }
-
 
 function showLoadError(pageName, container, error) {
     console.error(error);
@@ -1658,40 +1650,33 @@ function showLoadError(pageName, container, error) {
 
 function loadPromoPage() {
     const dynamic = document.getElementById("dynamicPage");
+    const dashboard = document.getElementById("dashboardBody");
 
-    // hide dashboard body
-    document.getElementById("dashboardBody").style.display = "none";
+    dashboard.style.display = "none";
+    dynamic.style.display = "block";
 
     fetch("promo-codes.html")
-        .then(res => res.text())
+        .then(r => r.text())
         .then(html => {
             dynamic.innerHTML = html;
 
-          const scripts = dynamic.querySelectorAll("script");
+            const scripts = [...dynamic.querySelectorAll("script")];
 
-scripts.forEach(oldScript => {
-    const newScript = document.createElement("script");
-    
-    newScript.onload = () => {
-        // Guarantee Firebase is ready before fragment script runs
-        if (window.db) {
-            console.log("Fragment script executed AFTER Firebase loaded");
-        } else {
-            console.error("Firebase STILL not loaded — check main dashboard");
-        }
-    };
+            scripts.forEach(s => {
+                const tag = document.createElement("script");
 
-    if (oldScript.src) newScript.src = oldScript.src;
-    else newScript.textContent = oldScript.textContent;
+                if (s.src) {
+                    tag.src = s.src + "?v=" + Date.now();
+                } else {
+                    tag.textContent = s.textContent;
+                }
 
-    document.body.appendChild(newScript);
-    oldScript.remove();
-});
-
+                document.body.appendChild(tag);
+                s.remove();
+            });
         })
         .catch(err => {
-            dynamic.innerHTML = "<p style='padding:20px;color:red;'>Failed to load Promo Codes page.</p>";
-            console.error(err);
+            dynamic.innerHTML = "Failed to load Promo Codes page";
         });
 }
 
