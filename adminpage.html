@@ -1785,6 +1785,10 @@ function setupEventListeners() {
         renderCalendar(currentMonth, currentYear);
     });
 }
+    // Add this after firebase initialization
+console.log('Firebase initialized:', !!firebase.apps.length);
+console.log('Firestore available:', !!firebase.firestore);
+console.log('Window.db set:', !!window.db);
 
 function setupMobileMenu() {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
