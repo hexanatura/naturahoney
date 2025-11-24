@@ -156,8 +156,10 @@
         return parts.join(', ');
       }
 
-loadUsers();
-attachUI();
+      document.addEventListener('DOMContentLoaded', function(){
+        loadUsers();
+        attachUI();
+      });
 
       function attachUI(){
         modalClose.addEventListener('click', closeModal);
@@ -184,23 +186,20 @@ attachUI();
         }
 
         // try to read users; use get() for a snapshot once
-        db.collection('users').orderBy('createdAt','desc').get()
-          .then(qs => {
-            users = [];
-            qs.forEach(doc => {
-              users.push({ id: doc.id, ...doc.data() });
-            });
-            applyFilters();
-          })
-          .catch(err => {
-            console.error('users load error', err);
-            if (err && err.code === 'permission-denied') {
-              tbody.innerHTML = '<tr><td colspan="5" class="muted">Permission denied: your Firestore rules prevent reading users. For testing, temporarily allow reads or sign in as an admin.</td></tr>';
-            } else {
-              tbody.innerHTML = '<tr><td colspan="5" class="muted">Error loading users</td></tr>';
-            }
-            showToast('Error loading users', true);
-          });
+db.collection('users').get()
+  .then(qs => {
+    users = [];
+    qs.forEach(doc => {
+      users.push({ id: doc.id, ...doc.data() });
+    });
+    applyFilters();
+  })
+  .catch(err => {
+    console.error('users load error', err);
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">Error loading users</td></tr>';
+    showToast('Error loading users', true);
+  });
+
       }
 
       function applyFilters() {
@@ -326,4 +325,3 @@ attachUI();
 
     })();
   </script>
-</div>
