@@ -1615,61 +1615,30 @@ function loadMessagesPage() {
     const dynamic = document.getElementById("dynamicPage");
     const dashboard = document.getElementById("dashboardBody");
 
-    // Clear any existing contact manager to prevent conflicts
-    if (window.contactManager) {
-        window.contactManager = null;
-    }
-
-    // Show loading state immediately
+    // Hide dashboard, show messages page
     dashboard.style.display = "none";
     dynamic.style.display = "block";
     dynamic.style.width = "100%";
-    dynamic.innerHTML = `
-        <div style="display: flex; justify-content: center; align-items: center; height: 50vh;">
-            <div style="text-align: center;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 40px; color: #666; margin-bottom: 20px;"></i>
-                <p style="color: #666;">Loading Messages...</p>
-            </div>
-        </div>
-    `;
 
     fetch("contact-submissions.html")
-        .then(r => {
-            if (!r.ok) throw new Error('Failed to load page');
-            return r.text();
-        })
+        .then(r => r.text())
         .then(html => {
             dynamic.innerHTML = html;
 
-            // Find and process the script tag
-            const scripts = dynamic.querySelectorAll('script');
-            scripts.forEach(script => {
-                if (script.src.includes('contact-submissions.js')) {
-                    // Remove the existing script
-                    script.remove();
-                    
-                    // Create a new script with cache busting
-                    const newScript = document.createElement('script');
-                    newScript.src = script.src + '?v=' + Date.now();
-                    newScript.onload = () => console.log('Contact script loaded successfully');
-                    newScript.onerror = (e) => console.error('Failed to load contact script:', e);
-                    
-                    document.body.appendChild(newScript);
+            const scripts = [...dynamic.querySelectorAll("script")];
+            scripts.forEach(s => {
+                const tag = document.createElement("script");
+                if (s.src) {
+                    tag.src = s.src + "?v=" + Date.now();
+                } else {
+                    tag.textContent = s.textContent;
                 }
+                document.body.appendChild(tag);
+                s.remove();
             });
         })
         .catch(err => {
-            console.error('Error loading messages page:', err);
-            dynamic.innerHTML = `
-                <div style="padding: 40px; text-align: center; color: #b00020;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px;"></i>
-                    <h3 style="margin-bottom: 10px;">Failed to load Messages</h3>
-                    <p style="color: #666; margin-bottom: 20px;">${err.message}</p>
-                    <button onclick="loadMessagesPage()" 
-                        style="padding: 10px 18px; background: black; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                        Retry
-                    </button>
-                </div>`;
+            dynamic.innerHTML = "Failed to load Messages page";
         });
 }
 
@@ -1770,10 +1739,6 @@ function setupEventListeners() {
         renderCalendar(currentMonth, currentYear);
     });
 }
-    // Add this after firebase initialization
-console.log('Firebase initialized:', !!firebase.apps.length);
-console.log('Firestore available:', !!firebase.firestore);
-console.log('Window.db set:', !!window.db);
 
 function setupMobileMenu() {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
