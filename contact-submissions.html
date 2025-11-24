@@ -461,9 +461,14 @@ tr:hover{
       <div class="page-title">Contact Submissions</div>
       <div class="page-subtitle">Manage and respond to customer inquiries</div>
     </div>
-    <button id="testDataBtn" style="padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;white-space:nowrap;">
+    <div style="display:flex;gap:10px;">
+      <button id="manual-refresh" style="padding:8px 16px;background:#f5f5f5;color:#333;border:1px solid #ddd;border-radius:5px;cursor:pointer;font-size:14px;white-space:nowrap;">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+      <button id="testDataBtn" style="padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;white-space:nowrap;">
         Add Test Data
-    </button>
+      </button>
+    </div>
   </div>
 
   <div class="filters-bar">
@@ -561,19 +566,24 @@ tr:hover{
 </div>
 
 <script>
-// Simple Contact Manager that works with your dashboard setup
+// Simple Contact Manager with Silent Auto-Refresh
 class ContactSubmissionsManager {
     constructor() {
         this.currentSubmissions = [];
         this.filteredSubmissions = [];
         this.currentSubmissionId = null;
+        this.autoRefreshTimer = null;
+        this.loadingStartTime = null;
+        this.MAX_LOADING_TIME = 8000; // 8 seconds
+        this.autoRefreshAttempts = 0;
+        this.MAX_AUTO_REFRESH_ATTEMPTS = 3;
         this.initialize();
     }
 
     initialize() {
         console.log('Contact Manager Initializing...');
         this.setupEventListeners();
-        this.loadSubmissions();
+        this.startLoadingWithAutoRefresh();
     }
 
     setupEventListeners() {
@@ -581,6 +591,12 @@ class ContactSubmissionsManager {
         const testBtn = document.getElementById('testDataBtn');
         if (testBtn) {
             testBtn.addEventListener('click', () => this.addTestData());
+        }
+
+        // Manual refresh button
+        const manualRefreshBtn = document.getElementById('manual-refresh');
+        if (manualRefreshBtn) {
+            manualRefreshBtn.addEventListener('click', () => this.manualRefresh());
         }
 
         // Modal close buttons
@@ -619,6 +635,48 @@ class ContactSubmissionsManager {
         });
     }
 
+    startLoadingWithAutoRefresh() {
+        this.loadingStartTime = Date.now();
+        this.showLoadingState();
+        this.loadSubmissions();
+        
+        // Set timeout to auto-refresh if loading takes too long
+        this.autoRefreshTimer = setTimeout(() => {
+            this.silentAutoRefresh();
+        }, this.MAX_LOADING_TIME);
+    }
+
+    silentAutoRefresh() {
+        this.autoRefreshAttempts++;
+        
+        if (this.autoRefreshAttempts <= this.MAX_AUTO_REFRESH_ATTEMPTS) {
+            console.log(`Silent auto-refresh attempt ${this.autoRefreshAttempts}/${this.MAX_AUTO_REFRESH_ATTEMPTS}`);
+            this.loadSubmissions();
+            
+            // Set next auto-refresh if still needed
+            this.autoRefreshTimer = setTimeout(() => {
+                this.silentAutoRefresh();
+            }, this.MAX_LOADING_TIME);
+        } else {
+            console.log('Max auto-refresh attempts reached, showing error');
+            this.showError("Unable to load messages after multiple attempts");
+        }
+    }
+
+    clearAutoRefresh() {
+        if (this.autoRefreshTimer) {
+            clearTimeout(this.autoRefreshTimer);
+            this.autoRefreshTimer = null;
+        }
+        this.autoRefreshAttempts = 0;
+    }
+
+    manualRefresh() {
+        this.clearAutoRefresh();
+        this.showToast("Refreshing...");
+        this.startLoadingWithAutoRefresh();
+    }
+
     showLoadingState() {
         const tableBody = document.getElementById('submissions-table-body');
         const mobileCards = document.getElementById('mobile-cards');
@@ -643,6 +701,8 @@ class ContactSubmissionsManager {
     }
 
     showError(message) {
+        this.clearAutoRefresh();
+        
         const tableBody = document.getElementById('submissions-table-body');
         const mobileCards = document.getElementById('mobile-cards');
 
@@ -652,8 +712,8 @@ class ContactSubmissionsManager {
                     <td colspan="5" style="text-align:center;padding:40px;color:red;">
                         <i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:10px;"></i>
                         <p>${message}</p>
-                        <button onclick="contactManager.loadSubmissions()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
-                            Retry
+                        <button onclick="contactManager.manualRefresh()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
+                            Try Again
                         </button>
                     </td>
                 </tr>`;
@@ -664,8 +724,8 @@ class ContactSubmissionsManager {
                 <div class="card" style="text-align:center;padding:30px;color:red;">
                     <i class="fas fa-exclamation-triangle" style="font-size:24px;margin-bottom:10px;"></i>
                     <p>${message}</p>
-                    <button onclick="contactManager.loadSubmissions()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
-                        Retry
+                    <button onclick="contactManager.manualRefresh()" style="margin-top:10px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
+                        Try Again
                     </button>
                 </div>`;
         }
@@ -676,11 +736,9 @@ class ContactSubmissionsManager {
         
         // Check if Firebase is available
         if (typeof firebase === 'undefined' || !firebase.firestore) {
-            this.showError("Firebase is not available. Please refresh the dashboard.");
+            this.showError("Firebase is not available");
             return;
         }
-
-        this.showLoadingState();
 
         try {
             const db = firebase.firestore();
@@ -693,6 +751,7 @@ class ContactSubmissionsManager {
                     this.currentSubmissions = [];
 
                     if (snapshot.empty) {
+                        this.clearAutoRefresh();
                         this.showNoDataMessage();
                         return;
                     }
@@ -712,6 +771,7 @@ class ContactSubmissionsManager {
                         this.currentSubmissions.push(submission);
                     });
 
+                    this.clearAutoRefresh();
                     this.filteredSubmissions = [...this.currentSubmissions];
                     this.renderTable();
                     this.renderMobileCards();
@@ -720,12 +780,18 @@ class ContactSubmissionsManager {
                 })
                 .catch((error) => {
                     console.error('Firestore error:', error);
-                    this.showError("Failed to load messages: " + error.message);
+                    // Don't show error immediately, let auto-refresh handle it
+                    if (this.autoRefreshAttempts >= this.MAX_AUTO_REFRESH_ATTEMPTS) {
+                        this.showError("Failed to load messages: " + error.message);
+                    }
                 });
 
         } catch (error) {
             console.error('Error loading submissions:', error);
-            this.showError("Error loading messages: " + error.message);
+            // Don't show error immediately, let auto-refresh handle it
+            if (this.autoRefreshAttempts >= this.MAX_AUTO_REFRESH_ATTEMPTS) {
+                this.showError("Error loading messages: " + error.message);
+            }
         }
     }
 
@@ -1106,7 +1172,7 @@ class ContactSubmissionsManager {
 let contactManager;
 
 function initializeContactPage() {
-    console.log('Initializing contact page...');
+    console.log('Initializing contact page with silent auto-refresh...');
     contactManager = new ContactSubmissionsManager();
     window.contactManager = contactManager;
 }
