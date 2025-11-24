@@ -1702,6 +1702,34 @@ function loadOrdersPage() {
         });
 }
 
+function loadCustomersPage() {
+    const dynamic = document.getElementById("dynamicPage");
+    const dashboard = document.getElementById("dashboardBody");
+
+    dashboard.style.display = "none";
+    dynamic.style.display = "block";
+    dynamic.style.width = "100%";
+
+    fetch("customers.html")
+        .then(r => r.text())
+        .then(html => {
+            dynamic.innerHTML = html;
+
+            const scripts = [...dynamic.querySelectorAll("script")];
+            scripts.forEach(s => {
+                const tag = document.createElement("script");
+                if (s.src) tag.src = s.src + "?v=" + Date.now();
+                else tag.textContent = s.textContent;
+                document.body.appendChild(tag);
+                s.remove();
+            });
+        })
+        .catch(err => {
+            dynamic.innerHTML = "Failed to load Customers page";
+        });
+}
+
+
 
 function showDashboard() {
     const dynamic = document.getElementById("dynamicPage");
@@ -1749,6 +1777,10 @@ function setupEventListeners() {
 case 'Orders':
     loadOrdersPage();
     break;
+    case 'Customers':
+    loadCustomersPage();
+    break;
+
                 default:
                     // For other menu items that don't have separate pages yet
                     showDashboard();
