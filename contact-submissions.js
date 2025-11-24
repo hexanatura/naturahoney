@@ -1,33 +1,32 @@
-class ContactSubmissionsManager {
+ class ContactSubmissionsManager {
     constructor() {
         this.currentSubmissions = [];
         this.filteredSubmissions = [];
         this.currentSubmissionId = null;
         this.db = null;
-        this.initialized = false;
         this.initialize();
     }
 
     initialize() {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.setup());
-        } else {
-            this.setup();
-        }
-    }
-
-    setup() {
-        if (!window.db) {
-            this.showError("Firebase is not ready. Refresh the dashboard.");
-            return;
-        }
-
-        this.db = window.db;
-        this.initialized = true;
-        this.startApplication();
+        console.log('Contact manager initializing...');
+        
+        // Wait for Firebase to be available
+        const checkFirebase = () => {
+            if (typeof firebase !== 'undefined' && window.db) {
+                this.db = window.db;
+                console.log('Firebase connected successfully');
+                this.startApplication();
+            } else {
+                console.log('Waiting for Firebase...');
+                setTimeout(checkFirebase, 100);
+            }
+        };
+        
+        checkFirebase();
     }
 
     startApplication() {
+        console.log('Starting contact application...');
         this.setupEventListeners();
         this.loadSubmissions();
     }
@@ -123,8 +122,9 @@ class ContactSubmissionsManager {
     }
 
     loadSubmissions() {
-        if (!this.initialized || !this.db) {
-            this.showError("Database not initialized.");
+        if (!this.db) {
+            this.showError("Database not ready. Please wait...");
+            setTimeout(() => this.loadSubmissions(), 1000);
             return;
         }
 
@@ -165,7 +165,8 @@ class ContactSubmissionsManager {
                 this.renderMobileCards();
             })
             .catch((error) => {
-                this.showError("Database Error: " + error.message);
+                console.error('Firebase error:', error);
+                this.showError("Failed to load messages: " + error.message);
             });
     }
 
@@ -181,6 +182,9 @@ class ContactSubmissionsManager {
                     <p style="color:#888;max-width:400px;margin:0 auto;">
                         No contact form submissions found.
                     </p>
+                    <button onclick="contactManager.addTestData()" style="margin-top:15px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
+                        Add Test Message
+                    </button>
                 </td></tr>`;
         }
 
@@ -190,9 +194,15 @@ class ContactSubmissionsManager {
                     <i class="fas fa-inbox" style="font-size:48px;color:#ddd;margin-bottom:15px;"></i>
                     <h3 style="margin-bottom:10px;font-weight:500;">No messages yet</h3>
                     <p style="color:#888;">Customer messages will appear here.</p>
+                    <button onclick="contactManager.addTestData()" style="margin-top:15px;padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;">
+                        Add Test Message
+                    </button>
                 </div>`;
         }
     }
+
+    // ... keep all your other methods the same (renderTable, renderMobileCards, openModal, etc.)
+    // Just make sure they're included in the class
 
     renderTable() {
         const tableBody = document.getElementById('submissions-table-body');
@@ -379,8 +389,8 @@ class ContactSubmissionsManager {
     }
 
     addTestData() {
-        if (!this.initialized || !this.db) {
-            this.showError("Database not ready.");
+        if (!this.db) {
+            this.showToast("Database not ready yet. Please wait...");
             return;
         }
 
@@ -389,18 +399,18 @@ class ContactSubmissionsManager {
             email: "test@example.com",
             phone: "+1234567890",
             subject: "Test Inquiry About Honey Products",
-            message: "Hello, I’m interested in your honey products.",
+            message: "Hello, I'm interested in your honey products. Can you tell me more about the different varieties you offer?",
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             status: "new"
         };
 
         this.db.collection("contactSubmissions").add(testData)
             .then(() => {
-                this.showToast("Test message added.");
+                this.showToast("Test message added successfully.");
                 this.loadSubmissions();
             })
             .catch((error) => {
-                this.showToast("Error: " + error.message);
+                this.showToast("Error adding test message: " + error.message);
             });
     }
 
@@ -434,5 +444,6 @@ class ContactSubmissionsManager {
     }
 }
 
+// Initialize the contact manager
 const contactManager = new ContactSubmissionsManager();
 window.contactManager = contactManager;
