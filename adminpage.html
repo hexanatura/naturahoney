@@ -38,6 +38,16 @@
             overflow-x: hidden;
         }
 
+#dynamicPage {
+    width: 100%;
+    background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+    min-height: calc(100vh - 40px);
+}
+
+#dashboardBody {
+    width: 100%;
+}
+
       .dashboard-container {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -1605,8 +1615,10 @@ function loadMessagesPage() {
     const dynamic = document.getElementById("dynamicPage");
     const dashboard = document.getElementById("dashboardBody");
 
+    // Hide dashboard, show messages page
     dashboard.style.display = "none";
     dynamic.style.display = "block";
+    dynamic.style.width = "100%";
 
     fetch("contact-submissions.html")
         .then(r => r.text())
@@ -1614,16 +1626,13 @@ function loadMessagesPage() {
             dynamic.innerHTML = html;
 
             const scripts = [...dynamic.querySelectorAll("script")];
-
             scripts.forEach(s => {
                 const tag = document.createElement("script");
-
                 if (s.src) {
                     tag.src = s.src + "?v=" + Date.now();
                 } else {
                     tag.textContent = s.textContent;
                 }
-
                 document.body.appendChild(tag);
                 s.remove();
             });
@@ -1633,27 +1642,14 @@ function loadMessagesPage() {
         });
 }
 
-function showLoadError(pageName, container, error) {
-    console.error(error);
-    container.innerHTML = `
-    <div style="padding:40px;text-align:center;color:#b00020;">
-        <i class="fas fa-exclamation-circle" style="font-size:32px;margin-bottom:10px;"></i>
-        <h3 style="margin-bottom:10px;">Failed to load ${pageName} page</h3>
-        <p style="color:#666;margin-bottom:20px;">${error.message || "Unknown error"}</p>
-        <button onclick="location.reload()" 
-            style="padding:10px 18px;background:black;color:white;border:none;border-radius:6px;cursor:pointer;">
-            Reload Dashboard
-        </button>
-    </div>`;
-}
-
-
 function loadPromoPage() {
     const dynamic = document.getElementById("dynamicPage");
     const dashboard = document.getElementById("dashboardBody");
 
+    // Hide dashboard, show promo page
     dashboard.style.display = "none";
     dynamic.style.display = "block";
+    dynamic.style.width = "100%";
 
     fetch("promo-codes.html")
         .then(r => r.text())
@@ -1661,16 +1657,13 @@ function loadPromoPage() {
             dynamic.innerHTML = html;
 
             const scripts = [...dynamic.querySelectorAll("script")];
-
             scripts.forEach(s => {
                 const tag = document.createElement("script");
-
                 if (s.src) {
                     tag.src = s.src + "?v=" + Date.now();
                 } else {
                     tag.textContent = s.textContent;
                 }
-
                 document.body.appendChild(tag);
                 s.remove();
             });
@@ -1680,6 +1673,15 @@ function loadPromoPage() {
         });
 }
 
+function showDashboard() {
+    const dynamic = document.getElementById("dynamicPage");
+    const dashboard = document.getElementById("dashboardBody");
+
+    // Show dashboard, hide dynamic page
+    dashboard.style.display = "block";
+    dynamic.style.display = "none";
+    dynamic.innerHTML = "";
+}
 
 function initDashboard() {
     setupEventListeners();
@@ -1687,19 +1689,40 @@ function initDashboard() {
     initCalendar();
     setupMobileMenu();
     
-    const promoItem = document.getElementById("menuPromo");
-if (promoItem) promoItem.addEventListener("click", loadPromoPage);
-
-    const msgItem = document.getElementById("menuMessages");
-    if (msgItem) msgItem.addEventListener("click", loadMessagesPage);
+    // Ensure dynamic page is hidden initially
+    const dynamicPage = document.getElementById("dynamicPage");
+    if (dynamicPage) {
+        dynamicPage.style.display = "none";
+    }
 }
 
 function setupEventListeners() {
     const menuItems = document.querySelectorAll('.menu-item');
     menuItems.forEach(item => {
         item.addEventListener('click', function () {
+            const menuText = this.querySelector('.menu-text').textContent;
+            
             menuItems.forEach(i => i.classList.remove('active'));
             this.classList.add('active');
+            
+            // Handle navigation based on menu item
+            switch(menuText) {
+                case 'Dashboard':
+                    showDashboard();
+                    break;
+                case 'Messages':
+                    loadMessagesPage();
+                    break;
+                case 'Promo Codes':
+                    loadPromoPage();
+                    break;
+                // Add other cases for Orders, Customers, Settings as needed
+                default:
+                    // For other menu items that don't have separate pages yet
+                    showDashboard();
+                    break;
+            }
+            
             if (window.innerWidth <= 992) closeMobileMenu();
         });
     });
@@ -1794,3 +1817,4 @@ document.addEventListener('DOMContentLoaded', initDashboard);
 </script>
 </body>
 </html>
+
