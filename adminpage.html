@@ -1211,12 +1211,11 @@
                     </div>
                     <div class="menu-text">Dashboard</div>
                 </div>
-                <div class="menu-item">
-                    <div class="menu-icon">
-                        <i class="fas fa-shopping-bag"></i>
-                    </div>
-                    <div class="menu-text">Orders</div>
-                </div>
+               <div class="menu-item" id="menuOrders">
+    <div class="menu-icon"><i class="fas fa-shopping-bag"></i></div>
+    <div class="menu-text">Orders</div>
+</div>
+
                 <div class="menu-item">
                     <div class="menu-icon">
                         <i class="fas fa-users"></i>
@@ -1673,6 +1672,37 @@ function loadPromoPage() {
         });
 }
 
+function loadOrdersPage() {
+    const dynamic = document.getElementById("dynamicPage");
+    const dashboard = document.getElementById("dashboardBody");
+
+    dashboard.style.display = "none";
+    dynamic.style.display = "block";
+    dynamic.style.width = "100%";
+
+    fetch("orders.html")
+        .then(r => r.text())
+        .then(html => {
+            dynamic.innerHTML = html;
+
+            const scripts = [...dynamic.querySelectorAll("script")];
+            scripts.forEach(s => {
+                const tag = document.createElement("script");
+                if (s.src) {
+                    tag.src = s.src + "?v=" + Date.now();
+                } else {
+                    tag.textContent = s.textContent;
+                }
+                document.body.appendChild(tag);
+                s.remove();
+            });
+        })
+        .catch(err => {
+            dynamic.innerHTML = "Failed to load Orders page";
+        });
+}
+
+
 function showDashboard() {
     const dynamic = document.getElementById("dynamicPage");
     const dashboard = document.getElementById("dashboardBody");
@@ -1716,7 +1746,9 @@ function setupEventListeners() {
                 case 'Promo Codes':
                     loadPromoPage();
                     break;
-                // Add other cases for Orders, Customers, Settings as needed
+case 'Orders':
+    loadOrdersPage();
+    break;
                 default:
                     // For other menu items that don't have separate pages yet
                     showDashboard();
