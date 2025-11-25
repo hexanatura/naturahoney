@@ -82,7 +82,9 @@ table{
   min-width:650px;
 }
 
-thead{background:rgba(0,0,0,0.04)}
+thead{
+  background:rgba(0,0,0,0.04)
+}
 
 th{
   padding:14px 16px;
@@ -99,7 +101,9 @@ td{
   vertical-align:middle
 }
 
-tr:hover{background:rgba(0,0,0,0.03)}
+tr:hover{
+  background:rgba(0,0,0,0.03)
+}
 
 .user-info{
   display:flex;
@@ -200,8 +204,14 @@ tr:hover{background:rgba(0,0,0,0.03)}
   border-radius:var(--radius);
   overflow:hidden;
   box-shadow:var(--shadow);
+  animation:pop .2s ease;
   max-height:90vh;
   overflow-y:auto;
+}
+
+@keyframes pop{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
 }
 
 .modal-header{
@@ -211,18 +221,26 @@ tr:hover{background:rgba(0,0,0,0.03)}
   display:flex;
   justify-content:space-between;
   align-items:center;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 
-.modal-body{padding:18px}
+.modal-body{
+  padding:18px
+}
 
 .detail-label{
-  font-size:.8rem;color:var(--gray);
-  margin-bottom:6px;font-weight:600
+  font-size:.8rem;
+  color:var(--gray);
+  margin-bottom:6px;
+  font-weight:600
 }
 
 .detail-value{
   background:rgba(0,0,0,0.04);
-  padding:12px;border-radius:10px;
+  padding:12px;
+  border-radius:10px;
   margin-bottom:12px;
   word-break:break-word;
 }
@@ -232,6 +250,7 @@ tr:hover{background:rgba(0,0,0,0.03)}
   max-height:200px;
   overflow:auto;
   white-space:pre-wrap;
+  word-break:break-word;
 }
 
 .modal-footer{
@@ -240,6 +259,8 @@ tr:hover{background:rgba(0,0,0,0.03)}
   justify-content:flex-end;
   padding:14px;
   border-top:1px solid var(--border);
+  position:sticky;
+  bottom:0;
   background:var(--card-bg);
 }
 
@@ -270,6 +291,8 @@ tr:hover{background:rgba(0,0,0,0.03)}
   opacity:0;
   transition:.25s;
   z-index:1300;
+  max-width:300px;
+  word-break:break-word;
 }
 
 .toast.show{
@@ -277,27 +300,199 @@ tr:hover{background:rgba(0,0,0,0.03)}
   opacity:1
 }
 
-/* MOBILE RESPONSIVE */
+/* RESPONSIVE DESIGN */
 @media(max-width:1024px){
-  .table-container{display:none}
-  .mobile-cards{display:flex}
+  .table-container{
+    display:none !important;
+  }
+
+  .mobile-cards{
+    display:flex;
+  }
+  
+  .filters-bar{
+    flex-direction:column;
+  }
+  
+  .filter-group{
+    min-width:100%;
+  }
+}
+
+@media(max-width:768px){
+  .page-container{
+    padding:12px;
+    margin:16px auto;
+  }
+  
+  .page-title{
+    font-size:1.6rem;
+  }
+  
+  .modal{
+    padding:10px;
+  }
+  
+  .modal-content{
+    max-height:95vh;
+  }
+  
+  .modal-body{
+    padding:14px;
+  }
+  
+  .modal-footer{
+    flex-direction:column;
+  }
+  
+  .btn{
+    width:100%;
+    text-align:center;
+  }
+  
+  .filters-bar{
+    padding:12px;
+  }
+}
+
+@media(max-width:480px){
+  .page-container{
+    padding:8px;
+    margin:12px auto;
+  }
+  
+  .page-title{
+    font-size:1.4rem;
+  }
+  
+  .page-subtitle{
+    font-size:0.9rem;
+  }
+  
+  .card{
+    padding:12px;
+  }
+  
+  .user-info{
+    gap:8px;
+  }
+  
+  .avatar{
+    width:32px;
+    height:32px;
+    font-size:0.8rem;
+  }
+  
+  .actions{
+    gap:6px;
+  }
+  
+  .action-btn{
+    width:32px;
+    height:32px;
+    font-size:0.8rem;
+  }
+  
+  .modal{
+    padding:5px;
+  }
+  
+  .modal-header{
+    padding:12px;
+    font-size:0.9rem;
+  }
+  
+  .modal-body{
+    padding:12px;
+  }
+  
+  .detail-value{
+    padding:10px;
+    font-size:0.9rem;
+  }
+  
+  .message-box{
+    max-height:150px;
+    font-size:0.9rem;
+  }
+  
+  .toast{
+    right:10px;
+    left:10px;
+    bottom:10px;
+    max-width:none;
+  }
+}
+
+/* Fix for mobile cards duplicate issue */
+.mobile-cards .card {
+  display: flex !important;
+}
+
+.table-container table {
+  display: table !important;
+}
+
+/* Ensure proper hiding on different screens */
+@media(max-width:1024px){
+  .table-container{
+    display:none;
+  }
+  
+  .mobile-cards{
+    display:flex;
+  }
 }
 
 @media(min-width:1025px){
-  .table-container{display:block}
-  .mobile-cards{display:none}
+  .table-container{
+    display:block;
+  }
+  
+  .mobile-cards{
+    display:none;
+  }
 }
 </style>
 
 <div class="page-container fade-in">
-
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-    <div>
+    <div style="flex:1;min-width:250px;">
       <div class="page-title">Contact Submissions</div>
       <div class="page-subtitle">Manage and respond to customer inquiries</div>
     </div>
+    <div style="display:flex;gap:10px;">
+      <button id="manual-refresh" style="padding:8px 16px;background:#f5f5f5;color:#333;border:1px solid #ddd;border-radius:5px;cursor:pointer;font-size:14px;white-space:nowrap;">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+      <button id="testDataBtn" style="padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;white-space:nowrap;">
+        Add Test Data
+      </button>
+    </div>
   </div>
 
+  <div class="filters-bar">
+    <div class="filter-group">
+      <div class="filter-label">Status</div>
+      <select id="status-filter" class="filter-select">
+        <option value="all">All</option>
+        <option value="new">New</option>
+        <option value="read">Read</option>
+        <option value="replied">Replied</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Date Range</div>
+      <select id="date-filter" class="filter-select">
+        <option value="all">All Time</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Desktop Table -->
   <div class="table-container">
     <table>
       <thead>
@@ -306,12 +501,13 @@ tr:hover{background:rgba(0,0,0,0.03)}
           <th>Subject</th>
           <th>Date</th>
           <th>Status</th>
+          <th style="width:140px">Actions</th>
         </tr>
       </thead>
-      <tbody id="messagesTable">
+      <tbody id="submissions-table-body">
         <tr>
-          <td colspan="4" style="text-align:center;padding:40px;color:#666;">
-            <i class="fas fa-spinner fa-spin" style="font-size:24px"></i>
+          <td colspan="5" style="text-align:center;padding:40px;color:#666;">
+            <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
             <p>Loading messages...</p>
           </td>
         </tr>
@@ -319,103 +515,248 @@ tr:hover{background:rgba(0,0,0,0.03)}
     </table>
   </div>
 
-  <div id="mobileCards" class="mobile-cards">
+  <!-- Mobile Cards -->
+  <div id="mobile-cards" class="mobile-cards">
     <div class="card" style="text-align:center;padding:30px;">
-      <i class="fas fa-spinner fa-spin" style="font-size:24px"></i>
+      <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
       <p>Loading messages...</p>
     </div>
   </div>
 </div>
 
+<!-- MODAL -->
+<div id="submission-modal" class="modal" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div style="font-weight:600;">Message Details</div>
+      <button id="close-modal" class="btn-secondary btn" style="min-width:auto;padding:8px;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-label">Name</div>
+      <div id="detail-name" class="detail-value">-</div>
+
+      <div class="detail-label">Email</div>
+      <div id="detail-email" class="detail-value">-</div>
+
+      <div class="detail-label">Phone</div>
+      <div id="detail-phone" class="detail-value">-</div>
+
+      <div class="detail-label">Subject</div>
+      <div id="detail-subject" class="detail-value">-</div>
+
+      <div class="detail-label">Status</div>
+      <div id="detail-status" class="detail-value">-</div>
+
+      <div class="detail-label">Message</div>
+      <div id="detail-message" class="detail-value message-box">-</div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="close-modal-2" class="btn-secondary btn">Close</button>
+      <button id="gmail-reply-btn" class="btn btn-secondary">Reply via Gmail</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast">
+  <i class="fas fa-check-circle"></i>
+  <div id="toast-message">Updated</div>
+</div>
+
 <script>
-(function() {
-    if (!window.db) {
-        document.querySelector("#messagesTable").innerHTML =
-        "<tr><td colspan='4' style='padding:40px;text-align:center;color:red'>Firestore Not Available</td></tr>";
-        return;
-    }
+(function () {
 
-    const tableBody = document.getElementById("messagesTable");
-    const mobileCards = document.getElementById("mobileCards");
+    document.addEventListener("DOMContentLoaded", initPage);
+    if (document.readyState === "complete") initPage();
 
-    function formatDate(ts){
-        try {
-            const d = ts.toDate ? ts.toDate() : new Date(ts);
+    function initPage() {
+        if (!window.db) return console.error("Firestore missing");
+
+        const tableBody = document.getElementById("submissions-table-body");
+        const mobileCards = document.getElementById("mobile-cards");
+
+        const modal = document.getElementById("submission-modal");
+        const closeModalBtns = [document.getElementById("close-modal"), document.getElementById("close-modal-2")];
+
+        let submissions = [];
+
+        load();
+
+        function load() {
+            showLoading();
+            window.db.collection("contactSubmissions")
+                .orderBy("timestamp", "desc")
+                .get()
+                .then(snapshot => {
+                    submissions = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        timestamp: doc.data().timestamp?.toDate?.() || null
+                    }));
+                    render();
+                })
+                .catch(err => showError(err.message));
+        }
+
+        function render() {
+            if (!submissions.length) return showEmpty();
+            renderTable();
+            renderCards();
+        }
+
+        function renderTable() {
+            tableBody.innerHTML = submissions.map(s => `
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="avatar">${initial(s.name)}</div>
+                            <div>
+                                <div style="font-weight:600">${safe(s.name)}</div>
+                                <div style="font-size:.8rem;color:#666">${safe(s.email)}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${safe(trim(s.subject, 50))}</td>
+                    <td>${formatDate(s.timestamp)}</td>
+                    <td><span class="status status-${s.status || 'new'}">${cap(s.status || "new")}</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn view-btn" data-id="${s.id}"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn reply-btn" data-id="${s.id}"><i class="fas fa-reply"></i></button>
+                            <button class="action-btn delete-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        function renderCards() {
+            mobileCards.innerHTML = submissions.map(s => `
+                <div class="card">
+                    <div class="card-row">
+                        <div class="user-info">
+                            <div class="avatar">${initial(s.name)}</div>
+                            <div>
+                                <div style="font-weight:600">${safe(s.name)}</div>
+                                <div style="font-size:.8rem;color:#666">${safe(s.email)}</div>
+                            </div>
+                        </div>
+                        <span class="status status-${s.status || 'new'}">${cap(s.status || "new")}</span>
+                    </div>
+                    <div style="font-weight:500">${safe(s.subject)}</div>
+                    <div style="font-size:.8rem;color:#666">${formatDate(s.timestamp)}</div>
+                    <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
+                        <button class="action-btn view-btn" data-id="${s.id}"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn reply-btn" data-id="${s.id}"><i class="fas fa-reply"></i></button>
+                        <button class="action-btn delete-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        document.addEventListener("click", e => {
+            const view = e.target.closest(".view-btn");
+            const reply = e.target.closest(".reply-btn");
+            const del = e.target.closest(".delete-btn");
+            if (view) openModal(view.dataset.id);
+            if (reply) replyEmail(view.dataset.id);
+            if (del) remove(view.dataset.id);
+        });
+
+        closeModalBtns.forEach(btn => btn.addEventListener("click", closeModal));
+        modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+        document.getElementById("manual-refresh").onclick = load;
+
+        document.getElementById("testDataBtn").onclick = () => {
+            window.db.collection("contactSubmissions").add({
+                name: "Demo User",
+                email: "demo@example.com",
+                phone: "1234567890",
+                subject: "Test submission",
+                message: "This is a test.",
+                status: "new",
+                timestamp: new Date()
+            }).then(load);
+        };
+
+        function openModal(id) {
+            const s = submissions.find(x => x.id === id);
+            if (!s) return;
+
+            fill("detail-name", s.name);
+            fill("detail-email", s.email);
+            fill("detail-phone", s.phone || "-");
+            fill("detail-subject", s.subject);
+            fill("detail-status", cap(s.status || "new"));
+            fill("detail-message", s.message);
+
+            modal.style.display = "flex";
+
+            if (s.status === "new") updateStatus(id, "read");
+        }
+
+        function updateStatus(id, status) {
+            window.db.collection("contactSubmissions").doc(id).update({ status }).then(load);
+        }
+
+        function replyEmail(id) {
+            const s = submissions.find(x => x.id === id);
+            if (!s) return;
+
+            updateStatus(id, "replied");
+
+            const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                s.email
+            )}&su=${encodeURIComponent("Re: " + s.subject)}&body=${encodeURIComponent(s.message)}`;
+
+            window.open(url, "_blank");
+        }
+
+        function remove(id) {
+            if (!confirm("Delete this message?")) return;
+            window.db.collection("contactSubmissions").doc(id).delete().then(load);
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        function showLoading() {
+            tableBody.innerHTML = `
+                <tr><td colspan="5" style="text-align:center;padding:40px;">
+                <i class="fas fa-spinner fa-spin"></i><p>Loading...</p>
+                </td></tr>`;
+            mobileCards.innerHTML = `<div class="card" style="text-align:center;padding:30px;">
+            <i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>`;
+        }
+
+        function showEmpty() {
+            tableBody.innerHTML = `
+                <tr><td colspan="5" style="text-align:center;padding:40px;color:#666;">
+                <i class="fas fa-inbox" style="font-size:40px;color:#ccc"></i><p>No messages found</p></td></tr>`;
+            mobileCards.innerHTML = `
+                <div class="card" style="text-align:center;padding:40px;">
+                <i class="fas fa-inbox" style="font-size:40px;color:#ccc"></i><p>No messages found</p></div>`;
+        }
+
+        function showError(msg) {
+            tableBody.innerHTML = `
+                <tr><td colspan="5" style="padding:40px;color:red;text-align:center;">${msg}</td></tr>`;
+        }
+
+        function formatDate(d) {
+            if (!d) return "-";
             return d.toLocaleString("en-IN");
-        } catch {
-            return "-";
-        }
-    }
-
-    function render(messages){
-        if(messages.length === 0){
-            tableBody.innerHTML =
-              `<tr><td colspan="4" style="padding:40px;text-align:center;color:#777">
-                  <i class='fas fa-inbox' style='font-size:40px;color:#ccc'></i>
-                  <p>No messages yet</p>
-               </td></tr>`;
-
-            mobileCards.innerHTML =
-              `<div class='card' style='text-align:center;padding:40px'>
-                  <i class='fas fa-inbox' style='font-size:40px;color:#ccc'></i>
-                  <p>No messages yet</p>
-               </div>`;
-            return;
         }
 
-        tableBody.innerHTML = messages.map(msg => `
-          <tr>
-            <td>
-              <div class="user-info">
-                <div class="avatar">${msg.name.charAt(0).toUpperCase()}</div>
-                <div>
-                  <div style="font-weight:600">${msg.name}</div>
-                  <div style="font-size:.8rem;color:#666">${msg.email}</div>
-                </div>
-              </div>
-            </td>
-            <td>${msg.subject}</td>
-            <td>${formatDate(msg.timestamp)}</td>
-            <td><span class="status status-${msg.status}">${msg.status}</span></td>
-          </tr>
-        `).join("");
-
-        mobileCards.innerHTML = messages.map(msg => `
-          <div class="card">
-            <div class="card-row">
-              <div class="user-info">
-                <div class="avatar">${msg.name.charAt(0)}</div>
-                <div>
-                  <div style="font-weight:600">${msg.name}</div>
-                  <div style="font-size:.8rem;color:#666">${msg.email}</div>
-                </div>
-              </div>
-              <span class="status status-${msg.status}">${msg.status}</span>
-            </div>
-            <div style="font-weight:500">${msg.subject}</div>
-            <div style="font-size:.8rem;color:#666">${formatDate(msg.timestamp)}</div>
-          </div>
-        `).join("");
+        const safe = t => (t || "").replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
+        const trim = (t, n) => (t.length > n ? t.slice(0, n) + "..." : t);
+        const initial = n => (n?.charAt(0) || "?").toUpperCase();
+        const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+        const fill = (id, val) => document.getElementById(id).textContent = val;
     }
-
-    function loadMessages(){
-        window.db.collection("contactSubmissions")
-          .orderBy("timestamp", "desc")
-          .get()
-          .then(ss => {
-              const msgs = ss.docs.map(d => ({
-                  id: d.id,
-                  ...d.data(),
-                  timestamp: d.data().timestamp || null
-              }));
-              render(msgs);
-          })
-          .catch(err => {
-              tableBody.innerHTML =
-              `<tr><td colspan="4" style="padding:40px;text-align:center;color:red">${err.message}</td></tr>`;
-          });
-    }
-
-    loadMessages();
 })();
 </script>
