@@ -567,196 +567,194 @@ tr:hover{
 
 <script>
 (function () {
+    function start() {
+        if (!document.getElementById("submissions-table-body")) return;
+        if (!window.db) return console.error("window.db missing");
 
-    document.addEventListener("DOMContentLoaded", initPage);
-    if (document.readyState === "complete") initPage();
+        const T = document.getElementById("submissions-table-body");
+        const C = document.getElementById("mobile-cards");
+        const M = document.getElementById("submission-modal");
 
-    function initPage() {
-        if (!window.db) return console.error("Firestore missing");
-
-        const tableBody = document.getElementById("submissions-table-body");
-        const mobileCards = document.getElementById("mobile-cards");
-
-        const modal = document.getElementById("submission-modal");
-        const closeModalBtns = [document.getElementById("close-modal"), document.getElementById("close-modal-2")];
-
-        let submissions = [];
+        let data = [];
 
         load();
 
+        // ---------- LOAD ----------
         function load() {
-            showLoading();
-            window.db.collection("contactSubmissions")
-                .orderBy("timestamp", "desc")
-                .get()
-                .then(snapshot => {
-                    submissions = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data(),
-                        timestamp: doc.data().timestamp?.toDate?.() || null
-                    }));
+            renderLoading();
+            window.db.collection("contactSubmissions").orderBy("timestamp", "desc").get()
+                .then(s => {
+                    data = s.docs.map(d => {
+                        const v = d.data();
+                        const ts = v.timestamp?.toDate?.() || null;
+                        return {
+                            id: d.id,
+                            name: v.name || "",
+                            email: v.email || "",
+                            phone: v.phone || "",
+                            subject: v.subject || "",
+                            message: v.message || "",
+                            status: v.status || "new",
+                            timestamp: ts
+                        };
+                    });
                     render();
                 })
-                .catch(err => showError(err.message));
+                .catch(e => renderError(e.message));
         }
 
+        // ---------- RENDER ----------
         function render() {
-            if (!submissions.length) return showEmpty();
-            renderTable();
-            renderCards();
-        }
+            if (!data.length) return renderEmpty();
 
-        function renderTable() {
-            tableBody.innerHTML = submissions.map(s => `
+            T.innerHTML = data.map(x => `
                 <tr>
                     <td>
                         <div class="user-info">
-                            <div class="avatar">${initial(s.name)}</div>
+                            <div class="avatar">${I(x.name)}</div>
                             <div>
-                                <div style="font-weight:600">${safe(s.name)}</div>
-                                <div style="font-size:.8rem;color:#666">${safe(s.email)}</div>
+                                <div style="font-weight:600">${S(x.name)}</div>
+                                <div style="font-size:.8rem;color:#666">${S(x.email)}</div>
                             </div>
                         </div>
                     </td>
-                    <td>${safe(trim(s.subject, 50))}</td>
-                    <td>${formatDate(s.timestamp)}</td>
-                    <td><span class="status status-${s.status || 'new'}">${cap(s.status || "new")}</span></td>
+                    <td>${S(short(x.subject))}</td>
+                    <td>${fmt(x.timestamp)}</td>
+                    <td><span class="status status-${x.status}">${cap(x.status)}</span></td>
                     <td>
                         <div class="actions">
-                            <button class="action-btn view-btn" data-id="${s.id}"><i class="fas fa-eye"></i></button>
-                            <button class="action-btn reply-btn" data-id="${s.id}"><i class="fas fa-reply"></i></button>
-                            <button class="action-btn delete-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button>
+                            <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn r" data-id="${x.id}"><i class="fas fa-reply"></i></button>
+                            <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
             `).join("");
-        }
 
-        function renderCards() {
-            mobileCards.innerHTML = submissions.map(s => `
+            C.innerHTML = data.map(x => `
                 <div class="card">
                     <div class="card-row">
                         <div class="user-info">
-                            <div class="avatar">${initial(s.name)}</div>
+                            <div class="avatar">${I(x.name)}</div>
                             <div>
-                                <div style="font-weight:600">${safe(s.name)}</div>
-                                <div style="font-size:.8rem;color:#666">${safe(s.email)}</div>
+                                <div style="font-weight:600">${S(x.name)}</div>
+                                <div style="font-size:.8rem;color:#666">${S(x.email)}</div>
                             </div>
                         </div>
-                        <span class="status status-${s.status || 'new'}">${cap(s.status || "new")}</span>
+                        <span class="status status-${x.status}">${cap(x.status)}</span>
                     </div>
-                    <div style="font-weight:500">${safe(s.subject)}</div>
-                    <div style="font-size:.8rem;color:#666">${formatDate(s.timestamp)}</div>
+
+                    <div style="font-weight:500;margin:8px 0;">${S(x.subject)}</div>
+                    <div style="font-size:.8rem;color:#666">${fmt(x.timestamp)}</div>
+
                     <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
-                        <button class="action-btn view-btn" data-id="${s.id}"><i class="fas fa-eye"></i></button>
-                        <button class="action-btn reply-btn" data-id="${s.id}"><i class="fas fa-reply"></i></button>
-                        <button class="action-btn delete-btn" data-id="${s.id}"><i class="fas fa-trash"></i></button>
+                        <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
+                        <button class="action-btn r" data-id="${x.id}"><i class="fas fa-reply"></i></button>
+                        <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
             `).join("");
         }
 
+        // ---------- CLICK HANDLER ----------
         document.addEventListener("click", e => {
-            const view = e.target.closest(".view-btn");
-            const reply = e.target.closest(".reply-btn");
-            const del = e.target.closest(".delete-btn");
-            if (view) openModal(view.dataset.id);
-            if (reply) replyEmail(view.dataset.id);
-            if (del) remove(view.dataset.id);
+            const v = e.target.closest(".v");
+            const r = e.target.closest(".r");
+            const d = e.target.closest(".d");
+
+            if (v) return open(v.dataset.id);
+            if (r) return reply(v.dataset.id);
+            if (d) return remove(v.dataset.id);
+
+            if (e.target.id === "close-modal" || e.target.id === "close-modal-2")
+                M.style.display = "none";
+
+            if (e.target.id === "manual-refresh") load();
+            if (e.target.id === "testDataBtn") addTest();
         });
 
-        closeModalBtns.forEach(btn => btn.addEventListener("click", closeModal));
-        modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+        // ---------- VIEW ----------
+        function open(id) {
+            const x = data.find(z => z.id === id);
+            if (!x) return;
 
-        document.getElementById("manual-refresh").onclick = load;
+            fill("detail-name", x.name);
+            fill("detail-email", x.email);
+            fill("detail-phone", x.phone || "-");
+            fill("detail-subject", x.subject);
+            fill("detail-status", cap(x.status));
+            fill("detail-message", x.message);
 
-        document.getElementById("testDataBtn").onclick = () => {
-            window.db.collection("contactSubmissions").add({
-                name: "Demo User",
-                email: "demo@example.com",
-                phone: "1234567890",
-                subject: "Test submission",
-                message: "This is a test.",
-                status: "new",
-                timestamp: new Date()
-            }).then(load);
-        };
+            M.style.display = "flex";
 
-        function openModal(id) {
-            const s = submissions.find(x => x.id === id);
-            if (!s) return;
-
-            fill("detail-name", s.name);
-            fill("detail-email", s.email);
-            fill("detail-phone", s.phone || "-");
-            fill("detail-subject", s.subject);
-            fill("detail-status", cap(s.status || "new"));
-            fill("detail-message", s.message);
-
-            modal.style.display = "flex";
-
-            if (s.status === "new") updateStatus(id, "read");
+            if (x.status === "new") setStatus(id, "read");
         }
 
-        function updateStatus(id, status) {
-            window.db.collection("contactSubmissions").doc(id).update({ status }).then(load);
+        // ---------- UPDATE STATUS ----------
+        function setStatus(id, st) {
+            window.db.collection("contactSubmissions").doc(id)
+                .update({ status: st })
+                .then(load);
         }
 
-        function replyEmail(id) {
-            const s = submissions.find(x => x.id === id);
-            if (!s) return;
+        // ---------- REPLY ----------
+        function reply(id) {
+            const x = data.find(z => z.id === id);
+            if (!x) return;
 
-            updateStatus(id, "replied");
+            setStatus(id, "replied");
 
-            const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
-                s.email
-            )}&su=${encodeURIComponent("Re: " + s.subject)}&body=${encodeURIComponent(s.message)}`;
+            const url =
+                `https://mail.google.com/mail/?view=cm&fs=1` +
+                `&to=${encodeURIComponent(x.email)}` +
+                `&su=${encodeURIComponent("Re: " + x.subject)}` +
+                `&body=${encodeURIComponent(x.message)}`;
 
             window.open(url, "_blank");
         }
 
+        // ---------- DELETE ----------
         function remove(id) {
             if (!confirm("Delete this message?")) return;
             window.db.collection("contactSubmissions").doc(id).delete().then(load);
         }
 
-        function closeModal() {
-            modal.style.display = "none";
+        // ---------- TEST ----------
+        function addTest() {
+            window.db.collection("contactSubmissions").add({
+                name: "Demo User",
+                email: "demo@example.com",
+                phone: "123456789",
+                subject: "Test message",
+                message: "This is a test.",
+                status: "new",
+                timestamp: new Date(),
+            }).then(load);
         }
 
-        function showLoading() {
-            tableBody.innerHTML = `
-                <tr><td colspan="5" style="text-align:center;padding:40px;">
-                <i class="fas fa-spinner fa-spin"></i><p>Loading...</p>
-                </td></tr>`;
-            mobileCards.innerHTML = `<div class="card" style="text-align:center;padding:30px;">
-            <i class="fas fa-spinner fa-spin"></i><p>Loading...</p></div>`;
+        // ---------- SMALL HELPERS ----------
+        function renderLoading() {
+            T.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;"><i class='fas fa-spinner fa-spin'></i></td></tr>`;
+            C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'><i class='fas fa-spinner fa-spin'></i></div>`;
         }
 
-        function showEmpty() {
-            tableBody.innerHTML = `
-                <tr><td colspan="5" style="text-align:center;padding:40px;color:#666;">
-                <i class="fas fa-inbox" style="font-size:40px;color:#ccc"></i><p>No messages found</p></td></tr>`;
-            mobileCards.innerHTML = `
-                <div class="card" style="text-align:center;padding:40px;">
-                <i class="fas fa-inbox" style="font-size:40px;color:#ccc"></i><p>No messages found</p></div>`;
+        function renderEmpty() {
+            T.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;">No messages</td></tr>`;
+            C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>No messages</div>`;
         }
 
-        function showError(msg) {
-            tableBody.innerHTML = `
-                <tr><td colspan="5" style="padding:40px;color:red;text-align:center;">${msg}</td></tr>`;
+        function renderError(msg) {
+            T.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:red;">${msg}</td></tr>`;
         }
 
-        function formatDate(d) {
-            if (!d) return "-";
-            return d.toLocaleString("en-IN");
-        }
-
-        const safe = t => (t || "").replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
-        const trim = (t, n) => (t.length > n ? t.slice(0, n) + "..." : t);
-        const initial = n => (n?.charAt(0) || "?").toUpperCase();
+        const S = t => (t || "").replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
+        const I = n => (n?.[0] || "?").toUpperCase();
         const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-        const fill = (id, val) => document.getElementById(id).textContent = val;
+        const short = t => (t.length > 50 ? t.slice(0, 50) + "..." : t);
+        const fmt = d => d ? new Date(d).toLocaleString("en-IN") : "-";
+        const fill = (id, v) => document.getElementById(id).textContent = v;
     }
+
+    setTimeout(start, 50);
 })();
 </script>
