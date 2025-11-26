@@ -21,6 +21,9 @@
             --card-bg: rgba(255, 255, 255, 0.9);
             --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             --radius: 12px;
+            --muted: #7a7a7a;
+            --success: #16a34a;
+            --danger: #dc2626;
         }
 
         * {
@@ -38,24 +41,22 @@
             overflow-x: hidden;
         }
 
-#dynamicPage {
-    width: 100%;
-    background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
-    min-height: calc(100vh - 40px);
-}
+        #dynamicPage {
+            width: 100%;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            min-height: calc(100vh - 40px);
+        }
 
-#dashboardBody {
-    width: 100%;
-}
+        #dashboardBody {
+            width: 100%;
+        }
 
-      .dashboard-container {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    height: 100%;
-}
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100%;
+        }
 
-
-        /* Mobile menu button */
         .mobile-menu-btn {
             display: none;
             position: fixed;
@@ -73,7 +74,6 @@
             color: var(--dark);
         }
 
-        /* Top Header with Search and Profile */
         .top-header {
             display: flex;
             justify-content: space-between;
@@ -177,7 +177,6 @@
             transform: translateY(2px);
         }
 
-        /* Header Icons */
         .header-icons {
             display: flex;
             align-items: center;
@@ -206,7 +205,6 @@
             transform: translateY(-2px);
         }
 
-        /* Sidebar */
         .sidebar {
             background: transparent;
             display: flex;
@@ -258,12 +256,11 @@
             margin-top: 0px;
         }
 
-    .menu {
-    height: auto;
-    min-height: unset;
-    flex: 1;
-}
-
+        .menu {
+            height: auto;
+            min-height: unset;
+            flex: 1;
+        }
 
         .menu-item {
             display: flex;
@@ -295,7 +292,6 @@
             font-size: 0.95rem;
         }
 
-        /* Performance Metrics in Sidebar - Line by line format */
         .performance-metrics {
             display: flex;
             flex-direction: column;
@@ -337,14 +333,11 @@
             color: var(--dark);
         }
 
-        .metric-change {
+        .positive {
             font-size: 0.75rem;
             display: flex;
             align-items: center;
             gap: 4px;
-        }
-
-        .positive {
             color: green;
         }
 
@@ -352,15 +345,14 @@
             color: red;
         }
 
-     .main-content {
-    overflow-y: visible;
-    height: auto;
-    margin-top: 20px;
+        .main-content {
+            overflow-y: visible;
+            height: auto;
+            margin-top: 20px;
+            padding-bottom: 0 !important;
+            margin-bottom: 0 !important;
+        }
 
-}
-
-
-        /* Welcome and Calendar Section - Now side by side */
         .welcome-calendar-section {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -368,7 +360,6 @@
             margin-bottom: 30px;
         }
 
-        /* Welcome Section - RESPONSIVE IMPROVEMENTS */
         .welcome-section {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -432,7 +423,7 @@
             background: rgba(0, 0, 0, 0.03);
             border-radius: 10px;
             text-align: center;
-            min-width: 0; /* Prevents overflow */
+            min-width: 0;
             transition: all 0.3s ease;
         }
 
@@ -455,7 +446,6 @@
             line-height: 1.3;
         }
 
-        /* New Date Widget */
         .date-widget {
             display: flex;
             align-items: center;
@@ -493,13 +483,7 @@
             line-height: 1.2;
         }
 
-        .day-name {
-            color: #4a4a4a;
-            font-size: clamp(11px, 3vw, 13px);
-            font-weight: 500;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-
+        .day-name,
         .month-name {
             color: #4a4a4a;
             font-size: clamp(11px, 3vw, 13px);
@@ -507,7 +491,6 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        /* Calendar Section - Full height */
         .calendar-section {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -611,7 +594,6 @@
             color: white;
         }
 
-        /* Recent Orders Section */
         .recent-orders-section {
             margin-bottom: 25px;
             width: 100%;
@@ -631,7 +613,6 @@
             width: 100%;
         }
 
-        /* Show only 4 cards max */
         .orders-list {
             display: flex;
             flex-direction: row;
@@ -642,9 +623,9 @@
             white-space: nowrap;
             scroll-behavior: smooth;
             width: 100%;
+            min-height: 140px;
         }
 
-        /* Individual order card */
         .order-item {
             background: var(--card-bg);
             border-radius: 10px;
@@ -660,9 +641,13 @@
             gap: 8px;
         }
 
-        .order-item:hover {
+        .order-item:hover:not(.order-item-empty) {
             transform: translateY(-3px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .order-item-empty {
+            opacity: 0.7;
         }
 
         .order-info {
@@ -709,8 +694,9 @@
         .status-processing { background-color: #cce7ff; color: #004085; }
         .status-shipped { background-color: #d1ecf1; color: #0c5460; }
         .status-delivered { background-color: #d4edda; color: #155724; }
+        .status-confirmed { background: rgba(59,130,246,0.08); color:#3b82f6; border:1px solid rgba(59,130,246,0.12); }
+        .status-cancelled { background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.12); }
 
-        /* Reviews and Activities Section - Side by side */
         .reviews-activities-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -718,7 +704,6 @@
             margin-bottom: 30px;
         }
 
-        /* Reviews Section */
         .reviews-section {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -838,7 +823,6 @@
             margin-bottom: 6px;
         }
 
-        /* Activities Section - Professional sizing */
         .recent-activities {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -910,16 +894,15 @@
             color: var(--gray);
         }
 
-        /* RESPONSIVE IMPROVEMENTS FOR WELCOME SECTION */
         @media (max-width: 1200px) {
             .welcome-stats {
                 grid-template-columns: repeat(2, 1fr);
             }
-            
+
             .welcome-calendar-section {
                 grid-template-columns: 1fr;
             }
-            
+
             .reviews-activities-section {
                 grid-template-columns: 1fr;
             }
@@ -929,7 +912,7 @@
             .dashboard-container {
                 grid-template-columns: 1fr;
             }
-            
+
             .sidebar {
                 position: fixed;
                 top: 0;
@@ -941,46 +924,46 @@
                 overflow-y: auto;
                 background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
             }
-            
+
             .sidebar.active {
                 transform: translateX(0);
             }
-            
+
             .mobile-menu-btn {
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
-            
+
             .main-content {
                 padding-top: 80px;
             }
-            
+
             .top-header {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
+
             .search-bar {
                 width: 100%;
             }
-            
+
             .header-icons {
                 margin-right: 0;
                 width: 100%;
                 justify-content: space-between;
             }
-            
+
             .admin-profile {
                 width: 100%;
                 justify-content: space-between;
             }
-            
+
             .welcome-header {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
+
             .date-widget {
                 align-self: flex-start;
             }
@@ -990,29 +973,29 @@
             .welcome-stats {
                 grid-template-columns: 1fr;
             }
-            
+
             .welcome-stat {
                 min-width: 100%;
             }
-            
+
             .calendar-title, .reviews-title, .activities-title, .section-title {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
+
             .orders-list {
                 max-width: 100%;
             }
-            
+
             .order-item {
                 min-width: 180px;
                 flex: 0 0 180px;
             }
-            
+
             .header-icons {
                 gap: 10px;
             }
-            
+
             .icon-btn {
                 width: 35px;
                 height: 35px;
@@ -1023,45 +1006,45 @@
             .main-content {
                 padding: 15px;
             }
-            
+
             .welcome-section, .calendar-section, .reviews-section, .recent-activities {
                 padding: 15px;
             }
-            
+
             .welcome-stats {
                 gap: 10px;
             }
-            
+
             .welcome-stat {
                 padding: 12px;
             }
-            
+
             .calendar-day {
                 height: 30px;
                 font-size: 0.8rem;
             }
-            
+
             .reviewer-info {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
+
             .review-header {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
             }
-            
+
             .review-rating {
                 align-self: flex-start;
             }
-            
+
             .activity-item {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 10px;
             }
-            
+
             .activity-icon {
                 align-self: flex-start;
             }
@@ -1075,79 +1058,58 @@
                 height: 40px;
                 font-size: 1rem;
             }
-            
+
             .main-content {
                 padding-top: 60px;
             }
-            
+
             .top-header {
                 margin-bottom: 20px;
             }
-            
+
             .welcome-calendar-section, .reviews-activities-section {
                 gap: 15px;
                 margin-bottom: 20px;
             }
-            
+
             .order-item {
                 min-width: 160px;
                 flex: 0 0 160px;
             }
-            
+
             .header-icons {
                 gap: 5px;
             }
-            
+
             .icon-btn {
                 width: 32px;
                 height: 32px;
                 font-size: 0.9rem;
             }
-            
+
             .admin-profile {
                 padding: 6px 12px;
             }
-            
+
             .profile-avatar {
                 width: 35px;
                 height: 35px;
             }
         }
 
-        .main-content {
-            padding-bottom: 0 !important;
-            margin-bottom: 0 !important;
-        }
-
-        /* Animations */
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .fade-in {
             animation: fadeIn 0.5s ease forwards;
         }
 
-        .delay-1 {
-            animation-delay: 0.1s;
-        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
 
-        .delay-2 {
-            animation-delay: 0.2s;
-        }
-
-        .delay-3 {
-            animation-delay: 0.3s;
-        }
-
-        /* Scrollbar Styling */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -1164,8 +1126,7 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
-        
-        /* Overlay for mobile menu */
+
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -1176,69 +1137,54 @@
             background: rgba(0, 0, 0, 0.5);
             z-index: 998;
         }
-        
+
         .sidebar-overlay.active {
             display: block;
         }
     </style>
 </head>
 <body>
-    <!-- Mobile Menu Button -->
     <button class="mobile-menu-btn" id="mobileMenuBtn">
         <i class="fas fa-bars"></i>
     </button>
-    
-    <!-- Overlay for mobile menu -->
+
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    
+
     <div class="dashboard-container">
-        <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
-            <!-- Top Section - Branding -->
             <div class="sidebar-section branding">
-                <div class="brand-logo">
-                    <i class="fas fa-chart-pie"></i>
-                </div>
+                <div class="brand-logo"><i class="fas fa-chart-pie"></i></div>
                 <div class="brand-name">Natura Honey</div>
                 <div class="brand-tagline">The Taste Of Hundreds</div>
             </div>
 
-            <!-- Middle Section - Menu -->
             <div class="sidebar-section menu">
                 <div class="menu-item active">
-                    <div class="menu-icon">
-                        <i class="fas fa-home"></i>
-                    </div>
+                    <div class="menu-icon"><i class="fas fa-home"></i></div>
                     <div class="menu-text">Dashboard</div>
                 </div>
-               <div class="menu-item" id="menuOrders">
-    <div class="menu-icon"><i class="fas fa-shopping-bag"></i></div>
-    <div class="menu-text">Orders</div>
-</div>
-
+                <div class="menu-item" id="menuOrders">
+                    <div class="menu-icon"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="menu-text">Orders</div>
+                </div>
                 <div class="menu-item">
-                    <div class="menu-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
+                    <div class="menu-icon"><i class="fas fa-users"></i></div>
                     <div class="menu-text">Customers</div>
                 </div>
-              <div class="menu-item" id="menuMessages">
-    <div class="menu-icon"><i class="fas fa-envelope"></i></div>
-    <div class="menu-text">Messages</div>
-</div>
-<div class="menu-item" id="menuPromo">
-    <div class="menu-icon"><i class="fas fa-tags"></i></div>
-    <div class="menu-text">Promo Codes</div>
-</div>
+                <div class="menu-item" id="menuMessages">
+                    <div class="menu-icon"><i class="fas fa-envelope"></i></div>
+                    <div class="menu-text">Messages</div>
+                </div>
+                <div class="menu-item" id="menuPromo">
+                    <div class="menu-icon"><i class="fas fa-tags"></i></div>
+                    <div class="menu-text">Promo Codes</div>
+                </div>
                 <div class="menu-item">
-                    <div class="menu-icon">
-                        <i class="fas fa-cog"></i>
-                    </div>
+                    <div class="menu-icon"><i class="fas fa-cog"></i></div>
                     <div class="menu-text">Settings</div>
                 </div>
             </div>
 
-            <!-- Bottom Section - Performance Metrics -->
             <div class="sidebar-section">
                 <div class="performance-metrics">
                     <div class="metric-row fade-in">
@@ -1277,7 +1223,6 @@
                             <i class="fas fa-arrow-up"></i> 3.7%
                         </div>
                     </div>
-                    <!-- Developer Credits -->
                     <div class="sidebar-footer">
                         <div class="dev-logo">
                             <img src="your-logo.png" alt="Developer Logo">
@@ -1291,36 +1236,29 @@
             </div>
         </div>
 
-        <!-- Main Content -->
-<div class="main-content" id="mainContent">
-            <!-- Top Header -->
+        <div class="main-content" id="mainContent">
             <div class="top-header">
                 <div class="search-bar">
                     <i class="fas fa-search"></i>
                     <input type="text" placeholder="Search orders, customers, analytics...">
                 </div>
-                
+
                 <div class="header-icons">
                     <a href="https://yourwebsite.com" target="_blank" class="icon-btn">
                         <i class="fas fa-globe"></i>
                     </a>
-
                     <button class="icon-btn" onclick="location.reload()">
                         <i class="fas fa-sync"></i>
                     </button>
-
                     <a href="mailto:yourmail@gmail.com" class="icon-btn">
                         <i class="fas fa-envelope"></i>
                     </a>
-
                     <a href="https://instagram.com/yourpage" target="_blank" class="icon-btn">
                         <i class="fab fa-instagram"></i>
                     </a>
-
                     <a href="https://facebook.com/yourpage" target="_blank" class="icon-btn">
                         <i class="fab fa-facebook-f"></i>
                     </a>
-
                     <a href="https://youtube.com/yourchannel" target="_blank" class="icon-btn">
                         <i class="fab fa-youtube"></i>
                     </a>
@@ -1339,538 +1277,552 @@
                     </div>
                 </div>
             </div>
-    
-    <div id="dashboardBody">
-            <div class="welcome-calendar-section">
-                <!-- Welcome Section -->
-                <div class="welcome-section fade-in">
-                    <div class="welcome-header">
-                        <div>
-                            <h2 class="welcome-title">Welcome Back, Admin!</h2>
-                            <p class="welcome-subtitle">Here's your business overview for today</p>
-                        </div>
-                        <div class="date-widget" id="date-widget">
-                            <div class="day-circle">
-                                <span class="day-number" id="current-day">19</span>
-                            </div>
-                            <div class="date-info">
-                                <span class="day-name" id="current-day-name">Tue,</span>
-                                <span class="month-name" id="current-month-year">January 2024</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="welcome-content">
-                        <div class="welcome-stats">
-                            <div class="welcome-stat">
-                                <div class="stat-number">₹42.5K</div>
-                                <div class="stat-text">Today's Revenue</div>
+            <div id="dashboardBody">
+                <div class="welcome-calendar-section">
+                    <div class="welcome-section fade-in">
+                        <div class="welcome-header">
+                            <div>
+                                <h2 class="welcome-title">Welcome Back, Admin!</h2>
+                                <p class="welcome-subtitle">Here's your business overview for today</p>
                             </div>
-                            <div class="welcome-stat">
-                                <div class="stat-number">24</div>
-                                <div class="stat-text">Pending Orders</div>
-                            </div>
-                            <div class="welcome-stat">
-                                <div class="stat-number">15</div>
-                                <div class="stat-text">New Customers</div>
-                            </div>
-                            <div class="welcome-stat">
-                                <div class="stat-number">18</div>
-                                <div class="stat-text">Messages</div>
+                            <div class="date-widget" id="date-widget">
+                                <div class="day-circle">
+                                    <span class="day-number" id="current-day"></span>
+                                </div>
+                                <div class="date-info">
+                                    <span class="day-name" id="current-day-name"></span>
+                                    <span class="month-name" id="current-month-year"></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-               <div class="orders-list" id="dashboardRecentOrders"></div>
+                        <div class="welcome-content">
+                            <div class="welcome-stats">
+                                <div class="welcome-stat">
+                                    <div class="stat-number">₹42.5K</div>
+                                    <div class="stat-text">Today's Revenue</div>
+                                </div>
+                                <div class="welcome-stat">
+                                    <div class="stat-number">24</div>
+                                    <div class="stat-text">Pending Orders</div>
+                                </div>
+                                <div class="welcome-stat">
+                                    <div class="stat-number">15</div>
+                                    <div class="stat-text">New Customers</div>
+                                </div>
+                                <div class="welcome-stat">
+                                    <div class="stat-number">18</div>
+                                    <div class="stat-text">Messages</div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Calendar Section -->
-                <div class="calendar-section">
-                    <div class="calendar-title">
-                        Calendar
-                        <button style="background: none; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: var(--gray);">
-                            <i class="fas fa-plus"></i> Add Event
-                        </button>
-                    </div>
-
-                    <div class="calendar-header">
-                        <div class="calendar-month" id="calendar-month">November 2023</div>
-                        <div class="calendar-nav">
-                            <button id="prev-month"><i class="fas fa-chevron-left"></i></button>
-                            <button id="next-month"><i class="fas fa-chevron-right"></i></button>
+                        <div class="recent-orders-section">
+                            <div class="section-title">
+                                <span>Recent Orders</span>
+                            </div>
+                            <div class="orders-list" id="dashboardRecentOrders"></div>
                         </div>
                     </div>
 
-                    <div class="calendar-weekdays">
-                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-                    </div>
-                    <div class="calendar-days" id="calendar-days"></div>
-                </div>
-            </div>
-            
-            <!-- Reviews and Activities Section (SWAPPED) -->
-            <div class="reviews-activities-section">
-                <!-- Recent Activities Section (NOW ON LEFT) -->
-                <div class="recent-activities">
-                    <div class="activities-title">
-                        Recent Activities
-                        <button style="background: none; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: var(--gray);">
-                            View All
-                        </button>
-                    </div>
+                    <div class="calendar-section">
+                        <div class="calendar-title">
+                            Calendar
+                            <button style="background: none; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: var(--gray);">
+                                <i class="fas fa-plus"></i> Add Event
+                            </button>
+                        </div>
 
-                    <div class="activities-list">
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-user-plus"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-message">15 new customers registered today</div>
-                                <div class="activity-time">1 hour ago</div>
+                        <div class="calendar-header">
+                            <div class="calendar-month" id="calendar-month">November 2023</div>
+                            <div class="calendar-nav">
+                                <button id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                                <button id="next-month"><i class="fas fa-chevron-right"></i></button>
                             </div>
                         </div>
 
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-tag"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-message">Promo code SUMMER25 activated</div>
-                                <div class="activity-time">2 hours ago</div>
-                            </div>
+                        <div class="calendar-weekdays">
+                            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
                         </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-shipping-fast"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-message">Order #ORD-7819 shipped to customer</div>
-                                <div class="activity-time">3 hours ago</div>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-comment"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-message">New message from customer #1245</div>
-                                <div class="activity-time">4 hours ago</div>
-                            </div>
-                        </div>
-
-                        <div class="activity-item">
-                            <div class="activity-icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="activity-content">
-                                <div class="activity-message">Monthly revenue target achieved</div>
-                                <div class="activity-time">5 hours ago</div>
-                            </div>
-                        </div>
+                        <div class="calendar-days" id="calendar-days"></div>
                     </div>
                 </div>
 
-                <!-- Reviews Section (NOW ON RIGHT) -->
-                <div class="reviews-section">
-                    <div class="reviews-title">
-                        Customer Reviews
-                        <button style="background: none; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: var(--gray);">
-                            View All
-                        </button>
+                <div class="reviews-activities-section">
+                    <div class="recent-activities">
+                        <div class="activities-title">
+                            Recent Activities
+                            <button style="background: none; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: var(--gray);">
+                                View All
+                            </button>
+                        </div>
+
+                        <div class="activities-list">
+                            <div class="activity-item">
+                                <div class="activity-icon"><i class="fas fa-user-plus"></i></div>
+                                <div class="activity-content">
+                                    <div class="activity-message">15 new customers registered today</div>
+                                    <div class="activity-time">1 hour ago</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon"><i class="fas fa-tag"></i></div>
+                                <div class="activity-content">
+                                    <div class="activity-message">Promo code SUMMER25 activated</div>
+                                    <div class="activity-time">2 hours ago</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon"><i class="fas fa-shipping-fast"></i></div>
+                                <div class="activity-content">
+                                    <div class="activity-message">Order #ORD-7819 shipped to customer</div>
+                                    <div class="activity-time">3 hours ago</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon"><i class="fas fa-comment"></i></div>
+                                <div class="activity-content">
+                                    <div class="activity-message">New message from customer #1245</div>
+                                    <div class="activity-time">4 hours ago</div>
+                                </div>
+                            </div>
+
+                            <div class="activity-item">
+                                <div class="activity-icon"><i class="fas fa-chart-line"></i></div>
+                                <div class="activity-content">
+                                    <div class="activity-message">Monthly revenue target achieved</div>
+                                    <div class="activity-time">5 hours ago</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="reviews-list">
-                        <div class="review-item">
-                            <div class="review-header">
-                                <div class="reviewer-info">
-                                    <div class="reviewer-avatar"><i class="fas fa-user"></i></div>
-                                    <div class="reviewer-details">
-                                        <div class="reviewer-name">Rahul Sharma</div>
-                                        <div class="review-date">2 days ago</div>
+                    <div class="reviews-section">
+                        <div class="reviews-title">
+                            Customer Reviews
+                            <button style="background: none; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: var(--gray);">
+                                View All
+                            </button>
+                        </div>
+
+                        <div class="reviews-list">
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div class="reviewer-info">
+                                        <div class="reviewer-avatar"><i class="fas fa-user"></i></div>
+                                        <div class="reviewer-details">
+                                            <div class="reviewer-name">Rahul Sharma</div>
+                                            <div class="review-date">2 days ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="review-rating">
+                                        <i class="fas fa-star star"></i>
+                                        <i class="fas fa-star star"></i>
+                                        <i class="fas fa-star star"></i>
+                                        <i class="fas fa-star star"></i>
+                                        <i class="fas fa-star star"></i>
                                     </div>
                                 </div>
-                                <div class="review-rating">
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
+                                <div class="review-content">
+                                    Excellent service and fast delivery. The product quality exceeded my expectations. Will order again!
                                 </div>
                             </div>
-                            <div class="review-content">
-                                Excellent service and fast delivery. The product quality exceeded my expectations. Will order again!
-                            </div>
-                        </div>
 
-                        <div class="review-item">
-                            <div class="review-header">
-                                <div class="reviewer-info">
-                                    <div class="reviewer-avatar"><i class="fas fa-user"></i></div>
-                                    <div class="reviewer-details">
-                                        <div class="reviewer-name">Priya Patel</div>
-                                        <div class="review-date">5 days ago</div>
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <div class="reviewer-info">
+                                        <div class="reviewer-avatar"><i class="fas fa-user"></i></div>
+                                        <div class="reviewer-details">
+                                            <div class="reviewer-name">Priya Patel</div>
+                                            <div class="review-date">5 days ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="review-rating">
+                                        <i class="fas fa-star star"></i>
+                                        <i class="fas fa-star star"></i>
+                                        <i class="fas fa-star star"></i>
+                                        <i class="fas fa-star star"></i>
+                                        <i class="far fa-star"></i>
                                     </div>
                                 </div>
-                                <div class="review-rating">
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="far fa-star"></i>
+                                <div class="review-content">
+                                    Good product overall, but the packaging could be improved.
                                 </div>
-                            </div>
-                            <div class="review-content">
-                                Good product overall, but the packaging could be improved.
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-</div>
-<div id="dynamicPage"></div>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+            <div id="dynamicPage"></div>
+        </div>
+    </div>
 
-<script>
-var firebaseConfig = {
-    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
-    projectId: "hexahoney-96aed",
-    storageBucket: "hexahoney-96aed.firebasestorage.app",
-    messagingSenderId: "700458850837",
-    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-    measurementId: "G-MQGKK9709H"
-};
-const dynamicPage = document.getElementById("dynamicPage");
-dynamicPage.style.display = "none";
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-firebase.initializeApp(firebaseConfig);
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+            authDomain: "hexahoney-96aed.firebaseapp.com",
+            projectId: "hexahoney-96aed",
+            storageBucket: "hexahoney-96aed.firebasestorage.app",
+            messagingSenderId: "700458850837",
+            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+            measurementId: "G-MQGKK9709H"
+        };
 
-// IMPORTANT: expose it globally for fragment scripts
-window.db = firebase.firestore();
-
-function loadMessagesPage() {
-    const dynamic = document.getElementById("dynamicPage");
-    const dashboard = document.getElementById("dashboardBody");
-
-    // Hide dashboard, show messages page
-    dashboard.style.display = "none";
-    dynamic.style.display = "block";
-    dynamic.style.width = "100%";
-
-    fetch("contact-submissions.html")
-        .then(r => r.text())
-        .then(html => {
-            dynamic.innerHTML = html;
-
-            const scripts = [...dynamic.querySelectorAll("script")];
-            scripts.forEach(s => {
-                const tag = document.createElement("script");
-                if (s.src) {
-                    tag.src = s.src + "?v=" + Date.now();
-                } else {
-                    tag.textContent = s.textContent;
-                }
-dynamic.appendChild(tag);
-                s.remove();
-            });
-        })
-        .catch(err => {
-            dynamic.innerHTML = "Failed to load Messages page";
-        });
-}
-
-function loadPromoPage() {
-    const dynamic = document.getElementById("dynamicPage");
-    const dashboard = document.getElementById("dashboardBody");
-
-    // Hide dashboard, show promo page
-    dashboard.style.display = "none";
-    dynamic.style.display = "block";
-    dynamic.style.width = "100%";
-
-    fetch("promo-codes.html")
-        .then(r => r.text())
-        .then(html => {
-            dynamic.innerHTML = html;
-
-            const scripts = [...dynamic.querySelectorAll("script")];
-            scripts.forEach(s => {
-                const tag = document.createElement("script");
-                if (s.src) {
-                    tag.src = s.src + "?v=" + Date.now();
-                } else {
-                    tag.textContent = s.textContent;
-                }
-                document.body.appendChild(tag);
-                s.remove();
-            });
-        })
-        .catch(err => {
-            dynamic.innerHTML = "Failed to load Promo Codes page";
-        });
-}
-
-function loadOrdersPage() {
-    const dynamic = document.getElementById("dynamicPage");
-    const dashboard = document.getElementById("dashboardBody");
-
-    dashboard.style.display = "none";
-    dynamic.style.display = "block";
-    dynamic.style.width = "100%";
-
-    fetch("orders.html")
-        .then(r => r.text())
-        .then(html => {
-            dynamic.innerHTML = html;
-
-            const scripts = [...dynamic.querySelectorAll("script")];
-            scripts.forEach(s => {
-                const tag = document.createElement("script");
-                if (s.src) {
-                    tag.src = s.src + "?v=" + Date.now();
-                } else {
-                    tag.textContent = s.textContent;
-                }
-                document.body.appendChild(tag);
-                s.remove();
-            });
-        })
-        .catch(err => {
-            dynamic.innerHTML = "Failed to load Orders page";
-        });
-}
-
-function loadCustomersPage() {
-    const dynamic = document.getElementById("dynamicPage");
-    const dashboard = document.getElementById("dashboardBody");
-
-    dashboard.style.display = "none";
-    dynamic.style.display = "block";
-    dynamic.style.width = "100%";
-
-    fetch("customers.html")
-        .then(r => r.text())
-        .then(html => {
-            dynamic.innerHTML = html;
-
-            const scripts = [...dynamic.querySelectorAll("script")];
-            scripts.forEach(s => {
-                const tag = document.createElement("script");
-                if (s.src) {
-                    tag.src = s.src + "?v=" + Date.now();
-                } else {
-                    tag.textContent = s.textContent;
-                }
-                document.body.appendChild(tag);
-                s.remove();
-            });
-        })
-        .catch(err => {
-            dynamic.innerHTML = "Failed to load Customers page";
-            console.error("Error loading customers page:", err);
-        });
-}
-
-
-function showDashboard() {
-    const dynamic = document.getElementById("dynamicPage");
-    const dashboard = document.getElementById("dashboardBody");
-
-    // Show dashboard, hide dynamic page
-    dashboard.style.display = "block";
-    dynamic.style.display = "none";
-    dynamic.innerHTML = "";
-}
-
-function initDashboard() {
-    setupEventListeners();
-    updateDateWidget();
-    initCalendar();
-    loadDashboardRecentOrders();
-    setupMobileMenu();
-    
-    // Ensure dynamic page is hidden initially
-    const dynamicPage = document.getElementById("dynamicPage");
-    if (dynamicPage) {
+        const dynamicPage = document.getElementById("dynamicPage");
         dynamicPage.style.display = "none";
-    }
-}
 
-function setupEventListeners() {
-    const menuItems = document.querySelectorAll('.menu-item');
-    menuItems.forEach(item => {
-        item.addEventListener('click', function () {
-            const menuText = this.querySelector('.menu-text').textContent;
-            
-            menuItems.forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Handle navigation based on menu item
-            switch(menuText) {
-                case 'Dashboard':
-                    showDashboard();
-                    break;
-                case 'Messages':
-                    loadMessagesPage();
-                    break;
-                case 'Promo Codes':
-                    loadPromoPage();
-                    break;
-                case 'Orders':
-                    loadOrdersPage();
-                    break;
-                case 'Customers':
-                    loadCustomersPage(); // This is the important line
-                    break;
-                default:
-                    showDashboard();
-                    break;
-            }
-            
-            if (window.innerWidth <= 992) closeMobileMenu();
-        });
-    });
-    
+        firebase.initializeApp(firebaseConfig);
+        window.db = firebase.firestore();
 
-    document.getElementById('prev-month').addEventListener('click', function () {
-        currentMonth--;
-        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-        renderCalendar(currentMonth, currentYear);
-    });
+        function loadMessagesPage() {
+            const dynamic = document.getElementById("dynamicPage");
+            const dashboard = document.getElementById("dashboardBody");
 
-    document.getElementById('next-month').addEventListener('click', function () {
-        currentMonth++;
-        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-        renderCalendar(currentMonth, currentYear);
-    });
-}
+            dashboard.style.display = "none";
+            dynamic.style.display = "block";
+            dynamic.style.width = "100%";
 
-async function loadDashboardRecentOrders() {
-    const list = document.getElementById("dashboardRecentOrders");
-    list.innerHTML = "Loading...";
+            fetch("contact-submissions.html")
+                .then(r => r.text())
+                .then(html => {
+                    dynamic.innerHTML = html;
+                    const scripts = [...dynamic.querySelectorAll("script")];
+                    scripts.forEach(s => {
+                        const tag = document.createElement("script");
+                        if (s.src) {
+                            tag.src = s.src + "?v=" + Date.now();
+                        } else {
+                            tag.textContent = s.textContent;
+                        }
+                        dynamic.appendChild(tag);
+                        s.remove();
+                    });
+                })
+                .catch(err => {
+                    dynamic.innerHTML = "Failed to load Messages page";
+                });
+        }
 
-    try {
-        db.collection("orders")
-            .orderBy("createdAt", "desc")
-            .limit(5)
-            .onSnapshot(snapshot => {
+        function loadPromoPage() {
+            const dynamic = document.getElementById("dynamicPage");
+            const dashboard = document.getElementById("dashboardBody");
 
-                if (snapshot.empty) {
-                    list.innerHTML = "<p>No recent orders.</p>";
-                    return;
-                }
+            dashboard.style.display = "none";
+            dynamic.style.display = "block";
+            dynamic.style.width = "100%";
 
-                list.innerHTML = "";
+            fetch("promo-codes.html")
+                .then(r => r.text())
+                .then(html => {
+                    dynamic.innerHTML = html;
 
-                snapshot.forEach(doc => {
-                    const o = doc.data();
-                    const div = document.createElement("div");
-                    div.className = "order-item fade-in";
+                    const scripts = [...dynamic.querySelectorAll("script")];
+                    scripts.forEach(s => {
+                        const tag = document.createElement("script");
+                        if (s.src) {
+                            tag.src = s.src + "?v=" + Date.now();
+                        } else {
+                            tag.textContent = s.textContent;
+                        }
+                        document.body.appendChild(tag);
+                        s.remove();
+                    });
+                })
+                .catch(err => {
+                    dynamic.innerHTML = "Failed to load Promo Codes page";
+                });
+        }
 
-                    div.innerHTML = `
-                        <div class="order-info">
-                            <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                            <div class="order-details">
-                                <div class="order-id">#${doc.id.substring(0, 8)}</div>
-                                <div class="order-amount">₹${o.total || 0}</div>
-                            </div>
-                        </div>
-                        <div class="order-status ${statusClass(o.status)}">${o.status || "Pending"}</div>
-                    `;
+        function loadOrdersPage() {
+            const dynamic = document.getElementById("dynamicPage");
+            const dashboard = document.getElementById("dashboardBody");
 
-                    list.appendChild(div);
+            dashboard.style.display = "none";
+            dynamic.style.display = "block";
+            dynamic.style.width = "100%";
+
+            fetch("orders.html")
+                .then(r => r.text())
+                .then(html => {
+                    dynamic.innerHTML = html;
+
+                    const scripts = [...dynamic.querySelectorAll("script")];
+                    scripts.forEach(s => {
+                        const tag = document.createElement("script");
+                        if (s.src) {
+                            tag.src = s.src + "?v=" + Date.now();
+                        } else {
+                            tag.textContent = s.textContent;
+                        }
+                        document.body.appendChild(tag);
+                        s.remove();
+                    });
+                })
+                .catch(err => {
+                    dynamic.innerHTML = "Failed to load Orders page";
+                });
+        }
+
+        function loadCustomersPage() {
+            const dynamic = document.getElementById("dynamicPage");
+            const dashboard = document.getElementById("dashboardBody");
+
+            dashboard.style.display = "none";
+            dynamic.style.display = "block";
+            dynamic.style.width = "100%";
+
+            fetch("customers.html")
+                .then(r => r.text())
+                .then(html => {
+                    dynamic.innerHTML = html;
+
+                    const scripts = [...dynamic.querySelectorAll("script")];
+                    scripts.forEach(s => {
+                        const tag = document.createElement("script");
+                        if (s.src) {
+                            tag.src = s.src + "?v=" + Date.now();
+                        } else {
+                            tag.textContent = s.textContent;
+                        }
+                        document.body.appendChild(tag);
+                        s.remove();
+                    });
+                })
+                .catch(err => {
+                    dynamic.innerHTML = "Failed to load Customers page";
+                    console.error("Error loading customers page:", err);
+                });
+        }
+
+        function showDashboard() {
+            const dynamic = document.getElementById("dynamicPage");
+            const dashboard = document.getElementById("dashboardBody");
+
+            dashboard.style.display = "block";
+            dynamic.style.display = "none";
+            dynamic.innerHTML = "";
+        }
+
+        function initDashboard() {
+            setupEventListeners();
+            updateDateWidget();
+            initCalendar();
+            loadDashboardRecentOrders();
+            setupMobileMenu();
+
+            const dynamicPage = document.getElementById("dynamicPage");
+            if (dynamicPage) dynamicPage.style.display = "none";
+        }
+
+        function setupEventListeners() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    const menuText = this.querySelector('.menu-text').textContent.trim();
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+
+                    switch(menuText) {
+                        case 'Dashboard':
+                            showDashboard();
+                            break;
+                        case 'Messages':
+                            loadMessagesPage();
+                            break;
+                        case 'Promo Codes':
+                            loadPromoPage();
+                            break;
+                        case 'Orders':
+                            loadOrdersPage();
+                            break;
+                        case 'Customers':
+                            loadCustomersPage();
+                            break;
+                        default:
+                            showDashboard();
+                            break;
+                    }
+
+                    if (window.innerWidth <= 992) closeMobileMenu();
                 });
             });
 
-    } catch (e) {
-        list.innerHTML = "Failed to load orders.";
-    }
-}
+            document.getElementById('prev-month').addEventListener('click', function () {
+                currentMonth--;
+                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                renderCalendar(currentMonth, currentYear);
+            });
 
-function statusClass(s) {
-    const map = {
-        pending: "status-pending",
-        confirmed: "status-processing",
-        shipped: "status-shipped",
-        delivered: "status-delivered",
-        cancelled: "status-cancelled"
-    };
-    return map[(s || "").toLowerCase()] || "status-pending";
-}
-
-
-function setupMobileMenu() {
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-    sidebarOverlay.addEventListener('click', closeMobileMenu);
-}
-
-function toggleMobileMenu() {
-    document.getElementById('sidebar').classList.toggle('active');
-    document.getElementById('sidebarOverlay').classList.toggle('active');
-}
-
-function closeMobileMenu() {
-    document.getElementById('sidebar').classList.remove('active');
-    document.getElementById('sidebarOverlay').classList.remove('active');
-}
-
-function updateDateWidget() {
-    const now = new Date();
-    document.getElementById('current-day').textContent = now.getDate();
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    document.getElementById('current-day-name').textContent = dayNames[now.getDay()] + ",";
-    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    document.getElementById('current-month-year').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-}
-
-let currentDate = new Date();
-let currentMonth = currentDate.getMonth();
-let currentYear = currentDate.getFullYear();
-
-function initCalendar() {
-    renderCalendar(currentMonth, currentYear);
-}
-
-function renderCalendar(month, year) {
-    const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
-
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
-    const calendarDays = document.getElementById('calendar-days');
-    calendarDays.innerHTML = '';
-
-    for (let i = firstDay - 1; i >= 0; i--) {
-        const d = document.createElement('div');
-        d.className = 'calendar-day other-month';
-        d.textContent = daysInPrevMonth - i;
-        calendarDays.appendChild(d);
-    }
-
-    const today = new Date();
-    for (let i = 1; i <= daysInMonth; i++) {
-        const d = document.createElement('div');
-        d.className = 'calendar-day';
-        d.textContent = i;
-        if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-            d.classList.add('today');
+            document.getElementById('next-month').addEventListener('click', function () {
+                currentMonth++;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                renderCalendar(currentMonth, currentYear);
+            });
         }
-        calendarDays.appendChild(d);
-    }
 
-    const totalCells = 42;
-    const remaining = totalCells - (firstDay + daysInMonth);
-    for (let i = 1; i <= remaining; i++) {
-        const d = document.createElement('div');
-        d.className = 'calendar-day other-month';
-        d.textContent = i;
-        calendarDays.appendChild(d);
-    }
+function renderDashboardEmptyOrders(list) {
+    list.innerHTML = "";
+
+    const div = document.createElement("div");
+    div.className = "order-item order-item-empty fade-in";
+    div.style.width = "100%";
+    div.style.minWidth = "100%";
+    div.style.textAlign = "center";
+    div.style.padding = "25px";
+
+    div.innerHTML = `
+        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">
+            No orders yet
+        </div>
+        <div style="font-size: 0.9rem; color: #666;">
+            New orders will appear here as soon as they are placed.
+        </div>
+    `;
+
+    list.appendChild(div);
 }
 
-document.addEventListener('DOMContentLoaded', initDashboard);
+        async function loadDashboardRecentOrders() {
+            const list = document.getElementById("dashboardRecentOrders");
+            if (!list) return;
 
-</script>
+            renderDashboardEmptyOrders(list);
+
+            try {
+                db.collection("orders")
+                    .orderBy("createdAt", "desc")
+                    .limit(5)
+                    .onSnapshot(snapshot => {
+                        if (snapshot.empty) {
+                            renderDashboardEmptyOrders(list);
+                            return;
+                        }
+
+                        list.innerHTML = "";
+
+                        snapshot.forEach(doc => {
+                            const o = doc.data();
+                            const div = document.createElement("div");
+                            div.className = "order-item fade-in";
+
+                            const total = Number(o.total || 0).toFixed(2);
+                            const status = (o.status || "pending").toLowerCase();
+                            const label = status.charAt(0).toUpperCase() + status.slice(1);
+
+                            div.innerHTML = `
+                                <div class="order-info">
+                                    <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
+                                    <div class="order-details">
+                                        <div class="order-id">#${doc.id.substring(0, 8)}</div>
+                                        <div class="order-amount">₹${total}</div>
+                                    </div>
+                                </div>
+                                <div class="order-status ${statusClass(status)}">${label}</div>
+                            `;
+
+                            list.appendChild(div);
+                        });
+                    });
+
+            } catch (e) {
+                renderDashboardEmptyOrders(list);
+            }
+        }
+
+        function statusClass(s) {
+            const map = {
+                pending: "status-pending",
+                confirmed: "status-confirmed",
+                shipped: "status-shipped",
+                delivered: "status-delivered",
+                cancelled: "status-cancelled",
+                processing: "status-processing"
+            };
+            return map[s] || "status-pending";
+        }
+
+        function setupMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            sidebarOverlay.addEventListener('click', closeMobileMenu);
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function closeMobileMenu() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+        }
+
+        function updateDateWidget() {
+            const now = new Date();
+            document.getElementById('current-day').textContent = now.getDate();
+            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            document.getElementById('current-day-name').textContent = dayNames[now.getDay()] + ",";
+            const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            document.getElementById('current-month-year').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+        }
+
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+
+        function initCalendar() {
+            renderCalendar(currentMonth, currentYear);
+        }
+
+        function renderCalendar(month, year) {
+            const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+            document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            const calendarDays = document.getElementById('calendar-days');
+            calendarDays.innerHTML = '';
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const d = document.createElement('div');
+                d.className = 'calendar-day other-month';
+                d.textContent = daysInPrevMonth - i;
+                calendarDays.appendChild(d);
+            }
+
+            const today = new Date();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const d = document.createElement('div');
+                d.className = 'calendar-day';
+                d.textContent = i;
+                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                    d.classList.add('today');
+                }
+                calendarDays.appendChild(d);
+            }
+
+            const totalCells = 42;
+            const remaining = totalCells - (firstDay + daysInMonth);
+            for (let i = 1; i <= remaining; i++) {
+                const d = document.createElement('div');
+                d.className = 'calendar-day other-month';
+                d.textContent = i;
+                calendarDays.appendChild(d);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
 </body>
 </html>
