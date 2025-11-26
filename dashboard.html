@@ -1381,73 +1381,9 @@
                         </div>
                     </div>
 
-                    <!-- RECENT ORDERS MOVED INSIDE WELCOME SECTION -->
-                    <div class="recent-orders-section" style="margin-top: 25px;">
-                        <div class="section-title">
-                            Recent Orders
-                            <button style="background: none; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; color: var(--gray);">
-                                View All
-                            </button>
-                        </div>
-
-                        <div class="orders-list">
-                            <div class="order-item fade-in">
-                                <div class="order-info">
-                                    <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                                    <div class="order-details">
-                                        <div class="order-id">#ORD-7819</div>
-                                        <div class="order-amount">₹8,499</div>
-                                    </div>
-                                </div>
-                                <div class="order-status status-shipped">Shipped</div>
-                            </div>
-
-                            <div class="order-item fade-in delay-1">
-                                <div class="order-info">
-                                    <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                                    <div class="order-details">
-                                        <div class="order-id">#ORD-7820</div>
-                                        <div class="order-amount">₹12,299</div>
-                                    </div>
-                                </div>
-                                <div class="order-status status-processing">Processing</div>
-                            </div>
-
-                            <div class="order-item fade-in delay-2">
-                                <div class="order-info">
-                                    <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                                    <div class="order-details">
-                                        <div class="order-id">#ORD-7821</div>
-                                        <div class="order-amount">₹5,799</div>
-                                    </div>
-                                </div>
-                                <div class="order-status status-pending">Pending</div>
-                            </div>
-
-                            <div class="order-item fade-in delay-3">
-                                <div class="order-info">
-                                    <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                                    <div class="order-details">
-                                        <div class="order-id">#ORD-7822</div>
-                                        <div class="order-amount">₹9,999</div>
-                                    </div>
-                                </div>
-                                <div class="order-status status-delivered">Delivered</div>
-                            </div>
-                            
-                            <div class="order-item fade-in delay-3">
-                                <div class="order-info">
-                                    <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                                    <div class="order-details">
-                                        <div class="order-id">#ORD-7823</div>
-                                        <div class="order-amount">₹7,499</div>
-                                    </div>
-                                </div>
-                                <div class="order-status status-delivered">Delivered</div>
-                            </div>
+               <div class="orders-list" id="dashboardRecentOrders"></div>
                         </div>
                     </div>
-                    <!-- END RECENT ORDERS INSIDE WELCOME -->
                 </div>
 
                 <!-- Calendar Section -->
@@ -1748,6 +1684,7 @@ function initDashboard() {
     setupEventListeners();
     updateDateWidget();
     initCalendar();
+    loadDashboardRecentOrders();
     setupMobileMenu();
     
     // Ensure dynamic page is hidden initially
@@ -1805,6 +1742,60 @@ function setupEventListeners() {
         renderCalendar(currentMonth, currentYear);
     });
 }
+
+async function loadDashboardRecentOrders() {
+    const list = document.getElementById("dashboardRecentOrders");
+    list.innerHTML = "Loading...";
+
+    try {
+        db.collection("orders")
+            .orderBy("createdAt", "desc")
+            .limit(5)
+            .onSnapshot(snapshot => {
+
+                if (snapshot.empty) {
+                    list.innerHTML = "<p>No recent orders.</p>";
+                    return;
+                }
+
+                list.innerHTML = "";
+
+                snapshot.forEach(doc => {
+                    const o = doc.data();
+                    const div = document.createElement("div");
+                    div.className = "order-item fade-in";
+
+                    div.innerHTML = `
+                        <div class="order-info">
+                            <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
+                            <div class="order-details">
+                                <div class="order-id">#${doc.id.substring(0, 8)}</div>
+                                <div class="order-amount">₹${o.total || 0}</div>
+                            </div>
+                        </div>
+                        <div class="order-status ${statusClass(o.status)}">${o.status || "Pending"}</div>
+                    `;
+
+                    list.appendChild(div);
+                });
+            });
+
+    } catch (e) {
+        list.innerHTML = "Failed to load orders.";
+    }
+}
+
+function statusClass(s) {
+    const map = {
+        pending: "status-pending",
+        confirmed: "status-processing",
+        shipped: "status-shipped",
+        delivered: "status-delivered",
+        cancelled: "status-cancelled"
+    };
+    return map[(s || "").toLowerCase()] || "status-pending";
+}
+
 
 function setupMobileMenu() {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
