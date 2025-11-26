@@ -1525,61 +1525,142 @@
             });
     }
     
-    function updateMonthlyRevenueMetric() {
-    const targetValue = document.querySelector('.metric-row:nth-child(1) .metric-value');
-    const targetChange = document.querySelector('.metric-row:nth-child(1) .metric-change');
-
-    if (!targetValue || !targetChange) return;
-
-    const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-
-    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthEnd   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+function updateMonthlyRevenueMetric() {
+    const valueEl = document.querySelector('.metric-row:nth-child(1) .metric-value');
+    const changeEl = document.querySelector('.metric-row:nth-child(1) .metric-change');
 
     Promise.all([
         db.collection("orders")
-            .where("createdAt", ">=", currentMonthStart)
-            .where("createdAt", "<=", currentMonthEnd)
-            .get(),
+          .where("createdAt", ">=", CUR.start)
+          .where("createdAt", "<=", CUR.end)
+          .get(),
         db.collection("orders")
-            .where("createdAt", ">=", prevMonthStart)
-            .where("createdAt", "<=", prevMonthEnd)
-            .get()
+          .where("createdAt", ">=", PREV.start)
+          .where("createdAt", "<=", PREV.end)
+          .get()
     ]).then(([curSnap, prevSnap]) => {
 
-        let curTotal = 0;
+        let curTotal = 0, prevTotal = 0;
         curSnap.forEach(d => curTotal += Number(d.data().total || 0));
-
-        let prevTotal = 0;
         prevSnap.forEach(d => prevTotal += Number(d.data().total || 0));
 
-        targetValue.textContent = "₹" + curTotal.toFixed(2);
+        valueEl.textContent = "₹" + curTotal.toFixed(2);
 
-        let diff = curTotal - prevTotal;
-        let percent = prevTotal === 0 ? 100 : (diff / prevTotal * 100);
-
-        if (percent >= 0) {
-            targetChange.innerHTML = `<i class="fas fa-arrow-up"></i> ${percent.toFixed(1)}%`;
-            targetChange.style.color = "green";
+        const pct = calcPercentChange(curTotal, prevTotal);
+        if (pct >= 0) {
+            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+            changeEl.style.color = "green";
         } else {
-            targetChange.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(percent).toFixed(1)}%`;
-            targetChange.style.color = "red";
+            changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+            changeEl.style.color = "red";
         }
     });
 }
 
 
 function updateTotalCustomersMetric() {
-    const targetValue = document.querySelector('.metric-row:nth-child(2) .metric-value');
-    if (!targetValue) return;
+    const valueEl = document.querySelector('.metric-row:nth-child(2) .metric-value');
+    const changeEl = document.querySelector('.metric-row:nth-child(2) .metric-change');
 
-    db.collection("users").where("isActive", "==", true)
-        .onSnapshot(snap => {
-            targetValue.textContent = snap.size;
-        });
+    Promise.all([
+        db.collection("users").get(),  // all time
+        db.collection("users")
+          .where("createdAt", ">=", CUR.start)
+          .where("createdAt", "<=", CUR.end)
+          .get(),
+        db.collection("users")
+          .where("createdAt", ">=", PREV.start)
+          .where("createdAt", "<=", PREV.end)
+          .get()
+    ]).then(([allSnap, curSnap, prevSnap]) => {
+
+        const allCount = allSnap.size;
+        const curCount = curSnap.size;
+        const prevCount = prevSnap.size;
+
+        valueEl.textContent = allCount;
+
+        const pct = calcPercentChange(curCount, prevCount);
+
+        if (pct >= 0) {
+            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+            changeEl.style.color = "green";
+        } else {
+            changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+            changeEl.style.color = "red";
+        }
+    });
 }
+
+function updateTotalOrdersMetric() {
+    const valueEl = document.querySelector('.metric-row:nth-child(3) .metric-value');
+    const changeEl = document.querySelector('.metric-row:nth-child(3) .metric-change');
+
+    Promise.all([
+        db.collection("orders").get(),  // all time
+        db.collection("orders")
+          .where("createdAt", ">=", CUR.start)
+          .where("createdAt", "<=", CUR.end)
+          .get(),
+        db.collection("orders")
+          .where("createdAt", ">=", PREV.start)
+          .where("createdAt", "<=", PREV.end)
+          .get()
+    ]).then(([allSnap, curSnap, prevSnap]) => {
+
+        const allCount = allSnap.size;
+        const curCount = curSnap.size;
+        const prevCount = prevSnap.size;
+
+        valueEl.textContent = allCount;
+
+        const pct = calcPercentChange(curCount, prevCount);
+
+        if (pct >= 0) {
+            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+            changeEl.style.color = "green";
+        } else {
+            changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+            changeEl.style.color = "red";
+        }
+    });
+}
+
+
+function updateTotalMessagesMetric() {
+    const valueEl = document.querySelector('.metric-row:nth-child(4) .metric-value');
+    const changeEl = document.querySelector('.metric-row:nth-child(4) .metric-change');
+
+    Promise.all([
+        db.collection("contactSubmissions").get(), // all time
+        db.collection("contactSubmissions")
+          .where("timestamp", ">=", CUR.start)
+          .where("timestamp", "<=", CUR.end)
+          .get(),
+        db.collection("contactSubmissions")
+          .where("timestamp", ">=", PREV.start)
+          .where("timestamp", "<=", PREV.end)
+          .get()
+    ]).then(([allSnap, curSnap, prevSnap]) => {
+
+        const allCount = allSnap.size;
+        const curCount = curSnap.size;
+        const prevCount = prevSnap.size;
+
+        valueEl.textContent = allCount;
+
+        const pct = calcPercentChange(curCount, prevCount);
+
+        if (pct >= 0) {
+            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+            changeEl.style.color = "green";
+        } else {
+            changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+            changeEl.style.color = "red";
+        }
+    });
+}
+
 
 function updateTotalOrdersTodayMetric() {
     const targetValue = document.querySelector('.metric-row:nth-child(3) .metric-value');
@@ -1796,6 +1877,23 @@ function updateTotalMessagesTodayMetric() {
                 console.error("Error loading customers page:", err);
             });
     }
+    
+    function getMonthRange(year, month) {
+    const start = new Date(year, month, 1, 0, 0, 0);
+    const end   = new Date(year, month + 1, 0, 23, 59, 59);
+    return { start, end };
+}
+
+// Calculates percentage movement between two values
+function calcPercentChange(current, previous) {
+    if (previous === 0) return 100;
+    return ((current - previous) / previous) * 100;
+}
+
+const now = new Date();
+const CUR = getMonthRange(now.getFullYear(), now.getMonth());
+const PREV = getMonthRange(now.getFullYear(), now.getMonth() - 1);
+
 
     function showDashboard() {
         const dynamic = document.getElementById("dynamicPage");
@@ -1812,10 +1910,13 @@ function updateTotalMessagesTodayMetric() {
         initCalendar();
         loadDashboardRecentOrders();
         setupMobileMenu();
-        updateMonthlyRevenueMetric();
-updateTotalCustomersMetric();
 updateTotalOrdersTodayMetric();
 updateTotalMessagesTodayMetric();
+updateMonthlyRevenueMetric();
+updateTotalCustomersMetric();
+updateTotalOrdersMetric();
+updateTotalMessagesMetric();
+
 
 
         // live pending orders
