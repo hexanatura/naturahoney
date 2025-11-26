@@ -1524,6 +1524,92 @@
                 dynamic.innerHTML = "Failed to load Messages page";
             });
     }
+    
+    function updateMonthlyRevenueMetric() {
+    const targetValue = document.querySelector('.metric-row:nth-child(1) .metric-value');
+    const targetChange = document.querySelector('.metric-row:nth-child(1) .metric-change');
+
+    if (!targetValue || !targetChange) return;
+
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthEnd   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+    Promise.all([
+        db.collection("orders")
+            .where("createdAt", ">=", currentMonthStart)
+            .where("createdAt", "<=", currentMonthEnd)
+            .get(),
+        db.collection("orders")
+            .where("createdAt", ">=", prevMonthStart)
+            .where("createdAt", "<=", prevMonthEnd)
+            .get()
+    ]).then(([curSnap, prevSnap]) => {
+
+        let curTotal = 0;
+        curSnap.forEach(d => curTotal += Number(d.data().total || 0));
+
+        let prevTotal = 0;
+        prevSnap.forEach(d => prevTotal += Number(d.data().total || 0));
+
+        targetValue.textContent = "₹" + curTotal.toFixed(2);
+
+        let diff = curTotal - prevTotal;
+        let percent = prevTotal === 0 ? 100 : (diff / prevTotal * 100);
+
+        if (percent >= 0) {
+            targetChange.innerHTML = `<i class="fas fa-arrow-up"></i> ${percent.toFixed(1)}%`;
+            targetChange.style.color = "green";
+        } else {
+            targetChange.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(percent).toFixed(1)}%`;
+            targetChange.style.color = "red";
+        }
+    });
+}
+
+
+function updateTotalCustomersMetric() {
+    const targetValue = document.querySelector('.metric-row:nth-child(2) .metric-value');
+    if (!targetValue) return;
+
+    db.collection("users").where("isActive", "==", true)
+        .onSnapshot(snap => {
+            targetValue.textContent = snap.size;
+        });
+}
+
+function updateTotalOrdersTodayMetric() {
+    const targetValue = document.querySelector('.metric-row:nth-child(3) .metric-value');
+    if (!targetValue) return;
+
+    const { start, end } = getDayRange(new Date());
+
+    db.collection("orders")
+        .where("createdAt", ">=", start)
+        .where("createdAt", "<=", end)
+        .onSnapshot(snap => {
+            targetValue.textContent = snap.size;
+        });
+}
+
+function updateTotalMessagesTodayMetric() {
+    const targetValue = document.querySelector('.metric-row:nth-child(4) .metric-value');
+    if (!targetValue) return;
+
+    const { start, end } = getDayRange(new Date());
+
+    db.collection("contactSubmissions")
+        .where("timestamp", ">=", start)
+        .where("timestamp", "<=", end)
+        .onSnapshot(snap => {
+            targetValue.textContent = snap.size;
+        });
+}
+
+
 
     function loadPromoPage() {
         const dynamic = document.getElementById("dynamicPage");
@@ -1584,8 +1670,6 @@
                 dynamic.innerHTML = "Failed to load Orders page";
             });
     }
-
-    // ---------- DASHBOARD STAT HELPERS (DATE-BASED) ----------
 
     // currently selected date for stats (default: today)
     let selectedDate = new Date();
@@ -1728,6 +1812,11 @@
         initCalendar();
         loadDashboardRecentOrders();
         setupMobileMenu();
+        updateMonthlyRevenueMetric();
+updateTotalCustomersMetric();
+updateTotalOrdersTodayMetric();
+updateTotalMessagesTodayMetric();
+
 
         // live pending orders
         updatePendingOrdersCount();
