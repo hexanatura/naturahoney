@@ -1584,6 +1584,18 @@
                     dynamic.innerHTML = "Failed to load Orders page";
                 });
         }
+        
+        function updatePendingOrdersCount() {
+    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
+    if (!target) return;
+
+    db.collection("orders")
+      .where("status", "==", "pending")
+      .onSnapshot(snapshot => {
+          target.textContent = snapshot.size;
+      });
+}
+
 
         function loadCustomersPage() {
             const dynamic = document.getElementById("dynamicPage");
@@ -1631,6 +1643,7 @@
             initCalendar();
             loadDashboardRecentOrders();
             setupMobileMenu();
+                updatePendingOrdersCount();
 
             const dynamicPage = document.getElementById("dynamicPage");
             if (dynamicPage) dynamicPage.style.display = "none";
