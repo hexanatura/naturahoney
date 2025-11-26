@@ -1,492 +1,131 @@
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-
-<style>
-:root {
-  --primary: #000000;
-  --secondary: #ffffff;
-  --accent: #888888<script>
-// STRICT FIREBASE INIT
-const firebaseConfig = {
-  apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-  authDomain: "hexahoney-96aed.firebaseapp.com",
-  projectId: "hexahoney-96aed",
-  storageBucket: "hexahoney-96aed.firebasestorage.app",
-  messagingSenderId: "700458850837",
-  appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-  measurementId: "G-MQGKK9709H"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// DOM SHORTCUTS
-const tbody = document.getElementById("orders-tbody");
-const cards = document.getElementById("orders-cards");
-const modalBg = document.getElementById("modal-bg");
-const modalBody = document.getElementById("modal-body");
-const modalClose = document.getElementById("modal-close");
-const modalCancel = document.getElementById("modal-cancel");
-const modalSave = document.getElementById("modal-save");
-const toast = document.getElementById("toast");
-const toastMsg = document.getElementById("toast-msg");
-
-let orders = [];
-let filteredOrders = [];
-let currentEditId = null;
-
-/* TOAST */
-function showToast(msg){
-  toastMsg.textContent = msg;
-  toast.classList.add("show");
-  setTimeout(()=> toast.classList.remove("show"), 2200);
-}
-const shortId = id => id ? id.substring(0, 8) : "—";
-const fmtDate = d => {
-  if (!d) return "N/A";
-  const dt = d.toDate ? d.toDate() : new Date(d);
-  return dt.toLocaleDateString();
-};
-const statusClass = s => "status-" + (s || "pending");
 
 
-/* ---------------------------------------------------
-   FIXED LOADING FUNCTION (NEVER BREAKS)
-----------------------------------------------------*/
-function loadOrders() {
-  tbody.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 
-  // Try safe ordered query first
-  db.collection("orders")
-    .orderBy("createdAt", "desc")
-    .onSnapshot(
-      snapshot => handleSnapshot(snapshot),
-      err => {
-        console.warn("OrderBy failed. Falling back to unordered query.", err);
+  <style>
+    :root {
+            --primary: #000000;
+            --secondary: #ffffff;
+            --accent: #888888;
+            --dark: #000000;
+            --light: #f5f5f5;
+            --gray: #666666;
+            --border: #e0e0e0;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
 
-        // Second attempt WITHOUT orderBy (works even if createdAt is invalid)
-        db.collection("orders").onSnapshot(
-          snapshot => handleSnapshot(snapshot),
-          err2 => {
-            console.error("FAILED LOADING ORDERS:", err2);
-            renderEmpty();
-          }
-        );
-      }
-    );
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* ---------------------------------------------------
-   HANDLE SNAPSHOT (VALID FOR BOTH FALLBACK & NORMAL)
-----------------------------------------------------*/
-function handleSnapshot(snapshot) {
-  orders = [];
-
-  snapshot.forEach(doc => {
-    orders.push({
-      id: doc.id,
-      ...doc.data()
-    });
-  });
-
-  // Sort manually if createdAt exists
-  orders.sort((a, b) => {
-    const da = a.createdAt?.toDate?.() || new Date(0);
-    const db = b.createdAt?.toDate?.() || new Date(0);
-    return db - da;
-  });
-
-  applyFilters();
-}
-
-/* EMPTY UI */
-function renderEmpty(){
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="7">
-        <div class="empty-state">
-          <i class="fas fa-shopping-bag"></i>
-          <p>No orders found</p>
-        </div>
-      </td>
-    </tr>`;
-  cards.innerHTML = `<div class="order-card"><div class="muted">No orders</div></div>`;
-}
-
-
-/* TABLE RENDER */
-function renderTable(list){
-  if(!list.length){ renderEmpty(); return; }
-
-  tbody.innerHTML = list.map(o=>{
-    const name = ((o.shippingAddress?.firstName || "") +
-                   " " +
-                   (o.shippingAddress?.lastName || "")).trim()
-                 || o.email
-                 || "Customer";
-    const items = (o.items || []).length;
-
-    return `
-      <tr>
-        <td>#${shortId(o.id)}</td>
-        <td>${name}</td>
-        <td>${fmtDate(o.createdAt)}</td>
-        <td>${items} items</td>
-        <td>₹${(o.total || 0).toFixed(2)}</td>
-        <td><span class="status-pill ${statusClass(o.status)}">${o.status}</span></td>
-        <td style="text-align:right;">
-          <button class="btn-ghost view-btn" data-id="${o.id}">
-            <i class="fas fa-eye"></i>
-          </button>
-          <button class="btn-ghost edit-btn" data-id="${o.id}">
-            <i class="fas fa-edit"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
-
-/* CARDS RENDER */
-function renderCards(list){
-  cards.innerHTML = list.map(o=>{
-    const name = ((o.shippingAddress?.firstName || "") +
-                   " " +
-                   (o.shippingAddress?.lastName || "")).trim()
-                 || o.email
-                 || "Customer";
-    const items = (o.items || []).length;
-
-    return `
-      <div class="order-card">
-        <div class="card-header">
-          <div>
-            <div class="customer-name">${name}</div>
-            <div class="card-meta">${fmtDate(o.createdAt)} • ${items} items</div>
-          </div>
-          <span class="status-pill ${statusClass(o.status)}">${o.status}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div style="font-weight:700;">₹${(o.total || 0).toFixed(2)}</div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn-ghost view-btn" data-id="${o.id}"><i class="fas fa-eye"></i></button>
-            <button class="btn-ghost edit-btn" data-id="${o.id}"><i class="fas fa-edit"></i></button>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-
-/* ---------------------------------------------------
-   FILTERING
-----------------------------------------------------*/
-function applyFilters(){
-  const st = document.getElementById("filter-status").value;
-  const dt = document.getElementById("filter-date").value;
-  const q = document.getElementById("filter-search").value.toLowerCase();
-
-  let list = [...orders];
-
-  if(st !== "all") list = list.filter(o => (o.status || "").toLowerCase() === st);
-
-  if(dt !== "all"){
-    const now = new Date();
-    let min = 0;
-
-    if(dt === "today") min = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if(dt === "week")  min = new Date(now.getTime() - 7 * 86400000);
-    if(dt === "month") min = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-
-    list = list.filter(o=>{
-      if(!o.createdAt) return false;
-      const od = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
-      return od >= min;
-    });
-  }
-
-  if(q){
-    list = list.filter(o=>{
-      const name = ((o.shippingAddress?.firstName||"") + " " + (o.shippingAddress?.lastName||"")).toLowerCase();
-      const email = (o.email || "").toLowerCase();
-      return name.includes(q) || email.includes(q) || o.id.toLowerCase().includes(q);
-    });
-  }
-
-  filteredOrders = list;
-  renderTable(list);
-  renderCards(list);
-  attachRowEvents();
-}
-
-
-/* ---------------------------------------------------
-   OPEN MODAL (your full modal restored)
-----------------------------------------------------*/
-function openModal(order){
-  currentEditId = order.id;
-
-  const customerName = ((order.shippingAddress?.firstName||"") + " " + (order.shippingAddress?.lastName||"")).trim() || "Customer";
-  const phone = order.shippingAddress?.phone || "No phone";
-  const email = order.email || "No email";
-
-  const address = (() => {
-    if(!order.shippingAddress) return "No address provided";
-    const a = order.shippingAddress;
-    return [a.address,a.city,a.state,a.zipCode,a.country].filter(Boolean).join(", ") || "No address provided";
-  })();
-
-  const itemsHTML = (!order.items || !order.items.length)
-    ? `<div class="muted">No items</div>`
-    : order.items.map(it=>`
-      <div style="display:flex;gap:10px;padding:8px;border-bottom:1px solid var(--border);align-items:center">
-        <div style="width:40px;height:40px;background:var(--light);border-radius:8px;display:flex;align-items:center;justify-content:center;">
-          <i class="fas fa-jar"></i>
-        </div>
-        <div style="flex:1;">
-          <div style="font-weight:600;">${it.name}</div>
-          <div class="muted" style="font-size:.85rem;">${it.weight||""}</div>
-        </div>
-        <div style="font-weight:700;">x${it.quantity}</div>
-        <div style="font-weight:700;">₹${(it.price*it.quantity).toFixed(2)}</div>
-      </div>
-    `).join("");
-
-  modalBody.innerHTML = `
-    <div style="display:grid;gap:14px;">
-      <div>
-        <div class="muted">Order ID</div>
-        <div style="font-weight:700;">#${shortId(order.id)}</div>
-      </div>
-
-      <div>
-        <div class="muted">Customer</div>
-        <div>${customerName}</div>
-      </div>
-
-      <div style="display:flex;gap:12px;">
-        <div style="flex:1;">
-          <div class="muted">Email</div>
-          <div>${email}</div>
-        </div>
-        <div style="flex:1;">
-          <div class="muted">Phone</div>
-          <div>${phone}</div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:12px;">
-        <div style="flex:1;">
-          <div class="muted">Date</div>
-          <div>${fmtDate(order.createdAt)}</div>
-        </div>
-        <div style="flex:1;">
-          <div class="muted">Total</div>
-          <div style="font-weight:700;">₹${(order.total||0).toFixed(2)}</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="muted">Status</div>
-        <select id="modal-status" style="padding:8px;border-radius:8px;border:1px solid var(--border);width:100%;">
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-      </div>
-
-      <div>
-        <div class="muted">Shipping Address</div>
-        <div>${address}</div>
-      </div>
-
-      <div class="muted">Items</div>
-      <div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px;">
-        ${itemsHTML}
-      </div>
-    </div>
-  `;
-
-  document.getElementById("modal-status").value = order.status || "pending";
-  modalBg.classList.add("show");
-}
-
-
-/* ---------------------------------------------------
-   SAVE MODAL
-----------------------------------------------------*/
-modalSave.onclick = ()=>{
-  const newStatus = document.getElementById("modal-status").value;
-
-  modalSave.disabled = true;
-  modalSave.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving…`;
-
-  db.doc(`orders/${currentEditId}`).set({
-    status:newStatus,
-    updatedAt:new Date()
-  }, {merge:true})
-  .then(()=>{
-    showToast("Order updated");
-    modalSave.disabled = false;
-    modalSave.innerHTML = `<i class="fas fa-save" style="margin-right:8px;"></i> Save`;
-    modalBg.classList.remove("show");
-  })
-  .catch(err=>{
-    console.error("SAVE ERROR:",err);
-    alert("Save failed: "+err.message);
-    modalSave.disabled = false;
-    modalSave.innerHTML = `<i class="fas fa-save" style="margin-right:8px;"></i> Save`;
-  });
-};
-
-
-/* EVENTS */
-function attachRowEvents(){
-  document.querySelectorAll(".view-btn,.edit-btn").forEach(btn=>{
-    btn.onclick=()=>{
-      const id = btn.getAttribute("data-id");
-      const order = orders.find(o=>o.id===id);
-      if(order) openModal(order);
-    }
-  });
-}
-
-modalClose.onclick = ()=> modalBg.classList.remove("show");
-modalCancel.onclick = ()=> modalBg.classList.remove("show");
-window.onclick = e => { if(e.target === modalBg) modalBg.classList.remove("show"); };
-
-document.getElementById("filter-status").onchange = applyFilters;
-document.getElementById("filter-date").onchange = applyFilters;
-document.getElementById("filter-search").oninput = () => setTimeout(applyFilters,150);
-
-document.getElementById("btn-export").onclick = ()=>{
-  if(!filteredOrders.length) return showToast("No orders to export");
-
-  let rows = [["Order ID","Email","Date","Items","Total","Status"]];
-  filteredOrders.forEach(o=>{
-    rows.push([
-      "#"+shortId(o.id),
-      o.email||"",
-      fmtDate(o.createdAt),
-      (o.items||[]).length,
-      o.total||0,
-      o.status||""
-    ]);
-  });
-
-  const csv = rows.map(r=>r.join(",")).join("\n");
-  const blob = new Blob([csv],{type:"text/csv"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "orders.csv";
-  a.click();
-};
-
-document.getElementById("btn-refresh").onclick = ()=> showToast("Refreshed");
-
-
-/* START */
-loadOrders();
-</script>
-
-  --dark: #000000;
-  --light: #f5f5f5;
-  --gray: #666666;
-  --border: #e0e0e0;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --shadow: 0 4px 12px rgba(0,0,0,0.1);
-  --radius: 12px;
-  --muted: #888;
-  --success:#10b981;
-  --danger:#ef4444;
-}
-
-*{margin:0;padding:0;box-sizing:border-box;}
-
-body{
-  background:linear-gradient(135deg,#f0f0f0 0%,#e0e0e0 100%);
-  color:var(--dark);
-  font-family:'Inter',sans-serif;
-  overflow-x:hidden;
-}
-
-.page-container{}
-.orders-view{
+        body {
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            color: var(--dark);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+     
+.orders-view {
   padding:22px;
+  background:transparent;
   min-height:100vh;
 }
 
-/* HEADER */
-.orders-top{
-  display:flex;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:16px;
-}
-.orders-title{
-  font-family:'Outfit',sans-serif;
-  font-size:1.3rem;
-  font-weight:700;
-}
-.orders-sub{
-  font-size:.9rem;
-  color:var(--muted);
+.orders-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* CONTROLS */
-.orders-controls{
+
+.orders-top {
   display:flex;
-  gap:12px;
-  flex-wrap:wrap;
   align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
 }
-.orders-card{
+
+.orders-title {
+  font-family:'Outfit',sans-serif;
+  font-size:1.2rem;
+  font-weight:700;
+  color:var(--dark);
+}
+
+.orders-sub {
+  font-size:0.9rem;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.orders-controls {
   display:flex;
   gap:12px;
+  align-items:center;
   flex-wrap:wrap;
-  padding:14px;
+}
+
+.orders-card {
   background:var(--card-bg);
   border-radius:var(--radius);
-  border:1px solid var(--border);
   box-shadow:var(--shadow);
+  padding:14px;
+  border:1px solid var(--border);
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
 }
+
 .filter-select,
-.search-box{
+.search-box {
   padding:10px 14px;
   border-radius:10px;
   border:1px solid var(--border);
   background:transparent;
-  font-size:.95rem;
+  font-size:0.95rem;
   min-width:160px;
 }
-.search-box{
+
+.search-box {
   display:flex;
-  align-items:center;
   gap:8px;
+  align-items:center;
   min-width:260px;
+  max-width:420px;
 }
-.search-box input{
+
+.search-box input {
   border:0;
-  outline:0;
+  outline:none;
   background:transparent;
   width:100%;
-  font-size:.95rem;
+  font-size:0.95rem;
 }
-.btn-primary{
+
+.btn-primary {
   background:var(--dark);
-  color:#fff;
-  padding:9px 14px;
-  border:0;
+  color:var(--secondary);
   border-radius:10px;
+  padding:9px 14px;
+  border:none;
   cursor:pointer;
   font-weight:700;
 }
-.btn-ghost{
+
+.btn-ghost {
   background:transparent;
   border:1px solid var(--border);
   padding:8px 12px;
@@ -495,606 +134,568 @@ body{
   font-weight:600;
 }
 
-/* TABLE */
-.table-card{
+.table-card {
   margin-top:16px;
   background:var(--card-bg);
-  padding:16px;
   border-radius:var(--radius);
-  border:1px solid var(--border);
   box-shadow:var(--shadow);
+  padding:16px;
+  border:1px solid var(--border);
 }
-.table-wrapper{overflow:auto;}
 
-.orders-table{
+.table-wrapper {
+  overflow:auto;
+}
+
+.orders-table {
   width:100%;
   border-collapse:collapse;
   min-width:900px;
-  font-size:.95rem;
+  font-size:0.95rem;
 }
-.orders-table thead th{
+
+.orders-table thead th {
   text-align:left;
   padding:12px 16px;
   font-weight:700;
-  border-bottom:1px solid var(--border);
-}
-.orders-table td{
-  padding:12px 16px;
+  color:var(--dark);
   border-bottom:1px solid var(--border);
 }
 
-/* STATUS */
-.status-pill{
+.orders-table td {
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+  color:var(--dark);
+}
+
+.status-pill {
   display:inline-block;
   padding:6px 10px;
   border-radius:999px;
   font-weight:700;
-  font-size:.75rem;
+  font-size:0.75rem;
 }
-.status-pending{background:rgba(245,158,11,0.08);color:#f59e0b;border:1px solid rgba(245,158,11,0.12);}
-.status-confirmed{background:rgba(59,130,246,0.08);color:#3b82f6;border:1px solid rgba(59,130,246,0.12);}
-.status-shipped{background:rgba(16,185,129,0.08);color:#10b981;border:1px solid rgba(16,185,129,0.12);}
-.status-delivered{background:rgba(101,163,13,0.08);color:#65a30d;border:1px solid rgba(101,163,13,0.12);}
-.status-cancelled{background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.12);}
 
-/* MOBILE CARDS */
-.mobile-cards{
+.status-pending {background:rgba(245,158,11,0.08); color:#f59e0b; border:1px solid rgba(245,158,11,0.12);}
+.status-confirmed {background:rgba(59,130,246,0.08); color:#3b82f6; border:1px solid rgba(59,130,246,0.12);}
+.status-shipped {background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.12);}
+.status-delivered {background:rgba(101,163,13,0.08); color:#65a30d; border:1px solid rgba(101,163,13,0.12);}
+.status-cancelled {background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.12);}
+
+.action-btn {
+  border-radius:8px;
+  border:0;
+  padding:8px;
+  background:transparent;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-size:0.95rem;
+}
+
+.action-btn .fa-eye {color:var(--dark);}
+.action-btn .fa-edit {color:var(--success);}
+
+.mobile-cards {
   display:none;
-  margin-top:12px;
   gap:12px;
-  flex-direction:column;
+  margin-top:12px;
 }
-.order-card{
-  padding:14px;
-  border-radius:var(--radius);
-  border:1px solid var(--border);
+
+.order-card {
   background:var(--card-bg);
+  border-radius:var(--radius);
   box-shadow:var(--shadow);
+  padding:14px;
+  border:1px solid var(--border);
 }
-.card-header{
+
+.card-header {
   display:flex;
   justify-content:space-between;
+  align-items:center;
   margin-bottom:8px;
 }
-.customer-name{font-weight:600;}
-.card-meta{font-size:.85rem;color:var(--muted);}
 
-/* MODAL */
-.orders-modal-bg{
+.customer-name {
+  font-weight:600;
+  color:var(--dark);
+}
+
+.card-meta {
+  color:var(--muted);
+  font-size:0.85rem;
+}
+
+.orders-modal-bg {
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:2000;
+  background:rgba(6,8,15,0.6);
+  z-index:1200;
+  padding:20px;
 }
-.orders-modal-bg.show{display:flex;}
 
-.orders-modal{
+.orders-modal-bg.show {
+  display:flex;
+}
+
+.orders-modal {
   width:100%;
   max-width:760px;
-  background:var(--card-bg);
   border-radius:12px;
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
   overflow:hidden;
+  background:var(--card-bg);
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
 }
-.modal-header,
-.modal-body,
-.modal-footer{
+
+.orders-modal .modal-header,
+.orders-modal .modal-body,
+.orders-modal .modal-footer {
   padding:14px 16px;
 }
-.modal-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+
+.empty-state {
+  text-align:center;
+  padding:36px 12px;
+  color:var(--muted);
 }
 
-.empty-state{text-align:center;padding:36px 12px;color:var(--muted);}
-
-/* TOAST */
-.oh-toast{
+.oh-toast {
   position:fixed;
   right:22px;
   bottom:22px;
-  background:var(--card-bg);
   padding:12px 16px;
+  background:var(--card-bg);
   border:1px solid var(--border);
-  border-left:4px solid var(--success);
   box-shadow:var(--shadow);
+  border-left:4px solid var(--success);
+  z-index:1400;
   display:flex;
   gap:10px;
   align-items:center;
-  z-index:3000;
-  opacity:0;
   transform:translateY(10px);
-  transition:.2s ease;
+  opacity:0;
+  transition:all .2s ease;
 }
-.oh-toast.show{
+
+.oh-toast.show {
   opacity:1;
   transform:translateY(0);
 }
 
-@media(max-width:1023px){
-  .table-wrapper{display:none;}
-  .mobile-cards{display:flex;}
-  .orders-card{width:100%;}
-  .search-box,.filter-select{width:100%;}
+@media (max-width:1023px) {
+  .table-wrapper { display:none; }
+  .mobile-cards { display:flex; flex-direction:column; }
+  .orders-controls { width:100%; flex-direction:column; }
+  .orders-card { width:100%; flex-direction:column; }
+  .search-box, .filter-select {
+    width:100%;
+    max-width:100%;
+  }
 }
 
-@media(max-width:480px){
-  body{padding:10px;}
-  .orders-view{padding:14px;}
+@media (max-width:768px) {
+  .orders-title { font-size:1.1rem; }
+  .orders-sub { font-size:0.85rem; }
+  .orders-card { padding:12px; }
+  .orders-modal { width:100%; max-width:90%; }
 }
-</style>
+
+@media (max-width:480px) {
+  body { padding:14px; }
+  .orders-view { padding:14px; }
+  .orders-card { padding:10px; }
+  .orders-table td, 
+  .orders-table th {
+    padding:8px 10px;
+  }
+  .orders-modal {
+    width:calc(100% - 20px);
+  }
+}
+
+  </style>
 </head>
-
 <body>
-<div class="page-container">
-  <div class="orders-view">
+  <div class="page-container">
+    <div class="orders-view fade-in">
 
-    <div class="orders-top">
-      <div>
-        <div class="orders-title">Order Management</div>
-        <div class="orders-sub">Manage and track customer orders</div>
+      <div class="orders-top">
+        <div>
+          <div class="orders-title">Order Management</div>
+          <div class="orders-sub muted">Manage and track customer orders</div>
+        </div>
+
+        <div class="orders-controls">
+          <div class="orders-card filters-row">
+            <select id="ov-status" class="filter-select" title="Filter by status">
+              <option value="all">All Orders</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <select id="ov-date" class="filter-select" title="Filter by date">
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+
+            <div class="search-box">
+              <i class="fas fa-search muted"></i>
+              <input id="ov-search" placeholder="Search order ID, customer, email">
+            </div>
+          </div>
+
+          <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+          <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
+        </div>
       </div>
 
-      <div class="orders-controls">
-        <div class="orders-card">
-          <select id="filter-status" class="filter-select">
-            <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+      <div class="table-card">
+        <div class="table-wrapper">
+          <table class="orders-table" aria-label="Orders table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ov-tbody">
+              <tr><td colspan="7" class="muted">Loading orders…</td></tr>
+            </tbody>
+          </table>
+        </div>
 
-          <select id="filter-date" class="filter-select">
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-          </select>
+        <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
+      </div>
 
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input id="filter-search" placeholder="Search order ID, customer, email">
+      <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
+        <div class="orders-modal" role="document" aria-modal="true">
+          <div class="modal-header">
+            <div style="font-weight:700" id="ov-modal-title">Order Details</div>
+            <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
+          </div>
+
+          <div class="modal-body" id="ov-modal-body"></div>
+
+          <div class="modal-footer">
+            <button id="ov-modal-cancel" class="btn-ghost">Close</button>
+            <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
           </div>
         </div>
-
-        <button id="btn-refresh" class="btn-ghost">
-          <i class="fas fa-sync-alt"></i>
-        </button>
-
-        <button id="btn-export" class="btn-primary">
-          <i class="fas fa-download" style="margin-right:8px"></i> Export
-        </button>
       </div>
-    </div>
 
-    <!-- TABLE -->
-    <div class="table-card">
-      <div class="table-wrapper">
-        <table class="orders-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Date</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th style="text-align:right;">Actions</th>
+    </div>
+  </div>
+
+  <div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
+    <i class="fas fa-check-circle" style="color:var(--success)"></i>
+    <div id="oh-toast-text">Saved</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+  <script>
+    (function(){
+      const SAFE_FIREBASE_CONFIG = {
+        apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+        authDomain: "hexahoney-96aed.firebaseapp.com",
+        projectId: "hexahoney-96aed",
+        storageBucket: "hexahoney-96aed.firebasestorage.app",
+        messagingSenderId: "700458850837",
+        appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+        measurementId: "G-MQGKK9709H"
+      };
+
+      try {
+        if (window.firebase) {
+          if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(SAFE_FIREBASE_CONFIG);
+        }
+      } catch (e) {}
+
+      const tbody = document.getElementById('ov-tbody');
+      const cards = document.getElementById('ov-cards');
+      const modalBg = document.getElementById('ov-modal-bg');
+      const modalClose = document.getElementById('ov-modal-close');
+      const modalCancel = document.getElementById('ov-modal-cancel');
+      const modalSave = document.getElementById('ov-modal-save');
+      const modalBody = document.getElementById('ov-modal-body');
+
+      const statusFilter = document.getElementById('ov-status');
+      const dateFilter = document.getElementById('ov-date');
+      const searchInput = document.getElementById('ov-search');
+      const refreshBtn = document.getElementById('ov-refresh');
+      const exportBtn = document.getElementById('ov-export');
+
+      const toastWrap = document.getElementById('oh-toast');
+      const toastText = document.getElementById('oh-toast-text');
+
+      let orders = [];
+      let filtered = [];
+      let editingOrderId = null;
+      let db = window.db || (window.firebase && firebase.firestore ? firebase.firestore() : null);
+
+      function showToast(msg, type='success'){
+        toastText.textContent = msg;
+        toastWrap.classList.add('show');
+        if (type === 'error'){ toastWrap.style.borderLeftColor = 'var(--danger)'; toastWrap.querySelector('i').className = 'fas fa-exclamation-circle'; toastWrap.querySelector('i').style.color = 'var(--danger)'; }
+        else if (type === 'info'){ toastWrap.style.borderLeftColor = '#3b82f6'; toastWrap.querySelector('i').className = 'fas fa-info-circle'; toastWrap.querySelector('i').style.color = '#3b82f6'; }
+        else { toastWrap.style.borderLeftColor = 'var(--success)'; toastWrap.querySelector('i').className = 'fas fa-check-circle'; toastWrap.querySelector('i').style.color = 'var(--success)'; }
+        setTimeout(()=> toastWrap.classList.remove('show'), 2800);
+      }
+
+      function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+      function shortId(id){ return id ? id.toString().substring(0,8) : '—'; }
+      function fmtDate(d){ if(!d) return 'N/A'; const dt = new Date(typeof d === 'object' && d.toDate ? d.toDate() : d); return dt.toLocaleDateString(); }
+      function getStatusClass(s){ if(!s) return 'status-pending'; return 'status-' + s; }
+
+      function loadOrders(){
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading orders…</td></tr>';
+        cards.innerHTML = '';
+
+        if (db && db.collection){
+          try {
+            db.collection('orders').orderBy('createdAt','desc').onSnapshot(qs => {
+              orders = [];
+              qs.forEach(doc => orders.push({ id: doc.id, ...doc.data() }));
+              applyFilters();
+            }, err => {
+              console.error('orders snapshot error', err);
+              orders = [];
+              renderEmpty();
+              showToast('Error loading orders','error');
+            });
+            return;
+          } catch (e) {
+            console.warn('Firestore onSnapshot fallback', e);
+          }
+        }
+
+        orders = [];
+        renderEmpty();
+      }
+
+      function renderEmpty(){
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-shopping-bag"></i><h3>No Orders Found</h3><p class="muted">Customer orders will appear here.</p></div></td></tr>';
+        cards.innerHTML = '<div class="order-card"><div class="muted">No orders for mobile view</div></div>';
+      }
+
+      function renderList(list){
+        if (!list || !list.length){ renderEmpty(); return; }
+
+        tbody.innerHTML = list.map(o => {
+          const itemsCount = (o.items||[]).length;
+          const total = o.total ?? 0;
+          const customer = (o.shippingAddress && (o.shippingAddress.firstName || o.shippingAddress.lastName)) ? `${escapeHtml(o.shippingAddress.firstName||'')} ${escapeHtml(o.shippingAddress.lastName||'')}`.trim() : escapeHtml(o.email||'Customer');
+
+          return `
+            <tr data-id="${escapeHtml(o.id)}">
+              <td class="order-id">#${escapeHtml(shortId(o.id))}</td>
+              <td>
+                <div style="display:flex;gap:10px;align-items:center">
+                  <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">${escapeHtml((customer||'C').slice(0,2).toUpperCase())}</div>
+                  <div style="min-width:0">
+                    <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${customer}</div>
+                    <div class="muted" style="font-size:0.85rem">${escapeHtml(o.email||'No email')}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="muted">${fmtDate(o.createdAt)}</td>
+              <td class="muted">${itemsCount} item${itemsCount !== 1 ? 's' : ''}</td>
+              <td>₹${Number(total).toFixed(2)}</td>
+              <td><span class="status-pill ${getStatusClass(o.status)}">${escapeHtml((o.status||'pending').charAt(0).toUpperCase() + (o.status||'pending').slice(1))}</span></td>
+              <td style="text-align:right">
+                <button class="action-btn view-btn" data-id="${escapeHtml(o.id)}" title="View"><i class="fas fa-eye"></i></button>
+                <button class="action-btn edit-btn" data-id="${escapeHtml(o.id)}" title="Edit"><i class="fas fa-edit"></i></button>
+              </td>
             </tr>
-          </thead>
-          <tbody id="orders-tbody">
-            <tr><td colspan="7" class="muted">Loading orders…</td></tr>
-          </tbody>
-        </table>
-      </div>
+          `;
+        }).join('');
 
-      <div class="mobile-cards" id="orders-cards"></div>
-    </div>
-  </div>
-</div>
+        cards.innerHTML = list.map(o => {
+          const itemsCount = (o.items||[]).length;
+          const total = o.total ?? 0;
+          const customer = (o.shippingAddress && (o.shippingAddress.firstName || o.shippingAddress.lastName)) ? `${escapeHtml(o.shippingAddress.firstName||'')} ${escapeHtml(o.shippingAddress.lastName||'')}`.trim() : escapeHtml(o.email||'Customer');
+          let itemsHTML = '';
+          if (o.items && o.items.length){
+            o.items.slice(0,2).forEach(it => {
+              itemsHTML += `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div style="width:30px;height:30px;border-radius:6px;background:var(--light);display:flex;align-items:center;justify-content:center"><i class="fas fa-jar"></i></div><div style="font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(it.name)}</div><div style="margin-left:auto" class="muted">x${it.quantity}</div></div>`;
+            });
+            if (o.items.length > 2) itemsHTML += `<div class="muted">+${o.items.length - 2} more</div>`;
+          } else itemsHTML = '<div class="muted">No items</div>';
 
-<!-- MODAL -->
-<div class="orders-modal-bg" id="modal-bg">
-  <div class="orders-modal">
-    <div class="modal-header">
-      <div style="font-weight:700;">Order Details</div>
-      <button class="btn-ghost" id="modal-close"><i class="fas fa-times"></i></button>
-    </div>
+          return `
+            <div class="order-card">
+              <div class="card-header">
+                <div>
+                  <div class="customer-name">${customer}</div>
+                  <div class="card-meta muted">${fmtDate(o.createdAt)} • ${itemsCount} item${itemsCount!==1?'s':''}</div>
+                </div>
+                <div><span class="status-pill ${getStatusClass(o.status)}" style="font-size:0.75rem;padding:6px 10px">${escapeHtml((o.status||'pending').charAt(0).toUpperCase() + (o.status||'pending').slice(1))}</span></div>
+              </div>
+              <div style="margin:8px 0">${itemsHTML}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-weight:700">₹${Number(total).toFixed(2)}</div>
+                <div style="display:flex;gap:8px">
+                  <button class="action-btn view-btn" data-id="${escapeHtml(o.id)}"><i class="fas fa-eye"></i></button>
+                  <button class="action-btn edit-btn" data-id="${escapeHtml(o.id)}"><i class="fas fa-edit"></i></button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
 
-    <div class="modal-body" id="modal-body"></div>
+        attachRowListeners();
+      }
 
-    <div class="modal-footer">
-      <button class="btn-ghost" id="modal-cancel">Close</button>
-      <button class="btn-primary" id="modal-save">
-        <i class="fas fa-save" style="margin-right:8px;"></i> Save
-      </button>
-    </div>
-  </div>
-</div>
+      function attachRowListeners(){
+        tbody.querySelectorAll('.view-btn').forEach(b => b.onclick = e => openModalById(e.currentTarget.getAttribute('data-id')));
+        tbody.querySelectorAll('.edit-btn').forEach(b => b.onclick = e => openModalById(e.currentTarget.getAttribute('data-id')));
+        cards.querySelectorAll('.view-btn').forEach(b => b.onclick = e => openModalById(e.currentTarget.getAttribute('data-id')));
+        cards.querySelectorAll('.edit-btn').forEach(b => b.onclick = e => openModalById(e.currentTarget.getAttribute('data-id')));
+      }
 
-<!-- TOAST -->
-<div id="toast" class="oh-toast">
-  <i class="fas fa-check-circle" style="color:var(--success)"></i>
-  <div id="toast-msg">Saved</div>
-</div>
+      function openModalById(id){
+        const order = orders.find(x => x.id === id) || { id };
+        openModal(order);
+      }
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+      function openModal(order){
+        if (!order) return;
+        editingOrderId = order.id || null;
+        const addressText = formatAddress(order.shippingAddress);
+        const itemsHtml = (order.items && order.items.length) ? order.items.map(it => `<div style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid var(--border)"><div style="width:40px;height:40px;border-radius:8px;background:var(--light);display:flex;align-items:center;justify-content:center"><i class="fas fa-jar"></i></div><div style="flex:1;min-width:0"><div style="font-weight:600">${escapeHtml(it.name)}</div><div class="muted">${escapeHtml(it.weight||'')}</div></div><div style="font-weight:700">x${it.quantity}</div><div style="color:var(--primary);font-weight:700">₹${Number((it.price||0)*it.quantity).toFixed(2)}</div></div>`).join('') : '<div class="muted">No items</div>';
 
-<script>
-// STRICT GOOD FIREBASE INIT (no fallback nonsense)
-const firebaseConfig = {
-  apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-  authDomain: "hexahoney-96aed.firebaseapp.com",
-  projectId: "hexahoney-96aed",
-  storageBucket: "hexahoney-96aed.firebasestorage.app",
-  messagingSenderId: "700458850837",
-  appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-  measurementId: "G-MQGKK9709H"
-};
+        modalBody.innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr;gap:10px">
+            <div><div class="muted">Order ID</div><div style="font-weight:700">${escapeHtml('#' + shortId(order.id))}</div></div>
+            <div><div class="muted">Customer</div><div>${escapeHtml((order.shippingAddress?.firstName||order.email||'Customer') + ' ' + (order.shippingAddress?.lastName||''))}</div></div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1"><div class="muted">Email</div><div>${escapeHtml(order.email || 'No email')}</div></div>
+              <div style="flex:1"><div class="muted">Phone</div><div>${escapeHtml(order.shippingAddress?.phone || 'No phone')}</div></div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="flex:1"><div class="muted">Date</div><div>${fmtDate(order.createdAt)}</div></div>
+              <div style="flex:1"><div class="muted">Total</div><div style="font-weight:700">₹${Number(order.total||0).toFixed(2)}</div></div>
+            </div>
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+            <div><div class="muted">Status</div>
+              <select id="ov-modal-status" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);width:100%">
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
 
-// DOM SHORTCUTS
-const tbody = document.getElementById("orders-tbody");
-const cards = document.getElementById("orders-cards");
-const modalBg = document.getElementById("modal-bg");
-const modalBody = document.getElementById("modal-body");
-const modalClose = document.getElementById("modal-close");
-const modalCancel = document.getElementById("modal-cancel");
-const modalSave = document.getElementById("modal-save");
-const toast = document.getElementById("toast");
-const toastMsg = document.getElementById("toast-msg");
+            <div><div class="muted">Shipping Address</div><div>${escapeHtml(addressText)}</div></div>
+            <div class="muted">Items</div>
+            <div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px" id="ov-modal-items">${itemsHtml}</div>
+          </div>
+        `;
+        const sel = document.getElementById('ov-modal-status'); if (sel) sel.value = order.status || 'pending';
+        modalBg.classList.add('show'); modalBg.setAttribute('aria-hidden','false');
+      }
 
-let orders = [];
-let filteredOrders = [];
-let currentEditId = null;
+      function formatAddress(a){
+        if(!a) return 'No address provided';
+        const parts = [a.address, a.city, a.state, a.zipCode, a.country].filter(Boolean);
+        return parts.join(', ');
+      }
 
-/* TOAST */
-function showToast(msg){
-  toastMsg.textContent = msg;
-  toast.classList.add("show");
-  setTimeout(()=> toast.classList.remove("show"), 2500);
-}
+      function closeModal(){ modalBg.classList.remove('show'); modalBg.setAttribute('aria-hidden','true'); editingOrderId = null; }
 
-function shortId(x){ return x ? x.substring(0,8) : "—"; }
-function fmtDate(d){
-  if(!d) return "N/A";
-  const dt = d.toDate ? d.toDate() : new Date(d);
-  return dt.toLocaleDateString();
-}
+      function saveModal(){
+        if (!editingOrderId) return;
+        const newStatus = document.getElementById('ov-modal-status')?.value || 'pending';
+        if (db && db.collection){
+          modalSave.disabled = true;
+          const oldText = modalSave.innerHTML;
+          modalSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+          db.collection('orders').doc(editingOrderId).update({ status: newStatus, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+            .then(()=>{ modalSave.disabled = false; modalSave.innerHTML = oldText; showToast('Order updated'); closeModal(); })
+            .catch(err=>{ modalSave.disabled = false; modalSave.innerHTML = oldText; showToast('Save failed','error'); });
+          return;
+        }
+        const idx = orders.findIndex(o=>o.id===editingOrderId);
+        if (idx !== -1){ orders[idx].status = newStatus; applyFilters(); showToast('Order updated (local)'); }
+        closeModal();
+      }
 
-function statusClass(s){ return "status-" + (s || "pending"); }
+      function applyFilters(){
+        const st = statusFilter.value;
+        const dv = dateFilter.value;
+        const q = (searchInput.value||'').trim().toLowerCase();
+        let list = orders.slice();
 
-/* LOAD ORDERS */
-function loadOrders(){
-  db.collection("orders")
-    .orderBy("createdAt","desc")
-    .onSnapshot(snap=>{
-      orders = [];
-      snap.forEach(doc=> orders.push({ id: doc.id, ...doc.data() }));
-      applyFilters();
-    });
-}
+        if (st !== 'all') list = list.filter(o => (o.status||'').toLowerCase() === st);
 
-/* RENDER */
-function renderEmpty(){
-  tbody.innerHTML = `
-  <tr>
-    <td colspan="7">
-      <div class="empty-state">
-        <i class="fas fa-shopping-bag"></i>
-        <p>No orders found</p>
-      </div>
-    </td>
-  </tr>`;
-  cards.innerHTML = `<div class="order-card"><div class="muted">No orders</div></div>`;
-}
+        if (dv !== 'all'){
+          const now = new Date(); let start = null;
+          if (dv === 'today') start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          if (dv === 'week') start = new Date(now.getTime() - 7*86400000);
+          if (dv === 'month') start = new Date(now.getFullYear(), now.getMonth()-1, now.getDate());
+          if (start) list = list.filter(o => { if(!o.createdAt) return false; const od = new Date(typeof o.createdAt === 'object' && o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt); return od >= start; });
+        }
 
-function renderTable(list){
-  if(!list.length){ renderEmpty(); return; }
+        if (q) list = list.filter(o => {
+          const id = (o.id||'').toLowerCase();
+          const name = ((o.shippingAddress?.firstName||'') + ' ' + (o.shippingAddress?.lastName||'')).toLowerCase();
+          const email = (o.email||'').toLowerCase();
+          return id.includes(q) || name.includes(q) || email.includes(q);
+        });
 
-  tbody.innerHTML = list.map(o=>{
-    const name = (o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "");
-    const items = (o.items || []).length;
-    return `
-    <tr>
-      <td>#${shortId(o.id)}</td>
-      <td>${name.trim() || o.email || "Customer"}</td>
-      <td>${fmtDate(o.createdAt)}</td>
-      <td>${items} items</td>
-      <td>₹${(o.total||0).toFixed(2)}</td>
-      <td><span class="status-pill ${statusClass(o.status)}">${o.status}</span></td>
-      <td style="text-align:right;">
-        <button class="btn-ghost view-btn" data-id="${o.id}"><i class="fas fa-eye"></i></button>
-        <button class="btn-ghost edit-btn" data-id="${o.id}"><i class="fas fa-edit"></i></button>
-      </td>
-    </tr>
-    `;
-  }).join("");
-}
+        filtered = list;
+        renderList(filtered);
+      }
 
-function renderCards(list){
-  cards.innerHTML = list.map(o=>{
-    const name = (o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "");
-    const items = (o.items||[]).length;
-    return `
-    <div class="order-card">
-      <div class="card-header">
-        <div>
-          <div class="customer-name">${name.trim() || o.email || "Customer"}</div>
-          <div class="card-meta">${fmtDate(o.createdAt)} • ${items} items</div>
-        </div>
-        <span class="status-pill ${statusClass(o.status)}">${o.status}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div style="font-weight:700;">₹${(o.total||0).toFixed(2)}</div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-ghost view-btn" data-id="${o.id}"><i class="fas fa-eye"></i></button>
-          <button class="btn-ghost edit-btn" data-id="${o.id}"><i class="fas fa-edit"></i></button>
-        </div>
-      </div>
-    </div>
-    `;
-  }).join("");
-}
+      function exportCSV(list){
+        if (!list || !list.length){ showToast('No orders to export','info'); return; }
+        const rows = [['Order ID','Customer','Email','Date','Items','Total','Status']];
+        list.forEach(o => {
+          const customer = (o.shippingAddress?.firstName || '') + ' ' + (o.shippingAddress?.lastName || '');
+          rows.push([`#${shortId(o.id)}`, customer.trim(), o.email||'', fmtDate(o.createdAt), (o.items||[]).length, (o.total||0), o.status||'']);
+        });
+        const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'orders.csv'; a.click(); URL.revokeObjectURL(url);
+        showToast('Export started');
+      }
 
-/* FILTERS */
-function applyFilters(){
-  const st = document.getElementById("filter-status").value;
-  const dt = document.getElementById("filter-date").value;
-  const q = document.getElementById("filter-search").value.toLowerCase().trim();
+      document.addEventListener('click', function(e){ if (e.target === modalBg) closeModal(); });
+      modalClose.addEventListener('click', closeModal);
+      modalCancel.addEventListener('click', closeModal);
+      modalSave.addEventListener('click', saveModal);
 
-  let list = [...orders];
+      statusFilter.addEventListener('change', applyFilters);
+      dateFilter.addEventListener('change', applyFilters);
+      searchInput.addEventListener('input', function(){ setTimeout(applyFilters, 120); });
 
-  if(st !== "all") list = list.filter(o => (o.status||"").toLowerCase() === st);
+      refreshBtn.addEventListener('click', function(){ loadOrders(); showToast('Refreshing orders...','info'); });
+      exportBtn.addEventListener('click', function(){ exportCSV(filtered.length ? filtered : orders); });
 
-  if(dt !== "all"){
-    const now = new Date();
-    let start = null;
-    if(dt==="today") start = new Date(now.getFullYear(),now.getMonth(),now.getDate());
-    if(dt==="week") start = new Date(now.getTime() - 7*86400000);
-    if(dt==="month") start = new Date(now.getFullYear(),now.getMonth()-1,now.getDate());
-    if(start){
-      list = list.filter(o=>{
-        if(!o.createdAt) return false;
-        const od = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
-        return od >= start;
-      });
-    }
-  }
+      loadOrders();
 
-  if(q){
-    list = list.filter(o=>{
-      const name = ((o.shippingAddress?.firstName||"") + " " + (o.shippingAddress?.lastName||"")).toLowerCase();
-      const email = (o.email||"").toLowerCase();
-      return name.includes(q) || email.includes(q) || o.id.toLowerCase().includes(q);
-    });
-  }
-
-  filteredOrders = list;
-  renderTable(list);
-  renderCards(list);
-
-  attachRowEvents();
-}
-
-/* OPEN MODAL */
-function openModal(order){
-  currentEditId = order.id;
-
-  const customerName =
-    ((order.shippingAddress?.firstName || "") + " " +
-    (order.shippingAddress?.lastName || "")).trim() ||
-    order.email ||
-    "Customer";
-
-  const phone = order.shippingAddress?.phone || "No phone";
-  const email = order.email || "No email";
-
-  const address = (() => {
-    if(!order.shippingAddress) return "No address provided";
-    const a = order.shippingAddress;
-    return [a.address, a.city, a.state, a.zipCode, a.country]
-      .filter(Boolean)
-      .join(", ") || "No address provided";
-  })();
-
-  const itemsHTML = (() => {
-    if(!order.items || !order.items.length)
-      return `<div class="muted">No items</div>`;
-
-    return order.items.map(it => `
-      <div style="
-        display:flex;
-        align-items:center;
-        gap:10px;
-        padding:8px;
-        border-bottom:1px solid var(--border);
-      ">
-        <div style="
-          width:40px;
-          height:40px;
-          border-radius:8px;
-          background:var(--light);
-          display:flex;
-          align-items:center;
-          justify-content:center;
-        ">
-          <i class="fas fa-jar"></i>
-        </div>
-
-        <div style="flex:1;">
-          <div style="font-weight:600;">${it.name}</div>
-          <div class="muted" style="font-size:.85rem;">${it.weight || ""}</div>
-        </div>
-
-        <div style="font-weight:700;">x${it.quantity}</div>
-        <div style="font-weight:700;color:var(--primary);">
-          ₹${(it.price * it.quantity).toFixed(2)}
-        </div>
-      </div>
-    `).join("");
-  })();
-
-  modalBody.innerHTML = `
-    <div style="display:grid;gap:14px;">
-
-      <div>
-        <div class="muted">Order ID</div>
-        <div style="font-weight:700;">#${shortId(order.id)}</div>
-      </div>
-
-      <div>
-        <div class="muted">Customer</div>
-        <div>${customerName}</div>
-      </div>
-
-      <div style="display:flex;gap:12px;">
-        <div style="flex:1;">
-          <div class="muted">Email</div>
-          <div>${email}</div>
-        </div>
-        <div style="flex:1;">
-          <div class="muted">Phone</div>
-          <div>${phone}</div>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:12px;">
-        <div style="flex:1;">
-          <div class="muted">Date</div>
-          <div>${fmtDate(order.createdAt)}</div>
-        </div>
-        <div style="flex:1;">
-          <div class="muted">Total</div>
-          <div style="font-weight:700;">₹${(order.total || 0).toFixed(2)}</div>
-        </div>
-      </div>
-
-      <div>
-        <div class="muted">Status</div>
-        <select id="modal-status"
-          style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;width:100%;">
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-      </div>
-
-      <div>
-        <div class="muted">Shipping Address</div>
-        <div>${address}</div>
-      </div>
-
-      <div class="muted" style="margin-top:4px;">Items</div>
-      <div style="
-        max-height:220px;
-        overflow:auto;
-        border:1px solid var(--border);
-        border-radius:8px;
-        padding:0;
-      ">
-        ${itemsHTML}
-      </div>
-
-    </div>
-  `;
-
-  document.getElementById("modal-status").value = order.status || "pending";
-  modalBg.classList.add("show");
-}
-
-/* SAVE MODAL */
-modalSave.onclick = function(){
-  const newStatus = document.getElementById("modal-status").value;
-
-  modalSave.disabled = true;
-  modalSave.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving…`;
-
-  // FIXED UPDATE — reliable
-  db.doc(`orders/${currentEditId}`).set({
-    status: newStatus,
-    updatedAt: new Date()
-  }, { merge: true })
-  .then(()=>{
-    showToast("Order updated");
-    modalBg.classList.remove("show");
-    modalSave.disabled = false;
-    modalSave.innerHTML = `<i class="fas fa-save" style="margin-right:8px;"></i> Save`;
-  })
-  .catch(err=>{
-    console.error("SAVE ERROR:", err);
-    alert("Save failed: " + err.message);
-    modalSave.disabled = false;
-    modalSave.innerHTML = `<i class="fas fa-save" style="margin-right:8px;"></i> Save`;
-  });
-};
-
-/* ATTACH */
-function attachRowEvents(){
-  document.querySelectorAll(".view-btn,.edit-btn").forEach(btn=>{
-    btn.onclick = ()=>{
-      const id = btn.getAttribute("data-id");
-      const order = orders.find(o=>o.id===id);
-      if(order) openModal(order);
-    };
-  });
-}
-
-/* CLOSE */
-modalClose.onclick = ()=> modalBg.classList.remove("show");
-modalCancel.onclick = ()=> modalBg.classList.remove("show");
-window.onclick = e=>{ if(e.target===modalBg) modalBg.classList.remove("show"); };
-
-/* EXPORT */
-document.getElementById("btn-export").onclick = function(){
-  if(!filteredOrders.length){
-    showToast("No orders to export");
-    return;
-  }
-  const rows = [["Order ID","Email","Date","Items","Total","Status"]];
-  filteredOrders.forEach(o=>{
-    rows.push([
-      "#" + shortId(o.id),
-      o.email||"",
-      fmtDate(o.createdAt),
-      (o.items||[]).length,
-      o.total||0,
-      o.status||""
-    ]);
-  });
-  const csv = rows.map(r=>r.join(",")).join("\n");
-  const blob = new Blob([csv],{type:"text/csv"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "orders.csv";
-  a.click();
-};
-
-/* REFRESH */
-document.getElementById("btn-refresh").onclick = ()=> showToast("Refreshed");
-
-/* FILTERS */
-document.getElementById("filter-status").onchange = applyFilters;
-document.getElementById("filter-date").onchange = applyFilters;
-document.getElementById("filter-search").oninput = ()=> setTimeout(applyFilters,150);
-
-/* START */
-loadOrders();
-</script>
-
-</body>
-</html>
+      window.__orders_debug = { loadOrders, applyFilters, exportCSV };
+    })();
+  </script> 
