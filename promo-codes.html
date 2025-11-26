@@ -120,10 +120,21 @@
           <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
             <div class="col" style="width:220px"><label class="muted">Valid Until</label><input id="pv-until" type="date" style="padding:10px;border:1px solid var(--border);border-radius:8px"></div>
             <div class="col" style="width:160px"><label class="muted">Usage Limit</label><input id="pv-limit" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0"></div>
-            <div class="col" style="display:flex;align-items:center;gap:8px"><input id="pv-active" type="checkbox" checked><label class="muted">Active</label></div>
-            <div class="col" style="display:flex;align-items:center;gap:8px"><input id="pv-popular" type="checkbox"><label class="muted">Mark as Popular</label></div>
-            <div class="col" style="display:flex;align-items:center;gap:8px"><input id="pv-checkout" type="checkbox" checked><label class="muted">Show on Checkout</label></div>
-          </div>
+          <div class="col" style="display:flex;align-items:center;gap:8px">
+  <input id="pv-popular" type="checkbox">
+  <label class="muted">Mark as Popular</label>
+</div>
+
+<div class="col" style="display:flex;align-items:center;gap:8px">
+  <input id="pv-checkout" type="checkbox" checked>
+  <label class="muted">Show on Checkout</label>
+</div>
+
+<div class="col" style="display:flex;align-items:center;gap:8px">
+  <input id="pv-active" type="checkbox" checked>
+  <label class="muted">Active</label>
+</div>
+
           <div style="margin-top:12px"><label class="muted">Terms</label><textarea id="pv-terms" style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:8px"></textarea></div>
         </form>
       </div>
@@ -139,286 +150,299 @@
     </div>
   </div>
 
-  <script>
-    (function () {
-      const tbody = document.getElementById('pv-tbody');
-      const cards = document.getElementById('pv-cards');
-      const addBtn = document.getElementById('pv-add');
-      const modalBg = document.getElementById('pv-modal-bg');
-      const modalClose = document.getElementById('pv-modal-close');
-      const cancelBtn = document.getElementById('pv-cancel');
-      const saveBtn = document.getElementById('pv-save');
-      const form = document.getElementById('pv-form');
-      const searchInput = document.getElementById('pv-search');
-      const statusFilter = document.getElementById('pv-status');
-      const typeFilter = document.getElementById('pv-type');
-      const confirmBg = document.getElementById('pv-confirm-bg');
-      const confirmMsg = document.getElementById('pv-confirm-msg');
-      const confirmOk = document.getElementById('pv-confirm-ok');
-      const confirmCancel = document.getElementById('pv-confirm-cancel');
+ <script>
+(function () {
+  const tbody = document.getElementById('pv-tbody');
+  const cards = document.getElementById('pv-cards');
+  const addBtn = document.getElementById('pv-add');
+  const modalBg = document.getElementById('pv-modal-bg');
+  const modalClose = document.getElementById('pv-modal-close');
+  const cancelBtn = document.getElementById('pv-cancel');
+  const saveBtn = document.getElementById('pv-save');
+  const form = document.getElementById('pv-form');
+  const searchInput = document.getElementById('pv-search');
+  const statusFilter = document.getElementById('pv-status');
+  const typeFilter = document.getElementById('pv-type');
+  const confirmBg = document.getElementById('pv-confirm-bg');
+  const confirmMsg = document.getElementById('pv-confirm-msg');
+  const confirmOk = document.getElementById('pv-confirm-ok');
+  const confirmCancel = document.getElementById('pv-confirm-cancel');
 
-      const idField = document.getElementById('pv-id');
-      const codeField = document.getElementById('pv-code');
-      const typeField = document.getElementById('pv-type-select');
-      const valueField = document.getElementById('pv-value');
-      const maxField = document.getElementById('pv-max');
-      const descField = document.getElementById('pv-desc');
-      const minField = document.getElementById('pv-min');
-      const untilField = document.getElementById('pv-until');
-      const limitField = document.getElementById('pv-limit');
-      const termsField = document.getElementById('pv-terms');
-      const activeField = document.getElementById('pv-active');
+  const idField = document.getElementById('pv-id');
+  const codeField = document.getElementById('pv-code');
+  const typeField = document.getElementById('pv-type-select');
+  const valueField = document.getElementById('pv-value');
+  const maxField = document.getElementById('pv-max');
+  const descField = document.getElementById('pv-desc');
+  const minField = document.getElementById('pv-min');
+  const untilField = document.getElementById('pv-until');
+  const limitField = document.getElementById('pv-limit');
+  const termsField = document.getElementById('pv-terms');
+  const activeField = document.getElementById('pv-active');
+  const popularField = document.getElementById('pv-popular');
+  const checkoutField = document.getElementById('pv-checkout');
 
-      let promos = [];
-      let lastDeleteId = null;
+  let promos = [];
+  let lastDeleteId = null;
 
-      function initializeApp() {
-        if (!firebase.apps.length) {
-          firebase.initializeApp({
-            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-            authDomain: "hexahoney-96aed.firebaseapp.com",
-            projectId: "hexahoney-96aed",
-            storageBucket: "hexahoney-96aed.firebasestorage.app",
-            messagingSenderId: "700458850837",
-            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-            measurementId: "G-MQGKK9709H"
-          });
-        }
-        loadPromos();
-      }
+  function initializeApp() {
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+        authDomain: "hexahoney-96aed.firebaseapp.com",
+        projectId: "hexahoney-96aed",
+        storageBucket: "hexahoney-96aed.firebasestorage.app",
+        messagingSenderId: "700458850837",
+        appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+        measurementId: "G-MQGKK9709H"
+      });
+    }
+    loadPromos();
+  }
 
-      addBtn.addEventListener('click', () => openModal());
-      modalClose.addEventListener('click', closeModal);
-      cancelBtn.addEventListener('click', closeModal);
-      saveBtn.addEventListener('click', savePromo);
+  addBtn.addEventListener('click', () => openModal());
+  modalClose.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  saveBtn.addEventListener('click', savePromo);
 
-      confirmCancel.addEventListener('click', () => confirmBg.classList.remove('show'));
-      document.getElementById('pv-confirm-close').addEventListener('click', () => confirmBg.classList.remove('show'));
-      confirmOk.addEventListener('click', () => deletePromo(lastDeleteId));
+  confirmCancel.addEventListener('click', () => confirmBg.classList.remove('show'));
+  document.getElementById('pv-confirm-close').addEventListener('click', () => confirmBg.classList.remove('show'));
+  confirmOk.addEventListener('click', () => deletePromo(lastDeleteId));
 
-      searchInput.addEventListener('input', applyFilters);
-      statusFilter.addEventListener('change', applyFilters);
-      typeFilter.addEventListener('change', applyFilters);
+  searchInput.addEventListener('input', applyFilters);
+  statusFilter.addEventListener('change', applyFilters);
+  typeFilter.addEventListener('change', applyFilters);
 
-      function loadPromos() {
-        tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading promo codes…</td></tr>';
-        cards.innerHTML = '';
+  tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (btn) handleAction({ currentTarget: btn });
+  });
 
-        firebase.firestore().collection('promoCodes').orderBy('createdAt', 'desc').get()
-          .then(qs => {
-            promos = [];
-            qs.forEach(doc => promos.push({ id: doc.id, ...doc.data() }));
-            applyFilters();
-          })
-          .catch(err => showError('Error loading promo codes: ' + err.message));
-      }
+  cards.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (btn) handleAction({ currentTarget: btn });
+  });
 
-      function renderPromos(list) {
-        if (!list.length) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="muted">No promo codes.</div></td></tr>';
-          cards.innerHTML = '<div class="promo-card"><div class="muted">No promo codes available</div></div>';
-          return;
-        }
+  function loadPromos() {
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading promo codes…</td></tr>';
+    cards.innerHTML = '';
 
-        tbody.innerHTML = list.map(p => `
-          <tr data-id="${p.id}">
-            <td><div style="display:flex;flex-direction:column;gap:6px;"><div style="font-weight:700">${escapeHtml(p.id)}</div><div class="muted">${getTypeLabel(p.type)}</div></div></td>
-            <td><div style="font-weight:600">${escapeHtml(getValueDisplay(p))}</div><div class="muted">${escapeHtml(p.description || '')}</div><div style="display:flex;gap:8px;margin-top:6px">${p.isPopular ? '<span class="tag">Popular</span>' : ''}${p.showOnCheckout ? '<span class="tag">Checkout</span>' : ''}</div></td>
-            <td class="muted">${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</td>
-            <td><span class="status-pill ${getStatusClass(p)}">${getStatusText(p)}</span></td>
-            <td style="text-align:right">
-              <button class="action-btn" data-action="edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
-              <button class="action-btn" data-action="toggle" data-id="${p.id}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
-              <button class="action-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash"></i></button>
-            </td>
-          </tr>
-        `).join('');
+    firebase.firestore().collection('promoCodes').orderBy('createdAt', 'desc').get()
+      .then(qs => {
+        promos = [];
+        qs.forEach(doc => promos.push({ id: doc.id, ...doc.data() }));
+        applyFilters();
+      })
+      .catch(err => showError('Error loading promo codes: ' + err.message));
+  }
 
-        cards.innerHTML = list.map(p => `
-          <div class="promo-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <div style="font-weight:700">${escapeHtml(p.id)}</div>
-              <div><span class="status-pill ${getStatusClass(p)}">${getStatusText(p)}</span></div>
-            </div>
-            <div class="muted" style="margin-bottom:8px">${getTypeLabel(p.type)} • ${getValueDisplay(p)}</div>
-            <div style="display:flex;justify-content:space-between;gap:8px">
-              <div class="muted">Valid: ${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</div>
-              <div style="display:flex;gap:6px">
-                <button class="action-btn" data-action="edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
-                <button class="action-btn" data-action="toggle" data-id="${p.id}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
-                <button class="action-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash"></i></button>
-              </div>
-            </div>
+  function renderPromos(list) {
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="muted">No promo codes.</div></td></tr>';
+      cards.innerHTML = '<div class="promo-card"><div class="muted">No promo codes available</div></div>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(p => `
+      <tr data-id="${p.id}">
+        <td><div style="display:flex;flex-direction:column;gap:6px;"><div style="font-weight:700">${escapeHtml(p.id)}</div><div class="muted">${getTypeLabel(p.type)}</div></div></td>
+        <td><div style="font-weight:600">${escapeHtml(getValueDisplay(p))}</div><div class="muted">${escapeHtml(p.description || '')}</div><div style="display:flex;gap:8px;margin-top:6px">${p.isPopular ? '<span class="tag">Popular</span>' : ''}${p.showOnCheckout ? '<span class="tag">Checkout</span>' : ''}</div></td>
+        <td class="muted">${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</td>
+        <td><span class="status-pill ${getStatusClass(p)}">${getStatusText(p)}</span></td>
+        <td style="text-align:right">
+          <button class="action-btn" data-action="edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
+          <button class="action-btn" data-action="toggle" data-id="${p.id}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
+          <button class="action-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `).join('');
+
+    cards.innerHTML = list.map(p => `
+      <div class="promo-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:700">${escapeHtml(p.id)}</div>
+          <div><span class="status-pill ${getStatusClass(p)}">${getStatusText(p)}</span></div>
+        </div>
+        <div class="muted" style="margin-bottom:8px">${getTypeLabel(p.type)} • ${getValueDisplay(p)}</div>
+        <div style="display:flex;justify-content:space-between;gap:8px">
+          <div class="muted">Valid: ${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</div>
+          <div style="display:flex;gap:6px">
+            <button class="action-btn" data-action="edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
+            <button class="action-btn" data-action="toggle" data-id="${p.id}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
+            <button class="action-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash"></i></button>
           </div>
-        `).join('');
+        </div>
+      </div>
+    `).join('');
+  }
 
-        tbody.querySelectorAll('button').forEach(btn => btn.addEventListener('click', handleAction));
-        cards.querySelectorAll('button').forEach(btn => btn.addEventListener('click', handleAction));
-      }
+  function handleAction(e) {
+    const action = e.currentTarget.getAttribute('data-action');
+    const id = e.currentTarget.getAttribute('data-id');
+    const promo = promos.find(x => x.id === id);
 
-      function handleAction(e) {
-        const action = e.currentTarget.getAttribute('data-action');
-        const id = e.currentTarget.getAttribute('data-id');
-        const promo = promos.find(x => x.id === id);
+    if (action === 'edit') openModal(promo);
+    if (action === 'toggle') togglePromoStatus(id);
+    if (action === 'delete') confirmDelete(id);
+  }
 
-        if (action === 'edit') openModal(promo);
-        if (action === 'toggle') togglePromoStatus(id, promo);
-        if (action === 'delete') confirmDelete(id);
-      }
+  function togglePromoStatus(id) {
+    const ref = firebase.firestore().collection('promoCodes').doc(id);
+    ref.get().then(doc => {
+      const current = doc.data();
+      return ref.update({
+        active: !current.active,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).then(loadPromos);
+  }
 
-      function togglePromoStatus(id, promo) {
-        firebase.firestore().collection('promoCodes').doc(id).update({
-          active: !promo.active,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(loadPromos);
-      }
+  function confirmDelete(id) {
+    lastDeleteId = id;
+    confirmMsg.textContent = `Delete promo "${id}"? This cannot be undone.`;
+    confirmBg.classList.add('show');
+  }
 
-      function confirmDelete(id) {
-        lastDeleteId = id;
-        confirmMsg.textContent = `Delete promo "${id}"? This cannot be undone.`;
-        confirmBg.classList.add('show');
-      }
+  function deletePromo(id) {
+    firebase.firestore().collection('promoCodes').doc(id).delete().then(() => {
+      confirmBg.classList.remove('show');
+      loadPromos();
+    });
+  }
 
-      function deletePromo(id) {
-        firebase.firestore().collection('promoCodes').doc(id).delete().then(() => {
-          confirmBg.classList.remove('show');
-          loadPromos();
-        });
-      }
+  function applyFilters() {
+    const s = searchInput.value.trim().toLowerCase();
+    const st = statusFilter.value;
+    const ty = typeFilter.value;
 
-      function applyFilters() {
-        const s = searchInput.value.trim().toLowerCase();
-        const st = statusFilter.value;
-        const ty = typeFilter.value;
+    let filtered = promos.slice();
 
-        let filtered = promos.slice();
+    if (st !== 'all') {
+      if (st === 'active') filtered = filtered.filter(p => p.active && !isExpired(p));
+      else if (st === 'inactive') filtered = filtered.filter(p => !p.active);
+      else if (st === 'expired') filtered = filtered.filter(p => isExpired(p));
+    }
 
-        if (st !== 'all') {
-          if (st === 'active') filtered = filtered.filter(p => p.active && !isExpired(p));
-          else if (st === 'inactive') filtered = filtered.filter(p => !p.active);
-          else if (st === 'expired') filtered = filtered.filter(p => isExpired(p));
-        }
+    if (ty !== 'all') filtered = filtered.filter(p => p.type === ty);
 
-        if (ty !== 'all') filtered = filtered.filter(p => p.type === ty);
+    if (s) filtered = filtered.filter(p =>
+      (p.id || '').toLowerCase().includes(s) ||
+      (p.description || '').toLowerCase().includes(s)
+    );
 
-        if (s) filtered = filtered.filter(p =>
-          (p.id || '').toLowerCase().includes(s) ||
-          (p.description || '').toLowerCase().includes(s)
-        );
+    renderPromos(filtered);
+  }
 
-        renderPromos(filtered);
-      }
+  function openModal(promo) {
+    if (promo) {
+      document.getElementById('pv-modal-title').textContent = 'Edit Promo Code';
+      idField.value = promo.id;
+      codeField.value = promo.id;
+      typeField.value = promo.type || '';
+      valueField.value = promo.value ?? '';
+      maxField.value = promo.maxDiscount ?? '';
+      descField.value = promo.description || '';
+      minField.value = promo.minOrder ?? '';
+      untilField.value = promo.validUntil ? new Date(promo.validUntil).toISOString().substr(0, 10) : '';
+      limitField.value = promo.usageLimit ?? '';
+      termsField.value = promo.terms || '';
+      activeField.checked = promo.active !== false;
+      popularField.checked = promo.isPopular === true;
+      checkoutField.checked = promo.showOnCheckout !== false;
+    } else {
+      document.getElementById('pv-modal-title').textContent = 'Create Promo Code';
+      form.reset();
+      idField.value = '';
+      activeField.checked = true;
+      popularField.checked = false;
+      checkoutField.checked = true;
+    }
+    modalBg.classList.add('show');
+  }
 
-      function openModal(promo) {
-        if (promo) {
-          document.getElementById('pv-modal-title').textContent = 'Edit Promo Code';
-          idField.value = promo.id;
-          codeField.value = promo.id;
-          typeField.value = promo.type || '';
-          valueField.value = promo.value ?? '';
-          maxField.value = promo.maxDiscount ?? '';
-          descField.value = promo.description || '';
-          minField.value = promo.minOrder ?? '';
-          untilField.value = promo.validUntil ? new Date(promo.validUntil).toISOString().substr(0,10) : '';
-          limitField.value = promo.usageLimit ?? '';
-          termsField.value = promo.terms || '';
-          activeField.checked = promo.active !== false;
-          document.getElementById('pv-popular').checked = promo.isPopular === true;
-          document.getElementById('pv-checkout').checked = promo.showOnCheckout !== false;
-        } else {
-          document.getElementById('pv-modal-title').textContent = 'Create Promo Code';
-          form.reset();
-          idField.value = '';
-          activeField.checked = true;
-          document.getElementById('pv-popular').checked = false;
-          document.getElementById('pv-checkout').checked = true;
-        }
+  function closeModal() {
+    modalBg.classList.remove('show');
+  }
 
-        modalBg.classList.add('show');
-      }
+  function savePromo(e) {
+    e.preventDefault();
 
-      function closeModal() {
-        modalBg.classList.remove('show');
-      }
+    const code = (codeField.value || '').trim().toUpperCase();
+    if (!code) return;
 
-      function savePromo(e) {
-        e.preventDefault();
+    const data = {
+      type: typeField.value || 'fixed',
+      value: typeField.value === 'shipping' ? 0 : parseFloat(valueField.value || 0),
+      maxDiscount: maxField.value ? parseFloat(maxField.value) : null,
+      minOrder: minField.value ? parseFloat(minField.value) : 0,
+      description: descField.value || '',
+      terms: termsField.value || '',
+      validUntil: untilField.value || null,
+      usageLimit: limitField.value ? parseInt(limitField.value) : 0,
+      active: activeField.checked,
+      isPopular: popularField.checked,
+      showOnCheckout: checkoutField.checked,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
 
-        const code = (codeField.value || '').trim().toUpperCase();
-        if (!code) return;
+    const docRef = idField.value
+      ? firebase.firestore().collection('promoCodes').doc(idField.value)
+      : firebase.firestore().collection('promoCodes').doc(code);
 
-        const data = {
-          type: typeField.value || 'fixed',
-          value: typeField.value === 'shipping' ? 0 : parseFloat(valueField.value || 0),
-          maxDiscount: maxField.value ? parseFloat(maxField.value) : null,
-          minOrder: minField.value ? parseFloat(minField.value) : 0,
-          description: descField.value || '',
-          terms: termsField.value || '',
-          validUntil: untilField.value || null,
-          usageLimit: limitField.value ? parseInt(limitField.value) : 0,
-          active: !!activeField.checked,
-          isPopular: document.getElementById('pv-popular').checked,
-          showOnCheckout: document.getElementById('pv-checkout').checked,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
+    const op = idField.value
+      ? docRef.update(data)
+      : docRef.set({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
 
-        const docRef = idField.value
-          ? firebase.firestore().collection('promoCodes').doc(idField.value)
-          : firebase.firestore().collection('promoCodes').doc(code);
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i> Saving...';
 
-        const op = idField.value
-          ? docRef.update(data)
-          : docRef.set({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    op.then(() => {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
+      closeModal();
+      loadPromos();
+    });
+  }
 
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i> Saving...';
+  function getTypeLabel(t) {
+    if (!t) return '';
+    return t === 'fixed' ? 'Fixed Discount' : t === 'percentage' ? 'Percentage Off' : 'Free Shipping';
+  }
 
-        op.then(() => {
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
-          closeModal();
-          loadPromos();
-        });
-      }
+  function getValueDisplay(p) {
+    if (p.type === 'fixed') return `₹${p.value ?? 0}`;
+    if (p.type === 'percentage') return `${p.value ?? 0}%${p.maxDiscount ? ' (max ₹' + p.maxDiscount + ')' : ''}`;
+    if (p.type === 'shipping') return 'Free Shipping';
+    return '';
+  }
 
-      function getTypeLabel(t) {
-        if (!t) return '';
-        return t === 'fixed' ? 'Fixed Discount' : t === 'percentage' ? 'Percentage Off' : 'Free Shipping';
-      }
+  function isExpired(p) {
+    if (!p.validUntil) return false;
+    return new Date(p.validUntil).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
+  }
 
-      function getValueDisplay(p) {
-        if (p.type === 'fixed') return `₹${p.value ?? 0}`;
-        if (p.type === 'percentage') return `${p.value ?? 0}%${p.maxDiscount ? ' (max ₹' + p.maxDiscount + ')' : ''}`;
-        if (p.type === 'shipping') return 'Free Shipping';
-        return '';
-      }
+  function getStatusClass(p) {
+    if (!p.active) return 'status-inactive';
+    if (isExpired(p)) return 'status-expired';
+    return 'status-active';
+  }
 
-      function isExpired(p) {
-        if (!p.validUntil) return false;
-        return new Date(p.validUntil).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
-      }
+  function getStatusText(p) {
+    if (!p.active) return 'Inactive';
+    if (isExpired(p)) return 'Expired';
+    return 'Active';
+  }
 
-      function getStatusClass(p) {
-        if (!p.active) return 'status-inactive';
-        if (isExpired(p)) return 'status-expired';
-        return 'status-active';
-      }
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
 
-      function getStatusText(p) {
-        if (!p.active) return 'Inactive';
-        if (isExpired(p)) return 'Expired';
-        return 'Active';
-      }
+  function showError(msg) {
+    tbody.innerHTML = `<tr><td colspan="5"><div style="text-align:center;padding:40px;color:#ef4444"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:16px"></i><div style="font-weight:600;margin-bottom:8px;">Error</div><div class="muted">${msg}</div></div></td></tr>`;
+  }
 
-      function escapeHtml(s) {
-        return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-      }
+  initializeApp();
+})();
+</script>
 
-      function showError(msg) {
-        tbody.innerHTML = `<tr><td colspan="5"><div style="text-align:center;padding:40px;color:#ef4444"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:16px"></i><div style="font-weight:600;margin-bottom:8px;">Error</div><div class="muted">${msg}</div></div></td></tr>`;
-      }
-
-      initializeApp();
-    })();
-  </script>
 </div>
