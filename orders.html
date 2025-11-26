@@ -14,7 +14,393 @@
 :root {
   --primary: #000000;
   --secondary: #ffffff;
-  --accent: #888888;
+  --accent: #888888<script>
+// STRICT FIREBASE INIT
+const firebaseConfig = {
+  apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+  authDomain: "hexahoney-96aed.firebaseapp.com",
+  projectId: "hexahoney-96aed",
+  storageBucket: "hexahoney-96aed.firebasestorage.app",
+  messagingSenderId: "700458850837",
+  appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+  measurementId: "G-MQGKK9709H"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// DOM SHORTCUTS
+const tbody = document.getElementById("orders-tbody");
+const cards = document.getElementById("orders-cards");
+const modalBg = document.getElementById("modal-bg");
+const modalBody = document.getElementById("modal-body");
+const modalClose = document.getElementById("modal-close");
+const modalCancel = document.getElementById("modal-cancel");
+const modalSave = document.getElementById("modal-save");
+const toast = document.getElementById("toast");
+const toastMsg = document.getElementById("toast-msg");
+
+let orders = [];
+let filteredOrders = [];
+let currentEditId = null;
+
+/* TOAST */
+function showToast(msg){
+  toastMsg.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(()=> toast.classList.remove("show"), 2200);
+}
+const shortId = id => id ? id.substring(0, 8) : "—";
+const fmtDate = d => {
+  if (!d) return "N/A";
+  const dt = d.toDate ? d.toDate() : new Date(d);
+  return dt.toLocaleDateString();
+};
+const statusClass = s => "status-" + (s || "pending");
+
+
+/* ---------------------------------------------------
+   FIXED LOADING FUNCTION (NEVER BREAKS)
+----------------------------------------------------*/
+function loadOrders() {
+  tbody.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
+
+  // Try safe ordered query first
+  db.collection("orders")
+    .orderBy("createdAt", "desc")
+    .onSnapshot(
+      snapshot => handleSnapshot(snapshot),
+      err => {
+        console.warn("OrderBy failed. Falling back to unordered query.", err);
+
+        // Second attempt WITHOUT orderBy (works even if createdAt is invalid)
+        db.collection("orders").onSnapshot(
+          snapshot => handleSnapshot(snapshot),
+          err2 => {
+            console.error("FAILED LOADING ORDERS:", err2);
+            renderEmpty();
+          }
+        );
+      }
+    );
+}
+
+/* ---------------------------------------------------
+   HANDLE SNAPSHOT (VALID FOR BOTH FALLBACK & NORMAL)
+----------------------------------------------------*/
+function handleSnapshot(snapshot) {
+  orders = [];
+
+  snapshot.forEach(doc => {
+    orders.push({
+      id: doc.id,
+      ...doc.data()
+    });
+  });
+
+  // Sort manually if createdAt exists
+  orders.sort((a, b) => {
+    const da = a.createdAt?.toDate?.() || new Date(0);
+    const db = b.createdAt?.toDate?.() || new Date(0);
+    return db - da;
+  });
+
+  applyFilters();
+}
+
+/* EMPTY UI */
+function renderEmpty(){
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="7">
+        <div class="empty-state">
+          <i class="fas fa-shopping-bag"></i>
+          <p>No orders found</p>
+        </div>
+      </td>
+    </tr>`;
+  cards.innerHTML = `<div class="order-card"><div class="muted">No orders</div></div>`;
+}
+
+
+/* TABLE RENDER */
+function renderTable(list){
+  if(!list.length){ renderEmpty(); return; }
+
+  tbody.innerHTML = list.map(o=>{
+    const name = ((o.shippingAddress?.firstName || "") +
+                   " " +
+                   (o.shippingAddress?.lastName || "")).trim()
+                 || o.email
+                 || "Customer";
+    const items = (o.items || []).length;
+
+    return `
+      <tr>
+        <td>#${shortId(o.id)}</td>
+        <td>${name}</td>
+        <td>${fmtDate(o.createdAt)}</td>
+        <td>${items} items</td>
+        <td>₹${(o.total || 0).toFixed(2)}</td>
+        <td><span class="status-pill ${statusClass(o.status)}">${o.status}</span></td>
+        <td style="text-align:right;">
+          <button class="btn-ghost view-btn" data-id="${o.id}">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button class="btn-ghost edit-btn" data-id="${o.id}">
+            <i class="fas fa-edit"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+/* CARDS RENDER */
+function renderCards(list){
+  cards.innerHTML = list.map(o=>{
+    const name = ((o.shippingAddress?.firstName || "") +
+                   " " +
+                   (o.shippingAddress?.lastName || "")).trim()
+                 || o.email
+                 || "Customer";
+    const items = (o.items || []).length;
+
+    return `
+      <div class="order-card">
+        <div class="card-header">
+          <div>
+            <div class="customer-name">${name}</div>
+            <div class="card-meta">${fmtDate(o.createdAt)} • ${items} items</div>
+          </div>
+          <span class="status-pill ${statusClass(o.status)}">${o.status}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-weight:700;">₹${(o.total || 0).toFixed(2)}</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-ghost view-btn" data-id="${o.id}"><i class="fas fa-eye"></i></button>
+            <button class="btn-ghost edit-btn" data-id="${o.id}"><i class="fas fa-edit"></i></button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+
+/* ---------------------------------------------------
+   FILTERING
+----------------------------------------------------*/
+function applyFilters(){
+  const st = document.getElementById("filter-status").value;
+  const dt = document.getElementById("filter-date").value;
+  const q = document.getElementById("filter-search").value.toLowerCase();
+
+  let list = [...orders];
+
+  if(st !== "all") list = list.filter(o => (o.status || "").toLowerCase() === st);
+
+  if(dt !== "all"){
+    const now = new Date();
+    let min = 0;
+
+    if(dt === "today") min = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if(dt === "week")  min = new Date(now.getTime() - 7 * 86400000);
+    if(dt === "month") min = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+
+    list = list.filter(o=>{
+      if(!o.createdAt) return false;
+      const od = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+      return od >= min;
+    });
+  }
+
+  if(q){
+    list = list.filter(o=>{
+      const name = ((o.shippingAddress?.firstName||"") + " " + (o.shippingAddress?.lastName||"")).toLowerCase();
+      const email = (o.email || "").toLowerCase();
+      return name.includes(q) || email.includes(q) || o.id.toLowerCase().includes(q);
+    });
+  }
+
+  filteredOrders = list;
+  renderTable(list);
+  renderCards(list);
+  attachRowEvents();
+}
+
+
+/* ---------------------------------------------------
+   OPEN MODAL (your full modal restored)
+----------------------------------------------------*/
+function openModal(order){
+  currentEditId = order.id;
+
+  const customerName = ((order.shippingAddress?.firstName||"") + " " + (order.shippingAddress?.lastName||"")).trim() || "Customer";
+  const phone = order.shippingAddress?.phone || "No phone";
+  const email = order.email || "No email";
+
+  const address = (() => {
+    if(!order.shippingAddress) return "No address provided";
+    const a = order.shippingAddress;
+    return [a.address,a.city,a.state,a.zipCode,a.country].filter(Boolean).join(", ") || "No address provided";
+  })();
+
+  const itemsHTML = (!order.items || !order.items.length)
+    ? `<div class="muted">No items</div>`
+    : order.items.map(it=>`
+      <div style="display:flex;gap:10px;padding:8px;border-bottom:1px solid var(--border);align-items:center">
+        <div style="width:40px;height:40px;background:var(--light);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-jar"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:600;">${it.name}</div>
+          <div class="muted" style="font-size:.85rem;">${it.weight||""}</div>
+        </div>
+        <div style="font-weight:700;">x${it.quantity}</div>
+        <div style="font-weight:700;">₹${(it.price*it.quantity).toFixed(2)}</div>
+      </div>
+    `).join("");
+
+  modalBody.innerHTML = `
+    <div style="display:grid;gap:14px;">
+      <div>
+        <div class="muted">Order ID</div>
+        <div style="font-weight:700;">#${shortId(order.id)}</div>
+      </div>
+
+      <div>
+        <div class="muted">Customer</div>
+        <div>${customerName}</div>
+      </div>
+
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1;">
+          <div class="muted">Email</div>
+          <div>${email}</div>
+        </div>
+        <div style="flex:1;">
+          <div class="muted">Phone</div>
+          <div>${phone}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;">
+        <div style="flex:1;">
+          <div class="muted">Date</div>
+          <div>${fmtDate(order.createdAt)}</div>
+        </div>
+        <div style="flex:1;">
+          <div class="muted">Total</div>
+          <div style="font-weight:700;">₹${(order.total||0).toFixed(2)}</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="muted">Status</div>
+        <select id="modal-status" style="padding:8px;border-radius:8px;border:1px solid var(--border);width:100%;">
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="muted">Shipping Address</div>
+        <div>${address}</div>
+      </div>
+
+      <div class="muted">Items</div>
+      <div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px;">
+        ${itemsHTML}
+      </div>
+    </div>
+  `;
+
+  document.getElementById("modal-status").value = order.status || "pending";
+  modalBg.classList.add("show");
+}
+
+
+/* ---------------------------------------------------
+   SAVE MODAL
+----------------------------------------------------*/
+modalSave.onclick = ()=>{
+  const newStatus = document.getElementById("modal-status").value;
+
+  modalSave.disabled = true;
+  modalSave.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving…`;
+
+  db.doc(`orders/${currentEditId}`).set({
+    status:newStatus,
+    updatedAt:new Date()
+  }, {merge:true})
+  .then(()=>{
+    showToast("Order updated");
+    modalSave.disabled = false;
+    modalSave.innerHTML = `<i class="fas fa-save" style="margin-right:8px;"></i> Save`;
+    modalBg.classList.remove("show");
+  })
+  .catch(err=>{
+    console.error("SAVE ERROR:",err);
+    alert("Save failed: "+err.message);
+    modalSave.disabled = false;
+    modalSave.innerHTML = `<i class="fas fa-save" style="margin-right:8px;"></i> Save`;
+  });
+};
+
+
+/* EVENTS */
+function attachRowEvents(){
+  document.querySelectorAll(".view-btn,.edit-btn").forEach(btn=>{
+    btn.onclick=()=>{
+      const id = btn.getAttribute("data-id");
+      const order = orders.find(o=>o.id===id);
+      if(order) openModal(order);
+    }
+  });
+}
+
+modalClose.onclick = ()=> modalBg.classList.remove("show");
+modalCancel.onclick = ()=> modalBg.classList.remove("show");
+window.onclick = e => { if(e.target === modalBg) modalBg.classList.remove("show"); };
+
+document.getElementById("filter-status").onchange = applyFilters;
+document.getElementById("filter-date").onchange = applyFilters;
+document.getElementById("filter-search").oninput = () => setTimeout(applyFilters,150);
+
+document.getElementById("btn-export").onclick = ()=>{
+  if(!filteredOrders.length) return showToast("No orders to export");
+
+  let rows = [["Order ID","Email","Date","Items","Total","Status"]];
+  filteredOrders.forEach(o=>{
+    rows.push([
+      "#"+shortId(o.id),
+      o.email||"",
+      fmtDate(o.createdAt),
+      (o.items||[]).length,
+      o.total||0,
+      o.status||""
+    ]);
+  });
+
+  const csv = rows.map(r=>r.join(",")).join("\n");
+  const blob = new Blob([csv],{type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "orders.csv";
+  a.click();
+};
+
+document.getElementById("btn-refresh").onclick = ()=> showToast("Refreshed");
+
+
+/* START */
+loadOrders();
+</script>
+
   --dark: #000000;
   --light: #f5f5f5;
   --gray: #666666;
