@@ -1479,451 +1479,502 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-    <script>
-        var firebaseConfig = {
-            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-            authDomain: "hexahoney-96aed.firebaseapp.com",
-            projectId: "hexahoney-96aed",
-            storageBucket: "hexahoney-96aed.firebasestorage.app",
-            messagingSenderId: "700458850837",
-            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-            measurementId: "G-MQGKK9709H"
-        };
+<script>
+    var firebaseConfig = {
+        apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+        authDomain: "hexahoney-96aed.firebaseapp.com",
+        projectId: "hexahoney-96aed",
+        storageBucket: "hexahoney-96aed.firebasestorage.app",
+        messagingSenderId: "700458850837",
+        appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+        measurementId: "G-MQGKK9709H"
+    };
+
+    const dynamicPage = document.getElementById("dynamicPage");
+    dynamicPage.style.display = "none";
+
+    firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore();
+
+    function loadMessagesPage() {
+        const dynamic = document.getElementById("dynamicPage");
+        const dashboard = document.getElementById("dashboardBody");
+
+        dashboard.style.display = "none";
+        dynamic.style.display = "block";
+        dynamic.style.width = "100%";
+
+        fetch("contact-submissions.html")
+            .then(r => r.text())
+            .then(html => {
+                dynamic.innerHTML = html;
+                const scripts = [...dynamic.querySelectorAll("script")];
+                scripts.forEach(s => {
+                    const tag = document.createElement("script");
+                    if (s.src) {
+                        tag.src = s.src + "?v=" + Date.now();
+                    } else {
+                        tag.textContent = s.textContent;
+                    }
+                    dynamic.appendChild(tag);
+                    s.remove();
+                });
+            })
+            .catch(err => {
+                dynamic.innerHTML = "Failed to load Messages page";
+            });
+    }
+
+    function loadPromoPage() {
+        const dynamic = document.getElementById("dynamicPage");
+        const dashboard = document.getElementById("dashboardBody");
+
+        dashboard.style.display = "none";
+        dynamic.style.display = "block";
+        dynamic.style.width = "100%";
+
+        fetch("promo-codes.html")
+            .then(r => r.text())
+            .then(html => {
+                dynamic.innerHTML = html;
+
+                const scripts = [...dynamic.querySelectorAll("script")];
+                scripts.forEach(s => {
+                    const tag = document.createElement("script");
+                    if (s.src) {
+                        tag.src = s.src + "?v=" + Date.now();
+                    } else {
+                        tag.textContent = s.textContent;
+                    }
+                    document.body.appendChild(tag);
+                    s.remove();
+                });
+            })
+            .catch(err => {
+                dynamic.innerHTML = "Failed to load Promo Codes page";
+            });
+    }
+
+    function loadOrdersPage() {
+        const dynamic = document.getElementById("dynamicPage");
+        const dashboard = document.getElementById("dashboardBody");
+
+        dashboard.style.display = "none";
+        dynamic.style.display = "block";
+        dynamic.style.width = "100%";
+
+        fetch("orders.html")
+            .then(r => r.text())
+            .then(html => {
+                dynamic.innerHTML = html;
+
+                const scripts = [...dynamic.querySelectorAll("script")];
+                scripts.forEach(s => {
+                    const tag = document.createElement("script");
+                    if (s.src) {
+                        tag.src = s.src + "?v=" + Date.now();
+                    } else {
+                        tag.textContent = s.textContent;
+                    }
+                    document.body.appendChild(tag);
+                    s.remove();
+                });
+            })
+            .catch(err => {
+                dynamic.innerHTML = "Failed to load Orders page";
+            });
+    }
+
+    // ---------- DASHBOARD STAT HELPERS (DATE-BASED) ----------
+
+    // currently selected date for stats (default: today)
+    let selectedDate = new Date();
+
+    function getDayRange(date) {
+        const d = new Date(date);
+        const yyyy = d.getFullYear();
+        const mm = d.getMonth();
+        const dd = d.getDate();
+
+        const start = new Date(yyyy, mm, dd, 0, 0, 0, 0);
+        const end   = new Date(yyyy, mm, dd, 23, 59, 59, 999);
+        return { start, end };
+    }
+
+    function updateMessagesCountForDate(date) {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
+        if (!target) return;
+
+        const { start, end } = getDayRange(date);
+
+        db.collection("contactSubmissions")
+          .where("timestamp", ">=", start)
+          .where("timestamp", "<=", end)
+          .get()
+          .then(snapshot => {
+              target.textContent = snapshot.size;
+          })
+          .catch(() => {
+              target.textContent = "0";
+          });
+    }
+
+    function updateRevenueForDate(date) {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(1) .stat-number');
+        if (!target) return;
+
+        const { start, end } = getDayRange(date);
+
+        db.collection("orders")
+          .where("createdAt", ">=", start)
+          .where("createdAt", "<=", end)
+          .get()
+          .then(snapshot => {
+              let total = 0;
+              snapshot.forEach(doc => {
+                  const data = doc.data();
+                  const amount = Number(data.total || 0);
+                  total += amount;
+              });
+              target.textContent = "₹" + total.toFixed(2);
+          })
+          .catch(() => {
+              target.textContent = "₹0.00";
+          });
+    }
+
+    function updateNewCustomersCountForDate(date) {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(3) .stat-number');
+        if (!target) return;
+
+        const { start, end } = getDayRange(date);
+
+        db.collection("users")
+          .where("createdAt", ">=", start)
+          .where("createdAt", "<=", end)
+          .get()
+          .then(snapshot => {
+              target.textContent = snapshot.size;
+          })
+          .catch(() => {
+              target.textContent = "0";
+          });
+    }
+
+    function updateStatsForDate(date) {
+        // keep a clean copy of selected date
+        selectedDate = new Date(date.getTime());
+        updateRevenueForDate(selectedDate);
+        updateNewCustomersCountForDate(selectedDate);
+        updateMessagesCountForDate(selectedDate);
+    }
+
+    // ---------- PENDING ORDERS: ALWAYS LIVE (REAL-TIME) ----------
+
+    function updatePendingOrdersCount() {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
+        if (!target) return;
+
+        db.collection("orders")
+          .where("status", "==", "pending")
+          .onSnapshot(snapshot => {
+              target.textContent = snapshot.size;
+          });
+    }
+
+    function loadCustomersPage() {
+        const dynamic = document.getElementById("dynamicPage");
+        const dashboard = document.getElementById("dashboardBody");
+
+        dashboard.style.display = "none";
+        dynamic.style.display = "block";
+        dynamic.style.width = "100%";
+
+        fetch("customers.html")
+            .then(r => r.text())
+            .then(html => {
+                dynamic.innerHTML = html;
+
+                const scripts = [...dynamic.querySelectorAll("script")];
+                scripts.forEach(s => {
+                    const tag = document.createElement("script");
+                    if (s.src) {
+                        tag.src = s.src + "?v=" + Date.now();
+                    } else {
+                        tag.textContent = s.textContent;
+                    }
+                    document.body.appendChild(tag);
+                    s.remove();
+                });
+            })
+            .catch(err => {
+                dynamic.innerHTML = "Failed to load Customers page";
+                console.error("Error loading customers page:", err);
+            });
+    }
+
+    function showDashboard() {
+        const dynamic = document.getElementById("dynamicPage");
+        const dashboard = document.getElementById("dashboardBody");
+
+        dashboard.style.display = "block";
+        dynamic.style.display = "none";
+        dynamic.innerHTML = "";
+    }
+
+    function initDashboard() {
+        setupEventListeners();
+        updateDateWidget();
+        initCalendar();
+        loadDashboardRecentOrders();
+        setupMobileMenu();
+
+        // live pending orders
+        updatePendingOrdersCount();
+
+        // stats should default to TODAY
+        const today = new Date();
+        updateStatsForDate(today);
 
         const dynamicPage = document.getElementById("dynamicPage");
-        dynamicPage.style.display = "none";
+        if (dynamicPage) dynamicPage.style.display = "none";
+    }
 
-        firebase.initializeApp(firebaseConfig);
-        window.db = firebase.firestore();
+    function setupEventListeners() {
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', function () {
+                const menuText = this.querySelector('.menu-text').textContent.trim();
+                menuItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
 
-        function loadMessagesPage() {
-            const dynamic = document.getElementById("dynamicPage");
-            const dashboard = document.getElementById("dashboardBody");
+                switch(menuText) {
+                    case 'Dashboard':
+                        showDashboard();
+                        break;
+                    case 'Messages':
+                        loadMessagesPage();
+                        break;
+                    case 'Promo Codes':
+                        loadPromoPage();
+                        break;
+                    case 'Orders':
+                        loadOrdersPage();
+                        break;
+                    case 'Customers':
+                        loadCustomersPage();
+                        break;
+                    default:
+                        showDashboard();
+                        break;
+                }
 
-            dashboard.style.display = "none";
-            dynamic.style.display = "block";
-            dynamic.style.width = "100%";
+                if (window.innerWidth <= 992) closeMobileMenu();
+            });
+        });
 
-            fetch("contact-submissions.html")
-                .then(r => r.text())
-                .then(html => {
-                    dynamic.innerHTML = html;
-                    const scripts = [...dynamic.querySelectorAll("script")];
-                    scripts.forEach(s => {
-                        const tag = document.createElement("script");
-                        if (s.src) {
-                            tag.src = s.src + "?v=" + Date.now();
-                        } else {
-                            tag.textContent = s.textContent;
-                        }
-                        dynamic.appendChild(tag);
-                        s.remove();
-                    });
-                })
-                .catch(err => {
-                    dynamic.innerHTML = "Failed to load Messages page";
-                });
-        }
+        document.getElementById('prev-month').addEventListener('click', function () {
+            currentMonth--;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            renderCalendar(currentMonth, currentYear);
+        });
 
-        function loadPromoPage() {
-            const dynamic = document.getElementById("dynamicPage");
-            const dashboard = document.getElementById("dashboardBody");
+        document.getElementById('next-month').addEventListener('click', function () {
+            currentMonth++;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar(currentMonth, currentYear);
+        });
+    }
 
-            dashboard.style.display = "none";
-            dynamic.style.display = "block";
-            dynamic.style.width = "100%";
+    function renderDashboardEmptyOrders(list) {
+        list.innerHTML = "";
 
-            fetch("promo-codes.html")
-                .then(r => r.text())
-                .then(html => {
-                    dynamic.innerHTML = html;
+        const div = document.createElement("div");
+        div.className = "order-item order-item-empty fade-in";
+        div.style.width = "100%";
+        div.style.minWidth = "100%";
+        div.style.textAlign = "center";
+        div.style.padding = "25px";
 
-                    const scripts = [...dynamic.querySelectorAll("script")];
-                    scripts.forEach(s => {
-                        const tag = document.createElement("script");
-                        if (s.src) {
-                            tag.src = s.src + "?v=" + Date.now();
-                        } else {
-                            tag.textContent = s.textContent;
-                        }
-                        document.body.appendChild(tag);
-                        s.remove();
-                    });
-                })
-                .catch(err => {
-                    dynamic.innerHTML = "Failed to load Promo Codes page";
-                });
-        }
+        div.innerHTML = `
+            <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">
+                No orders yet
+            </div>
+            <div style="font-size: 0.9rem; color: #666;">
+                New orders will appear here as soon as they are placed.
+            </div>
+        `;
 
-        function loadOrdersPage() {
-            const dynamic = document.getElementById("dynamicPage");
-            const dashboard = document.getElementById("dashboardBody");
+        list.appendChild(div);
+    }
 
-            dashboard.style.display = "none";
-            dynamic.style.display = "block";
-            dynamic.style.width = "100%";
+    async function loadDashboardRecentOrders() {
+        const list = document.getElementById("dashboardRecentOrders");
+        if (!list) return;
 
-            fetch("orders.html")
-                .then(r => r.text())
-                .then(html => {
-                    dynamic.innerHTML = html;
+        renderDashboardEmptyOrders(list);
 
-                    const scripts = [...dynamic.querySelectorAll("script")];
-                    scripts.forEach(s => {
-                        const tag = document.createElement("script");
-                        if (s.src) {
-                            tag.src = s.src + "?v=" + Date.now();
-                        } else {
-                            tag.textContent = s.textContent;
-                        }
-                        document.body.appendChild(tag);
-                        s.remove();
-                    });
-                })
-                .catch(err => {
-                    dynamic.innerHTML = "Failed to load Orders page";
-                });
-        }
-        
-        function updateTodayMessagesCount() {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
-    if (!target) return;
-
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = today.getMonth();
-    const dd = today.getDate();
-
-    const start = new Date(yyyy, mm, dd, 0, 0, 0);
-    const end   = new Date(yyyy, mm, dd, 23, 59, 59);
-
-    db.collection("contactSubmissions")
-      .where("timestamp", ">=", start)
-      .where("timestamp", "<=", end)
-      .onSnapshot(snapshot => {
-          target.textContent = snapshot.size;
-      });
-}
-
-        
-        function updatePendingOrdersCount() {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
-    if (!target) return;
-
-    db.collection("orders")
-      .where("status", "==", "pending")
-      .onSnapshot(snapshot => {
-          target.textContent = snapshot.size;
-      });
-}
-
-
-        function loadCustomersPage() {
-            const dynamic = document.getElementById("dynamicPage");
-            const dashboard = document.getElementById("dashboardBody");
-
-            dashboard.style.display = "none";
-            dynamic.style.display = "block";
-            dynamic.style.width = "100%";
-
-            fetch("customers.html")
-                .then(r => r.text())
-                .then(html => {
-                    dynamic.innerHTML = html;
-
-                    const scripts = [...dynamic.querySelectorAll("script")];
-                    scripts.forEach(s => {
-                        const tag = document.createElement("script");
-                        if (s.src) {
-                            tag.src = s.src + "?v=" + Date.now();
-                        } else {
-                            tag.textContent = s.textContent;
-                        }
-                        document.body.appendChild(tag);
-                        s.remove();
-                    });
-                })
-                .catch(err => {
-                    dynamic.innerHTML = "Failed to load Customers page";
-                    console.error("Error loading customers page:", err);
-                });
-        }
-        
-        function updateTodayRevenue() {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(1) .stat-number');
-    if (!target) return;
-
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = today.getMonth();
-    const dd = today.getDate();
-
-    const start = new Date(yyyy, mm, dd, 0, 0, 0);
-    const end   = new Date(yyyy, mm, dd, 23, 59, 59);
-
-    db.collection("orders")
-      .where("createdAt", ">=", start)
-      .where("createdAt", "<=", end)
-      .onSnapshot(snapshot => {
-
-          let total = 0;
-          snapshot.forEach(doc => {
-              const data = doc.data();
-              const amount = Number(data.total || 0);
-              total += amount;
-          });
-
-          target.textContent = "₹" + total.toFixed(2);
-      });
-}
-
-        
-        function updateNewCustomersCount() {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(3) .stat-number');
-    if (!target) return;
-
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = today.getMonth();
-    const dd = today.getDate();
-
-    const start = new Date(yyyy, mm, dd, 0, 0, 0);
-    const end   = new Date(yyyy, mm, dd, 23, 59, 59);
-
-    db.collection("users")
-      .where("createdAt", ">=", start)
-      .where("createdAt", "<=", end)
-      .onSnapshot(snapshot => {
-          target.textContent = snapshot.size;
-      });
-}
-
-
-        function showDashboard() {
-            const dynamic = document.getElementById("dynamicPage");
-            const dashboard = document.getElementById("dashboardBody");
-
-            dashboard.style.display = "block";
-            dynamic.style.display = "none";
-            dynamic.innerHTML = "";
-        }
-
-        function initDashboard() {
-            setupEventListeners();
-            updateDateWidget();
-            initCalendar();
-            loadDashboardRecentOrders();
-            setupMobileMenu();
-                updatePendingOrdersCount();
-                updateNewCustomersCount();
-                updateTodayMessagesCount();
-                updateTodayRevenue();
-
-
-            const dynamicPage = document.getElementById("dynamicPage");
-            if (dynamicPage) dynamicPage.style.display = "none";
-        }
-
-        function setupEventListeners() {
-            const menuItems = document.querySelectorAll('.menu-item');
-            menuItems.forEach(item => {
-                item.addEventListener('click', function () {
-                    const menuText = this.querySelector('.menu-text').textContent.trim();
-                    menuItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-
-                    switch(menuText) {
-                        case 'Dashboard':
-                            showDashboard();
-                            break;
-                        case 'Messages':
-                            loadMessagesPage();
-                            break;
-                        case 'Promo Codes':
-                            loadPromoPage();
-                            break;
-                        case 'Orders':
-                            loadOrdersPage();
-                            break;
-                        case 'Customers':
-                            loadCustomersPage();
-                            break;
-                        default:
-                            showDashboard();
-                            break;
+        try {
+            db.collection("orders")
+                .orderBy("createdAt", "desc")
+                .limit(5)
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) {
+                        renderDashboardEmptyOrders(list);
+                        return;
                     }
 
-                    if (window.innerWidth <= 992) closeMobileMenu();
-                });
-            });
+                    list.innerHTML = "";
 
-            document.getElementById('prev-month').addEventListener('click', function () {
-                currentMonth--;
-                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-                renderCalendar(currentMonth, currentYear);
-            });
+                    snapshot.forEach(doc => {
+                        const o = doc.data();
+                        const div = document.createElement("div");
+                        div.className = "order-item fade-in";
 
-            document.getElementById('next-month').addEventListener('click', function () {
-                currentMonth++;
-                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-                renderCalendar(currentMonth, currentYear);
-            });
-        }
+                        const total = Number(o.total || 0).toFixed(2);
+                        const status = (o.status || "pending").toLowerCase();
+                        const label = status.charAt(0).toUpperCase() + status.slice(1);
 
-function renderDashboardEmptyOrders(list) {
-    list.innerHTML = "";
-
-    const div = document.createElement("div");
-    div.className = "order-item order-item-empty fade-in";
-    div.style.width = "100%";
-    div.style.minWidth = "100%";
-    div.style.textAlign = "center";
-    div.style.padding = "25px";
-
-    div.innerHTML = `
-        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">
-            No orders yet
-        </div>
-        <div style="font-size: 0.9rem; color: #666;">
-            New orders will appear here as soon as they are placed.
-        </div>
-    `;
-
-    list.appendChild(div);
-}
-
-        async function loadDashboardRecentOrders() {
-            const list = document.getElementById("dashboardRecentOrders");
-            if (!list) return;
-
-            renderDashboardEmptyOrders(list);
-
-            try {
-                db.collection("orders")
-                    .orderBy("createdAt", "desc")
-                    .limit(5)
-                    .onSnapshot(snapshot => {
-                        if (snapshot.empty) {
-                            renderDashboardEmptyOrders(list);
-                            return;
-                        }
-
-                        list.innerHTML = "";
-
-                        snapshot.forEach(doc => {
-                            const o = doc.data();
-                            const div = document.createElement("div");
-                            div.className = "order-item fade-in";
-
-                            const total = Number(o.total || 0).toFixed(2);
-                            const status = (o.status || "pending").toLowerCase();
-                            const label = status.charAt(0).toUpperCase() + status.slice(1);
-
-                            div.innerHTML = `
-                                <div class="order-info">
-                                    <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                                    <div class="order-details">
-                                        <div class="order-id">#${doc.id.substring(0, 8)}</div>
-                                        <div class="order-amount">₹${total}</div>
-                                    </div>
+                        div.innerHTML = `
+                            <div class="order-info">
+                                <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
+                                <div class="order-details">
+                                    <div class="order-id">#${doc.id.substring(0, 8)}</div>
+                                    <div class="order-amount">₹${total}</div>
                                 </div>
-                                <div class="order-status ${statusClass(status)}">${label}</div>
-                            `;
+                            </div>
+                            <div class="order-status ${statusClass(status)}">${label}</div>
+                        `;
 
-                            list.appendChild(div);
-                        });
+                        list.appendChild(div);
                     });
+                });
 
-            } catch (e) {
-                renderDashboardEmptyOrders(list);
+        } catch (e) {
+            renderDashboardEmptyOrders(list);
+        }
+    }
+
+    function statusClass(s) {
+        const map = {
+            pending: "status-pending",
+            confirmed: "status-confirmed",
+            shipped: "status-shipped",
+            delivered: "status-delivered",
+            cancelled: "status-cancelled",
+            processing: "status-processing"
+        };
+        return map[s] || "status-pending";
+    }
+
+    function setupMobileMenu() {
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        sidebarOverlay.addEventListener('click', closeMobileMenu);
+    }
+
+    function toggleMobileMenu() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    }
+
+    function closeMobileMenu() {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+    }
+
+    function updateDateWidget() {
+        const now = new Date();
+        document.getElementById('current-day').textContent = now.getDate();
+        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        document.getElementById('current-day-name').textContent = dayNames[now.getDay()] + ",";
+        const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        document.getElementById('current-month-year').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+    }
+
+    let currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+
+    function handleCalendarDayClick(year, month, day, element) {
+        const calendarDays = document.getElementById('calendar-days');
+        if (!calendarDays) return;
+
+        // remove previous selection
+        calendarDays.querySelectorAll('.calendar-day').forEach(el => {
+            el.classList.remove('selected');
+        });
+
+        // mark new selected cell
+        element.classList.add('selected');
+
+        // update stats for that date
+        const clickedDate = new Date(year, month, day);
+        updateStatsForDate(clickedDate);
+    }
+
+    function initCalendar() {
+        renderCalendar(currentMonth, currentYear);
+    }
+
+    function renderCalendar(month, year) {
+        const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+        const calendarDays = document.getElementById('calendar-days');
+        calendarDays.innerHTML = '';
+
+        const today = new Date();
+
+        // leading previous-month days (no click)
+        for (let i = firstDay - 1; i >= 0; i--) {
+            const d = document.createElement('div');
+            d.className = 'calendar-day other-month';
+            d.textContent = daysInPrevMonth - i;
+            calendarDays.appendChild(d);
+        }
+
+        // current month days
+        for (let i = 1; i <= daysInMonth; i++) {
+            const d = document.createElement('div');
+            d.className = 'calendar-day';
+            d.textContent = i;
+
+            // mark today
+            if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                d.classList.add('today');
             }
-        }
 
-        function statusClass(s) {
-            const map = {
-                pending: "status-pending",
-                confirmed: "status-confirmed",
-                shipped: "status-shipped",
-                delivered: "status-delivered",
-                cancelled: "status-cancelled",
-                processing: "status-processing"
-            };
-            return map[s] || "status-pending";
-        }
-
-        function setupMobileMenu() {
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
-            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-            sidebarOverlay.addEventListener('click', closeMobileMenu);
-        }
-
-        function toggleMobileMenu() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
-        }
-
-        function closeMobileMenu() {
-            document.getElementById('sidebar').classList.remove('active');
-            document.getElementById('sidebarOverlay').classList.remove('active');
-        }
-
-        function updateDateWidget() {
-            const now = new Date();
-            document.getElementById('current-day').textContent = now.getDate();
-            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-            document.getElementById('current-day-name').textContent = dayNames[now.getDay()] + ",";
-            const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-            document.getElementById('current-month-year').textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-        }
-
-        let currentDate = new Date();
-        let currentMonth = currentDate.getMonth();
-        let currentYear = currentDate.getFullYear();
-
-        function initCalendar() {
-            renderCalendar(currentMonth, currentYear);
-        }
-
-        function renderCalendar(month, year) {
-            const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-            document.getElementById('calendar-month').textContent = `${monthNames[month]} ${year}`;
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const daysInPrevMonth = new Date(year, month, 0).getDate();
-            const calendarDays = document.getElementById('calendar-days');
-            calendarDays.innerHTML = '';
-
-            for (let i = firstDay - 1; i >= 0; i--) {
-                const d = document.createElement('div');
-                d.className = 'calendar-day other-month';
-                d.textContent = daysInPrevMonth - i;
-                calendarDays.appendChild(d);
+            // mark selected date
+            if (selectedDate &&
+                selectedDate.getFullYear() === year &&
+                selectedDate.getMonth() === month &&
+                selectedDate.getDate() === i) {
+                d.classList.add('selected');
             }
 
-            const today = new Date();
-            for (let i = 1; i <= daysInMonth; i++) {
-                const d = document.createElement('div');
-                d.className = 'calendar-day';
-                d.textContent = i;
-                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                    d.classList.add('today');
-                }
-                calendarDays.appendChild(d);
-            }
+            d.addEventListener('click', () => handleCalendarDayClick(year, month, i, d));
 
-            const totalCells = 42;
-            const remaining = totalCells - (firstDay + daysInMonth);
-            for (let i = 1; i <= remaining; i++) {
-                const d = document.createElement('div');
-                d.className = 'calendar-day other-month';
-                d.textContent = i;
-                calendarDays.appendChild(d);
-            }
+            calendarDays.appendChild(d);
         }
 
-        document.addEventListener('DOMContentLoaded', initDashboard);
-    </script>
+        // trailing next-month days (no click)
+        const totalCells = 42;
+        const usedCells = firstDay + daysInMonth;
+        const remaining = totalCells - usedCells;
+        for (let i = 1; i <= remaining; i++) {
+            const d = document.createElement('div');
+            d.className = 'calendar-day other-month';
+            d.textContent = i;
+            calendarDays.appendChild(d);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initDashboard);
+</script>
 </body>
 </html>
