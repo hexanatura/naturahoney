@@ -1585,6 +1585,27 @@
                 });
         }
         
+        function updateTodayMessagesCount() {
+    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
+    if (!target) return;
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = today.getMonth();
+    const dd = today.getDate();
+
+    const start = new Date(yyyy, mm, dd, 0, 0, 0);
+    const end   = new Date(yyyy, mm, dd, 23, 59, 59);
+
+    db.collection("contactSubmissions")
+      .where("timestamp", ">=", start)
+      .where("timestamp", "<=", end)
+      .onSnapshot(snapshot => {
+          target.textContent = snapshot.size;
+      });
+}
+
+        
         function updatePendingOrdersCount() {
     const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
     if (!target) return;
@@ -1666,6 +1687,7 @@
             setupMobileMenu();
                 updatePendingOrdersCount();
                 updateNewCustomersCount();
+                updateTodayMessagesCount();
 
 
             const dynamicPage = document.getElementById("dynamicPage");
