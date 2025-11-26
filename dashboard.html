@@ -1627,6 +1627,27 @@
                     console.error("Error loading customers page:", err);
                 });
         }
+        
+        function updateNewCustomersCount() {
+    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(3) .stat-number');
+    if (!target) return;
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = today.getMonth();
+    const dd = today.getDate();
+
+    const start = new Date(yyyy, mm, dd, 0, 0, 0);
+    const end   = new Date(yyyy, mm, dd, 23, 59, 59);
+
+    db.collection("users")
+      .where("createdAt", ">=", start)
+      .where("createdAt", "<=", end)
+      .onSnapshot(snapshot => {
+          target.textContent = snapshot.size;
+      });
+}
+
 
         function showDashboard() {
             const dynamic = document.getElementById("dynamicPage");
@@ -1644,6 +1665,8 @@
             loadDashboardRecentOrders();
             setupMobileMenu();
                 updatePendingOrdersCount();
+                updateNewCustomersCount();
+
 
             const dynamicPage = document.getElementById("dynamicPage");
             if (dynamicPage) dynamicPage.style.display = "none";
