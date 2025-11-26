@@ -367,12 +367,27 @@
         const confirmMsg = document.getElementById("cv-confirm-msg");
         const confirmOk = document.getElementById("cv-confirm-ok");
         const confirmCancel = document.getElementById("cv-confirm-cancel");
+        const confirmClose = document.getElementById("cv-confirm-close");
+
         const search = document.getElementById("cv-search");
         const filter = document.getElementById("cv-status");
         const sort = document.getElementById("cv-sort");
 
         let data = [];
         let deleteId = null;
+
+        // ---- FIX: real click handlers for close buttons (x mark issue) ----
+        if (modalClose) modalClose.addEventListener("click", () => modalBg.classList.remove("show"));
+        if (closeBtn)  closeBtn.addEventListener("click", () => modalBg.classList.remove("show"));
+        if (modalBg)   modalBg.addEventListener("click", (e) => {
+            if (e.target === modalBg) modalBg.classList.remove("show");
+        });
+
+        if (confirmClose) confirmClose.addEventListener("click", () => confirmBg.classList.remove("show"));
+        if (confirmCancel) confirmCancel.addEventListener("click", () => confirmBg.classList.remove("show"));
+        if (confirmBg) confirmBg.addEventListener("click", (e) => {
+            if (e.target === confirmBg) confirmBg.classList.remove("show");
+        });
 
         load();
 
@@ -384,18 +399,26 @@
                     const v = d.data();
                     const created = ts(v.createdAt || v.creationTime);
                     const last = ts(v.lastLoginAt || v.lastSignInTime);
+
                     data.push({
                         id: d.id,
                         name: v.name || v.displayName || "Unknown",
                         email: v.email || "No email",
-                        phone: v.phone || v.phoneNumber || "-",
+
+                        // ---- FIX: more phone field fallbacks ----
+                        phone: v.phone || v.phoneNumber || v.phone_number || v.mobile || v.mobileNumber || "-",
+
                         createdAt: created,
                         lastLogin: last,
-                        orders: Array.isArray(v.orders) ? v.orders.length : 0,
+                        orders: Array.isArray(v.orders) ? v.orders.length : (v.ordersCount || 0),
                         active: v.active !== false
                     });
                 });
                 apply();
+            }).catch(err => {
+                console.error("Error loading users:", err);
+                T.innerHTML = `<tr><td colspan="7" class="muted">Error loading customers</td></tr>`;
+                C.innerHTML = `<div class="customers-card muted">Error loading customers</div>`;
             });
         }
 
@@ -405,16 +428,19 @@
             if (q) list = list.filter(x =>
                 x.name.toLowerCase().includes(q) ||
                 x.email.toLowerCase().includes(q) ||
-                x.phone.includes(q)
+                (x.phone || "").toLowerCase().includes(q)
             );
+
             const st = filter.value;
             if (st !== "all") {
                 list = list.filter(x => statusText(x).toLowerCase() === st);
             }
+
             const so = sort.value;
             if (so === "newest") list.sort((a, b) => b.createdAt - a.createdAt);
             if (so === "oldest") list.sort((a, b) => a.createdAt - b.createdAt);
-            if (so === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+            if (so === "name")   list.sort((a, b) => a.name.localeCompare(b.name));
+
             render(list);
         }
 
@@ -479,21 +505,15 @@
             `).join("");
         }
 
+        // view / delete / refresh
         document.addEventListener("click", e => {
-            const v = e.target.closest(".v");
-            const d = e.target.closest(".d");
+            const viewBtn = e.target.closest(".v");
+            const delBtn = e.target.closest(".d");
+            const refreshBtn = e.target.closest("#cv-refresh");
 
-            if (v) return open(v.dataset.id);
-            if (d) return askDelete(d.dataset.id);
-
-            if (e.target.id === "cv-modal-close" || e.target.id === "cv-close")
-                modalBg.classList.remove("show");
-
-            if (e.target.id === "cv-confirm-close" || e.target.id === "cv-confirm-cancel")
-                confirmBg.classList.remove("show");
-
-            if (e.target.id === "cv-confirm-ok") return remove();
-            if (e.target.id === "cv-refresh") return load();
+            if (viewBtn) return open(viewBtn.dataset.id);
+            if (delBtn)  return askDelete(delBtn.dataset.id);
+            if (refreshBtn) return load();
         });
 
         function open(id) {
@@ -549,6 +569,8 @@
             });
         }
 
+        if (confirmOk) confirmOk.addEventListener("click", remove);
+
         search.oninput = apply;
         filter.onchange = apply;
         sort.onchange = apply;
@@ -558,11 +580,13 @@
             C.innerHTML = `<div class="customers-card muted">Loading...</div>`;
         }
 
+        // timestamp parser
         const ts = x =>
             x?.toDate?.() ? x.toDate().getTime() :
             x?.seconds ? x.seconds * 1000 :
-            typeof x === "string" ? new Date(x).getTime() :
-            x || 0;
+            typeof x === "string" ? new Date(x).getTime() || 0 :
+            typeof x === "number" ? x :
+            0;
 
         const fmt = d => d ? new Date(d).toLocaleString("en-IN") : "Never";
 
@@ -575,3 +599,4 @@
     setTimeout(init, 40);
 })();
 </script>
+
