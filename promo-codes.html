@@ -1,48 +1,306 @@
-<!-- promo-codes.html -->
 <div class="promo-view fade-in">
   <style>
     .promo-view { padding: 22px; background: transparent; min-height: 100vh; }
-    .promo-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
-    .promo-title { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+
+    .promo-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .promo-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
     .promo-sub { font-size: 0.9rem; color: var(--gray); margin-top: 4px; }
+
     .promo-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .promo-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; border: 1px solid var(--border); }
-    .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .filter-select, .promo-search { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: transparent; font-size: 0.95rem; min-width: 160px; }
-    .promo-search { display: flex; align-items: center; gap: 8px; padding: 8px 12px; min-width: 260px; max-width: 420px; }
-    .promo-search input { border: 0; outline: none; background: transparent; width: 100%; font-size: 0.95rem; }
-    .btn-ghost { background: transparent; border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
-    .btn-primary { background: var(--dark); color: var(--secondary); border-radius: 10px; padding: 9px 14px; border: none; cursor: pointer; font-weight: 700; }
-    .btn-primary:disabled { background: var(--gray); cursor: not-allowed; opacity: 0.6; }
-    .promo-table { width: 100%; border-collapse: collapse; margin-top: 16px; min-width: 900px; font-size: 0.95rem; }
-    .promo-table thead th { text-align: left; padding: 12px 16px; font-weight: 700; color: var(--dark); border-bottom: 1px solid var(--border); background: transparent; }
-    .promo-table tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; background: transparent; }
-    .promo-table tbody tr:hover { background: rgba(0,0,0,0.02); }
-    .promo-table td { padding: 12px 16px; vertical-align: middle; color: var(--dark); }
-    .tag { display: inline-block; padding: 6px 10px; border-radius: 999px; font-weight: 600; font-size: 0.8rem; background: rgba(0,0,0,0.03); }
-    .status-pill { display: inline-block; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 0.75rem; }
-    .status-active { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.18); }
-    .status-inactive { background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.12); }
-    .status-expired { background: rgba(0,0,0,0.04); color: #666; border: 1px solid rgba(0,0,0,0.06); }
-    .action-btn { border-radius: 8px; border: 0; padding: 8px; cursor: pointer; background: transparent; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; }
+
+    .promo-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-select,
+    .promo-search {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-size: 0.95rem;
+      min-width: 160px;
+    }
+
+    .promo-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      min-width: 260px;
+      max-width: 420px;
+    }
+
+    .promo-search input {
+      border: 0;
+      outline: none;
+      background: transparent;
+      width: 100%;
+      font-size: 0.95rem;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: var(--dark);
+      color: var(--secondary);
+      border-radius: 10px;
+      padding: 9px 14px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-primary:disabled {
+      background: var(--gray);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .promo-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      min-width: 900px;
+      font-size: 0.95rem;
+    }
+
+    .promo-table thead th {
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--dark);
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+    }
+
+    .promo-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+      background: transparent;
+    }
+
+    .promo-table tbody tr:hover { background: rgba(0, 0, 0, 0.02); }
+
+    .promo-table td {
+      padding: 12px 16px;
+      vertical-align: middle;
+      color: var(--dark);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    .status-active {
+      background: rgba(16, 185, 129, 0.12);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.18);
+    }
+
+    .status-inactive {
+      background: rgba(239, 68, 68, 0.08);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.12);
+    }
+
+    .status-expired {
+      background: rgba(0, 0, 0, 0.04);
+      color: #666;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .action-btn {
+      border-radius: 8px;
+      border: 0;
+      padding: 8px;
+      cursor: pointer;
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+
     .action-btn .fa-edit { color: var(--dark); }
-    .action-btn .fa-play, .action-btn .fa-pause { color: var(--gray); }
+    .action-btn .fa-play,
+    .action-btn .fa-pause { color: var(--gray); }
     .action-btn .fa-trash { color: #ef4444; }
+
     .mobile-cards { display: none; gap: 12px; margin-top: 12px; }
-    @media (max-width: 1023px) { .table-wrapper { display: none; } .mobile-cards { display: flex; flex-direction: column; } }
-    @media (min-width: 1024px) { .table-wrapper { display: block; } }
-    .promo-modal-bg { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(15,23,42,0.6); z-index: 1200; }
+
+    .promo-modal-bg {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.6);
+      z-index: 1200;
+    }
+
     .promo-modal-bg.show { display: flex; }
-    .promo-modal { width: 100%; max-width: 560px; border-radius: var(--radius); overflow: hidden; background: var(--card-bg); box-shadow: var(--shadow); border: 1px solid var(--border); }
-    .promo-modal .modal-header { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; background: transparent; border-bottom: 1px solid var(--border); }
+
+    .promo-modal {
+      width: 100%;
+      max-width: 560px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--card-bg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .promo-modal .modal-header {
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: transparent;
+      border-bottom: 1px solid var(--border);
+    }
+
     .promo-modal .modal-body { padding: 16px; }
-    .promo-modal .modal-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+    .promo-modal .modal-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
     .muted { color: var(--gray); font-size: 0.9rem; }
-    .flex { display: flex; gap: 10px; align-items: center; }
+
     .col { display: flex; flex-direction: column; gap: 8px; }
-    @media (max-width: 1024px) { .promo-controls { flex-direction: column; width: 100%; } .promo-card.filter-row { width: 100%; flex-wrap: wrap; } .promo-search { min-width: 100%; max-width: 100%; } .promo-top { flex-direction: column; align-items: flex-start; } .promo-card .table-wrapper { overflow-x: auto; } }
-    @media (max-width: 768px) { .promo-title { font-size: 1.1rem; } .promo-sub { font-size: 0.85rem; } .promo-controls { flex-direction: column; width: 100%; } .promo-card.filter-row { flex-direction: column; gap: 10px; width: 100%; } .filter-select { width: 100%; } .promo-search { width: 100%; } .promo-modal .modal-body form > div { flex-direction: column !important; width: 100%; } #pv-value, #pv-max, #pv-limit, #pv-min, #pv-until { width: 100% !important; } }
-    @media (max-width: 480px) { .promo-view { padding: 14px; } .promo-title { font-size: 1rem; } .promo-card { padding: 12px; } .promo-table td, .promo-table th { padding: 8px 10px; } .promo-modal { width: calc(100% - 20px); margin: 0 10px; } .promo-modal .modal-header, .promo-modal .modal-footer, .promo-modal .modal-body { padding: 12px; } input, select, textarea { font-size: 0.9rem; } .mobile-cards .promo-card { padding: 12px; } }
+
+    .field-input,
+    .field-select,
+    .field-textarea {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      font: inherit;
+    }
+
+    .checkbox-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-item label { cursor: pointer; }
+
+    @media (max-width: 1023px) {
+      .table-wrapper { display: none; }
+      .mobile-cards { display: flex; flex-direction: column; }
+
+      .promo-controls { flex-direction: column; width: 100%; }
+      .promo-card.filter-row { width: 100%; flex-wrap: wrap; }
+      .promo-search { min-width: 100%; max-width: 100%; }
+      .promo-top { flex-direction: column; align-items: flex-start; }
+      .promo-card .table-wrapper { overflow-x: auto; }
+    }
+
+    @media (min-width: 1024px) {
+      .table-wrapper { display: block; }
+    }
+
+    @media (max-width: 768px) {
+      .promo-title { font-size: 1.1rem; }
+      .promo-sub { font-size: 0.85rem; }
+
+      .promo-controls { flex-direction: column; width: 100%; }
+      .promo-card.filter-row { flex-direction: column; gap: 10px; width: 100%; }
+      .filter-select { width: 100%; }
+      .promo-search { width: 100%; }
+
+      .promo-modal .modal-body form > div {
+        flex-direction: column !important;
+        width: 100%;
+      }
+
+      #pv-value,
+      #pv-max,
+      #pv-limit,
+      #pv-min,
+      #pv-until {
+        width: 100% !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .promo-view { padding: 14px; }
+      .promo-title { font-size: 1rem; }
+      .promo-card { padding: 12px; }
+      .promo-table td,
+      .promo-table th { padding: 8px 10px; }
+      .promo-modal {
+        width: calc(100% - 20px);
+        margin: 0 10px;
+      }
+      .promo-modal .modal-header,
+      .promo-modal .modal-footer,
+      .promo-modal .modal-body { padding: 12px; }
+      input,
+      select,
+      textarea { font-size: 0.9rem; }
+      .mobile-cards .promo-card { padding: 12px; }
+    }
   </style>
 
   <div class="promo-top">
@@ -59,12 +317,14 @@
           <option value="inactive">Inactive</option>
           <option value="expired">Expired</option>
         </select>
+
         <select id="pv-type" class="filter-select">
           <option value="all">All types</option>
           <option value="fixed">Fixed</option>
           <option value="percentage">Percentage</option>
           <option value="shipping">Free Shipping</option>
         </select>
+
         <div class="promo-search">
           <i class="fas fa-search muted"></i>
           <input id="pv-search" placeholder="Search promo codes or description">
@@ -104,73 +364,91 @@
         <div id="pv-modal-title" style="font-weight:700">Create Promo Code</div>
         <button id="pv-modal-close" class="btn-ghost"><i class="fas fa-times"></i></button>
       </div>
+
       <div class="modal-body">
         <form id="pv-form">
           <input type="hidden" id="pv-id">
+
           <div class="col">
             <label class="muted">Promo Code</label>
-            <input id="pv-code" required style="padding:10px;border:1px solid var(--border);border-radius:8px;text-transform:uppercase">
+            <input id="pv-code" required class="field-input" style="text-transform:uppercase">
           </div>
+
           <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
             <div class="col" style="flex:1">
               <label class="muted">Type</label>
-              <select id="pv-type-select" style="padding:10px;border:1px solid var(--border);border-radius:8px">
+              <select id="pv-type-select" class="field-select">
                 <option value="">Select</option>
                 <option value="fixed">Fixed (₹)</option>
                 <option value="percentage">Percentage (%)</option>
                 <option value="shipping">Free Shipping</option>
               </select>
             </div>
+
             <div class="col" style="width:140px">
               <label class="muted">Value</label>
-              <input id="pv-value" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
+              <input id="pv-value" type="number" class="field-input" min="0">
             </div>
+
             <div class="col" style="width:160px">
               <label class="muted">Max Discount</label>
-              <input id="pv-max" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
+              <input id="pv-max" type="number" class="field-input" min="0">
             </div>
           </div>
+
           <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
             <div class="col" style="flex:1">
               <label class="muted">Description</label>
-              <input id="pv-desc" style="padding:10px;border:1px solid var(--border);border-radius:8px">
+              <input id="pv-desc" class="field-input">
             </div>
+
             <div class="col" style="width:160px">
               <label class="muted">Min Order (₹)</label>
-              <input id="pv-min" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
+              <input id="pv-min" type="number" class="field-input" min="0">
             </div>
           </div>
+
           <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
             <div class="col" style="width:220px">
               <label class="muted">Valid Until</label>
-              <input id="pv-until" type="date" style="padding:10px;border:1px solid var(--border);border-radius:8px">
+              <input id="pv-until" type="date" class="field-input">
             </div>
+
             <div class="col" style="width:160px">
               <label class="muted">Usage Limit</label>
-              <input id="pv-limit" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
-            </div>
-            <div class="col" style="display:flex;align-items:center;gap:8px">
-              <input id="pv-popular" type="checkbox">
-              <label class="muted">Mark as Popular</label>
-            </div>
-            <div class="col" style="display:flex;align-items:center;gap:8px">
-              <input id="pv-checkout" type="checkbox" checked>
-              <label class="muted">Show on Checkout</label>
-            </div>
-            <div class="col" style="display:flex;align-items:center;gap:8px">
-              <input id="pv-active" type="checkbox" checked>
-              <label class="muted">Active</label>
+              <input id="pv-limit" type="number" class="field-input" min="0">
             </div>
           </div>
+
+          <div class="checkbox-row">
+            <div class="checkbox-item">
+              <input id="pv-popular" type="checkbox">
+              <label class="muted" for="pv-popular">Mark as Popular</label>
+            </div>
+
+            <div class="checkbox-item">
+              <input id="pv-checkout" type="checkbox" checked>
+              <label class="muted" for="pv-checkout">Show on Checkout</label>
+            </div>
+
+            <div class="checkbox-item">
+              <input id="pv-active" type="checkbox" checked>
+              <label class="muted" for="pv-active">Active</label>
+            </div>
+          </div>
+
           <div style="margin-top:12px">
             <label class="muted">Terms</label>
-            <textarea id="pv-terms" style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:8px"></textarea>
+            <textarea id="pv-terms" class="field-textarea" style="width:100%;min-height:80px"></textarea>
           </div>
         </form>
       </div>
+
       <div class="modal-footer">
         <button id="pv-cancel" class="btn-ghost">Cancel</button>
-        <button id="pv-save" class="btn-primary"><i class="fas fa-check" style="margin-right:8px"></i> Save</button>
+        <button id="pv-save" class="btn-primary">
+          <i class="fas fa-check" style="margin-right:8px"></i> Save
+        </button>
       </div>
     </div>
   </div>
@@ -181,9 +459,11 @@
         <div style="font-weight:700">Confirm</div>
         <button id="pv-confirm-close" class="btn-ghost"><i class="fas fa-times"></i></button>
       </div>
+
       <div class="modal-body">
         <div id="pv-confirm-msg">Are you sure?</div>
       </div>
+
       <div class="modal-footer">
         <button id="pv-confirm-cancel" class="btn-ghost">Cancel</button>
         <button id="pv-confirm-ok" class="btn-primary">Delete</button>
@@ -227,6 +507,12 @@
       let lastDeleteId = null;
 
       function initializeApp() {
+        if (typeof firebase === 'undefined') {
+          console.error('Firebase not loaded');
+          showError('Firebase SDK not found on page.');
+          return;
+        }
+
         if (!firebase.apps.length) {
           firebase.initializeApp({
             apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
@@ -238,6 +524,7 @@
             measurementId: "G-MQGKK9709H"
           });
         }
+
         loadPromos();
       }
 
@@ -248,7 +535,9 @@
 
       confirmCancel.addEventListener('click', () => confirmBg.classList.remove('show'));
       document.getElementById('pv-confirm-close').addEventListener('click', () => confirmBg.classList.remove('show'));
-      confirmOk.addEventListener('click', () => deletePromo(lastDeleteId));
+      confirmOk.addEventListener('click', () => {
+        if (lastDeleteId) deletePromo(lastDeleteId);
+      });
 
       searchInput.addEventListener('input', applyFilters);
       statusFilter.addEventListener('change', applyFilters);
@@ -256,12 +545,12 @@
 
       tbody.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action]');
-        if (btn) handleAction({ currentTarget: btn });
+        if (btn) handleAction(btn);
       });
 
       cards.addEventListener('click', (e) => {
         const btn = e.target.closest('button[data-action]');
-        if (btn) handleAction({ currentTarget: btn });
+        if (btn) handleAction(btn);
       });
 
       function loadPromos() {
@@ -274,7 +563,10 @@
             qs.forEach(doc => promos.push({ id: doc.id, ...doc.data() }));
             applyFilters();
           })
-          .catch(err => showError('Error loading promo codes: ' + err.message));
+          .catch(err => {
+            console.error(err);
+            showError('Error loading promo codes: ' + err.message);
+          });
       }
 
       function renderPromos(list) {
@@ -285,7 +577,7 @@
         }
 
         tbody.innerHTML = list.map(p => `
-          <tr data-id="${p.id}">
+          <tr data-id="${escapeHtml(p.id)}">
             <td>
               <div style="display:flex;flex-direction:column;gap:6px;">
                 <div style="font-weight:700">${escapeHtml(p.id)}</div>
@@ -303,9 +595,9 @@
             <td class="muted">${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</td>
             <td><span class="status-pill ${getStatusClass(p)}">${getStatusText(p)}</span></td>
             <td style="text-align:right">
-              <button class="action-btn" data-action="edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
-              <button class="action-btn" data-action="toggle" data-id="${p.id}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
-              <button class="action-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash"></i></button>
+              <button class="action-btn" data-action="edit" data-id="${escapeHtml(p.id)}"><i class="fas fa-edit"></i></button>
+              <button class="action-btn" data-action="toggle" data-id="${escapeHtml(p.id)}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
+              <button class="action-btn" data-action="delete" data-id="${escapeHtml(p.id)}"><i class="fas fa-trash"></i></button>
             </td>
           </tr>
         `).join('');
@@ -320,34 +612,41 @@
             <div style="display:flex;justify-content:space-between;gap:8px">
               <div class="muted">Valid: ${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</div>
               <div style="display:flex;gap:6px">
-                <button class="action-btn" data-action="edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
-                <button class="action-btn" data-action="toggle" data-id="${p.id}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
-                <button class="action-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash"></i></button>
+                <button class="action-btn" data-action="edit" data-id="${escapeHtml(p.id)}"><i class="fas fa-edit"></i></button>
+                <button class="action-btn" data-action="toggle" data-id="${escapeHtml(p.id)}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
+                <button class="action-btn" data-action="delete" data-id="${escapeHtml(p.id)}"><i class="fas fa-trash"></i></button>
               </div>
             </div>
           </div>
         `).join('');
       }
 
-      function handleAction(e) {
-        const action = e.currentTarget.getAttribute('data-action');
-        const id = e.currentTarget.getAttribute('data-id');
+      function handleAction(btn) {
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
         const promo = promos.find(x => x.id === id);
 
-        if (action === 'edit') openModal(promo);
+        if (action === 'edit' && promo) openModal(promo);
         if (action === 'toggle') togglePromoStatus(id);
         if (action === 'delete') confirmDelete(id);
       }
 
       function togglePromoStatus(id) {
         const ref = firebase.firestore().collection('promoCodes').doc(id);
-        ref.get().then(doc => {
-          const current = doc.data();
-          return ref.update({
-            active: !current.active,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        ref.get()
+          .then(doc => {
+            if (!doc.exists) throw new Error('Promo not found');
+            const current = doc.data();
+            return ref.update({
+              active: !current.active,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          })
+          .then(loadPromos)
+          .catch(err => {
+            console.error(err);
+            showError('Error updating promo status: ' + err.message);
           });
-        }).then(loadPromos);
       }
 
       function confirmDelete(id) {
@@ -357,10 +656,15 @@
       }
 
       function deletePromo(id) {
-        firebase.firestore().collection('promoCodes').doc(id).delete().then(() => {
-          confirmBg.classList.remove('show');
-          loadPromos();
-        });
+        firebase.firestore().collection('promoCodes').doc(id).delete()
+          .then(() => {
+            confirmBg.classList.remove('show');
+            loadPromos();
+          })
+          .catch(err => {
+            console.error(err);
+            showError('Error deleting promo: ' + err.message);
+          });
       }
 
       function applyFilters() {
@@ -378,10 +682,12 @@
 
         if (ty !== 'all') filtered = filtered.filter(p => p.type === ty);
 
-        if (s) filtered = filtered.filter(p =>
-          (p.id || '').toLowerCase().includes(s) ||
-          (p.description || '').toLowerCase().includes(s)
-        );
+        if (s) {
+          filtered = filtered.filter(p =>
+            (p.id || '').toLowerCase().includes(s) ||
+            (p.description || '').toLowerCase().includes(s)
+          );
+        }
 
         renderPromos(filtered);
       }
@@ -406,6 +712,7 @@
           document.getElementById('pv-modal-title').textContent = 'Create Promo Code';
           form.reset();
           idField.value = '';
+          typeField.value = '';
           activeField.checked = true;
           popularField.checked = false;
           checkoutField.checked = true;
@@ -423,9 +730,11 @@
         const code = (codeField.value || '').trim().toUpperCase();
         if (!code) return;
 
+        const selectedType = typeField.value || 'fixed';
+
         const data = {
-          type: typeField.value || 'fixed',
-          value: typeField.value === 'shipping' ? 0 : parseFloat(valueField.value || 0),
+          type: selectedType,
+          value: selectedType === 'shipping' ? 0 : parseFloat(valueField.value || 0),
           maxDiscount: maxField.value ? parseFloat(maxField.value) : null,
           minOrder: minField.value ? parseFloat(minField.value) : 0,
           description: descField.value || '',
@@ -454,17 +763,28 @@
           saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
           closeModal();
           loadPromos();
+        }).catch(err => {
+          console.error(err);
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
+          showError('Error saving promo: ' + err.message);
         });
       }
 
       function getTypeLabel(t) {
         if (!t) return '';
-        return t === 'fixed' ? 'Fixed Discount' : t === 'percentage' ? 'Percentage Off' : 'Free Shipping';
+        if (t === 'fixed') return 'Fixed Discount';
+        if (t === 'percentage') return 'Percentage Off';
+        if (t === 'shipping') return 'Free Shipping';
+        return t;
       }
 
       function getValueDisplay(p) {
         if (p.type === 'fixed') return `₹${p.value ?? 0}`;
-        if (p.type === 'percentage') return `${p.value ?? 0}%${p.maxDiscount ? ' (max ₹' + p.maxDiscount + ')' : ''}`;
+        if (p.type === 'percentage') {
+          const base = `${p.value ?? 0}%`;
+          return p.maxDiscount ? `${base} (max ₹${p.maxDiscount})` : base;
+        }
         if (p.type === 'shipping') return 'Free Shipping';
         return '';
       }
@@ -487,11 +807,27 @@
       }
 
       function escapeHtml(s) {
-        return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        return String(s || '').replace(/[&<>"']/g, c => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[c]));
       }
 
       function showError(msg) {
-        tbody.innerHTML = `<tr><td colspan="5"><div style="text-align:center;padding:40px;color:#ef4444"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:16px"></i><div style="font-weight:600;margin-bottom:8px;">Error</div><div class="muted">${msg}</div></div></td></tr>`;
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div style="text-align:center;padding:40px;color:#ef4444">
+                <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:16px"></i>
+                <div style="font-weight:600;margin-bottom:8px;">Error</div>
+                <div class="muted">${escapeHtml(msg)}</div>
+              </div>
+            </td>
+          </tr>
+        `;
       }
 
       initializeApp();
