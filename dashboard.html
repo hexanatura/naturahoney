@@ -41,12 +41,12 @@
             overflow-x: hidden;
         }
 
-.main-content {
-    padding-right: 20px;  
-}
-#dynamicPage {
-    padding-right: 20px;
-}
+        .main-content {
+            padding-right: 20px;
+        }
+        #dynamicPage {
+            padding-right: 20px;
+        }
 
         #dynamicPage {
             width: 100%;
@@ -377,7 +377,6 @@
             box-shadow: var(--shadow);
             height: auto;
             width: 100%;
-            overflow: hidden;
         }
 
         .welcome-section:hover {
@@ -829,13 +828,12 @@
             opacity: 5;
             margin-bottom: 6px;
         }
-        
-        .reviews-section,
-.recent-activities {
-    height: auto;
-    min-height: 380px;
-}
 
+        .reviews-section,
+        .recent-activities {
+            height: auto;
+            min-height: 380px;
+        }
 
         .recent-activities {
             background: var(--card-bg);
@@ -1371,47 +1369,8 @@
                             </button>
                         </div>
 
-                        <div class="activities-list">
-                            <div class="activity-item">
-                                <div class="activity-icon"><i class="fas fa-user-plus"></i></div>
-                                <div class="activity-content">
-                                    <div class="activity-message">15 new customers registered today</div>
-                                    <div class="activity-time">1 hour ago</div>
-                                </div>
-                            </div>
-
-                            <div class="activity-item">
-                                <div class="activity-icon"><i class="fas fa-tag"></i></div>
-                                <div class="activity-content">
-                                    <div class="activity-message">Promo code SUMMER25 activated</div>
-                                    <div class="activity-time">2 hours ago</div>
-                                </div>
-                            </div>
-
-                            <div class="activity-item">
-                                <div class="activity-icon"><i class="fas fa-shipping-fast"></i></div>
-                                <div class="activity-content">
-                                    <div class="activity-message">Order #ORD-7819 shipped to customer</div>
-                                    <div class="activity-time">3 hours ago</div>
-                                </div>
-                            </div>
-
-                            <div class="activity-item">
-                                <div class="activity-icon"><i class="fas fa-comment"></i></div>
-                                <div class="activity-content">
-                                    <div class="activity-message">New message from customer #1245</div>
-                                    <div class="activity-time">4 hours ago</div>
-                                </div>
-                            </div>
-
-                            <div class="activity-item">
-                                <div class="activity-icon"><i class="fas fa-chart-line"></i></div>
-                                <div class="activity-content">
-                                    <div class="activity-message">Monthly revenue target achieved</div>
-                                    <div class="activity-time">5 hours ago</div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- DYNAMIC ACTIVITIES LIST -->
+                        <div class="activities-list" id="activitiesList"></div>
                     </div>
 
                     <div class="reviews-section">
@@ -1496,6 +1455,38 @@
     firebase.initializeApp(firebaseConfig);
     window.db = firebase.firestore();
 
+    // ---------- ACTIVITY HELPERS ----------
+
+    function logActivity(type, message) {
+        return db.collection("activities").add({
+            type: type,
+            message: message,
+            time: new Date()
+        }).then(() => {
+            trimActivityCollection();
+        }).catch(() => {});
+    }
+
+    function trimActivityCollection() {
+        db.collection("activities")
+          .orderBy("time", "desc")
+          .get()
+          .then(snapshot => {
+              if (snapshot.size <= 50) return;
+              const extra = snapshot.docs.slice(50);
+              extra.forEach(doc => doc.ref.delete());
+          })
+          .catch(() => {});
+    }
+
+    function timeAgo(date) {
+        const seconds = (Date.now() - date.getTime()) / 1000;
+        if (seconds < 60) return "just now";
+        if (seconds < 3600) return Math.floor(seconds / 60) + " mins ago";
+        if (seconds < 86400) return Math.floor(seconds / 3600) + " hours ago";
+        return Math.floor(seconds / 86400) + " days ago";
+    }
+
     function loadMessagesPage() {
         const dynamic = document.getElementById("dynamicPage");
         const dashboard = document.getElementById("dashboardBody");
@@ -1524,173 +1515,168 @@
                 dynamic.innerHTML = "Failed to load Messages page";
             });
     }
-    
-function updateMonthlyRevenueMetric() {
-    const valueEl = document.querySelector('.metric-row:nth-child(1) .metric-value');
-    const changeEl = document.querySelector('.metric-row:nth-child(1) .metric-change');
 
-    Promise.all([
-        db.collection("orders")
-          .where("createdAt", ">=", CUR.start)
-          .where("createdAt", "<=", CUR.end)
-          .get(),
-        db.collection("orders")
-          .where("createdAt", ">=", PREV.start)
-          .where("createdAt", "<=", PREV.end)
-          .get()
-    ]).then(([curSnap, prevSnap]) => {
+    function updateMonthlyRevenueMetric() {
+        const valueEl = document.querySelector('.metric-row:nth-child(1) .metric-value');
+        const changeEl = document.querySelector('.metric-row:nth-child(1) .metric-change');
 
-        let curTotal = 0, prevTotal = 0;
-        curSnap.forEach(d => curTotal += Number(d.data().total || 0));
-        prevSnap.forEach(d => prevTotal += Number(d.data().total || 0));
+        Promise.all([
+            db.collection("orders")
+              .where("createdAt", ">=", CUR.start)
+              .where("createdAt", "<=", CUR.end)
+              .get(),
+            db.collection("orders")
+              .where("createdAt", ">=", PREV.start)
+              .where("createdAt", "<=", PREV.end)
+              .get()
+        ]).then(([curSnap, prevSnap]) => {
 
-        valueEl.textContent = "₹" + curTotal.toFixed(2);
+            let curTotal = 0, prevTotal = 0;
+            curSnap.forEach(d => curTotal += Number(d.data().total || 0));
+            prevSnap.forEach(d => prevTotal += Number(d.data().total || 0));
 
-        const pct = calcPercentChange(curTotal, prevTotal);
-        if (pct >= 0) {
-            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
-            changeEl.style.color = "green";
-        } else {
-            changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
-            changeEl.style.color = "red";
-        }
-    });
-}
+            valueEl.textContent = "₹" + curTotal.toFixed(2);
 
-
-function updateTotalCustomersMetric() {
-    const valueEl = document.querySelector('.metric-row:nth-child(2) .metric-value');
-    const changeEl = document.querySelector('.metric-row:nth-child(2) .metric-change');
-
-    Promise.all([
-        db.collection("users").get(),  // all time
-        db.collection("users")
-          .where("createdAt", ">=", CUR.start)
-          .where("createdAt", "<=", CUR.end)
-          .get(),
-        db.collection("users")
-          .where("createdAt", ">=", PREV.start)
-          .where("createdAt", "<=", PREV.end)
-          .get()
-    ]).then(([allSnap, curSnap, prevSnap]) => {
-
-        const allCount = allSnap.size;
-        const curCount = curSnap.size;
-        const prevCount = prevSnap.size;
-
-        valueEl.textContent = allCount;
-
-        const pct = calcPercentChange(curCount, prevCount);
-
-        if (pct >= 0) {
-            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
-            changeEl.style.color = "green";
-        } else {
-            changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
-            changeEl.style.color = "red";
-        }
-    });
-}
-
-function updateTotalOrdersMetric() {
-    const valueEl = document.querySelector('.metric-row:nth-child(3) .metric-value');
-    const changeEl = document.querySelector('.metric-row:nth-child(3) .metric-change');
-
-    Promise.all([
-        db.collection("orders").get(),  // all time
-        db.collection("orders")
-          .where("createdAt", ">=", CUR.start)
-          .where("createdAt", "<=", CUR.end)
-          .get(),
-        db.collection("orders")
-          .where("createdAt", ">=", PREV.start)
-          .where("createdAt", "<=", PREV.end)
-          .get()
-    ]).then(([allSnap, curSnap, prevSnap]) => {
-
-        const allCount = allSnap.size;
-        const curCount = curSnap.size;
-        const prevCount = prevSnap.size;
-
-        valueEl.textContent = allCount;
-
-        const pct = calcPercentChange(curCount, prevCount);
-
-        if (pct >= 0) {
-            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
-            changeEl.style.color = "green";
-        } else {
-            changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
-            changeEl.style.color = "red";
-        }
-    });
-}
-
-
-function updateTotalMessagesMetric() {
-    const valueEl = document.querySelector('.metric-row:nth-child(4) .metric-value');
-    const changeEl = document.querySelector('.metric-row:nth-child(4) .metric-change');
-
-    Promise.all([
-        db.collection("contactSubmissions").get(), // all time
-        db.collection("contactSubmissions")
-          .where("timestamp", ">=", CUR.start)
-          .where("timestamp", "<=", CUR.end)
-          .get(),
-        db.collection("contactSubmissions")
-          .where("timestamp", ">=", PREV.start)
-          .where("timestamp", "<=", PREV.end)
-          .get()
-    ]).then(([allSnap, curSnap, prevSnap]) => {
-
-        const allCount = allSnap.size;
-        const curCount = curSnap.size;
-        const prevCount = prevSnap.size;
-
-        valueEl.textContent = allCount;
-
-        const pct = calcPercentChange(curCount, prevCount);
-
-        if (pct >= 0) {
-            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
-            changeEl.style.color = "green";
-        } else {
-            changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
-            changeEl.style.color = "red";
-        }
-    });
-}
-
-
-function updateTotalOrdersTodayMetric() {
-    const targetValue = document.querySelector('.metric-row:nth-child(3) .metric-value');
-    if (!targetValue) return;
-
-    const { start, end } = getDayRange(new Date());
-
-    db.collection("orders")
-        .where("createdAt", ">=", start)
-        .where("createdAt", "<=", end)
-        .onSnapshot(snap => {
-            targetValue.textContent = snap.size;
+            const pct = calcPercentChange(curTotal, prevTotal);
+            if (pct >= 0) {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+                changeEl.style.color = "green";
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+                changeEl.style.color = "red";
+            }
         });
-}
+    }
 
-function updateTotalMessagesTodayMetric() {
-    const targetValue = document.querySelector('.metric-row:nth-child(4) .metric-value');
-    if (!targetValue) return;
+    function updateTotalCustomersMetric() {
+        const valueEl = document.querySelector('.metric-row:nth-child(2) .metric-value');
+        const changeEl = document.querySelector('.metric-row:nth-child(2) .metric-change');
 
-    const { start, end } = getDayRange(new Date());
+        Promise.all([
+            db.collection("users").get(),  // all time
+            db.collection("users")
+              .where("createdAt", ">=", CUR.start)
+              .where("createdAt", "<=", CUR.end)
+              .get(),
+            db.collection("users")
+              .where("createdAt", ">=", PREV.start)
+              .where("createdAt", "<=", PREV.end)
+              .get()
+        ]).then(([allSnap, curSnap, prevSnap]) => {
 
-    db.collection("contactSubmissions")
-        .where("timestamp", ">=", start)
-        .where("timestamp", "<=", end)
-        .onSnapshot(snap => {
-            targetValue.textContent = snap.size;
+            const allCount = allSnap.size;
+            const curCount = curSnap.size;
+            const prevCount = prevSnap.size;
+
+            valueEl.textContent = allCount;
+
+            const pct = calcPercentChange(curCount, prevCount);
+
+            if (pct >= 0) {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+                changeEl.style.color = "green";
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+                changeEl.style.color = "red";
+            }
         });
-}
+    }
 
+    function updateTotalOrdersMetric() {
+        const valueEl = document.querySelector('.metric-row:nth-child(3) .metric-value');
+        const changeEl = document.querySelector('.metric-row:nth-child(3) .metric-change');
 
+        Promise.all([
+            db.collection("orders").get(),  // all time
+            db.collection("orders")
+              .where("createdAt", ">=", CUR.start)
+              .where("createdAt", "<=", CUR.end)
+              .get(),
+            db.collection("orders")
+              .where("createdAt", ">=", PREV.start)
+              .where("createdAt", "<=", PREV.end)
+              .get()
+        ]).then(([allSnap, curSnap, prevSnap]) => {
+
+            const allCount = allSnap.size;
+            const curCount = curSnap.size;
+            const prevCount = prevSnap.size;
+
+            valueEl.textContent = allCount;
+
+            const pct = calcPercentChange(curCount, prevCount);
+
+            if (pct >= 0) {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+                changeEl.style.color = "green";
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+                changeEl.style.color = "red";
+            }
+        });
+    }
+
+    function updateTotalMessagesMetric() {
+        const valueEl = document.querySelector('.metric-row:nth-child(4) .metric-value');
+        const changeEl = document.querySelector('.metric-row:nth-child(4) .metric-change');
+
+        Promise.all([
+            db.collection("contactSubmissions").get(), // all time
+            db.collection("contactSubmissions")
+              .where("timestamp", ">=", CUR.start)
+              .where("timestamp", "<=", CUR.end)
+              .get(),
+            db.collection("contactSubmissions")
+              .where("timestamp", ">=", PREV.start)
+              .where("timestamp", "<=", PREV.end)
+              .get()
+        ]).then(([allSnap, curSnap, prevSnap]) => {
+
+            const allCount = allSnap.size;
+            const curCount = curSnap.size;
+            const prevCount = prevSnap.size;
+
+            valueEl.textContent = allCount;
+
+            const pct = calcPercentChange(curCount, prevCount);
+
+            if (pct >= 0) {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+                changeEl.style.color = "green";
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+                changeEl.style.color = "red";
+            }
+        });
+    }
+
+    function updateTotalOrdersTodayMetric() {
+        const targetValue = document.querySelector('.metric-row:nth-child(3) .metric-value');
+        if (!targetValue) return;
+
+        const { start, end } = getDayRange(new Date());
+
+        db.collection("orders")
+            .where("createdAt", ">=", start)
+            .where("createdAt", "<=", end)
+            .onSnapshot(snap => {
+                targetValue.textContent = snap.size;
+            });
+    }
+
+    function updateTotalMessagesTodayMetric() {
+        const targetValue = document.querySelector('.metric-row:nth-child(4) .metric-value');
+        if (!targetValue) return;
+
+        const { start, end } = getDayRange(new Date());
+
+        db.collection("contactSubmissions")
+            .where("timestamp", ">=", start)
+            .where("timestamp", "<=", end)
+            .onSnapshot(snap => {
+                targetValue.textContent = snap.size;
+            });
+    }
 
     function loadPromoPage() {
         const dynamic = document.getElementById("dynamicPage");
@@ -1827,7 +1813,6 @@ function updateTotalMessagesTodayMetric() {
     }
 
     function updateStatsForDate(date) {
-        // keep a clean copy of selected date
         selectedDate = new Date(date.getTime());
         updateRevenueForDate(selectedDate);
         updateNewCustomersCountForDate(selectedDate);
@@ -1877,23 +1862,22 @@ function updateTotalMessagesTodayMetric() {
                 console.error("Error loading customers page:", err);
             });
     }
-    
+
     function getMonthRange(year, month) {
-    const start = new Date(year, month, 1, 0, 0, 0);
-    const end   = new Date(year, month + 1, 0, 23, 59, 59);
-    return { start, end };
-}
+        const start = new Date(year, month, 1, 0, 0, 0);
+        const end   = new Date(year, month + 1, 0, 23, 59, 59);
+        return { start, end };
+    }
 
-// Calculates percentage movement between two values
-function calcPercentChange(current, previous) {
-    if (previous === 0) return 100;
-    return ((current - previous) / previous) * 100;
-}
+    // Calculates percentage movement between two values
+    function calcPercentChange(current, previous) {
+        if (previous === 0) return 100;
+        return ((current - previous) / previous) * 100;
+    }
 
-const now = new Date();
-const CUR = getMonthRange(now.getFullYear(), now.getMonth());
-const PREV = getMonthRange(now.getFullYear(), now.getMonth() - 1);
-
+    const now = new Date();
+    const CUR = getMonthRange(now.getFullYear(), now.getMonth());
+    const PREV = getMonthRange(now.getFullYear(), now.getMonth() - 1);
 
     function showDashboard() {
         const dynamic = document.getElementById("dynamicPage");
@@ -1909,15 +1893,14 @@ const PREV = getMonthRange(now.getFullYear(), now.getMonth() - 1);
         updateDateWidget();
         initCalendar();
         loadDashboardRecentOrders();
+        loadRecentActivities();
         setupMobileMenu();
-updateTotalOrdersTodayMetric();
-updateTotalMessagesTodayMetric();
-updateMonthlyRevenueMetric();
-updateTotalCustomersMetric();
-updateTotalOrdersMetric();
-updateTotalMessagesMetric();
-
-
+        updateTotalOrdersTodayMetric();
+        updateTotalMessagesTodayMetric();
+        updateMonthlyRevenueMetric();
+        updateTotalCustomersMetric();
+        updateTotalOrdersMetric();
+        updateTotalMessagesMetric();
 
         // live pending orders
         updatePendingOrdersCount();
@@ -1996,6 +1979,58 @@ updateTotalMessagesMetric();
         `;
 
         list.appendChild(div);
+    }
+
+    function loadRecentActivities() {
+        const list = document.getElementById("activitiesList");
+        if (!list) return;
+
+        db.collection("activities")
+          .orderBy("time", "desc")
+          .limit(6)
+          .onSnapshot(snapshot => {
+              list.innerHTML = "";
+
+              // If no activities: keep the list empty.
+              // The card has min-height, so layout doesn't collapse.
+              if (snapshot.empty) {
+                  return;
+              }
+
+              const icons = {
+                  NEW_CUSTOMER: "fa-user-plus",
+                  NEW_ORDER: "fa-shopping-bag",
+                  ORDER_STATUS: "fa-clipboard-check",
+                  NEW_MESSAGE: "fa-comment",
+                  PROMO_CREATED: "fa-tag",
+                  PROMO_UPDATED: "fa-tag",
+                  REVENUE_MILESTONE: "fa-chart-line",
+                  CUSTOMER_MILESTONE: "fa-users"
+              };
+
+              snapshot.forEach(doc => {
+                  const a = doc.data();
+                  const icon = icons[a.type] || "fa-info-circle";
+
+                  const item = document.createElement("div");
+                  item.className = "activity-item fade-in";
+
+                  let timeText = "";
+                  if (a.time && a.time.toDate) {
+                      timeText = timeAgo(a.time.toDate());
+                  }
+
+                  item.innerHTML = `
+                      <div class="activity-icon"><i class="fas ${icon}"></i></div>
+                      <div class="activity-content">
+                          <div class="activity-message">${a.message || ""}</div>
+                          <div class="activity-time">${timeText}</div>
+                      </div>
+                  `;
+
+                  list.appendChild(item);
+              });
+          });
     }
 
     async function loadDashboardRecentOrders() {
