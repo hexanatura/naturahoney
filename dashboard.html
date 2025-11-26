@@ -1649,6 +1649,35 @@
                 });
         }
         
+        function updateTodayRevenue() {
+    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(1) .stat-number');
+    if (!target) return;
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = today.getMonth();
+    const dd = today.getDate();
+
+    const start = new Date(yyyy, mm, dd, 0, 0, 0);
+    const end   = new Date(yyyy, mm, dd, 23, 59, 59);
+
+    db.collection("orders")
+      .where("createdAt", ">=", start)
+      .where("createdAt", "<=", end)
+      .onSnapshot(snapshot => {
+
+          let total = 0;
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              const amount = Number(data.total || 0);
+              total += amount;
+          });
+
+          target.textContent = "₹" + total.toFixed(2);
+      });
+}
+
+        
         function updateNewCustomersCount() {
     const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(3) .stat-number');
     if (!target) return;
@@ -1688,6 +1717,7 @@
                 updatePendingOrdersCount();
                 updateNewCustomersCount();
                 updateTodayMessagesCount();
+                updateTodayRevenue();
 
 
             const dynamicPage = document.getElementById("dynamicPage");
