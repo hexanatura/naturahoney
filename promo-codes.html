@@ -2,344 +2,49 @@
 <div class="promo-view fade-in">
   <style>
     .promo-view { padding: 22px; background: transparent; min-height: 100vh; }
-
-    .promo-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-    
-    .promo-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--dark);
-    }
-    
-    .promo-sub {
-      font-size: 0.9rem;
-      color: var(--gray);
-      margin-top: 4px;
-    }
-
-    .promo-controls {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .promo-card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 16px;
-      border: 1px solid var(--border);
-    }
-
-    .filter-row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    
-    .filter-select, .promo-search {
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: transparent;
-      font-size: 0.95rem;
-      min-width: 160px;
-    }
-
-    .promo-search {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      min-width: 260px;
-      max-width: 420px;
-    }
-    
-    .promo-search input {
-      border: 0;
-      outline: none;
-      background: transparent;
-      width: 100%;
-      font-size: 0.95rem;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid var(--border);
-      padding: 8px 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .btn-primary {
-      background: var(--dark);
-      color: var(--secondary);
-      border-radius: 10px;
-      padding: 9px 14px;
-      border: none;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .btn-primary:disabled {
-      background: var(--gray);
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    .promo-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 16px;
-      min-width: 900px;
-      font-size: 0.95rem;
-    }
-    
-    .promo-table thead th {
-      text-align: left;
-      padding: 12px 16px;
-      font-weight: 700;
-      color: var(--dark);
-      border-bottom: 1px solid var(--border);
-      background: transparent;
-    }
-    
-    .promo-table tbody tr {
-      border-bottom: 1px solid var(--border);
-      transition: background .15s;
-      background: transparent;
-    }
-    
+    .promo-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+    .promo-title { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--dark); }
+    .promo-sub { font-size: 0.9rem; color: var(--gray); margin-top: 4px; }
+    .promo-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .promo-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; border: 1px solid var(--border); }
+    .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .filter-select, .promo-search { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: transparent; font-size: 0.95rem; min-width: 160px; }
+    .promo-search { display: flex; align-items: center; gap: 8px; padding: 8px 12px; min-width: 260px; max-width: 420px; }
+    .promo-search input { border: 0; outline: none; background: transparent; width: 100%; font-size: 0.95rem; }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: var(--dark); color: var(--secondary); border-radius: 10px; padding: 9px 14px; border: none; cursor: pointer; font-weight: 700; }
+    .btn-primary:disabled { background: var(--gray); cursor: not-allowed; opacity: 0.6; }
+    .promo-table { width: 100%; border-collapse: collapse; margin-top: 16px; min-width: 900px; font-size: 0.95rem; }
+    .promo-table thead th { text-align: left; padding: 12px 16px; font-weight: 700; color: var(--dark); border-bottom: 1px solid var(--border); background: transparent; }
+    .promo-table tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; background: transparent; }
     .promo-table tbody tr:hover { background: rgba(0,0,0,0.02); }
     .promo-table td { padding: 12px 16px; vertical-align: middle; color: var(--dark); }
-
-    .tag {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 600;
-      font-size: 0.8rem;
-      background: rgba(0,0,0,0.03);
-    }
-
-    .status-pill {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.75rem;
-    }
-    
+    .tag { display: inline-block; padding: 6px 10px; border-radius: 999px; font-weight: 600; font-size: 0.8rem; background: rgba(0,0,0,0.03); }
+    .status-pill { display: inline-block; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 0.75rem; }
     .status-active { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.18); }
     .status-inactive { background: rgba(239,68,68,0.08); color: #ef4444; border: 1px solid rgba(239,68,68,0.12); }
     .status-expired { background: rgba(0,0,0,0.04); color: #666; border: 1px solid rgba(0,0,0,0.06); }
-
-    .action-btn {
-      border-radius: 8px;
-      border: 0;
-      padding: 8px;
-      cursor: pointer;
-      background: transparent;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-size: 0.95rem;
-    }
-    
-    .action-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
+    .action-btn { border-radius: 8px; border: 0; padding: 8px; cursor: pointer; background: transparent; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; }
     .action-btn .fa-edit { color: var(--dark); }
     .action-btn .fa-play, .action-btn .fa-pause { color: var(--gray); }
     .action-btn .fa-trash { color: #ef4444; }
-
     .mobile-cards { display: none; gap: 12px; margin-top: 12px; }
-    
-    @media (max-width: 1023px) {
-      .table-wrapper { display: none; }
-      .mobile-cards { display: flex; flex-direction: column; }
-    }
-    
-    @media (min-width: 1024px) {
-      .table-wrapper { display: block; }
-    }
-
-    .promo-modal-bg {
-      position: fixed; 
-      inset: 0; 
-      display: none; 
-      align-items: center; 
-      justify-content: center;
-      background: rgba(15,23,42,0.6); 
-      z-index: 1200;
-    }
-    
+    @media (max-width: 1023px) { .table-wrapper { display: none; } .mobile-cards { display: flex; flex-direction: column; } }
+    @media (min-width: 1024px) { .table-wrapper { display: block; } }
+    .promo-modal-bg { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(15,23,42,0.6); z-index: 1200; }
     .promo-modal-bg.show { display: flex; }
-    
-    .promo-modal {
-      width: 100%; 
-      max-width: 560px; 
-      border-radius: var(--radius); 
-      overflow: hidden;
-      background: var(--card-bg); 
-      box-shadow: var(--shadow); 
-      border: 1px solid var(--border);
-    }
-    
-    .promo-modal .modal-header {
-      padding: 14px 16px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      background: transparent;
-      border-bottom: 1px solid var(--border);
-    }
-    
+    .promo-modal { width: 100%; max-width: 560px; border-radius: var(--radius); overflow: hidden; background: var(--card-bg); box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .promo-modal .modal-header { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; background: transparent; border-bottom: 1px solid var(--border); }
     .promo-modal .modal-body { padding: 16px; }
-    
-    .promo-modal .modal-footer { 
-      padding: 12px 16px; 
-      border-top: 1px solid var(--border); 
-      display: flex; 
-      justify-content: flex-end; 
-      gap: 8px; 
-    }
-
+    .promo-modal .modal-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
     .muted { color: var(--gray); font-size: 0.9rem; }
     .flex { display: flex; gap: 10px; align-items: center; }
     .col { display: flex; flex-direction: column; gap: 8px; }
-    
-    .auth-warning {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 16px;
-      color: #856404;
-    }
-    
-    .auth-warning.hidden {
-      display: none;
-    }
-
-    /* Responsive styles */
-    @media (max-width: 1024px) {
-      .promo-controls {
-        flex-direction: column;
-        width: 100%;
-      }
-      .promo-card.filter-row {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-      .promo-search {
-        min-width: 100%;
-        max-width: 100%;
-      }
-      .promo-top {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .promo-card .table-wrapper {
-        overflow-x: auto;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .promo-title {
-        font-size: 1.1rem;
-      }
-      .promo-sub {
-        font-size: 0.85rem;
-      }
-      .promo-controls {
-        flex-direction: column;
-        width: 100%;
-      }
-      .promo-card.filter-row {
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-      }
-      .filter-select {
-        width: 100%;
-      }
-      .promo-search {
-        width: 100%;
-      }
-      .promo-modal .modal-body form > div {
-        flex-direction: column !important;
-        width: 100%;
-      }
-      #pv-value,
-      #pv-max,
-      #pv-limit,
-      #pv-min,
-      #pv-until {
-        width: 100% !important;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .promo-view {
-        padding: 14px;
-      }
-      .promo-title {
-        font-size: 1rem;
-      }
-      .promo-card {
-        padding: 12px;
-      }
-      .promo-table td,
-      .promo-table th {
-        padding: 8px 10px;
-      }
-      .promo-modal {
-        width: calc(100% - 20px);
-        margin: 0 10px;
-      }
-      .promo-modal .modal-header,
-      .promo-modal .modal-footer,
-      .promo-modal .modal-body {
-        padding: 12px;
-      }
-      input,
-      select,
-      textarea {
-        font-size: 0.9rem;
-      }
-      .mobile-cards .promo-card {
-        padding: 12px;
-      }
-    }
+    @media (max-width: 1024px) { .promo-controls { flex-direction: column; width: 100%; } .promo-card.filter-row { width: 100%; flex-wrap: wrap; } .promo-search { min-width: 100%; max-width: 100%; } .promo-top { flex-direction: column; align-items: flex-start; } .promo-card .table-wrapper { overflow-x: auto; } }
+    @media (max-width: 768px) { .promo-title { font-size: 1.1rem; } .promo-sub { font-size: 0.85rem; } .promo-controls { flex-direction: column; width: 100%; } .promo-card.filter-row { flex-direction: column; gap: 10px; width: 100%; } .filter-select { width: 100%; } .promo-search { width: 100%; } .promo-modal .modal-body form > div { flex-direction: column !important; width: 100%; } #pv-value, #pv-max, #pv-limit, #pv-min, #pv-until { width: 100% !important; } }
+    @media (max-width: 480px) { .promo-view { padding: 14px; } .promo-title { font-size: 1rem; } .promo-card { padding: 12px; } .promo-table td, .promo-table th { padding: 8px 10px; } .promo-modal { width: calc(100% - 20px); margin: 0 10px; } .promo-modal .modal-header, .promo-modal .modal-footer, .promo-modal .modal-body { padding: 12px; } input, select, textarea { font-size: 0.9rem; } .mobile-cards .promo-card { padding: 12px; } }
   </style>
 
-  <!-- Authentication Warning -->
-  <div id="auth-warning" class="auth-warning hidden">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <i class="fas fa-exclamation-triangle"></i>
-      <div>
-        <strong>Authentication Required</strong>
-        <div>You need to be signed in as an admin to manage promo codes.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- header / controls -->
   <div class="promo-top">
     <div>
       <div class="promo-title">Promo Codes</div>
@@ -354,30 +59,27 @@
           <option value="inactive">Inactive</option>
           <option value="expired">Expired</option>
         </select>
-
         <select id="pv-type" class="filter-select">
           <option value="all">All types</option>
           <option value="fixed">Fixed</option>
           <option value="percentage">Percentage</option>
           <option value="shipping">Free Shipping</option>
         </select>
-
         <div class="promo-search">
           <i class="fas fa-search muted"></i>
           <input id="pv-search" placeholder="Search promo codes or description">
         </div>
       </div>
 
-      <button id="pv-add" class="btn-primary" disabled>
+      <button id="pv-add" class="btn-primary">
         <i class="fas fa-plus" style="margin-right:8px"></i> Create New
       </button>
     </div>
   </div>
 
-  <!-- table / cards -->
   <div class="promo-card">
     <div class="table-wrapper">
-      <table class="promo-table" aria-label="Promo codes table">
+      <table class="promo-table">
         <thead>
           <tr>
             <th>Promo</th>
@@ -388,9 +90,7 @@
           </tr>
         </thead>
         <tbody id="pv-tbody">
-          <tr>
-            <td colspan="5" class="muted">Loading promo codes…</td>
-          </tr>
+          <tr><td colspan="5" class="muted">Loading promo codes…</td></tr>
         </tbody>
       </table>
     </div>
@@ -398,117 +98,49 @@
     <div class="mobile-cards" id="pv-cards"></div>
   </div>
 
-  <!-- modal: add/edit -->
-  <div class="promo-modal-bg" id="pv-modal-bg" role="dialog" aria-hidden="true">
-    <div class="promo-modal" role="document">
+  <div class="promo-modal-bg" id="pv-modal-bg">
+    <div class="promo-modal">
       <div class="modal-header">
-        <div style="font-weight:700" id="pv-modal-title">Create Promo Code</div>
+        <div id="pv-modal-title" style="font-weight:700">Create Promo Code</div>
         <button id="pv-modal-close" class="btn-ghost"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
         <form id="pv-form">
           <input type="hidden" id="pv-id">
-
-          <div class="col">
-            <label class="muted">Promo Code</label>
-            <input id="pv-code" required style="padding:10px;border:1px solid var(--border);border-radius:8px;text-transform:uppercase">
-          </div>
-
+          <div class="col"><label class="muted">Promo Code</label><input id="pv-code" required style="padding:10px;border:1px solid var(--border);border-radius:8px;text-transform:uppercase"></div>
           <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-            <div class="col" style="flex:1">
-              <label class="muted">Type</label>
-              <select id="pv-type-select" style="padding:10px;border:1px solid var(--border);border-radius:8px">
-                <option value="">Select</option>
-                <option value="fixed">Fixed (₹)</option>
-                <option value="percentage">Percentage (%)</option>
-                <option value="shipping">Free Shipping</option>
-              </select>
-            </div>
-
-            <div class="col" style="width:140px">
-              <label class="muted">Value</label>
-              <input id="pv-value" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
-            </div>
-
-            <div class="col" style="width:160px">
-              <label class="muted">Max Discount</label>
-              <input id="pv-max" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
-            </div>
+            <div class="col" style="flex:1"><label class="muted">Type</label><select id="pv-type-select" style="padding:10px;border:1px solid var(--border);border-radius:8px"><option value="">Select</option><option value="fixed">Fixed (₹)</option><option value="percentage">Percentage (%)</option><option value="shipping">Free Shipping</option></select></div>
+            <div class="col" style="width:140px"><label class="muted">Value</label><input id="pv-value" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0"></div>
+            <div class="col" style="width:160px"><label class="muted">Max Discount</label><input id="pv-max" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0"></div>
           </div>
-
           <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-            <div class="col" style="flex:1">
-              <label class="muted">Description</label>
-              <input id="pv-desc" style="padding:10px;border:1px solid var(--border);border-radius:8px">
-            </div>
-            <div class="col" style="width:160px">
-              <label class="muted">Min Order (₹)</label>
-              <input id="pv-min" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
-            </div>
+            <div class="col" style="flex:1"><label class="muted">Description</label><input id="pv-desc" style="padding:10px;border:1px solid var(--border);border-radius:8px"></div>
+            <div class="col" style="width:160px"><label class="muted">Min Order (₹)</label><input id="pv-min" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0"></div>
           </div>
-
           <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-            <div class="col" style="width:220px">
-              <label class="muted">Valid Until</label>
-              <input id="pv-until" type="date" style="padding:10px;border:1px solid var(--border);border-radius:8px">
-            </div>
-            <div class="col" style="width:160px">
-              <label class="muted">Usage Limit</label>
-              <input id="pv-limit" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0">
-            </div>
-
-            <div class="col" style="display:flex;align-items:center;gap:8px">
-              <input id="pv-active" type="checkbox" checked>
-              <label class="muted">Active</label>
-            </div>
-
-            <div class="col" style="display:flex;align-items:center;gap:8px">
-              <input id="pv-popular" type="checkbox">
-              <label class="muted">Mark as Popular</label>
-            </div>
-
-            <div class="col" style="display:flex;align-items:center;gap:8px">
-              <input id="pv-checkout" type="checkbox" checked>
-              <label class="muted">Show on Checkout</label>
-            </div>
+            <div class="col" style="width:220px"><label class="muted">Valid Until</label><input id="pv-until" type="date" style="padding:10px;border:1px solid var(--border);border-radius:8px"></div>
+            <div class="col" style="width:160px"><label class="muted">Usage Limit</label><input id="pv-limit" type="number" style="padding:10px;border:1px solid var(--border);border-radius:8px" min="0"></div>
+            <div class="col" style="display:flex;align-items:center;gap:8px"><input id="pv-active" type="checkbox" checked><label class="muted">Active</label></div>
+            <div class="col" style="display:flex;align-items:center;gap:8px"><input id="pv-popular" type="checkbox"><label class="muted">Mark as Popular</label></div>
+            <div class="col" style="display:flex;align-items:center;gap:8px"><input id="pv-checkout" type="checkbox" checked><label class="muted">Show on Checkout</label></div>
           </div>
-
-          <div style="margin-top:12px">
-            <label class="muted">Terms</label>
-            <textarea id="pv-terms" style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:8px"></textarea>
-          </div>
+          <div style="margin-top:12px"><label class="muted">Terms</label><textarea id="pv-terms" style="width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:8px"></textarea></div>
         </form>
       </div>
-
-      <div class="modal-footer">
-        <button id="pv-cancel" class="btn-ghost">Cancel</button>
-        <button id="pv-save" class="btn-primary" disabled>
-          <i class="fas fa-check" style="margin-right:8px"></i> Save
-        </button>
-      </div>
+      <div class="modal-footer"><button id="pv-cancel" class="btn-ghost">Cancel</button><button id="pv-save" class="btn-primary"><i class="fas fa-check" style="margin-right:8px"></i> Save</button></div>
     </div>
   </div>
 
-  <!-- confirm modal -->
-  <div class="promo-modal-bg" id="pv-confirm-bg" role="dialog" aria-hidden="true">
-    <div class="promo-modal" role="document" style="max-width:420px">
-      <div class="modal-header">
-        <div style="font-weight:700">Confirm</div>
-        <button id="pv-confirm-close" class="btn-ghost"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="modal-body">
-        <div id="pv-confirm-msg">Are you sure?</div>
-      </div>
-      <div class="modal-footer">
-        <button id="pv-confirm-cancel" class="btn-ghost">Cancel</button>
-        <button id="pv-confirm-ok" class="btn-primary" disabled>Delete</button>
-      </div>
+  <div class="promo-modal-bg" id="pv-confirm-bg">
+    <div class="promo-modal" style="max-width:420px">
+      <div class="modal-header"><div style="font-weight:700">Confirm</div><button id="pv-confirm-close" class="btn-ghost"><i class="fas fa-times"></i></button></div>
+      <div class="modal-body"><div id="pv-confirm-msg">Are you sure?</div></div>
+      <div class="modal-footer"><button id="pv-confirm-cancel" class="btn-ghost">Cancel</button><button id="pv-confirm-ok" class="btn-primary">Delete</button></div>
     </div>
   </div>
 
   <script>
     (function () {
-      // DOM refs
       const tbody = document.getElementById('pv-tbody');
       const cards = document.getElementById('pv-cards');
       const addBtn = document.getElementById('pv-add');
@@ -524,9 +156,7 @@
       const confirmMsg = document.getElementById('pv-confirm-msg');
       const confirmOk = document.getElementById('pv-confirm-ok');
       const confirmCancel = document.getElementById('pv-confirm-cancel');
-      const authWarning = document.getElementById('auth-warning');
 
-      // form fields
       const idField = document.getElementById('pv-id');
       const codeField = document.getElementById('pv-code');
       const typeField = document.getElementById('pv-type-select');
@@ -541,120 +171,35 @@
 
       let promos = [];
       let lastDeleteId = null;
-      let isAuthenticated = false;
-      let currentUser = null;
 
-      // Initialize Firebase and check authentication
       function initializeApp() {
-        try {
-          if (typeof firebase === 'undefined') {
-            showError('Firebase not loaded');
-            return;
-          }
-
-          // Initialize Firebase if not already initialized
-          if (!firebase.apps.length) {
-            const firebaseConfig = {
-              apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-              authDomain: "hexahoney-96aed.firebaseapp.com",
-              projectId: "hexahoney-96aed",
-              storageBucket: "hexahoney-96aed.firebasestorage.app",
-              messagingSenderId: "700458850837",
-              appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-              measurementId: "G-MQGKK9709H"
-            };
-            firebase.initializeApp(firebaseConfig);
-          }
-
-          // Check authentication state
-          firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-              currentUser = user;
-              checkAdminStatus(user);
-            } else {
-              setUnauthenticatedState();
-            }
+        if (!firebase.apps.length) {
+          firebase.initializeApp({
+            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+            authDomain: "hexahoney-96aed.firebaseapp.com",
+            projectId: "hexahoney-96aed",
+            storageBucket: "hexahoney-96aed.firebasestorage.app",
+            messagingSenderId: "700458850837",
+            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+            measurementId: "G-MQGKK9709H"
           });
-
-        } catch (err) {
-          console.error('Firebase initialization failed:', err);
-          showError('Failed to initialize Firebase');
         }
+        loadPromos();
       }
 
-      // Check if user is admin
-      function checkAdminStatus(user) {
-        // First check if user has admin claim
-        user.getIdTokenResult().then((idTokenResult) => {
-          if (idTokenResult.claims.admin) {
-            setAuthenticatedState(true);
-            return;
-          }
-          
-          // If no admin claim, check admins collection
-          firebase.firestore().collection('admins').doc(user.uid).get()
-            .then((doc) => {
-              if (doc.exists) {
-                setAuthenticatedState(true);
-              } else {
-                setAuthenticatedState(false);
-              }
-            })
-            .catch((error) => {
-              console.error('Error checking admin status:', error);
-              setAuthenticatedState(false);
-            });
-        }).catch((error) => {
-          console.error('Error getting ID token:', error);
-          setAuthenticatedState(false);
-        });
-      }
-
-      function setAuthenticatedState(isAdmin) {
-        isAuthenticated = isAdmin;
-        
-        if (isAdmin) {
-          authWarning.classList.add('hidden');
-          addBtn.disabled = false;
-          saveBtn.disabled = false;
-          confirmOk.disabled = false;
-          loadPromos();
-        } else {
-          setUnauthenticatedState();
-          showToast('You do not have admin privileges', true);
-        }
-      }
-
-      function setUnauthenticatedState() {
-        isAuthenticated = false;
-        currentUser = null;
-        authWarning.classList.remove('hidden');
-        addBtn.disabled = true;
-        saveBtn.disabled = true;
-        confirmOk.disabled = true;
-        
-        // Show read-only data if available
-        loadPromosReadOnly();
-      }
-
-      // Wire events
       addBtn.addEventListener('click', () => openModal());
       modalClose.addEventListener('click', closeModal);
       cancelBtn.addEventListener('click', closeModal);
       saveBtn.addEventListener('click', savePromo);
+
+      confirmCancel.addEventListener('click', () => confirmBg.classList.remove('show'));
+      document.getElementById('pv-confirm-close').addEventListener('click', () => confirmBg.classList.remove('show'));
+      confirmOk.addEventListener('click', () => deletePromo(lastDeleteId));
+
       searchInput.addEventListener('input', applyFilters);
       statusFilter.addEventListener('change', applyFilters);
       typeFilter.addEventListener('change', applyFilters);
 
-      confirmCancel.addEventListener('click', () => { confirmBg.classList.remove('show'); });
-      document.getElementById('pv-confirm-close').addEventListener('click', () => { confirmBg.classList.remove('show'); });
-
-      confirmOk.addEventListener('click', () => {
-        if (!lastDeleteId || !isAuthenticated) return;
-        deletePromo(lastDeleteId);
-      });
-
-      // Load promos with authentication
       function loadPromos() {
         tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading promo codes…</td></tr>';
         cards.innerHTML = '';
@@ -662,178 +207,83 @@
         firebase.firestore().collection('promoCodes').orderBy('createdAt', 'desc').get()
           .then(qs => {
             promos = [];
-            qs.forEach(doc => {
-              promos.push({ id: doc.id, ...doc.data() });
-            });
+            qs.forEach(doc => promos.push({ id: doc.id, ...doc.data() }));
             applyFilters();
           })
-          .catch(err => {
-            console.error('Error loading promos:', err);
-            if (err.code === 'permission-denied') {
-              showError('Permission denied. You need admin access.');
-            } else {
-              showError('Error loading promo codes: ' + err.message);
-            }
-          });
-      }
-
-      // Load promos in read-only mode (public access)
-      function loadPromosReadOnly() {
-        tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading promo codes…</td></tr>';
-        cards.innerHTML = '';
-
-        firebase.firestore().collection('promoCodes').orderBy('createdAt', 'desc').get()
-          .then(qs => {
-            promos = [];
-            qs.forEach(doc => {
-              promos.push({ id: doc.id, ...doc.data() });
-            });
-            applyFilters();
-            // Disable all action buttons in read-only mode
-            disableAllActions();
-          })
-          .catch(err => {
-            console.error('Error loading promos:', err);
-            showError('Error loading promo codes: ' + err.message);
-          });
-      }
-
-      function disableAllActions() {
-        // Disable action buttons in table
-        tbody.querySelectorAll('button').forEach(btn => {
-          btn.disabled = true;
-        });
-        
-        // Disable action buttons in mobile cards
-        cards.querySelectorAll('button').forEach(btn => {
-          btn.disabled = true;
-        });
+          .catch(err => showError('Error loading promo codes: ' + err.message));
       }
 
       function renderPromos(list) {
         if (!list.length) {
-          tbody.innerHTML = '<tr><td colspan="5"><div class="muted">No promo codes. ' + 
-            (isAuthenticated ? 'Create one using the button above.' : 'Sign in as admin to create promo codes.') + 
-            '</div></td></tr>';
-          cards.innerHTML = `
-            <div class="promo-card">
-              <div class="muted">No promo codes available</div>
-            </div>
-          `;
+          tbody.innerHTML = '<tr><td colspan="5"><div class="muted">No promo codes.</div></td></tr>';
+          cards.innerHTML = '<div class="promo-card"><div class="muted">No promo codes available</div></div>';
           return;
         }
 
         tbody.innerHTML = list.map(p => `
           <tr data-id="${p.id}">
-            <td>
-              <div style="display:flex;flex-direction:column;gap:6px;">
-                <div style="font-weight:700">${escapeHtml(p.id)}</div>
-                <div class="muted">${getTypeLabel(p.type)}</div>
-              </div>
-            </td>
-            <td>
-              <div style="font-weight:600">${escapeHtml(getValueDisplay(p))}</div>
-              <div class="muted">${escapeHtml(p.description || '')}</div>
-              <div style="display:flex;gap:8px;margin-top:6px">
-                ${p.isPopular ? '<span class="tag">Popular</span>' : ''}
-                ${p.showOnCheckout ? '<span class="tag">Checkout</span>' : ''}
-              </div>
-            </td>
+            <td><div style="display:flex;flex-direction:column;gap:6px;"><div style="font-weight:700">${escapeHtml(p.id)}</div><div class="muted">${getTypeLabel(p.type)}</div></div></td>
+            <td><div style="font-weight:600">${escapeHtml(getValueDisplay(p))}</div><div class="muted">${escapeHtml(p.description || '')}</div><div style="display:flex;gap:8px;margin-top:6px">${p.isPopular ? '<span class="tag">Popular</span>' : ''}${p.showOnCheckout ? '<span class="tag">Checkout</span>' : ''}</div></td>
             <td class="muted">${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</td>
             <td><span class="status-pill ${getStatusClass(p)}">${getStatusText(p)}</span></td>
             <td style="text-align:right">
-              <button class="action-btn" data-action="edit" data-id="${p.id}" title="Edit" ${!isAuthenticated ? 'disabled' : ''}>
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="action-btn" data-action="toggle" data-id="${p.id}" title="${p.active ? 'Deactivate' : 'Activate'}" ${!isAuthenticated ? 'disabled' : ''}>
-                <i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i>
-              </button>
-              <button class="action-btn" data-action="delete" data-id="${p.id}" title="Delete" ${!isAuthenticated ? 'disabled' : ''}>
-                <i class="fas fa-trash"></i>
-              </button>
+              <button class="action-btn" data-action="edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
+              <button class="action-btn" data-action="toggle" data-id="${p.id}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
+              <button class="action-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash"></i></button>
             </td>
           </tr>
         `).join('');
 
-        // mobile cards
         cards.innerHTML = list.map(p => `
           <div class="promo-card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <div style="font-weight:700">${escapeHtml(p.id)}</div>
-              <div><span class="status-pill ${getStatusClass(p)}" style="font-size:0.75rem;padding:6px 10px">${getStatusText(p)}</span></div>
+              <div><span class="status-pill ${getStatusClass(p)}">${getStatusText(p)}</span></div>
             </div>
             <div class="muted" style="margin-bottom:8px">${getTypeLabel(p.type)} • ${getValueDisplay(p)}</div>
             <div style="display:flex;justify-content:space-between;gap:8px">
               <div class="muted">Valid: ${p.validUntil ? new Date(p.validUntil).toLocaleDateString() : 'No expiry'}</div>
               <div style="display:flex;gap:6px">
-                <button class="action-btn" data-action="edit" data-id="${p.id}" ${!isAuthenticated ? 'disabled' : ''}>
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn" data-action="toggle" data-id="${p.id}" ${!isAuthenticated ? 'disabled' : ''}>
-                  <i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i>
-                </button>
-                <button class="action-btn" data-action="delete" data-id="${p.id}" ${!isAuthenticated ? 'disabled' : ''}>
-                  <i class="fas fa-trash"></i>
-                </button>
+                <button class="action-btn" data-action="edit" data-id="${p.id}"><i class="fas fa-edit"></i></button>
+                <button class="action-btn" data-action="toggle" data-id="${p.id}"><i class="fas ${p.active ? 'fa-pause' : 'fa-play'}"></i></button>
+                <button class="action-btn" data-action="delete" data-id="${p.id}"><i class="fas fa-trash"></i></button>
               </div>
             </div>
           </div>
         `).join('');
 
-        // attach delegated listeners
-        tbody.querySelectorAll('button:not(:disabled)').forEach(btn => btn.addEventListener('click', handleAction));
-        cards.querySelectorAll('button:not(:disabled)').forEach(btn => btn.addEventListener('click', handleAction));
+        tbody.querySelectorAll('button').forEach(btn => btn.addEventListener('click', handleAction));
+        cards.querySelectorAll('button').forEach(btn => btn.addEventListener('click', handleAction));
       }
 
       function handleAction(e) {
-        if (!isAuthenticated) {
-          showToast('Authentication required', true);
-          return;
-        }
-
         const action = e.currentTarget.getAttribute('data-action');
         const id = e.currentTarget.getAttribute('data-id');
         const promo = promos.find(x => x.id === id);
-        if (!promo && action !== 'delete') return;
-        
+
         if (action === 'edit') openModal(promo);
         if (action === 'toggle') togglePromoStatus(id, promo);
-        if (action === 'delete') confirmDelete(id, promo);
+        if (action === 'delete') confirmDelete(id);
       }
 
       function togglePromoStatus(id, promo) {
-        const newStatus = !promo.active;
-        firebase.firestore().collection('promoCodes').doc(id).update({ 
-          active: newStatus, 
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
-        })
-          .then(() => { 
-            showToast('Status updated'); 
-            loadPromos(); 
-          })
-          .catch(err => {
-            console.error('Error updating promo:', err);
-            showToast('Update failed: ' + err.message, true);
-          });
+        firebase.firestore().collection('promoCodes').doc(id).update({
+          active: !promo.active,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(loadPromos);
       }
 
-      function confirmDelete(id, promo) {
+      function confirmDelete(id) {
         lastDeleteId = id;
         confirmMsg.textContent = `Delete promo "${id}"? This cannot be undone.`;
         confirmBg.classList.add('show');
       }
 
       function deletePromo(id) {
-        firebase.firestore().collection('promoCodes').doc(id).delete()
-          .then(() => {
-            showToast('Deleted successfully');
-            confirmBg.classList.remove('show');
-            loadPromos();
-          })
-          .catch(err => {
-            console.error('Error deleting promo:', err);
-            showToast('Delete failed: ' + err.message, true);
-          });
+        firebase.firestore().collection('promoCodes').doc(id).delete().then(() => {
+          confirmBg.classList.remove('show');
+          loadPromos();
+        });
       }
 
       function applyFilters() {
@@ -842,23 +292,24 @@
         const ty = typeFilter.value;
 
         let filtered = promos.slice();
+
         if (st !== 'all') {
           if (st === 'active') filtered = filtered.filter(p => p.active && !isExpired(p));
           else if (st === 'inactive') filtered = filtered.filter(p => !p.active);
           else if (st === 'expired') filtered = filtered.filter(p => isExpired(p));
         }
+
         if (ty !== 'all') filtered = filtered.filter(p => p.type === ty);
-        if (s) filtered = filtered.filter(p => (p.id || '').toLowerCase().includes(s) || (p.description||'').toLowerCase().includes(s));
+
+        if (s) filtered = filtered.filter(p =>
+          (p.id || '').toLowerCase().includes(s) ||
+          (p.description || '').toLowerCase().includes(s)
+        );
+
         renderPromos(filtered);
       }
 
-      /* ---------- Modal handling ---------- */
       function openModal(promo) {
-        if (!isAuthenticated) {
-          showToast('Authentication required', true);
-          return;
-        }
-
         if (promo) {
           document.getElementById('pv-modal-title').textContent = 'Edit Promo Code';
           idField.value = promo.id;
@@ -882,26 +333,19 @@
           document.getElementById('pv-popular').checked = false;
           document.getElementById('pv-checkout').checked = true;
         }
+
         modalBg.classList.add('show');
       }
 
-      function closeModal() { 
-        modalBg.classList.remove('show'); 
+      function closeModal() {
+        modalBg.classList.remove('show');
       }
 
-      function savePromo(ev) {
-        ev.preventDefault();
-        
-        if (!isAuthenticated) {
-          showToast('Authentication required', true);
-          return;
-        }
+      function savePromo(e) {
+        e.preventDefault();
 
         const code = (codeField.value || '').trim().toUpperCase();
-        if (!code) { 
-          showToast('Enter promo code', true); 
-          return; 
-        }
+        if (!code) return;
 
         const data = {
           type: typeField.value || 'fixed',
@@ -918,13 +362,13 @@
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        const docRef = idField.value ? 
-          firebase.firestore().collection('promoCodes').doc(idField.value) : 
-          firebase.firestore().collection('promoCodes').doc(code);
+        const docRef = idField.value
+          ? firebase.firestore().collection('promoCodes').doc(idField.value)
+          : firebase.firestore().collection('promoCodes').doc(code);
 
-        const op = idField.value ? 
-          docRef.update(data) : 
-          docRef.set({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        const op = idField.value
+          ? docRef.update(data)
+          : docRef.set({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
 
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i> Saving...';
@@ -932,29 +376,17 @@
         op.then(() => {
           saveBtn.disabled = false;
           saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
-          showToast('Saved successfully');
           closeModal();
           loadPromos();
-        }).catch(err => {
-          console.error('Error saving promo:', err);
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
-          if (err.code === 'permission-denied') {
-            showToast('Permission denied. You need admin access.', true);
-          } else {
-            showToast('Save failed: ' + err.message, true);
-          }
         });
       }
 
-      /* ---------- Helpers ---------- */
       function getTypeLabel(t) {
         if (!t) return '';
-        return t === 'fixed' ? 'Fixed Discount' : (t === 'percentage' ? 'Percentage Off' : 'Free Shipping');
+        return t === 'fixed' ? 'Fixed Discount' : t === 'percentage' ? 'Percentage Off' : 'Free Shipping';
       }
 
       function getValueDisplay(p) {
-        if (!p) return '';
         if (p.type === 'fixed') return `₹${p.value ?? 0}`;
         if (p.type === 'percentage') return `${p.value ?? 0}%${p.maxDiscount ? ' (max ₹' + p.maxDiscount + ')' : ''}`;
         if (p.type === 'shipping') return 'Free Shipping';
@@ -962,7 +394,7 @@
       }
 
       function isExpired(p) {
-        if (!p || !p.validUntil) return false;
+        if (!p.validUntil) return false;
         return new Date(p.validUntil).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
       }
 
@@ -978,46 +410,15 @@
         return 'Active';
       }
 
-      function escapeHtml(s) { 
-        return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); 
+      function escapeHtml(s) {
+        return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       }
 
-      function showError(message) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5">
-              <div style="text-align: center; padding: 40px; color: #ef4444;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 16px;"></i>
-                <div style="font-weight: 600; margin-bottom: 8px;">Error</div>
-                <div class="muted">${message}</div>
-              </div>
-            </td>
-          </tr>
-        `;
+      function showError(msg) {
+        tbody.innerHTML = `<tr><td colspan="5"><div style="text-align:center;padding:40px;color:#ef4444"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:16px"></i><div style="font-weight:600;margin-bottom:8px;">Error</div><div class="muted">${msg}</div></div></td></tr>`;
       }
 
-      function showToast(msg, isError = false) {
-        const t = document.createElement('div');
-        t.style.cssText = `
-          position: fixed;
-          bottom: 22px;
-          right: 22px;
-          padding: 12px 16px;
-          background: ${isError ? '#ffe8e8' : 'var(--card-bg)'};
-          border: 1px solid var(--border);
-          box-shadow: var(--shadow);
-          border-left: 4px solid ${isError ? '#ef4444' : '#10b981'};
-          z-index: 1400;
-          font-weight: 500;
-        `;
-        t.textContent = msg;
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3000);
-      }
-
-      // Initialize the app
       initializeApp();
-
     })();
   </script>
 </div>
