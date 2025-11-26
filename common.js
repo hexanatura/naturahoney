@@ -1269,12 +1269,20 @@ loginBtn.addEventListener('click', () => {
     }
     
     auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            closeAllSidebars();
-            overlay.classList.remove('active');
-            document.body.style.overflow = 'auto';
-            alert('Login successful!');
-        })
+    .then(async (userCredential) => {
+        const user = userCredential.user;
+
+        await db.collection("users").doc(user.uid).set({
+            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+            phone: user.phoneNumber || null
+        }, { merge: true });
+
+        closeAllSidebars();
+        overlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        alert('Login successful!');
+    })
+
         .catch((error) => {
             console.error("Error signing in:", error);
             alert('Error signing in: ' + error.message);
@@ -1368,20 +1376,18 @@ googleLoginBtn.addEventListener('click', () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         
         auth.signInWithPopup(provider)
-            .then((result) => {
-                const user = result.user;
-                
-                // Check if user exists in Firestore, if not create document (only for profile data)
-                return db.collection('users').doc(user.uid).get().then((doc) => {
-                    if (!doc.exists) {
-                        return db.collection('users').doc(user.uid).set({
-                            displayName: user.displayName,
-                            email: user.email,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                });
-            })
+    .then(async (result) => {
+    const user = result.user;
+
+    await db.collection("users").doc(user.uid).set({
+        displayName: user.displayName,
+        email: user.email,
+        phone: user.phoneNumber || null,
+        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+})
+
             .then(() => {
                 closeAllSidebars();
                 overlay.classList.remove('active');
