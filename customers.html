@@ -350,301 +350,207 @@
       </div>
     </div>
   </div>
+  
+  <script src="activityLogger.js?v=1"></script>
 
 <script>
 (function () {
-    
-    // Activity logger for customers page
-const customerActivityCache = new Set();
+const cache=new Set();
+function init(){
+if(!document.getElementById("cv-tbody"))return;
+if(!window.db)return;
+const T=document.getElementById("cv-tbody");
+const C=document.getElementById("cv-cards");
+const modalBg=document.getElementById("cv-modal-bg");
+const modalClose=document.getElementById("cv-modal-close");
+const closeBtn=document.getElementById("cv-close");
+const confirmBg=document.getElementById("cv-confirm-bg");
+const confirmMsg=document.getElementById("cv-confirm-msg");
+const confirmOk=document.getElementById("cv-confirm-ok");
+const confirmCancel=document.getElementById("cv-confirm-cancel");
+const confirmClose=document.getElementById("cv-confirm-close");
+const search=document.getElementById("cv-search");
+const filter=document.getElementById("cv-status");
+const sort=document.getElementById("cv-sort");
+let data=[];
+let deleteId=null;
 
-function logCustomerActivity(type, message, refId = null) {
-    if (!window.db || !window.db.collection) return;
+if(modalClose)modalClose.onclick=()=>modalBg.classList.remove("show");
+if(closeBtn)closeBtn.onclick=()=>modalBg.classList.remove("show");
+if(modalBg)modalBg.onclick=e=>{if(e.target===modalBg)modalBg.classList.remove("show")};
+if(confirmClose)confirmClose.onclick=()=>confirmBg.classList.remove("show");
+if(confirmCancel)confirmCancel.onclick=()=>confirmBg.classList.remove("show");
+if(confirmBg)confirmBg.onclick=e=>{if(e.target===confirmBg)confirmBg.classList.remove("show")};
 
-const key = `${type}_${refId}`;
+load();
 
-    if (customerActivityCache.has(key)) return;
-    customerActivityCache.add(key);
-
-    window.db.collection("activities").add({
-        type,
-        message,
-        refId,
-        time: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(err => console.error("Activity log failed:", err));
+function load(){
+T.innerHTML='<tr><td colspan="7" class="muted">Loading...</td></tr>';
+C.innerHTML='<div class="customers-card muted">Loading...</div>';
+db.collection("users").get().then(s=>{
+data=[];
+s.forEach(d=>{
+const v=d.data();
+const created=ts(v.createdAt||v.creationTime);
+const last=ts(v.lastLoginAt||v.lastSignInTime);
+data.push({
+id:d.id,
+name:v.name||v.displayName||"Unknown",
+email:v.email||"No email",
+phone:v.phone||v.phoneNumber||v.phone_number||v.mobile||v.mobileNumber||"-",
+createdAt:created,
+lastLogin:last,
+orders:Array.isArray(v.orders)?v.orders.length:(v.ordersCount||0),
+active:v.active!==false
+});
+if(!v.activityLogged){
+activityLogger.logActivity("CUSTOMER_NEW",`New customer added: ${v.name||"Unknown"} (${v.email||"-"})`,{refId:d.id});
+db.collection("users").doc(d.id).update({activityLogged:true});
+}
+if((v.ordersCount||0)>=5){
+activityLogger.logActivity("CUSTOMER_HIGH_VALUE",`High-value customer: ${v.name} (${v.email})`,{refId:d.id});
+}
+});
+apply();
+}).catch(()=>{
+T.innerHTML='<tr><td colspan="7" class="muted">Error loading customers</td></tr>';
+C.innerHTML='<div class="customers-card muted">Error loading</div>';
+});
 }
 
-
-    function init() {
-        if (!document.getElementById("cv-tbody")) return;
-        if (!window.db) return console.error("window.db missing");
-
-        const T = document.getElementById("cv-tbody");
-        const C = document.getElementById("cv-cards");
-
-        const modalBg = document.getElementById("cv-modal-bg");
-        const modalClose = document.getElementById("cv-modal-close");
-        const closeBtn = document.getElementById("cv-close");
-        const confirmBg = document.getElementById("cv-confirm-bg");
-        const confirmMsg = document.getElementById("cv-confirm-msg");
-        const confirmOk = document.getElementById("cv-confirm-ok");
-        const confirmCancel = document.getElementById("cv-confirm-cancel");
-        const confirmClose = document.getElementById("cv-confirm-close");
-
-        const search = document.getElementById("cv-search");
-        const filter = document.getElementById("cv-status");
-        const sort = document.getElementById("cv-sort");
-
-        let data = [];
-        let deleteId = null;
-
-        // ---- FIX: real click handlers for close buttons (x mark issue) ----
-        if (modalClose) modalClose.addEventListener("click", () => modalBg.classList.remove("show"));
-        if (closeBtn)  closeBtn.addEventListener("click", () => modalBg.classList.remove("show"));
-        if (modalBg)   modalBg.addEventListener("click", (e) => {
-            if (e.target === modalBg) modalBg.classList.remove("show");
-        });
-
-        if (confirmClose) confirmClose.addEventListener("click", () => confirmBg.classList.remove("show"));
-        if (confirmCancel) confirmCancel.addEventListener("click", () => confirmBg.classList.remove("show"));
-        if (confirmBg) confirmBg.addEventListener("click", (e) => {
-            if (e.target === confirmBg) confirmBg.classList.remove("show");
-        });
-
-        load();
-
-        function load() {
-            renderLoading();
-            window.db.collection("users").get().then(s => {
-                data = [];
-                s.forEach(d => {
-                    const v = d.data();
-                    const created = ts(v.createdAt || v.creationTime);
-                    const last = ts(v.lastLoginAt || v.lastSignInTime);
-
-                    data.push({
-                        id: d.id,
-                        name: v.name || v.displayName || "Unknown",
-                        email: v.email || "No email",
-
-                        // ---- FIX: more phone field fallbacks ----
-                        phone: v.phone || v.phoneNumber || v.phone_number || v.mobile || v.mobileNumber || "-",
-
-                        time: created,
-                        lastLogin: last,
-                        orders: Array.isArray(v.orders) ? v.orders.length : (v.ordersCount || 0),
-                        active: v.active !== false
-                    });
-                    
-                    // NEW CUSTOMER (one-time logging)
-if (!v.activityLogged) {
-    logCustomerActivity(
-        "CUSTOMER_NEW",
-        `New customer added: ${v.name || "Unknown"} (${v.email || "-"})`,
-        d.id
-    );
-
-    // Set flag in DB to prevent duplicate logging in future
-    window.db.collection("users").doc(d.id).update({
-        activityLogged: true
-    });
+function apply(){
+let list=[...data];
+const q=search.value.trim().toLowerCase();
+if(q)list=list.filter(x=>x.name.toLowerCase().includes(q)||x.email.toLowerCase().includes(q)||(x.phone||"").toLowerCase().includes(q));
+const st=filter.value;
+if(st!=="all")list=list.filter(x=>statusText(x).toLowerCase()===st);
+const so=sort.value;
+if(so==="newest")list.sort((a,b)=>b.createdAt-a.createdAt);
+if(so==="oldest")list.sort((a,b)=>a.createdAt-b.createdAt);
+if(so==="name")list.sort((a,b)=>a.name.localeCompare(b.name));
+render(list);
 }
 
-
-if ((v.ordersCount || 0) >= 5) {
-    logCustomerActivity("CUSTOMER_HIGH_VALUE", `High-value customer: ${v.name} (${v.email})`, d.id);
+function render(list){
+if(!list.length){
+T.innerHTML='<tr><td colspan="7" class="muted">No customers</td></tr>';
+C.innerHTML='<div class="customers-card muted">No customers</div>';
+return;
+}
+T.innerHTML=list.map(x=>`
+<tr>
+<td>
+<div class="customer-info">
+<div class="customer-avatar"><i class="fas fa-user"></i></div>
+<div>
+<div style="font-weight:700">${S(x.name)}</div>
+<div class="muted">ID: ${x.id.slice(0,8)}</div>
+</div>
+</div>
+</td>
+<td>
+<div style="font-weight:600">${S(x.email)}</div>
+<div class="muted">${S(x.phone)}</div>
+</td>
+<td class="muted">${fmt(x.createdAt)}</td>
+<td class="muted">${fmt(x.lastLogin)}</td>
+<td>${x.orders}</td>
+<td><span class="status-pill ${statusClass(x)}">${statusText(x)}</span></td>
+<td style="text-align:right">
+<button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
+<button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
+</td>
+</tr>
+`).join("");
+C.innerHTML=list.map(x=>`
+<div class="customers-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+<div class="customer-info">
+<div class="customer-avatar"><i class="fas fa-user"></i></div>
+<div>
+<div style="font-weight:700">${S(x.name)}</div>
+<div class="muted">${S(x.email)}</div>
+</div>
+</div>
+<span class="status-pill ${statusClass(x)}">${statusText(x)}</span>
+</div>
+<div class="muted" style="margin-bottom:4px">
+<div>Phone: ${S(x.phone)}</div>
+<div>Registered: ${fmt(x.createdAt)}</div>
+<div>Last Login: ${fmt(x.lastLogin)}</div>
+</div>
+<div style="display:flex;justify-content:space-between;margin-top:8px">
+<div class="muted">Orders: ${x.orders}</div>
+<div>
+<button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
+<button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
+</div>
+</div>
+</div>
+`).join("");
 }
 
-                });
-                apply();
-            }).catch(err => {
-                console.error("Error loading users:", err);
-                T.innerHTML = `<tr><td colspan="7" class="muted">Error loading customers</td></tr>`;
-                C.innerHTML = `<div class="customers-card muted">Error loading customers</div>`;
-            });
-        }
+document.addEventListener("click",e=>{
+const v=e.target.closest(".v");
+const d=e.target.closest(".d");
+const r=e.target.closest("#cv-refresh");
+if(v)return open(v.dataset.id);
+if(d)return askDelete(d.dataset.id);
+if(r)return load();
+});
 
-        function apply() {
-            let list = [...data];
-            const q = search.value.trim().toLowerCase();
-            if (q) list = list.filter(x =>
-                x.name.toLowerCase().includes(q) ||
-                x.email.toLowerCase().includes(q) ||
-                (x.phone || "").toLowerCase().includes(q)
-            );
-
-            const st = filter.value;
-            if (st !== "all") {
-                list = list.filter(x => statusText(x).toLowerCase() === st);
-            }
-
-            const so = sort.value;
-            if (so === "newest") list.sort((a, b) => b.createdAt - a.createdAt);
-            if (so === "oldest") list.sort((a, b) => a.createdAt - b.createdAt);
-            if (so === "name")   list.sort((a, b) => a.name.localeCompare(b.name));
-
-            render(list);
-        }
-
-        function render(list) {
-            if (!list.length) {
-                T.innerHTML = `<tr><td colspan="7" class="muted">No customers</td></tr>`;
-                C.innerHTML = `<div class="customers-card muted">No customers</div>`;
-                return;
-            }
-
-            T.innerHTML = list.map(x => `
-                <tr>
-                    <td>
-                        <div class="customer-info">
-                            <div class="customer-avatar"><i class="fas fa-user"></i></div>
-                            <div>
-                                <div style="font-weight:700">${S(x.name)}</div>
-                                <div class="muted">ID: ${x.id.slice(0,8)}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div style="font-weight:600">${S(x.email)}</div>
-                        <div class="muted">${S(x.phone)}</div>
-                    </td>
-                    <td class="muted">${fmt(x.createdAt)}</td>
-                    <td class="muted">${fmt(x.lastLogin)}</td>
-                    <td>${x.orders}</td>
-                    <td><span class="status-pill ${statusClass(x)}">${statusText(x)}</span></td>
-                    <td style="text-align:right">
-                        <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
-                        <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join("");
-
-            C.innerHTML = list.map(x => `
-                <div class="customers-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                        <div class="customer-info">
-                            <div class="customer-avatar"><i class="fas fa-user"></i></div>
-                            <div>
-                                <div style="font-weight:700">${S(x.name)}</div>
-                                <div class="muted">${S(x.email)}</div>
-                            </div>
-                        </div>
-                        <span class="status-pill ${statusClass(x)}">${statusText(x)}</span>
-                    </div>
-                    <div class="muted" style="margin-bottom:4px">
-                        <div>Phone: ${S(x.phone)}</div>
-                        <div>Registered: ${fmt(x.createdAt)}</div>
-                        <div>Last Login: ${fmt(x.lastLogin)}</div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;margin-top:8px">
-                        <div class="muted">Orders: ${x.orders}</div>
-                        <div style="display:flex;gap:6px">
-                            <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
-                            <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                </div>
-            `).join("");
-        }
-
-        // view / delete / refresh
-        document.addEventListener("click", e => {
-            const viewBtn = e.target.closest(".v");
-            const delBtn = e.target.closest(".d");
-            const refreshBtn = e.target.closest("#cv-refresh");
-
-            if (viewBtn) return open(viewBtn.dataset.id);
-            if (delBtn)  return askDelete(delBtn.dataset.id);
-            if (refreshBtn) return load();
-        });
-
-        function open(id) {
-    const x = data.find(z => z.id === id);
-    if (!x) return;
-
-logCustomerActivity("CUSTOMER_VIEW", `Viewed customer ${x.name} (${x.email})`, x.id);
-            document.getElementById("cv-customer-details").innerHTML = `
-                <div class="col">
-                    <div class="customer-info" style="margin-bottom:16px;">
-                        <div class="customer-avatar" style="width:60px;height:60px;">
-                            <i class="fas fa-user" style="font-size:1.5rem"></i>
-                        </div>
-                        <div>
-                            <div style="font-weight:700;font-size:1.2rem">${S(x.name)}</div>
-                            <div class="muted">${x.id}</div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <label class="muted">Email</label>
-                        <div>${S(x.email)}</div>
-                    </div>
-                    <div class="col">
-                        <label class="muted">Phone</label>
-                        <div>${S(x.phone)}</div>
-                    </div>
-                    <div class="col">
-                        <label class="muted">Registration</label>
-                        <div>${fmt(x.createdAt)}</div>
-                    </div>
-                    <div class="col">
-                        <label class="muted">Last Login</label>
-                        <div>${fmt(x.lastLogin)}</div>
-                    </div>
-                    <div class="col">
-                        <label class="muted">Orders</label>
-                        <div>${x.orders}</div>
-                    </div>
-                </div>
-            `;
-            modalBg.classList.add("show");
-        }
-
-        function askDelete(id) {
-            deleteId = id;
-            confirmMsg.textContent = "Delete this customer?";
-            confirmBg.classList.add("show");
-        }
-
-function remove() {
-    if (!deleteId) return;
-
-    const x = data.find(z => z.id === deleteId);
-
-    window.db.collection("users").doc(deleteId).delete().then(() => {
-
-logCustomerActivity("CUSTOMER_DELETED", `Deleted customer ${x?.name || "Unknown"} (${x?.email || "-"})`, deleteId);
-
-        confirmBg.classList.remove("show");
-        load();
-    });
+function open(id){
+const x=data.find(z=>z.id===id);
+if(!x)return;
+activityLogger.logActivity("CUSTOMER_VIEW",`Viewed customer ${x.name} (${x.email})`,{refId:x.id});
+document.getElementById("cv-customer-details").innerHTML=`
+<div class="col">
+<div class="customer-info" style="margin-bottom:16px;">
+<div class="customer-avatar" style="width:60px;height:60px;"><i class="fas fa-user" style="font-size:1.5rem"></i></div>
+<div>
+<div style="font-weight:700;font-size:1.2rem">${S(x.name)}</div>
+<div class="muted">${x.id}</div>
+</div>
+</div>
+<div class="col"><label class="muted">Email</label><div>${S(x.email)}</div></div>
+<div class="col"><label class="muted">Phone</label><div>${S(x.phone)}</div></div>
+<div class="col"><label class="muted">Registration</label><div>${fmt(x.createdAt)}</div></div>
+<div class="col"><label class="muted">Last Login</label><div>${fmt(x.lastLogin)}</div></div>
+<div class="col"><label class="muted">Orders</label><div>${x.orders}</div></div>
+</div>`;
+modalBg.classList.add("show");
 }
 
-        if (confirmOk) confirmOk.addEventListener("click", remove);
+function askDelete(id){
+deleteId=id;
+confirmMsg.textContent="Delete this customer?";
+confirmBg.classList.add("show");
+}
 
-        search.oninput = apply;
-        filter.onchange = apply;
-        sort.onchange = apply;
+function remove(){
+if(!deleteId)return;
+const x=data.find(z=>z.id===deleteId);
+db.collection("users").doc(deleteId).delete().then(()=>{
+activityLogger.logActivity("CUSTOMER_DELETED",`Deleted customer ${x?.name||"Unknown"} (${x?.email||"-"})`,{refId:deleteId});
+confirmBg.classList.remove("show");
+load();
+});
+}
 
-        function renderLoading() {
-            T.innerHTML = `<tr><td colspan="7" class="muted">Loading...</td></tr>`;
-            C.innerHTML = `<div class="customers-card muted">Loading...</div>`;
-        }
+if(confirmOk)confirmOk.onclick=remove;
+search.oninput=apply;
+filter.onchange=apply;
+sort.onchange=apply;
 
-        // timestamp parser
-        const ts = x =>
-            x?.toDate?.() ? x.toDate().getTime() :
-            x?.seconds ? x.seconds * 1000 :
-            typeof x === "string" ? new Date(x).getTime() || 0 :
-            typeof x === "number" ? x :
-            0;
-
-        const fmt = d => d ? new Date(d).toLocaleString("en-IN") : "Never";
-
-        const S = t => (t || "").replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
-
-        const statusText = x => x.active ? "Active" : "Inactive";
-        const statusClass = x => x.active ? "status-active" : "status-inactive";
-    }
-
-    setTimeout(init, 40);
+function ts(x){
+return x?.toDate?.()?x.toDate().getTime():x?.seconds?x.seconds*1000:typeof x==="string"?new Date(x).getTime()||0:typeof x==="number"?x:0;
+}
+function fmt(d){return d?new Date(d).toLocaleString("en-IN"):"Never"}
+function S(t){return(t||"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]))}
+function statusText(x){return x.active?"active":"inactive"}
+function statusClass(x){return x.active?"status-active":"status-inactive"}
+}
+setTimeout(init,40);
 })();
+
 </script>
