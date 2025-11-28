@@ -517,8 +517,10 @@
         });
 
         function open(id) {
-            const x = data.find(z => z.id === id);
-            if (!x) return;
+    const x = data.find(z => z.id === id);
+    if (!x) return;
+
+    logActivity("CUSTOMER_VIEW", `Viewed customer ${x.name} (${x.email})`);
             document.getElementById("cv-customer-details").innerHTML = `
                 <div class="col">
                     <div class="customer-info" style="margin-bottom:16px;">
@@ -561,13 +563,19 @@
             confirmBg.classList.add("show");
         }
 
-        function remove() {
-            if (!deleteId) return;
-            window.db.collection("users").doc(deleteId).delete().then(() => {
-                confirmBg.classList.remove("show");
-                load();
-            });
-        }
+function remove() {
+    if (!deleteId) return;
+
+    const x = data.find(z => z.id === deleteId);
+
+    window.db.collection("users").doc(deleteId).delete().then(() => {
+
+        logActivity("CUSTOMER_DELETED", `Deleted customer ${x?.name || "Unknown"} (${x?.email || "-"})`);
+
+        confirmBg.classList.remove("show");
+        load();
+    });
+}
 
         if (confirmOk) confirmOk.addEventListener("click", remove);
 
@@ -599,4 +607,3 @@
     setTimeout(init, 40);
 })();
 </script>
-
