@@ -753,12 +753,19 @@
 
         const op = idField.value
           ? docRef.update(data)
-          : docRef.set({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+          : docRef.set({ ...data, time: firebase.firestore.FieldValue.serverTimestamp() });
 
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i> Saving...';
 
         op.then(() => {
+db.collection("activities").add({
+    type: "PROMO_DELETED",
+    message: `Promo deleted: ${id}`,
+    refId: id,
+    time: firebase.firestore.FieldValue.serverTimestamp()
+});
+
           saveBtn.disabled = false;
           saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
           closeModal();
