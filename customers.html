@@ -360,7 +360,7 @@ const customerActivityCache = new Set();
 function logCustomerActivity(type, message, refId = null) {
     if (!window.db || !window.db.collection) return;
 
-    const key = `${type}_${refId}_${type}`; // safer unique key
+const key = `${type}_${refId}`;
 
     if (customerActivityCache.has(key)) return;
     customerActivityCache.add(key);
@@ -369,7 +369,7 @@ function logCustomerActivity(type, message, refId = null) {
         type,
         message,
         refId,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        time: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(err => console.error("Activity log failed:", err));
 }
 
@@ -429,7 +429,7 @@ function logCustomerActivity(type, message, refId = null) {
                         // ---- FIX: more phone field fallbacks ----
                         phone: v.phone || v.phoneNumber || v.phone_number || v.mobile || v.mobileNumber || "-",
 
-                        createdAt: created,
+                        time: created,
                         lastLogin: last,
                         orders: Array.isArray(v.orders) ? v.orders.length : (v.ordersCount || 0),
                         active: v.active !== false
