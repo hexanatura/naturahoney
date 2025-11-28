@@ -1457,15 +1457,13 @@
 
     // ---------- ACTIVITY HELPERS ----------
 
-    function logActivity(type, message) {
-        return db.collection("activities").add({
-            type: type,
-            message: message,
-            time: new Date()
-        }).then(() => {
-            trimActivityCollection();
-        }).catch(() => {});
-    }
+function logActivity(type, message) {
+    return db.collection("activities").add({
+        type,
+        message,
+        time: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(trimActivityCollection);
+}
 
     function trimActivityCollection() {
         db.collection("activities")
@@ -1997,16 +1995,34 @@
                   return;
               }
 
-              const icons = {
-                  NEW_CUSTOMER: "fa-user-plus",
-                  NEW_ORDER: "fa-shopping-bag",
-                  ORDER_STATUS: "fa-clipboard-check",
-                  NEW_MESSAGE: "fa-comment",
-                  PROMO_CREATED: "fa-tag",
-                  PROMO_UPDATED: "fa-tag",
-                  REVENUE_MILESTONE: "fa-chart-line",
-                  CUSTOMER_MILESTONE: "fa-users"
-              };
+                 const icons = {
+    NEW_CUSTOMER: "fa-user-plus",
+    CUSTOMER_VIEW: "fa-eye",
+    CUSTOMER_DELETED: "fa-trash",
+    CUSTOMER_HIGH_VALUE: "fa-star",
+
+    NEW_ORDER: "fa-shopping-bag",
+    ORDER_STATUS: "fa-clipboard-check",
+    ORDER_CANCELLED: "fa-ban",
+    ORDER_DELIVERED: "fa-check-circle",
+
+    NEW_MESSAGE: "fa-comment",
+    ENQUIRY_NEW: "fa-comment",
+    ENQUIRY_READ: "fa-envelope-open",
+    ENQUIRY_REPLIED: "fa-reply",
+    ENQUIRY_DELETED: "fa-trash",
+    ENQUIRY_MISSED: "fa-clock",
+
+    PROMO_CREATED: "fa-tag",
+    PROMO_UPDATED: "fa-tag",
+    PROMO_DELETED: "fa-tag",
+    PROMO_USED: "fa-percent",
+    PROMO_LIMIT_REACHED: "fa-exclamation-triangle",
+
+    REVENUE_MILESTONE: "fa-chart-line",
+    CUSTOMER_MILESTONE: "fa-users",
+};
+
 
               snapshot.forEach(doc => {
                   const a = doc.data();
@@ -2016,9 +2032,13 @@
                   item.className = "activity-item fade-in";
 
                   let timeText = "";
-                  if (a.time && a.time.toDate) {
-                      timeText = timeAgo(a.time.toDate());
-                  }
+                let ts = a.time || a.createdAt;
+if (ts && ts.toDate) {
+    timeText = timeAgo(ts.toDate());
+} else {
+    timeText = "just now";
+}
+
 
                   item.innerHTML = `
                       <div class="activity-icon"><i class="fas ${icon}"></i></div>
