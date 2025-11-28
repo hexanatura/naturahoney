@@ -470,6 +470,9 @@
       </div>
     </div>
   </div>
+  
+  <script src="activityLogger.js?v=1"></script>
+
 
   <script>
     (function () {
@@ -631,23 +634,31 @@
         if (action === 'delete') confirmDelete(id);
       }
 
-      function togglePromoStatus(id) {
-        const ref = firebase.firestore().collection('promoCodes').doc(id);
-        ref.get()
-          .then(doc => {
-            if (!doc.exists) throw new Error('Promo not found');
-            const current = doc.data();
-            return ref.update({
-              active: !current.active,
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          })
-          .then(loadPromos)
-          .catch(err => {
-            console.error(err);
-            showError('Error updating promo status: ' + err.message);
-          });
-      }
+function togglePromoStatus(id) {
+    const ref = firebase.firestore().collection('promoCodes').doc(id);
+
+    ref.get().then(doc => {
+        if (!doc.exists) throw new Error("Promo not found");
+
+        const current = doc.data();
+        const newState = !current.active;
+
+        return ref.update({
+            active: newState,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+
+            logActivity(
+                newState ? "PROMO_ACTIVATED" : "PROMO_DEACTIVATED",
+                newState ? `Promo activated: ${id}` : `Promo deactivated: ${id}`,
+                id
+            );
+
+            loadPromos();
+        });
+    })
+    .catch(err => showError("Error updating promo: " + err.message));
+}
 
       function confirmDelete(id) {
         lastDeleteId = id;
@@ -657,10 +668,14 @@
 
       function deletePromo(id) {
         firebase.firestore().collection('promoCodes').doc(id).delete()
-          .then(() => {
-            confirmBg.classList.remove('show');
-            loadPromos();
-          })
+.then(() => {
+
+    logActivity("PROMO_DELETED", `Promo deleted: ${id}`, id);
+
+    confirmBg.classList.remove('show');
+    loadPromos();
+})
+
           .catch(err => {
             console.error(err);
             showError('Error deleting promo: ' + err.message);
@@ -726,6 +741,7 @@
 
       function savePromo(e) {
         e.preventDefault();
+        
 
         const code = (codeField.value || '').trim().toUpperCase();
         if (!code) return;
@@ -747,6 +763,20 @@
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
+let oldLimit = 0;
+if (idField.value) {
+    const oldPromo = promos.find(p => p.id === idField.value);
+    oldLimit = oldPromo?.usageLimit ?? 0;
+}
+
+if (data.usageLimit !== oldLimit) {
+    logActivity(
+        "PROMO_LIMIT_SET",
+        `Usage limit updated for promo ${code}: ${data.usageLimit}`,
+        code
+    );
+}
+
         const docRef = idField.value
           ? firebase.firestore().collection('promoCodes').doc(idField.value)
           : firebase.firestore().collection('promoCodes').doc(code);
@@ -757,25 +787,27 @@
 
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px"></i> Saving...';
+op.then(() => {
+    const isNew = !idField.value;
+    const promoId = code;
 
-        op.then(() => {
-db.collection("activities").add({
-    type: "PROMO_DELETED",
-    message: `Promo deleted: ${id}`,
-    refId: id,
-    time: firebase.firestore.FieldValue.serverTimestamp()
+    logActivity(
+        isNew ? "PROMO_CREATED" : "PROMO_UPDATED",
+        isNew ? `New promo created: ${promoId}` : `Promo updated: ${promoId}`,
+        promoId
+    );
+
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
+    closeModal();
+    loadPromos();
+})
+.catch(err => {
+    console.error(err);
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
+    showError('Error saving promo: ' + err.message);
 });
-
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
-          closeModal();
-          loadPromos();
-        }).catch(err => {
-          console.error(err);
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = '<i class="fas fa-check" style="margin-right:8px"></i> Save';
-          showError('Error saving promo: ' + err.message);
-        });
       }
 
       function getTypeLabel(t) {
