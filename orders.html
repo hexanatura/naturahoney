@@ -1,3 +1,4 @@
+// your code goes here
 
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -467,41 +468,61 @@
       function fmtDate(d){ if(!d) return 'N/A'; const dt = new Date(typeof d === 'object' && d.toDate ? d.toDate() : d); return dt.toLocaleDateString(); }
       function getStatusClass(s){ if(!s) return 'status-pending'; return 'status-' + s; }
 
-      function loadOrders(){
-        tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading orders…</td></tr>';
-        cards.innerHTML = '';
+// Prevent duplicate logs
+const activityCache = new Set();
 
-        if (db && db.collection){
-          try {
-            db.collection('orders').orderBy('createdAt','desc').onSnapshot(qs => {
-              orders = [];
-qs.forEach(doc => {
-    const existing = orders.find(x => x.id === doc.id);
-    const data = { id: doc.id, ...doc.data() };
+function logActivity(type, message, refId = null) {
+    if (!db || !db.collection) return;
 
-    if (!existing) {
-        const cid = shortId(doc.id);
-        logActivity("NEW_ORDER", `New order placed: #${cid}`);
+    // Build unique key
+    const key = `${type}_${message}`;
+
+    // If already logged, skip
+    if (activityCache.has(key)) return;
+
+    activityCache.add(key);
+
+    db.collection("activities").add({
+        type: type,
+        message: message,
+        refId: refId || null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(err => {
+        console.error("Activity log failed:", err);
+    });
+}
+
+
+function loadOrders(){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading orders…</td></tr>';
+    cards.innerHTML = '';
+
+    if (db && db.collection){
+        try {
+            db.collection('orders')
+              .orderBy('createdAt','desc')
+              .onSnapshot(qs => {
+                  orders = qs.docs.map(doc => ({
+                      id: doc.id,
+                      ...doc.data()
+                  }));
+
+                  applyFilters();
+              }, err => {
+                  console.error('orders snapshot error', err);
+                  orders = [];
+                  renderEmpty();
+                  showToast('Error loading orders', 'error');
+              });
+            return;
+        } catch (e) {
+            console.warn('Firestore onSnapshot fallback', e);
+        }
     }
 
-    orders.push(data);
-});
-              applyFilters();
-            }, err => {
-              console.error('orders snapshot error', err);
-              orders = [];
-              renderEmpty();
-              showToast('Error loading orders','error');
-            });
-            return;
-          } catch (e) {
-            console.warn('Firestore onSnapshot fallback', e);
-          }
-        }
-
-        orders = [];
-        renderEmpty();
-      }
+    orders = [];
+    renderEmpty();
+}
 
       function renderEmpty(){
         tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-shopping-bag"></i><h3>No Orders Found</h3><p class="muted">Customer orders will appear here.</p></div></td></tr>';
@@ -645,15 +666,15 @@ qs.forEach(doc => {
 .then(() => {
     const cid = shortId(editingOrderId);
 
-    logActivity("ORDER_STATUS", `Order #${cid} updated to ${newStatus}`);
+logActivity("ORDER_STATUS", `Order #${cid} updated to ${newStatus}`, editingOrderId);
 
-    if (newStatus === "cancelled") {
-        logActivity("ORDER_CANCELLED", `Order #${cid} was cancelled`);
-    }
+if (newStatus === "cancelled") {
+    logActivity("ORDER_CANCELLED", `Order #${cid} was cancelled`, editingOrderId);
+}
 
-    if (newStatus === "delivered") {
-        logActivity("ORDER_DELIVERED", `Order #${cid} delivered successfully`);
-    }
+if (newStatus === "delivered") {
+    logActivity("ORDER_DELIVERED", `Order #${cid} delivered successfully`, editingOrderId);
+}
 
     modalSave.disabled = false;
     modalSave.innerHTML = oldText;
