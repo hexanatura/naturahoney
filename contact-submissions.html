@@ -567,6 +567,24 @@ tr:hover{
 
 <script>
 (function () {
+    
+const enquiryActivityCache = new Set();
+
+function logEnquiryActivity(type, message, refId = null) {
+    if (!window.db || !window.db.collection) return;
+
+    const key = `${type}_${refId}`;
+    if (enquiryActivityCache.has(key)) return;
+    enquiryActivityCache.add(key);
+
+    window.db.collection("activities").add({
+        type,
+        message,
+        refId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(err => console.error("Activity log failed:", err));
+}
+
     function start() {
         if (!document.getElementById("submissions-table-body")) return;
         if (!window.db) return console.error("window.db missing");
@@ -586,6 +604,19 @@ tr:hover{
                 .then(s => {
                     data = s.docs.map(d => {
                         const v = d.data();
+                        // New message (one-time logging)
+if (!v.activityLogged) {
+    logEnquiryActivity(
+        "ENQUIRY_NEW",
+        `New message received from ${v.name || "Unknown"} (${v.email || "-"})`,
+        d.id
+    );
+
+    window.db.collection("contactSubmissions").doc(d.id).update({
+        activityLogged: true
+    });
+}
+
                         const ts = v.timestamp?.toDate?.() || null;
                         return {
                             id: d.id,
@@ -598,7 +629,32 @@ tr:hover{
                             timestamp: ts
                         };
                     });
+                    
+                    const now = Date.now();
+
+data.forEach(msg => {
+    if (msg.status === "new" && msg.timestamp) {
+        const ageHours = (now - msg.timestamp.getTime()) / (1000 * 60 * 60);
+
+        // If unread for more than 24 hours
+       if (ageHours >= 24 && !msg.missedAlertSent) {
+    logEnquiryActivity(
+        "ENQUIRY_MISSED",
+        `Unread message for 24 hours from ${msg.name} (${msg.email})`,
+        msg.id
+    );
+
+    window.db.collection("contactSubmissions")
+        .doc(msg.id)
+        .update({ missedAlertSent: true });
+
+    msg.missedAlertSent = true; // IMPORTANT — prevents duplicates
+}
+
+    }
+});
                     render();
+                    
                 })
                 .catch(e => renderError(e.message));
         }
@@ -687,7 +743,17 @@ tr:hover{
 
             M.style.display = "flex";
 
-            if (x.status === "new") setStatus(id, "read");
+if (x.status === "new") {
+    logEnquiryActivity(
+        "ENQUIRY_READ",
+        `Message opened from ${x.name} (${x.email})`,
+        id
+    );
+
+    setStatus(id, "read");
+}
+
+
         }
 
         // ---------- UPDATE STATUS ----------
@@ -697,12 +763,17 @@ tr:hover{
                 .then(load);
         }
 
-        // ---------- REPLY ----------
-        function reply(id) {
-            const x = data.find(z => z.id === id);
-            if (!x) return;
+      function reply(id) {
+    const x = data.find(z => z.id === id);
+    if (!x) return;
 
-            setStatus(id, "replied");
+    setStatus(id, "replied");
+
+    logEnquiryActivity(
+        "ENQUIRY_REPLIED",
+        `Replied to message from ${x.name} (${x.email})`,
+        id
+    );
 
             const url =
                 `https://mail.google.com/mail/?view=cm&fs=1` +
@@ -714,10 +785,18 @@ tr:hover{
         }
 
         // ---------- DELETE ----------
-        function remove(id) {
-            if (!confirm("Delete this message?")) return;
-            window.db.collection("contactSubmissions").doc(id).delete().then(load);
-        }
+function remove(id) {
+    const x = data.find(z => z.id === id);
+    if (!confirm("Delete this message?")) return;
+
+    logEnquiryActivity(
+        "ENQUIRY_DELETED",
+        `Deleted message from ${x?.name || "Unknown"} (${x?.email || "-"})`,
+        id
+    );
+
+    window.db.collection("contactSubmissions").doc(id).delete().then(load);
+}
 
         // ---------- TEST ----------
         function addTest() {
