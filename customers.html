@@ -353,6 +353,27 @@
 
 <script>
 (function () {
+    
+    // Activity logger for customers page
+const customerActivityCache = new Set();
+
+function logCustomerActivity(type, message, refId = null) {
+    if (!window.db || !window.db.collection) return;
+
+    const key = `${type}_${refId}_${type}`; // safer unique key
+
+    if (customerActivityCache.has(key)) return;
+    customerActivityCache.add(key);
+
+    window.db.collection("activities").add({
+        type,
+        message,
+        refId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(err => console.error("Activity log failed:", err));
+}
+
+
     function init() {
         if (!document.getElementById("cv-tbody")) return;
         if (!window.db) return console.error("window.db missing");
@@ -413,6 +434,26 @@
                         orders: Array.isArray(v.orders) ? v.orders.length : (v.ordersCount || 0),
                         active: v.active !== false
                     });
+                    
+                    // NEW CUSTOMER (one-time logging)
+if (!v.activityLogged) {
+    logCustomerActivity(
+        "CUSTOMER_NEW",
+        `New customer added: ${v.name || "Unknown"} (${v.email || "-"})`,
+        d.id
+    );
+
+    // Set flag in DB to prevent duplicate logging in future
+    window.db.collection("users").doc(d.id).update({
+        activityLogged: true
+    });
+}
+
+
+if ((v.ordersCount || 0) >= 5) {
+    logCustomerActivity("CUSTOMER_HIGH_VALUE", `High-value customer: ${v.name} (${v.email})`, d.id);
+}
+
                 });
                 apply();
             }).catch(err => {
@@ -520,7 +561,7 @@
     const x = data.find(z => z.id === id);
     if (!x) return;
 
-    logActivity("CUSTOMER_VIEW", `Viewed customer ${x.name} (${x.email})`);
+logCustomerActivity("CUSTOMER_VIEW", `Viewed customer ${x.name} (${x.email})`, x.id);
             document.getElementById("cv-customer-details").innerHTML = `
                 <div class="col">
                     <div class="customer-info" style="margin-bottom:16px;">
@@ -570,7 +611,7 @@ function remove() {
 
     window.db.collection("users").doc(deleteId).delete().then(() => {
 
-        logActivity("CUSTOMER_DELETED", `Deleted customer ${x?.name || "Unknown"} (${x?.email || "-"})`);
+logCustomerActivity("CUSTOMER_DELETED", `Deleted customer ${x?.name || "Unknown"} (${x?.email || "-"})`, deleteId);
 
         confirmBg.classList.remove("show");
         load();
