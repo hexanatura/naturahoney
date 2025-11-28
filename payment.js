@@ -1965,16 +1965,37 @@ function applyPromoCode() {
     return;
   }
   
-  // Check minimum order value
-  if (originalTotal < (promoDetails.minOrder || 0)) {
+ // Check minimum order value
+if (originalTotal < (promoDetails.minOrder || 0)) {
     showPromoError(`Minimum order value of ₹${promoDetails.minOrder} required for this promo code`);
     promoInput.value = '';
     refreshPromoCodes();
     return;
-  }
-  
-  // Calculate discount based on type
-  let discountValue = 0;
+}
+
+if (promoDetails.usageLimit !== undefined) {
+    const used = promoDetails.usedCount || 0;
+    const limit = promoDetails.usageLimit;
+
+    if (used >= limit) {
+        showPromoError("Promo usage limit reached");
+
+        // Log activity
+        db.collection('activities').add({
+            type: "PROMO_USAGE_LIMIT_REACHED",
+            promoCode: promoCode,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
+    }
+}
+
+// Calculate discount based on type
+let discountValue = 0;
+
   
   if (promoDetails.type === 'percentage') {
     discountValue = Math.round(originalTotal * (promoDetails.value / 100));
@@ -1991,6 +2012,22 @@ function applyPromoCode() {
   currentDiscount = discountValue;
   appliedPromoCode = promoCode;
   updateTotals();
+  
+  // Increment promo usage count
+db.collection("promoCodes").doc(promoCode).update({
+    usedCount: firebase.firestore.FieldValue.increment(1)
+}).catch(err => {
+    console.error("Failed to increment promo usage:", err);
+});
+
+// Log usage activity
+db.collection("activities").add({
+    type: "PROMO_USED",
+    promoCode: promoCode,
+    discount: discountValue,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+});
+
   
   // Update promo cards UI
   refreshPromoCodes();
