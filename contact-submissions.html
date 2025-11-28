@@ -581,7 +581,7 @@ function logEnquiryActivity(type, message, refId = null) {
         type,
         message,
         refId,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        time: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(err => console.error("Activity log failed:", err));
 }
 
