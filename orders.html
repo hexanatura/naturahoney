@@ -475,7 +475,17 @@
           try {
             db.collection('orders').orderBy('createdAt','desc').onSnapshot(qs => {
               orders = [];
-              qs.forEach(doc => orders.push({ id: doc.id, ...doc.data() }));
+qs.forEach(doc => {
+    const existing = orders.find(x => x.id === doc.id);
+    const data = { id: doc.id, ...doc.data() };
+
+    if (!existing) {
+        const cid = shortId(doc.id);
+        logActivity("NEW_ORDER", `New order placed: #${cid}`);
+    }
+
+    orders.push(data);
+});
               applyFilters();
             }, err => {
               console.error('orders snapshot error', err);
@@ -632,7 +642,24 @@
           const oldText = modalSave.innerHTML;
           modalSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
           db.collection('orders').doc(editingOrderId).update({ status: newStatus, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
-            .then(()=>{ modalSave.disabled = false; modalSave.innerHTML = oldText; showToast('Order updated'); closeModal(); })
+.then(() => {
+    const cid = shortId(editingOrderId);
+
+    logActivity("ORDER_STATUS", `Order #${cid} updated to ${newStatus}`);
+
+    if (newStatus === "cancelled") {
+        logActivity("ORDER_CANCELLED", `Order #${cid} was cancelled`);
+    }
+
+    if (newStatus === "delivered") {
+        logActivity("ORDER_DELIVERED", `Order #${cid} delivered successfully`);
+    }
+
+    modalSave.disabled = false;
+    modalSave.innerHTML = oldText;
+    showToast('Order updated');
+    closeModal();
+})
             .catch(err=>{ modalSave.disabled = false; modalSave.innerHTML = oldText; showToast('Save failed','error'); });
           return;
         }
