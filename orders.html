@@ -410,337 +410,38 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="activityLogger.js?v=1"></script>
+
 
   <script>
-    (function(){
-      const SAFE_FIREBASE_CONFIG = {
-        apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-        authDomain: "hexahoney-96aed.firebaseapp.com",
-        projectId: "hexahoney-96aed",
-        storageBucket: "hexahoney-96aed.firebasestorage.app",
-        messagingSenderId: "700458850837",
-        appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-        measurementId: "G-MQGKK9709H"
-      };
+   (function(){
+const config={apiKey:"AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",authDomain:"hexahoney-96aed.firebaseapp.com",projectId:"hexahoney-96aed",storageBucket:"hexahoney-96aed.firebasestorage.app",messagingSenderId:"700458850837",appId:"1:700458850837:web:0eb4fca98a5f4acc2d0c1c",measurementId:"G-MQGKK9709H"};
+if(window.firebase){if(!firebase.apps.length)firebase.initializeApp(config);}
+const t=document.getElementById("ov-tbody"),c=document.getElementById("ov-cards"),m=document.getElementById("ov-modal-bg"),mc=document.getElementById("ov-modal-close"),mca=document.getElementById("ov-modal-cancel"),ms=document.getElementById("ov-modal-save"),mb=document.getElementById("ov-modal-body"),fs=document.getElementById("ov-status"),fd=document.getElementById("ov-date"),si=document.getElementById("ov-search"),rb=document.getElementById("ov-refresh"),xb=document.getElementById("ov-export"),tw=document.getElementById("oh-toast"),tt=document.getElementById("oh-toast-text");
+let orders=[],filtered=[],editing=null,db=window.db||firebase.firestore();
+function toast(m,y="success"){tt.textContent=m;tw.classList.add("show");if(y==="error"){tw.style.borderLeftColor="#ef4444";tw.querySelector("i").className="fas fa-exclamation-circle";tw.querySelector("i").style.color="#ef4444"}else if(y==="info"){tw.style.borderLeftColor="#3b82f6";tw.querySelector("i").className="fas fa-info-circle";tw.querySelector("i").style.color="#3b82f6"}else{tw.style.borderLeftColor="#10b981";tw.querySelector("i").className="fas fa-check-circle";tw.querySelector("i").style.color="#10b981"}setTimeout(()=>tw.classList.remove("show"),2600)}
+function esc(s){return String(s||"").replace(/[&<>"']/g,a=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[a]))}
+function sid(x){return x?x.substring(0,8):"—"}
+function fdn(d){if(!d)return"—";const x=d.toDate?d.toDate():new Date(d);return x.toLocaleDateString("en-IN")}
+function sc(s){return"status-"+s}
+function load(){t.innerHTML='<tr><td colspan="7" class="muted">Loading orders…</td></tr>';c.innerHTML="";db.collection("orders").orderBy("createdAt","desc").onSnapshot(q=>{orders=q.docs.map(d=>({id:d.id,...d.data()}));apply()},e=>{orders=[];empty();toast("Error loading orders","error")})}
+function empty(){t.innerHTML='<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>';c.innerHTML='<div class="order-card muted">No orders</div>'}
+function list(x){if(!x.length){empty();return}t.innerHTML=x.map(o=>{const it=(o.items||[]).length,tot=o.total||0,cu=o.shippingAddress?(o.shippingAddress.firstName||"")+" "+(o.shippingAddress.lastName||""):o.email||"Customer";return`<tr data-id="${esc(o.id)}"><td>#${esc(sid(o.id))}</td><td><div style="display:flex;gap:10px;align-items:center"><div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">${esc(cu.slice(0,2).toUpperCase())}</div><div><div style="font-weight:600">${esc(cu)}</div><div class="muted">${esc(o.email||"—")}</div></div></div></td><td class="muted">${fdn(o.createdAt)}</td><td class="muted">${it} item${it!==1?"s":""}</td><td>₹${Number(tot).toFixed(2)}</td><td><span class="status-pill ${sc(o.status)}">${esc(o.status||"pending")}</span></td><td style="text-align:right"><button class="action-btn view-btn" data-id="${o.id}"><i class="fas fa-eye"></i></button><button class="action-btn edit-btn" data-id="${o.id}"><i class="fas fa-edit"></i></button></td></tr>`}).join("");
+c.innerHTML=x.map(o=>{const it=(o.items||[]).length,tot=o.total||0,cu=o.shippingAddress?(o.shippingAddress.firstName||"")+" "+(o.shippingAddress.lastName||""):o.email||"Customer";return`<div class="order-card"><div class="card-header"><div><div class="customer-name">${esc(cu)}</div><div class="card-meta muted">${fdn(o.createdAt)} • ${it} item${it!==1?"s":""}</div></div><span class="status-pill ${sc(o.status)}">${esc(o.status||"pending")}</span></div><div style="margin:8px 0">${(o.items||[]).slice(0,2).map(i=>`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div style="width:30px;height:30px;border-radius:6px;background:#f5f5f5;display:flex;align-items:center;justify-content:center"><i class="fas fa-jar"></i></div><div style="flex:1">${esc(i.name)}</div><div class="muted">x${i.quantity}</div></div>`).join("")}${it>2?`<div class="muted">+${it-2} more</div>`:""}</div><div style="display:flex;justify-content:space-between"><div style="font-weight:700">₹${Number(tot).toFixed(2)}</div><div><button class="action-btn view-btn" data-id="${o.id}"><i class="fas fa-eye"></i></button><button class="action-btn edit-btn" data-id="${o.id}"><i class="fas fa-edit"></i></button></div></div></div>`}).join("");
+bind()}
+function bind(){document.querySelectorAll(".view-btn").forEach(b=>b.onclick=e=>open(e.currentTarget.dataset.id));document.querySelectorAll(".edit-btn").forEach(b=>b.onclick=e=>open(e.currentTarget.dataset.id))}
+function open(id){const o=orders.find(x=>x.id===id);if(!o)return;editing=id;const ad=o.shippingAddress?[o.shippingAddress.address,o.shippingAddress.city,o.shippingAddress.state,o.shippingAddress.zipCode,o.shippingAddress.country].filter(Boolean).join(", "):"No address";const it=(o.items||[]).map(i=>`<div style="display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid var(--border)"><div style="width:40px;height:40px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center"><i class="fas fa-jar"></i></div><div style="flex:1"><div style="font-weight:600">${esc(i.name)}</div><div class="muted">${esc(i.weight||"")}</div></div><div style="font-weight:700">x${i.quantity}</div><div style="font-weight:700">₹${(i.price*i.quantity).toFixed(2)}</div></div>`).join("")||"<div class='muted'>No items</div>";mb.innerHTML=`<div style="display:grid;gap:10px"><div><div class="muted">Order ID</div><div style="font-weight:700">#${esc(sid(id))}</div></div><div><div class="muted">Customer</div><div>${esc(o.shippingAddress?(o.shippingAddress.firstName+" "+o.shippingAddress.lastName):o.email)}</div></div><div style="display:flex;gap:12px"><div style="flex:1"><div class="muted">Email</div><div>${esc(o.email||"—")}</div></div><div style="flex:1"><div class="muted">Phone</div><div>${esc(o.shippingAddress?.phone||"—")}</div></div></div><div style="display:flex;gap:12px"><div style="flex:1"><div class="muted">Date</div><div>${fdn(o.createdAt)}</div></div><div style="flex:1"><div class="muted">Total</div><div style="font-weight:700">₹${Number(o.total||0).toFixed(2)}</div></div></div><div><div class="muted">Status</div><select id="ov-modal-status" style="padding:8px;border:1px solid var(--border);border-radius:8px;width:100%"> <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div><div><div class="muted">Shipping Address</div><div>${esc(ad)}</div></div><div class="muted">Items</div><div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px">${it}</div></div>`;
+document.getElementById("ov-modal-status").value=o.status||"pending";
+m.classList.add("show")}
+function close(){m.classList.remove("show");editing=null}
+function save(){if(!editing)return;const st=document.getElementById("ov-modal-status").value;ms.disabled=true;const ot=ms.innerHTML;ms.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';db.collection("orders").doc(editing).update({status:st,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{activityLogger.logActivity("ORDER_STATUS",`Order #${sid(editing)} updated to ${st}`,{refId:editing});if(st==="cancelled")activityLogger.logActivity("ORDER_CANCELLED",`Order #${sid(editing)} was cancelled`,{refId:editing});if(st==="delivered")activityLogger.logActivity("ORDER_DELIVERED",`Order #${sid(editing)} delivered successfully`,{refId:editing});ms.disabled=false;ms.innerHTML=ot;toast("Order updated");close()}).catch(()=>{ms.disabled=false;ms.innerHTML=ot;toast("Save failed","error")})}
+function apply(){let x=[...orders];const st=fs.value,d=fd.value,q=si.value.toLowerCase();if(st!=="all")x=x.filter(o=>(o.status||"").toLowerCase()===st);if(d!=="all"){const n=new Date();let S=null;if(d==="today")S=new Date(n.getFullYear(),n.getMonth(),n.getDate());if(d==="week")S=new Date(n.getTime()-7*864e5);if(d==="month")S=new Date(n.getFullYear(),n.getMonth()-1,n.getDate());if(S)x=x.filter(o=>{if(!o.createdAt)return false;const D=o.createdAt.toDate?o.createdAt.toDate():new Date(o.createdAt);return D>=S})}if(q)x=x.filter(o=>{const id=o.id.toLowerCase(),nm=((o.shippingAddress?.firstName||"")+" "+(o.shippingAddress?.lastName||"")).toLowerCase(),em=(o.email||"").toLowerCase();return id.includes(q)||nm.includes(q)||em.includes(q)});filtered=x;list(x)}
+function csv(x){if(!x.length){toast("No orders to export","info");return}const rows=[["Order ID","Customer","Email","Date","Items","Total","Status"]];x.forEach(o=>{const cu=(o.shippingAddress?.firstName||"")+" "+(o.shippingAddress?.lastName||"");rows.push([`#${sid(o.id)}`,cu.trim(),o.email||"",fdn(o.createdAt),(o.items||[]).length,o.total||0,o.status||""])});
+const out=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+const B=new Blob([out],{type:"text/csv"}),u=URL.createObjectURL(B),a=document.createElement("a");a.href=u;a.download="orders.csv";a.click();URL.revokeObjectURL(u);toast("Export started")}
+document.addEventListener("click",e=>{if(e.target===m)close()});
+mc.onclick=close;mca.onclick=close;ms.onclick=save;fs.onchange=apply;fd.onchange=apply;si.oninput=()=>setTimeout(apply,100);rb.onclick=()=>{load();toast("Refreshing...","info")};xb.onclick=()=>csv(filtered.length?filtered:orders);
+load();
+})();
 
-      try {
-        if (window.firebase) {
-          if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(SAFE_FIREBASE_CONFIG);
-        }
-      } catch (e) {}
-
-      const tbody = document.getElementById('ov-tbody');
-      const cards = document.getElementById('ov-cards');
-      const modalBg = document.getElementById('ov-modal-bg');
-      const modalClose = document.getElementById('ov-modal-close');
-      const modalCancel = document.getElementById('ov-modal-cancel');
-      const modalSave = document.getElementById('ov-modal-save');
-      const modalBody = document.getElementById('ov-modal-body');
-
-      const statusFilter = document.getElementById('ov-status');
-      const dateFilter = document.getElementById('ov-date');
-      const searchInput = document.getElementById('ov-search');
-      const refreshBtn = document.getElementById('ov-refresh');
-      const exportBtn = document.getElementById('ov-export');
-
-      const toastWrap = document.getElementById('oh-toast');
-      const toastText = document.getElementById('oh-toast-text');
-
-      let orders = [];
-      let filtered = [];
-      let editingOrderId = null;
-      let db = window.db || (window.firebase && firebase.firestore ? firebase.firestore() : null);
-
-      function showToast(msg, type='success'){
-        toastText.textContent = msg;
-        toastWrap.classList.add('show');
-        if (type === 'error'){ toastWrap.style.borderLeftColor = 'var(--danger)'; toastWrap.querySelector('i').className = 'fas fa-exclamation-circle'; toastWrap.querySelector('i').style.color = 'var(--danger)'; }
-        else if (type === 'info'){ toastWrap.style.borderLeftColor = '#3b82f6'; toastWrap.querySelector('i').className = 'fas fa-info-circle'; toastWrap.querySelector('i').style.color = '#3b82f6'; }
-        else { toastWrap.style.borderLeftColor = 'var(--success)'; toastWrap.querySelector('i').className = 'fas fa-check-circle'; toastWrap.querySelector('i').style.color = 'var(--success)'; }
-        setTimeout(()=> toastWrap.classList.remove('show'), 2800);
-      }
-
-      function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-      function shortId(id){ return id ? id.toString().substring(0,8) : '—'; }
-      function fmtDate(d){ if(!d) return 'N/A'; const dt = new Date(typeof d === 'object' && d.toDate ? d.toDate() : d); return dt.toLocaleDateString(); }
-      function getStatusClass(s){ if(!s) return 'status-pending'; return 'status-' + s; }
-
-// Prevent duplicate logs
-const activityCache = new Set();
-
-function logActivity(type, message, refId = null) {
-    if (!db || !db.collection) return;
-
-    // Build unique key
-    const key = `${type}_${message}`;
-
-    // If already logged, skip
-    if (activityCache.has(key)) return;
-
-    activityCache.add(key);
-
-    db.collection("activities").add({
-        type: type,
-        message: message,
-        refId: refId || null,
-        time: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(err => {
-        console.error("Activity log failed:", err);
-    });
-}
-
-
-function loadOrders(){
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading orders…</td></tr>';
-    cards.innerHTML = '';
-
-    if (db && db.collection){
-        try {
-            db.collection('orders')
-              .orderBy('createdAt','desc')
-              .onSnapshot(qs => {
-                  orders = qs.docs.map(doc => ({
-                      id: doc.id,
-                      ...doc.data()
-                  }));
-
-                  applyFilters();
-              }, err => {
-                  console.error('orders snapshot error', err);
-                  orders = [];
-                  renderEmpty();
-                  showToast('Error loading orders', 'error');
-              });
-            return;
-        } catch (e) {
-            console.warn('Firestore onSnapshot fallback', e);
-        }
-    }
-
-    orders = [];
-    renderEmpty();
-}
-
-      function renderEmpty(){
-        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-shopping-bag"></i><h3>No Orders Found</h3><p class="muted">Customer orders will appear here.</p></div></td></tr>';
-        cards.innerHTML = '<div class="order-card"><div class="muted">No orders for mobile view</div></div>';
-      }
-
-      function renderList(list){
-        if (!list || !list.length){ renderEmpty(); return; }
-
-        tbody.innerHTML = list.map(o => {
-          const itemsCount = (o.items||[]).length;
-          const total = o.total ?? 0;
-          const customer = (o.shippingAddress && (o.shippingAddress.firstName || o.shippingAddress.lastName)) ? `${escapeHtml(o.shippingAddress.firstName||'')} ${escapeHtml(o.shippingAddress.lastName||'')}`.trim() : escapeHtml(o.email||'Customer');
-
-          return `
-            <tr data-id="${escapeHtml(o.id)}">
-              <td class="order-id">#${escapeHtml(shortId(o.id))}</td>
-              <td>
-                <div style="display:flex;gap:10px;align-items:center">
-                  <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#a855f7);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">${escapeHtml((customer||'C').slice(0,2).toUpperCase())}</div>
-                  <div style="min-width:0">
-                    <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${customer}</div>
-                    <div class="muted" style="font-size:0.85rem">${escapeHtml(o.email||'No email')}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="muted">${fmtDate(o.createdAt)}</td>
-              <td class="muted">${itemsCount} item${itemsCount !== 1 ? 's' : ''}</td>
-              <td>₹${Number(total).toFixed(2)}</td>
-              <td><span class="status-pill ${getStatusClass(o.status)}">${escapeHtml((o.status||'pending').charAt(0).toUpperCase() + (o.status||'pending').slice(1))}</span></td>
-              <td style="text-align:right">
-                <button class="action-btn view-btn" data-id="${escapeHtml(o.id)}" title="View"><i class="fas fa-eye"></i></button>
-                <button class="action-btn edit-btn" data-id="${escapeHtml(o.id)}" title="Edit"><i class="fas fa-edit"></i></button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-
-        cards.innerHTML = list.map(o => {
-          const itemsCount = (o.items||[]).length;
-          const total = o.total ?? 0;
-          const customer = (o.shippingAddress && (o.shippingAddress.firstName || o.shippingAddress.lastName)) ? `${escapeHtml(o.shippingAddress.firstName||'')} ${escapeHtml(o.shippingAddress.lastName||'')}`.trim() : escapeHtml(o.email||'Customer');
-          let itemsHTML = '';
-          if (o.items && o.items.length){
-            o.items.slice(0,2).forEach(it => {
-              itemsHTML += `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div style="width:30px;height:30px;border-radius:6px;background:var(--light);display:flex;align-items:center;justify-content:center"><i class="fas fa-jar"></i></div><div style="font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(it.name)}</div><div style="margin-left:auto" class="muted">x${it.quantity}</div></div>`;
-            });
-            if (o.items.length > 2) itemsHTML += `<div class="muted">+${o.items.length - 2} more</div>`;
-          } else itemsHTML = '<div class="muted">No items</div>';
-
-          return `
-            <div class="order-card">
-              <div class="card-header">
-                <div>
-                  <div class="customer-name">${customer}</div>
-                  <div class="card-meta muted">${fmtDate(o.createdAt)} • ${itemsCount} item${itemsCount!==1?'s':''}</div>
-                </div>
-                <div><span class="status-pill ${getStatusClass(o.status)}" style="font-size:0.75rem;padding:6px 10px">${escapeHtml((o.status||'pending').charAt(0).toUpperCase() + (o.status||'pending').slice(1))}</span></div>
-              </div>
-              <div style="margin:8px 0">${itemsHTML}</div>
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <div style="font-weight:700">₹${Number(total).toFixed(2)}</div>
-                <div style="display:flex;gap:8px">
-                  <button class="action-btn view-btn" data-id="${escapeHtml(o.id)}"><i class="fas fa-eye"></i></button>
-                  <button class="action-btn edit-btn" data-id="${escapeHtml(o.id)}"><i class="fas fa-edit"></i></button>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        attachRowListeners();
-      }
-
-      function attachRowListeners(){
-        tbody.querySelectorAll('.view-btn').forEach(b => b.onclick = e => openModalById(e.currentTarget.getAttribute('data-id')));
-        tbody.querySelectorAll('.edit-btn').forEach(b => b.onclick = e => openModalById(e.currentTarget.getAttribute('data-id')));
-        cards.querySelectorAll('.view-btn').forEach(b => b.onclick = e => openModalById(e.currentTarget.getAttribute('data-id')));
-        cards.querySelectorAll('.edit-btn').forEach(b => b.onclick = e => openModalById(e.currentTarget.getAttribute('data-id')));
-      }
-
-      function openModalById(id){
-        const order = orders.find(x => x.id === id) || { id };
-        openModal(order);
-      }
-
-      function openModal(order){
-        if (!order) return;
-        editingOrderId = order.id || null;
-        const addressText = formatAddress(order.shippingAddress);
-        const itemsHtml = (order.items && order.items.length) ? order.items.map(it => `<div style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid var(--border)"><div style="width:40px;height:40px;border-radius:8px;background:var(--light);display:flex;align-items:center;justify-content:center"><i class="fas fa-jar"></i></div><div style="flex:1;min-width:0"><div style="font-weight:600">${escapeHtml(it.name)}</div><div class="muted">${escapeHtml(it.weight||'')}</div></div><div style="font-weight:700">x${it.quantity}</div><div style="color:var(--primary);font-weight:700">₹${Number((it.price||0)*it.quantity).toFixed(2)}</div></div>`).join('') : '<div class="muted">No items</div>';
-
-        modalBody.innerHTML = `
-          <div style="display:grid;grid-template-columns:1fr;gap:10px">
-            <div><div class="muted">Order ID</div><div style="font-weight:700">${escapeHtml('#' + shortId(order.id))}</div></div>
-            <div><div class="muted">Customer</div><div>${escapeHtml((order.shippingAddress?.firstName||order.email||'Customer') + ' ' + (order.shippingAddress?.lastName||''))}</div></div>
-            <div style="display:flex;gap:12px">
-              <div style="flex:1"><div class="muted">Email</div><div>${escapeHtml(order.email || 'No email')}</div></div>
-              <div style="flex:1"><div class="muted">Phone</div><div>${escapeHtml(order.shippingAddress?.phone || 'No phone')}</div></div>
-            </div>
-            <div style="display:flex;gap:12px">
-              <div style="flex:1"><div class="muted">Date</div><div>${fmtDate(order.createdAt)}</div></div>
-              <div style="flex:1"><div class="muted">Total</div><div style="font-weight:700">₹${Number(order.total||0).toFixed(2)}</div></div>
-            </div>
-
-            <div><div class="muted">Status</div>
-              <select id="ov-modal-status" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);width:100%">
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-
-            <div><div class="muted">Shipping Address</div><div>${escapeHtml(addressText)}</div></div>
-            <div class="muted">Items</div>
-            <div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px" id="ov-modal-items">${itemsHtml}</div>
-          </div>
-        `;
-        const sel = document.getElementById('ov-modal-status'); if (sel) sel.value = order.status || 'pending';
-        modalBg.classList.add('show'); modalBg.setAttribute('aria-hidden','false');
-      }
-
-      function formatAddress(a){
-        if(!a) return 'No address provided';
-        const parts = [a.address, a.city, a.state, a.zipCode, a.country].filter(Boolean);
-        return parts.join(', ');
-      }
-
-      function closeModal(){ modalBg.classList.remove('show'); modalBg.setAttribute('aria-hidden','true'); editingOrderId = null; }
-
-      function saveModal(){
-        if (!editingOrderId) return;
-        const newStatus = document.getElementById('ov-modal-status')?.value || 'pending';
-        if (db && db.collection){
-          modalSave.disabled = true;
-          const oldText = modalSave.innerHTML;
-          modalSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-          db.collection('orders').doc(editingOrderId).update({ status: newStatus, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
-.then(() => {
-    const cid = shortId(editingOrderId);
-
-logActivity("ORDER_STATUS", `Order #${cid} updated to ${newStatus}`, editingOrderId);
-
-if (newStatus === "cancelled") {
-    logActivity("ORDER_CANCELLED", `Order #${cid} was cancelled`, editingOrderId);
-}
-
-if (newStatus === "delivered") {
-    logActivity("ORDER_DELIVERED", `Order #${cid} delivered successfully`, editingOrderId);
-}
-
-    modalSave.disabled = false;
-    modalSave.innerHTML = oldText;
-    showToast('Order updated');
-    closeModal();
-})
-            .catch(err=>{ modalSave.disabled = false; modalSave.innerHTML = oldText; showToast('Save failed','error'); });
-          return;
-        }
-        const idx = orders.findIndex(o=>o.id===editingOrderId);
-        if (idx !== -1){ orders[idx].status = newStatus; applyFilters(); showToast('Order updated (local)'); }
-        closeModal();
-      }
-
-      function applyFilters(){
-        const st = statusFilter.value;
-        const dv = dateFilter.value;
-        const q = (searchInput.value||'').trim().toLowerCase();
-        let list = orders.slice();
-
-        if (st !== 'all') list = list.filter(o => (o.status||'').toLowerCase() === st);
-
-        if (dv !== 'all'){
-          const now = new Date(); let start = null;
-          if (dv === 'today') start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          if (dv === 'week') start = new Date(now.getTime() - 7*86400000);
-          if (dv === 'month') start = new Date(now.getFullYear(), now.getMonth()-1, now.getDate());
-          if (start) list = list.filter(o => { if(!o.createdAt) return false; const od = new Date(typeof o.createdAt === 'object' && o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt); return od >= start; });
-        }
-
-        if (q) list = list.filter(o => {
-          const id = (o.id||'').toLowerCase();
-          const name = ((o.shippingAddress?.firstName||'') + ' ' + (o.shippingAddress?.lastName||'')).toLowerCase();
-          const email = (o.email||'').toLowerCase();
-          return id.includes(q) || name.includes(q) || email.includes(q);
-        });
-
-        filtered = list;
-        renderList(filtered);
-      }
-
-      function exportCSV(list){
-        if (!list || !list.length){ showToast('No orders to export','info'); return; }
-        const rows = [['Order ID','Customer','Email','Date','Items','Total','Status']];
-        list.forEach(o => {
-          const customer = (o.shippingAddress?.firstName || '') + ' ' + (o.shippingAddress?.lastName || '');
-          rows.push([`#${shortId(o.id)}`, customer.trim(), o.email||'', fmtDate(o.createdAt), (o.items||[]).length, (o.total||0), o.status||'']);
-        });
-        const csv = rows.map(r => r.map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'orders.csv'; a.click(); URL.revokeObjectURL(url);
-        showToast('Export started');
-      }
-
-      document.addEventListener('click', function(e){ if (e.target === modalBg) closeModal(); });
-      modalClose.addEventListener('click', closeModal);
-      modalCancel.addEventListener('click', closeModal);
-      modalSave.addEventListener('click', saveModal);
-
-      statusFilter.addEventListener('change', applyFilters);
-      dateFilter.addEventListener('change', applyFilters);
-      searchInput.addEventListener('input', function(){ setTimeout(applyFilters, 120); });
-
-      refreshBtn.addEventListener('click', function(){ loadOrders(); showToast('Refreshing orders...','info'); });
-      exportBtn.addEventListener('click', function(){ exportCSV(filtered.length ? filtered : orders); });
-
-      loadOrders();
-
-      window.__orders_debug = { loadOrders, applyFilters, exportCSV };
-    })();
   </script> 
