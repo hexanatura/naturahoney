@@ -478,9 +478,31 @@
   
   <script src="activityLogger.js?v=1"></script>
 
-  <!-- Promo page script -->
-  <script>
+<script>
     (function(){
+        
+let promoListener = null;
+
+function cleanupPromos() {
+  if (promoListener) {
+    promoListener();
+    promoListener = null;
+  }
+}
+
+// ADD DEBOUNCE FUNCTION
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
       const logActivityFn =
         (typeof logActivity === "function")
           ? logActivity
@@ -545,7 +567,8 @@
         });
       }
 
-      if (searchInput) searchInput.addEventListener('input', applyFilters);
+      // FIX: ADD DEBOUNCED SEARCH
+      if (searchInput) searchInput.addEventListener('input', debounce(applyFilters, 300));
       if (statusFilter) statusFilter.addEventListener('change', applyFilters);
       if (typeFilter) typeFilter.addEventListener('change', applyFilters);
 
@@ -565,30 +588,31 @@
 
       function loadPromos() {
         if (!tbody) return;
-
         tbody.innerHTML = '<tr><td colspan="5" class="muted">Loading promo codes…</td></tr>';
         if (cards) cards.innerHTML = '';
 
         const db = getDb();
-        if (!db) {
-          showError('Database unavailable');
-          return;
-        }
+        if (!db) { showError('Database unavailable'); return; }
 
-        db.collection('promoCodes').orderBy('createdAt','desc').get()
-          .then(qs => {
+        // Cleanup previous
+        cleanupPromos();
+
+        promoListener = db.collection('promoCodes')
+          .orderBy('createdAt','desc')
+          .limit(100) // ADD LIMIT
+          .onSnapshot(qs => {
             promos = [];
             qs.forEach(doc => {
               const data = doc.data() || {};
-              promos.push({
-                id: doc.id,
-                ...data
-              });
+              promos.push({ id: doc.id, ...data });
             });
             applyFilters();
-          })
-          .catch(err => {
-            showError(err && err.message ? err.message : 'Error loading promo codes');
+          }, err => {
+            // ADD PROPER ERROR HANDLING
+            console.error('Promo codes load error:', err);
+            showError(err?.message || 'Error loading promo codes');
+            tbody.innerHTML = '<tr><td colspan="5" class="muted">Error loading promo codes</td></tr>';
+            if (cards) cards.innerHTML = '<div class="promo-card"><div class="muted">Error loading promo codes</div></div>';
           });
       }
 
@@ -721,7 +745,10 @@
             confirmBg.classList.remove('show');
             loadPromos();
           })
-          .catch(err => showError(err && err.message ? err.message : 'Error deleting promo'));
+          .catch(err => {
+            showError(err && err.message ? err.message : 'Error deleting promo');
+            confirmBg.classList.remove('show');
+          });
       }
 
       function applyFilters() {
@@ -914,7 +941,7 @@
           "'":'&#39;'
         }[c]));
       }
-
+     
       function showError(msg) {
         if (!tbody) return;
         tbody.innerHTML =
@@ -926,6 +953,9 @@
             '</div>' +
           '</td></tr>';
       }
+      
+      // FIX: ONLY CLEANUP PROMOS FOR THIS PAGE
+      window.addEventListener('beforeunload', cleanupPromos);
 
       // init
       loadPromos();
