@@ -679,62 +679,65 @@
   // --------------------------------------------------------
   //  ** FIXED SAVE FUNCTION — AUTO UPDATE ROOT + USER ORDER **
   // --------------------------------------------------------
-  async function save() {
-    if (!editing) return;
+  function save() {
+  if (!editing) return;
 
-    const st = document.getElementById("ov-modal-status").value;
-    const rootRef = db.collection("orders").doc(editing);
+  const st = document.getElementById("ov-modal-status").value;
+  ms.disabled = true;
 
-    ms.disabled = true;
-    const old = ms.innerHTML;
-    ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  const ot = ms.innerHTML;
+  ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-    try {
-      const doc = await rootRef.get();
+  const rootRef = db.collection("orders").doc(editing);
 
-      if (doc.exists) {
-        await rootRef.update({
-          status: st,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-
-        toast("Order updated");
-        close();
-      } else {
-        const users = await db.collection("users").get();
-
-        let updated = false;
-
-        for (const u of users.docs) {
-          const userRef = db
-            .collection("users")
-            .doc(u.id)
-            .collection("orders")
-            .doc(editing);
-
-          const d = await userRef.get();
-          if (d.exists) {
-            await userRef.update({
-              status: st,
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            });
-
-            updated = true;
-            toast("Order updated");
-            close();
-            break;
-          }
-        }
-
-        if (!updated) toast("Order not found", "error");
-      }
-    } catch (e) {
-      toast("Save failed", "error");
+  rootRef.get().then(doc => {
+    if (doc.exists) {
+      // Order exists in /orders → update here
+      return rootRef.update({
+        status: st,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
     }
 
+    // Not in /orders → search inside all users
+    return db.collection("users").get().then(users => {
+      let found = false;
+      const promises = [];
+
+      users.forEach(u => {
+        const subRef = db.collection("users").doc(u.id).collection("orders").doc(editing);
+        promises.push(
+          subRef.get().then(snap => {
+            if (snap.exists) {
+              found = true;
+              return subRef.update({
+                status: st,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+            }
+          })
+        );
+      });
+
+      return Promise.all(promises).then(() => {
+        if (!found) throw new Error("Order not found in any path");
+      });
+    });
+  })
+  .then(() => {
     ms.disabled = false;
-    ms.innerHTML = old;
-  }
+    ms.innerHTML = ot;
+    toast("Order updated");
+    m.classList.remove("show");
+  })
+  .catch((err) => {
+    ms.disabled = false;
+    ms.innerHTML = ot;
+    console.error(err);
+    toast("Save failed", "error");
+  });
+}
+
 
   function apply() {
     let x = [...orders];
