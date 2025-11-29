@@ -570,530 +570,291 @@ tr:hover{
 
 <script>
 (function () {
-  // Prevent double-binding if this script is injected multiple times
-  if (window.__CONTACT_SUBMISSIONS_SCRIPT_LOADED__) return;
-  window.__CONTACT_SUBMISSIONS_SCRIPT_LOADED__ = true;
+
+  if (window.__CONTACT_FIXED__) return;
+  window.__CONTACT_FIXED__ = true;
 
   const enquiryActivityCache = new Set();
 
-  function escapeHtml(s) {
-    return String(s || "").replace(/[&<>"']/g, c => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[c]));
+  function escape(s){
+    return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))
   }
 
-  function logEnquiryActivity(type, message, refId = null) {
-    try {
-      if (!window.db || !window.db.collection) return;
-      const key = `${type}_${refId || ""}`;
-      if (enquiryActivityCache.has(key)) return;
-      enquiryActivityCache.add(key);
-      window.db.collection("activities").add({
-        type,
-        message,
-        refId,
-        time: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(() => {});
-    } catch (e) {
-      // Silent fail – activity logging is non-critical
-    }
+  function logActivity(type,msg,id=null){
+    if(!window.db) return;
+    const key = type+"_"+id;
+    if(enquiryActivityCache.has(key)) return;
+    enquiryActivityCache.add(key);
+    window.db.collection("activities").add({
+      type,message:msg,refId:id,
+      time:firebase.firestore.FieldValue.serverTimestamp()
+    });
   }
 
-  function parseTs(x) {
-    if (!x) return null;
-    if (typeof x.toDate === "function") return x.toDate();
-    if (x.seconds) return new Date(x.seconds * 1000);
-    if (x instanceof Date) return x;
-    if (typeof x === "number") return new Date(x);
-    try {
+  function parseTs(x){
+    try{
+      if(!x) return null;
+      if(x.toDate) return x.toDate();
+      if(x.seconds) return new Date(x.seconds*1000);
+      if(typeof x==="number") return new Date(x);
       return new Date(x);
-    } catch (e) {
-      return null;
-    }
+    }catch{ return null; }
   }
 
-  function initial(name) {
-    const s = String(name || "").trim();
-    return s ? s[0].toUpperCase() : "?";
+  function initWhenDBReady(cb){
+    if(window.db && window.db.collection) return cb();
+    let chk = setInterval(()=>{
+      if(window.db && window.db.collection){
+        clearInterval(chk);
+        cb();
+      }
+    },50);
   }
 
-  function cap(s) {
-    if (!s) return "";
-    const str = String(s);
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
+  function start(){
 
-  function shortText(t) {
-    if (!t) return "";
-    return t.length > 50 ? t.slice(0, 50) + "..." : t;
-  }
-
-  function fmt(d) {
-    if (!d) return "-";
-    try {
-      return new Date(d).toLocaleString("en-IN");
-    } catch (e) {
-      return "-";
-    }
-  }
-
-  function start() {
     const T = document.getElementById("submissions-table-body");
     const C = document.getElementById("mobile-cards");
     const M = document.getElementById("submission-modal");
 
-    if (!T || !C || !M) return;
+    if(!T) return;
 
-    const manualRefresh = document.getElementById("manual-refresh");
-    const testDataBtn = document.getElementById("testDataBtn");
     const statusFilter = document.getElementById("status-filter");
     const dateFilter = document.getElementById("date-filter");
-    const closeModalBtn = document.getElementById("close-modal");
-    const closeModalBtn2 = document.getElementById("close-modal-2");
-    const gmailReplyBtn = document.getElementById("gmail-reply-btn");
+    const manualRefresh = document.getElementById("manual-refresh");
+    const testBtn = document.getElementById("testDataBtn");
+    const replyBtn = document.getElementById("gmail-reply-btn");
 
     let data = [];
-    let currentMessageId = null;
+    let currentId = null;
 
-    function renderLoading() {
+    function showLoading(){
       T.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center;padding:40px;">
-            <i class="fas fa-spinner fa-spin"></i>
-          </td>
-        </tr>`;
-      C.innerHTML = `
-        <div class="card" style="text-align:center;padding:30px;">
-          <i class="fas fa-spinner fa-spin"></i>
-        </div>`;
+        <tr><td colspan="5" style="text-align:center;padding:40px;">
+        <i class="fas fa-spinner fa-spin"></i>
+        </td></tr>`;
+      C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>
+        <i class='fas fa-spinner fa-spin'></i>
+      </div>`;
     }
 
-    function renderEmpty() {
-      T.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center;padding:40px;">
-            No messages
-          </td>
-        </tr>`;
-      C.innerHTML = `
-        <div class="card" style="text-align:center;padding:30px;">
-          No messages
-        </div>`;
+    function showEmpty(){
+      T.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;">No messages</td></tr>`;
+      C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>No messages</div>`;
     }
 
-    function renderError(msg) {
-      T.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center;padding:40px;color:red;">
-            ${escapeHtml(msg)}
-          </td>
-        </tr>`;
-      C.innerHTML = `
-        <div class="card" style="text-align:center;padding:30px;color:red;">
-          ${escapeHtml(msg)}
-        </div>`;
-    }
-
-    function load() {
-      renderLoading();
-
-      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
-      if (!db || !db.collection) {
-        renderError("Firestore unavailable");
-        return;
-      }
-
-      db.collection("contactSubmissions")
-        .orderBy("timestamp", "desc")
-        .get()
-        .then((snap) => {
-          const now = Date.now();
-
-          data = snap.docs.map((d) => {
-            const v = d.data() || {};
-            const ts = parseTs(v.timestamp);
-
-            if (!v.activityLogged) {
-              logEnquiryActivity(
-                "ENQUIRY_NEW",
-                `New message received from ${v.name || "Unknown"} (${v.email || "-"})`,
-                d.id
-              );
-              db.collection("contactSubmissions").doc(d.id)
-                .update({ activityLogged: true })
-                .catch(() => {});
-            }
-
-            const item = {
-              id: d.id,
-              name: v.name || "",
-              email: v.email || "",
-              phone: v.phone || "",
-              subject: v.subject || "",
-              message: v.message || "",
-              status: v.status || "new",
-              timestamp: ts,
-              missedAlertSent: !!v.missedAlertSent
-            };
-
-            if (item.status === "new" && item.timestamp && !item.missedAlertSent) {
-              const ageHours = (now - item.timestamp.getTime()) / (1000 * 60 * 60);
-              if (ageHours >= 24) {
-                logEnquiryActivity(
-                  "ENQUIRY_MISSED",
-                  `Unread message for 24 hours from ${item.name} (${item.email})`,
-                  item.id
-                );
-                db.collection("contactSubmissions").doc(item.id)
-                  .update({ missedAlertSent: true })
-                  .catch(() => {});
-                item.missedAlertSent = true;
-              }
-            }
-
-            return item;
-          });
-
-          applyFilters();
-        })
-        .catch((err) => {
-          renderError(err && err.message ? err.message : "Failed to load messages");
-        });
-    }
-
-    function render(list) {
-      if (!list || !list.length) {
-        renderEmpty();
-        return;
-      }
-
-      T.innerHTML = list
-        .map((x) => `
-          <tr>
-            <td>
-              <div class="user-info">
-                <div class="avatar">${initial(x.name)}</div>
-                <div>
-                  <div style="font-weight:600">${escapeHtml(x.name)}</div>
-                  <div style="font-size:.8rem;color:#666">${escapeHtml(x.email)}</div>
-                </div>
-              </div>
-            </td>
-            <td>${escapeHtml(shortText(x.subject))}</td>
-            <td>${fmt(x.timestamp)}</td>
-            <td>
-              <span class="status status-${escapeHtml(x.status)}">${cap(x.status)}</span>
-            </td>
-            <td>
-              <div class="actions">
-                <button class="action-btn v" data-id="${escapeHtml(x.id)}">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button class="action-btn r" data-id="${escapeHtml(x.id)}">
-                  <i class="fas fa-reply"></i>
-                </button>
-                <button class="action-btn d" data-id="${escapeHtml(x.id)}">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        `)
-        .join("");
-
-      C.innerHTML = list
-        .map((x) => `
-          <div class="card">
-            <div class="card-row">
-              <div class="user-info">
-                <div class="avatar">${initial(x.name)}</div>
-                <div>
-                  <div style="font-weight:600">${escapeHtml(x.name)}</div>
-                  <div style="font-size:.8rem;color:#666">${escapeHtml(x.email)}</div>
-                </div>
-              </div>
-              <span class="status status-${escapeHtml(x.status)}">${cap(x.status)}</span>
-            </div>
-            <div style="font-weight:500;margin:8px 0;">
-              ${escapeHtml(x.subject)}
-            </div>
-            <div style="font-size:.8rem;color:#666">
-              ${fmt(x.timestamp)}
-            </div>
-            <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
-              <button class="action-btn v" data-id="${escapeHtml(x.id)}">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="action-btn r" data-id="${escapeHtml(x.id)}">
-                <i class="fas fa-reply"></i>
-              </button>
-              <button class="action-btn d" data-id="${escapeHtml(x.id)}">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        `)
-        .join("");
-    }
-
-    function applyFilters() {
+    function applyFilters(){
       let list = [...data];
+      const st = statusFilter.value;
+      const dv = dateFilter.value;
 
-      const st = statusFilter ? statusFilter.value : "all";
-      const dv = dateFilter ? dateFilter.value : "all";
+      if(st!=="all") list = list.filter(x=>x.status===st);
 
-      if (st !== "all") {
-        list = list.filter((x) => x.status === st);
-      }
-
-      if (dv !== "all") {
+      if(dv!=="all"){
         const now = new Date();
-        let start = null;
-
-        if (dv === "today") {
-          start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        } else if (dv === "week") {
-          start = new Date(now.getTime() - 7 * 86400000);
-        } else if (dv === "month") {
-          start = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        }
-
-        if (start) {
-          list = list.filter((o) => o.timestamp && o.timestamp >= start);
-        }
+        let s = null;
+        if(dv==="today") s = new Date(now.getFullYear(),now.getMonth(),now.getDate());
+        if(dv==="week") s = new Date(now.getTime()-7*864e5);
+        if(dv==="month") s = new Date(now.getFullYear(),now.getMonth()-1,now.getDate());
+        if(s) list = list.filter(x=>x.timestamp && x.timestamp>=s);
       }
 
       render(list);
     }
 
-    function openMessage(id) {
-      const x = data.find((z) => z.id === id);
-      if (!x) return;
+    function render(list){
+      if(!list.length) return showEmpty();
 
-      currentMessageId = id;
+      // TABLE
+      T.innerHTML = list.map(x=>`
+        <tr>
+          <td>
+            <div class="user-info">
+              <div class="avatar">${(x.name||"?")[0].toUpperCase()}</div>
+              <div>
+                <div style="font-weight:600">${escape(x.name)}</div>
+                <div style="font-size:.8rem;color:#666">${escape(x.email)}</div>
+              </div>
+            </div>
+          </td>
+          <td>${escape(x.subject.length>50?x.subject.slice(0,50)+"...":x.subject)}</td>
+          <td>${(x.timestamp?new Date(x.timestamp).toLocaleString("en-IN"):"-")}</td>
+          <td><span class="status status-${escape(x.status)}">${x.status[0].toUpperCase()+x.status.slice(1)}</span></td>
+          <td>
+            <div class="actions">
+              <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
+              <button class="action-btn r" data-id="${x.id}"><i class="fas fa-reply"></i></button>
+              <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
 
-      fill("detail-name", x.name || "-");
-      fill("detail-email", x.email || "-");
-      fill("detail-phone", x.phone || "-");
-      fill("detail-subject", x.subject || "-");
-      fill("detail-status", cap(x.status || ""));
-      fill("detail-message", x.message || "-");
+      // MOBILE CARDS
+      C.innerHTML = list.map(x=>`
+        <div class="card">
+          <div class="card-row">
+            <div class="user-info">
+              <div class="avatar">${(x.name||"?")[0].toUpperCase()}</div>
+              <div>
+                <div style="font-weight:600">${escape(x.name)}</div>
+                <div style="font-size:.8rem;color:#666">${escape(x.email)}</div>
+              </div>
+            </div>
+            <span class="status status-${escape(x.status)}">${x.status[0].toUpperCase()+x.status.slice(1)}</span>
+          </div>
+          <div style="font-weight:500;margin:8px 0;">${escape(x.subject)}</div>
+          <div style="font-size:.8rem;color:#666">${(x.timestamp?new Date(x.timestamp).toLocaleString("en-IN"):"-")}</div>
+          <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
+            <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
+            <button class="action-btn r" data-id="${x.id}"><i class="fas fa-reply"></i></button>
+            <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `).join("");
+    }
 
-      M.style.display = "flex";
+    function openMessage(id){
+      const x = data.find(a=>a.id===id);
+      if(!x) return;
 
-      if (x.status === "new") {
-        logEnquiryActivity(
-          "ENQUIRY_READ",
-          `Message opened from ${x.name} (${x.email})`,
-          id
-        );
-        setStatus(id, "read");
+      currentId = id;
+
+      document.getElementById("detail-name").textContent = x.name||"-";
+      document.getElementById("detail-email").textContent = x.email||"-";
+      document.getElementById("detail-phone").textContent = x.phone||"-";
+      document.getElementById("detail-subject").textContent = x.subject||"-";
+      document.getElementById("detail-status").textContent = x.status||"-";
+      document.getElementById("detail-message").textContent = x.message||"-";
+
+      M.style.display="flex";
+
+      if(x.status==="new"){
+        setStatus(id,"read");
+        logActivity("ENQUIRY_READ",`Opened by admin — ${x.name}`,id);
       }
     }
 
-    function setStatus(id, st) {
-      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
-      if (!db || !db.collection) return;
+    function sendReply(id){
+      const x = data.find(a=>a.id===id);
+      if(!x) return;
 
-      db.collection("contactSubmissions")
-        .doc(id)
-        .update({
-          status: st,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(() => {
-          // Reload to reflect changes
-          load();
-        })
-        .catch(() => {});
-    }
+      setStatus(id,"replied");
+      logActivity("ENQUIRY_REPLIED",`Replied to ${x.name}`,id);
 
-    function replyMessage(id) {
-      const x = data.find((z) => z.id === id);
-      if (!x || !x.email) return;
+      const dateStr = x.timestamp
+        ? new Date(x.timestamp).toLocaleString("en-IN")
+        : "";
 
-      setStatus(id, "replied");
-      logEnquiryActivity(
-        "ENQUIRY_REPLIED",
-        `Replied to message from ${x.name} (${x.email})`,
-        id
-      );
+      const emailBody =
+`Hi ${x.name},
 
-      const subject = `Re: ${x.subject || ""}`;
-      const bodyLines = [
-        `Hi ${x.name || ""},`,
-        "",
-        `Thanks for reaching out regarding "${x.subject || ""}".`,
-        "",
-        "Original message:",
-        x.message || "",
-        "",
-        "Best regards,",
-        "Hexahoney Team"
-      ];
-      const body = bodyLines.join("\n");
+Thanks for reaching out.
+[Your reply message goes here — clear, short, direct.]
+
+Let me know if you need anything else.
+
+On ${dateStr}, ${x.name} wrote:
+
+${x.message}
+`;
 
       const url =
         "https://mail.google.com/mail/?view=cm&fs=1" +
         `&to=${encodeURIComponent(x.email)}` +
-        `&su=${encodeURIComponent(subject)}` +
-        `&body=${encodeURIComponent(body)}`;
+        `&su=${encodeURIComponent("Re: "+x.subject)}` +
+        `&body=${encodeURIComponent(emailBody)}`;
 
-      window.open(url, "_blank", "noopener");
+      window.open(url,"_blank","noopener");
     }
 
-    function deleteMessage(id) {
-      const x = data.find((z) => z.id === id);
-      if (!x) return;
+    function deleteMsg(id){
+      const x = data.find(a=>a.id===id);
+      if(!x) return;
+      if(!confirm("Delete this message?")) return;
 
-      if (!confirm("Delete this message?")) return;
+      logActivity("ENQUIRY_DELETED",`Deleted ${x.name}`,id);
 
-      logEnquiryActivity(
-        "ENQUIRY_DELETED",
-        `Deleted message from ${x.name || "Unknown"} (${x.email || "-"})`,
-        id
-      );
+      window.db.collection("contactSubmissions").doc(id).delete().then(load);
+    }
 
-      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
-      if (!db || !db.collection) return;
-
-      db.collection("contactSubmissions")
+    function setStatus(id,st){
+      window.db.collection("contactSubmissions")
         .doc(id)
-        .delete()
-        .then(() => {
-          load();
+        .update({
+          status:st,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         })
-        .catch((err) => {
-          renderError(err && err.message ? err.message : "Delete failed");
+        .then(load);
+    }
+
+    function load(){
+      showLoading();
+
+      window.db.collection("contactSubmissions")
+        .orderBy("timestamp","desc")
+        .get()
+        .then(snap=>{
+          data = snap.docs.map(d=>{
+            const v = d.data()||{};
+            return {
+              id:d.id,
+              name:v.name||"",
+              email:v.email||"",
+              phone:v.phone||"",
+              subject:v.subject||"",
+              message:v.message||"",
+              status:v.status||"new",
+              timestamp:parseTs(v.timestamp)
+            }
+          });
+          applyFilters();
         });
     }
 
-    function addTest() {
-      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
-      if (!db || !db.collection) return;
+    // Events
+    T.onclick = e=>{
+      const btn = e.target.closest("button");
+      if(!btn) return;
+      const id = btn.dataset.id;
+      if(btn.classList.contains("v")) openMessage(id);
+      if(btn.classList.contains("r")) sendReply(id);
+      if(btn.classList.contains("d")) deleteMsg(id);
+    };
 
-      db.collection("contactSubmissions")
-        .add({
-          name: "Demo User",
-          email: "demo@example.com",
-          phone: "1234567890",
-          subject: "Test message",
-          message: "This is a test.",
-          status: "new",
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(() => load())
-        .catch(() => {});
-    }
+    C.onclick = T.onclick;
 
-    function fill(id, v) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    }
+    manualRefresh.onclick = load;
 
-    // Event wiring (NO duplicate global handlers)
-    if (manualRefresh) {
-      manualRefresh.addEventListener("click", function () {
-        load();
-      });
-    }
+    testBtn.onclick = ()=>{
+      window.db.collection("contactSubmissions").add({
+        name:"Demo User",
+        email:"demo@example.com",
+        phone:"1234567890",
+        subject:"Test message",
+        message:"This is a test.",
+        status:"new",
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      }).then(load);
+    };
 
-    if (testDataBtn) {
-      testDataBtn.addEventListener("click", function () {
-        addTest();
-      });
-    }
+    replyBtn.onclick = ()=> sendReply(currentId);
 
-    if (statusFilter) {
-      statusFilter.addEventListener("change", applyFilters);
-    }
+    document.getElementById("close-modal").onclick = ()=> M.style.display="none";
+    document.getElementById("close-modal-2").onclick = ()=> M.style.display="none";
 
-    if (dateFilter) {
-      dateFilter.addEventListener("change", applyFilters);
-    }
+    M.onclick = e=>{
+      if(e.target===M) M.style.display="none";
+    };
 
-    if (closeModalBtn) {
-      closeModalBtn.addEventListener("click", function () {
-        M.style.display = "none";
-      });
-    }
+    statusFilter.onchange = applyFilters;
+    dateFilter.onchange = applyFilters;
 
-    if (closeModalBtn2) {
-      closeModalBtn2.addEventListener("click", function () {
-        M.style.display = "none";
-      });
-    }
-
-    // Close modal on backdrop click
-    M.addEventListener("click", function (e) {
-      if (e.target === M) {
-        M.style.display = "none";
-      }
-    });
-
-    // Gmail reply from inside modal (uses last opened message)
-    if (gmailReplyBtn) {
-      gmailReplyBtn.addEventListener("click", function () {
-        if (currentMessageId) {
-          replyMessage(currentMessageId);
-        }
-      });
-    }
-
-    // Delegate clicks from table (desktop)
-    T.addEventListener("click", function (e) {
-      const viewBtn = e.target.closest(".v");
-      const replyBtn = e.target.closest(".r");
-      const delBtn = e.target.closest(".d");
-
-      if (viewBtn) {
-        openMessage(viewBtn.dataset.id);
-        return;
-      }
-      if (replyBtn) {
-        replyMessage(replyBtn.dataset.id);
-        return;
-      }
-      if (delBtn) {
-        deleteMessage(delBtn.dataset.id);
-        return;
-      }
-    });
-
-    // Delegate clicks from mobile cards
-    C.addEventListener("click", function (e) {
-      const viewBtn = e.target.closest(".v");
-      const replyBtn = e.target.closest(".r");
-      const delBtn = e.target.closest(".d");
-
-      if (viewBtn) {
-        openMessage(viewBtn.dataset.id);
-        return;
-      }
-      if (replyBtn) {
-        replyMessage(replyBtn.dataset.id);
-        return;
-      }
-      if (delBtn) {
-        deleteMessage(delBtn.dataset.id);
-        return;
-      }
-    });
-
-    // Initial load
+    // Load immediately (no lag)
     load();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start);
-  } else {
-    start();
-  }
-})();
-</script>
+  initWhenDBReady(start);
 
+})();
 </script>
