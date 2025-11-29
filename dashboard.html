@@ -41,6 +41,20 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
+        
+.admin-profile {
+    position: relative !important;
+    z-index: 4000 !important;
+}
+
+#profileMenu {
+    position: absolute !important;
+    top: 55px !important;
+    right: 0 !important;
+    z-index: 5000 !important;
+    pointer-events: auto !important;
+}
+
 
         .main-content {
             padding-right: 20px;
@@ -84,15 +98,16 @@
             color: #e5e7eb;
         }
 
-        .top-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding: 10px 12px 0;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
+    .top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 10px 12px 0;
+    flex-wrap: wrap;       /* <-- THIS is breaking your layout */
+    gap: 15px;
+}
+
 
         .search-bar {
             position: relative;
@@ -257,7 +272,7 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            gap: 4px;
+            gap: 1px;
         }
 
         .brand-logo {
@@ -1098,17 +1113,37 @@
                 grid-template-columns: 1fr;
             }
 
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 260px;
-                height: 100vh;
-                z-index: 950;
-                transform: translateX(-100%);
-                overflow-y: auto;
-                background: radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(15,23,42,0.98));
-            }
+         .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 260px;
+        height: 100vh;
+        z-index: 950;
+        transform: translateX(-100%);
+        overflow-y: auto;
+       background: #fff !important;
+backdrop-filter: none !important;
+
+        border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+        box-shadow: var(--shadow) !important;
+        
+         }
+         
+  .admin-profile {
+        position: absolute !important;
+        top: -15px !important;
+        right: 10px !important;
+    margin-left: auto !important;
+        padding: 6px 12px !important;
+        transform: scale(0.9);
+        z-index: 1 !important;
+    }
+
+    .top-header {
+        position: relative !important;
+        padding-top: 65px !important;
+    }
 
             .sidebar.active {
                 transform: translateX(0);
@@ -1552,6 +1587,10 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+profileMenu.addEventListener("click", (e) => {
+    e.stopPropagation();
+});
 
     // ------------------------------
     // UTILS
