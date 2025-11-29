@@ -609,23 +609,31 @@ function cleanupMessages() {
     }catch{ return null; }
   }
 
-  function initWhenDBReady(cb){
-    if(window.db && window.db.collection) return cb();
-    let chk = setInterval(()=>{
-      if(window.db && window.db.collection){
-        clearInterval(chk);
-        cb();
-      }
-    },50);
+  // FIX: SIMPLIFIED INIT - NO COMPLEX WAITING
+  function initMessages() {
+    // Wait for Firebase to be ready
+    if (!window.firebase || !firebase.firestore) {
+      setTimeout(initMessages, 100);
+      return;
+    }
+
+    // Set db reference
+    if (!window.db) {
+      window.db = firebase.firestore();
+    }
+
+    startMessages();
   }
 
-  function start(){
-
+  function startMessages() {
     const T = document.getElementById("submissions-table-body");
     const C = document.getElementById("mobile-cards");
     const M = document.getElementById("submission-modal");
 
-    if(!T) return;
+    if(!T) {
+      console.error('Table element not found');
+      return;
+    }
 
     const statusFilter = document.getElementById("status-filter");
     const dateFilter = document.getElementById("date-filter");
@@ -640,31 +648,51 @@ function cleanupMessages() {
       T.innerHTML = `
         <tr><td colspan="5" style="text-align:center;padding:40px;">
         <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading messages...</p>
         </td></tr>`;
-      C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>
-        <i class='fas fa-spinner fa-spin'></i>
-      </div>`;
+      if (C) {
+        C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>
+          <i class='fas fa-spinner fa-spin'></i>
+          <p>Loading messages...</p>
+        </div>`;
+      }
     }
 
     function showEmpty(){
-      T.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;">No messages</td></tr>`;
-      C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>No messages</div>`;
+      T.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;">No messages found</td></tr>`;
+      if (C) {
+        C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>No messages found</div>`;
+      }
+    }
+
+    function showError(message){
+      T.innerHTML = `
+        <tr><td colspan="5" style="text-align:center;padding:40px;color:#ef4444;">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>${message}</p>
+        </td></tr>`;
+      if (C) {
+        C.innerHTML = `<div class='card' style='text-align:center;padding:30px;color:#ef4444;'>
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>${message}</p>
+        </div>`;
+      }
     }
 
     function applyFilters(){
       let list = [...data];
-      const st = statusFilter.value;
-      const dv = dateFilter.value;
+      const st = statusFilter ? statusFilter.value : 'all';
+      const dv = dateFilter ? dateFilter.value : 'all';
 
-      if(st!=="all") list = list.filter(x=>x.status===st);
+      if(st !== "all") list = list.filter(x => x.status === st);
 
-      if(dv!=="all"){
+      if(dv !== "all"){
         const now = new Date();
         let s = null;
-        if(dv==="today") s = new Date(now.getFullYear(),now.getMonth(),now.getDate());
-        if(dv==="week") s = new Date(now.getTime()-7*864e5);
-        if(dv==="month") s = new Date(now.getFullYear(),now.getMonth()-1,now.getDate());
-        if(s) list = list.filter(x=>x.timestamp && x.timestamp>=s);
+        if(dv === "today") s = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if(dv === "week") s = new Date(now.getTime() - 7 * 864e5);
+        if(dv === "month") s = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        if(s) list = list.filter(x => x.timestamp && x.timestamp >= s);
       }
 
       render(list);
@@ -674,7 +702,7 @@ function cleanupMessages() {
       if(!list.length) return showEmpty();
 
       // TABLE
-      T.innerHTML = list.map(x=>`
+      T.innerHTML = list.map(x => `
         <tr>
           <td>
             <div class="user-info">
@@ -685,70 +713,72 @@ function cleanupMessages() {
               </div>
             </div>
           </td>
-          <td>${escape(x.subject.length>50?x.subject.slice(0,50)+"...":x.subject)}</td>
-          <td>${(x.timestamp?new Date(x.timestamp).toLocaleString("en-IN"):"-")}</td>
-          <td><span class="status status-${escape(x.status)}">${x.status[0].toUpperCase()+x.status.slice(1)}</span></td>
+          <td>${escape(x.subject.length > 50 ? x.subject.slice(0,50) + "..." : x.subject)}</td>
+          <td>${(x.timestamp ? new Date(x.timestamp).toLocaleString("en-IN") : "-")}</td>
+          <td><span class="status status-${escape(x.status)}">${x.status[0].toUpperCase() + x.status.slice(1)}</span></td>
           <td>
             <div class="actions">
-              <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
-              <button class="action-btn r" data-id="${x.id}"><i class="fas fa-reply"></i></button>
-              <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
+              <button class="action-btn v" data-id="${x.id}" title="View"><i class="fas fa-eye"></i></button>
+              <button class="action-btn r" data-id="${x.id}" title="Reply"><i class="fas fa-reply"></i></button>
+              <button class="action-btn d" data-id="${x.id}" title="Delete"><i class="fas fa-trash"></i></button>
             </div>
           </td>
         </tr>
       `).join("");
 
       // MOBILE CARDS
-      C.innerHTML = list.map(x=>`
-        <div class="card">
-          <div class="card-row">
-            <div class="user-info">
-              <div class="avatar">${(x.name||"?")[0].toUpperCase()}</div>
-              <div>
-                <div style="font-weight:600">${escape(x.name)}</div>
-                <div style="font-size:.8rem;color:#666">${escape(x.email)}</div>
+      if (C) {
+        C.innerHTML = list.map(x => `
+          <div class="card">
+            <div class="card-row">
+              <div class="user-info">
+                <div class="avatar">${(x.name||"?")[0].toUpperCase()}</div>
+                <div>
+                  <div style="font-weight:600">${escape(x.name)}</div>
+                  <div style="font-size:.8rem;color:#666">${escape(x.email)}</div>
+                </div>
               </div>
+              <span class="status status-${escape(x.status)}">${x.status[0].toUpperCase() + x.status.slice(1)}</span>
             </div>
-            <span class="status status-${escape(x.status)}">${x.status[0].toUpperCase()+x.status.slice(1)}</span>
+            <div style="font-weight:500;margin:8px 0;">${escape(x.subject)}</div>
+            <div style="font-size:.8rem;color:#666">${(x.timestamp ? new Date(x.timestamp).toLocaleString("en-IN") : "-")}</div>
+            <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
+              <button class="action-btn v" data-id="${x.id}" title="View"><i class="fas fa-eye"></i></button>
+              <button class="action-btn r" data-id="${x.id}" title="Reply"><i class="fas fa-reply"></i></button>
+              <button class="action-btn d" data-id="${x.id}" title="Delete"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
-          <div style="font-weight:500;margin:8px 0;">${escape(x.subject)}</div>
-          <div style="font-size:.8rem;color:#666">${(x.timestamp?new Date(x.timestamp).toLocaleString("en-IN"):"-")}</div>
-          <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
-            <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
-            <button class="action-btn r" data-id="${x.id}"><i class="fas fa-reply"></i></button>
-            <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
-          </div>
-        </div>
-      `).join("");
+        `).join("");
+      }
     }
 
     function openMessage(id){
-      const x = data.find(a=>a.id===id);
+      const x = data.find(a => a.id === id);
       if(!x) return;
 
       currentId = id;
 
-      document.getElementById("detail-name").textContent = x.name||"-";
-      document.getElementById("detail-email").textContent = x.email||"-";
-      document.getElementById("detail-phone").textContent = x.phone||"-";
-      document.getElementById("detail-subject").textContent = x.subject||"-";
-      document.getElementById("detail-status").textContent = x.status||"-";
-      document.getElementById("detail-message").textContent = x.message||"-";
+      document.getElementById("detail-name").textContent = x.name || "-";
+      document.getElementById("detail-email").textContent = x.email || "-";
+      document.getElementById("detail-phone").textContent = x.phone || "-";
+      document.getElementById("detail-subject").textContent = x.subject || "-";
+      document.getElementById("detail-status").textContent = x.status || "-";
+      document.getElementById("detail-message").textContent = x.message || "-";
 
-      M.style.display="flex";
+      M.style.display = "flex";
 
-      if(x.status==="new"){
-        setStatus(id,"read");
-        logActivity("ENQUIRY_READ",`Opened by admin — ${x.name}`,id);
+      if(x.status === "new"){
+        setStatus(id, "read");
+        logActivity("ENQUIRY_READ", `Opened by admin — ${x.name}`, id);
       }
     }
 
     function sendReply(id){
-      const x = data.find(a=>a.id===id);
+      const x = data.find(a => a.id === id);
       if(!x) return;
 
-      setStatus(id,"replied");
-      logActivity("ENQUIRY_REPLIED",`Replied to ${x.name}`,id);
+      setStatus(id, "replied");
+      logActivity("ENQUIRY_REPLIED", `Replied to ${x.name}`, id);
 
       const dateStr = x.timestamp
         ? new Date(x.timestamp).toLocaleString("en-IN")
@@ -770,31 +800,33 @@ ${x.message}
       const url =
         "https://mail.google.com/mail/?view=cm&fs=1" +
         `&to=${encodeURIComponent(x.email)}` +
-        `&su=${encodeURIComponent("Re: "+x.subject)}` +
+        `&su=${encodeURIComponent("Re: " + x.subject)}` +
         `&body=${encodeURIComponent(emailBody)}`;
 
-      window.open(url,"_blank","noopener");
+      window.open(url, "_blank", "noopener");
     }
 
     function deleteMsg(id){
-      const x = data.find(a=>a.id===id);
+      const x = data.find(a => a.id === id);
       if(!x) return;
       if(!confirm("Delete this message?")) return;
 
-      logActivity("ENQUIRY_DELETED",`Deleted ${x.name}`,id);
+      logActivity("ENQUIRY_DELETED", `Deleted ${x.name}`, id);
 
-      window.db.collection("contactSubmissions").doc(id).delete().then(load).catch(error => {
-        console.error('Delete error:', error);
-        alert('Error deleting message');
-      });
+      window.db.collection("contactSubmissions").doc(id).delete()
+        .then(load)
+        .catch(error => {
+          console.error('Delete error:', error);
+          alert('Error deleting message');
+        });
     }
 
-    function setStatus(id,st){
+    function setStatus(id, st){
       window.db.collection("contactSubmissions")
         .doc(id)
         .update({
-          status:st,
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          status: st,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         })
         .then(load)
         .catch(error => {
@@ -802,85 +834,118 @@ ${x.message}
         });
     }
 
-    // REPLACE EXISTING load FUNCTION IN MESSAGES
     function load(){
       showLoading();
 
-      // Cleanup previous
+      // Cleanup previous listener
       cleanupMessages();
 
-      messagesListener = window.db.collection("contactSubmissions")
-        .orderBy("timestamp","desc")
-        .limit(100) // ADD LIMIT
-        .onSnapshot(snap=>{
-          data = snap.docs.map(d=>{
-            const v = d.data()||{};
-            return {
-              id:d.id,
-              name:v.name||"",
-              email:v.email||"",
-              phone:v.phone||"",
-              subject:v.subject||"",
-              message:v.message||"",
-              status:v.status||"new",
-              timestamp:parseTs(v.timestamp)
+      try {
+        messagesListener = window.db.collection("contactSubmissions")
+          .orderBy("timestamp", "desc")
+          .limit(100)
+          .onSnapshot(
+            snap => {
+              data = snap.docs.map(d => {
+                const v = d.data() || {};
+                return {
+                  id: d.id,
+                  name: v.name || "",
+                  email: v.email || "",
+                  phone: v.phone || "",
+                  subject: v.subject || "",
+                  message: v.message || "",
+                  status: v.status || "new",
+                  timestamp: parseTs(v.timestamp)
+                }
+              });
+              applyFilters();
+            }, 
+            error => {
+              console.error('Messages load error:', error);
+              showError('Failed to load messages. Please refresh the page.');
             }
-          });
-          applyFilters();
-        }, error => {
-          console.error('Messages load error:', error);
-          showEmpty();
-        });
+          );
+      } catch (error) {
+        console.error('Listener setup error:', error);
+        showError('Error setting up messages listener.');
+      }
     }
 
-    // Events
-    T.onclick = e=>{
-      const btn = e.target.closest("button");
-      if(!btn) return;
-      const id = btn.dataset.id;
-      if(btn.classList.contains("v")) openMessage(id);
-      if(btn.classList.contains("r")) sendReply(id);
-      if(btn.classList.contains("d")) deleteMsg(id);
-    };
+    // Event handlers
+    if (T) {
+      T.onclick = e => {
+        const btn = e.target.closest("button");
+        if(!btn) return;
+        const id = btn.dataset.id;
+        if(btn.classList.contains("v")) openMessage(id);
+        if(btn.classList.contains("r")) sendReply(id);
+        if(btn.classList.contains("d")) deleteMsg(id);
+      };
+    }
 
-    C.onclick = T.onclick;
+    if (C) {
+      C.onclick = T.onclick;
+    }
 
-    manualRefresh.onclick = load;
+    if (manualRefresh) {
+      manualRefresh.onclick = load;
+    }
 
-    testBtn.onclick = ()=>{
-      window.db.collection("contactSubmissions").add({
-        name:"Demo User",
-        email:"demo@example.com",
-        phone:"1234567890",
-        subject:"Test message",
-        message:"This is a test.",
-        status:"new",
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(load).catch(error => {
-        console.error('Test data error:', error);
-      });
-    };
+    if (testBtn) {
+      testBtn.onclick = () => {
+        window.db.collection("contactSubmissions").add({
+          name: "Demo User",
+          email: "demo@example.com",
+          phone: "1234567890",
+          subject: "Test message",
+          message: "This is a test message from the admin panel.",
+          status: "new",
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(load).catch(error => {
+          console.error('Test data error:', error);
+          alert('Error creating test message');
+        });
+      };
+    }
 
-    replyBtn.onclick = ()=> sendReply(currentId);
+    if (replyBtn) {
+      replyBtn.onclick = () => {
+        if (currentId) sendReply(currentId);
+      };
+    }
 
-    document.getElementById("close-modal").onclick = ()=> M.style.display="none";
-    document.getElementById("close-modal-2").onclick = ()=> M.style.display="none";
+    const closeModal1 = document.getElementById("close-modal");
+    const closeModal2 = document.getElementById("close-modal-2");
+    
+    if (closeModal1) closeModal1.onclick = () => M.style.display = "none";
+    if (closeModal2) closeModal2.onclick = () => M.style.display = "none";
 
-    M.onclick = e=>{
-      if(e.target===M) M.style.display="none";
-    };
+    if (M) {
+      M.onclick = e => {
+        if(e.target === M) M.style.display = "none";
+      };
+    }
 
-    statusFilter.onchange = applyFilters;
-    dateFilter.onchange = applyFilters;
+    if (statusFilter) {
+      statusFilter.onchange = applyFilters;
+    }
 
-    // FIX: ONLY CLEANUP MESSAGES FOR THIS PAGE
+    if (dateFilter) {
+      dateFilter.onchange = applyFilters;
+    }
+
+    // Cleanup on page unload
     window.addEventListener('beforeunload', cleanupMessages);
 
-    // Load immediately (no lag)
+    // Start loading
     load();
   }
 
-  initWhenDBReady(start);
+  // Initialize when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    initMessages();
+  });
 
 })();
 </script>
