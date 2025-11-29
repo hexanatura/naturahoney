@@ -452,363 +452,234 @@
 
   <script src="activityLogger.js?v=1"></script>
 
-  <script>
-    (function () {
-      let db;
-      let data = [];
-      let deleteId = null;
+<script>
+(function () {
+  let db;
+  let data = [];
+  let deleteId = null;
 
-      function init() {
-        const tbody = document.getElementById("cv-tbody");
-        if (!tbody) return;
-        if (!window.firebase) {
-          console.error("Firebase not loaded");
-          return;
-        }
+  function waitForFirebaseAuth(callback) {
+    if (!window.firebase || !firebase.auth) {
+      return setTimeout(() => waitForFirebaseAuth(callback), 50);
+    }
 
-        db = firebase.firestore();
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) callback();
+    });
+  }
 
-        const cardsDiv      = document.getElementById("cv-cards");
-        const modalBg       = document.getElementById("cv-modal-bg");
-        const modalClose    = document.getElementById("cv-modal-close");
-        const closeBtn      = document.getElementById("cv-close");
-        const confirmBg     = document.getElementById("cv-confirm-bg");
-        const confirmMsg    = document.getElementById("cv-confirm-msg");
-        const confirmOk     = document.getElementById("cv-confirm-ok");
-        const confirmCancel = document.getElementById("cv-confirm-cancel");
-        const confirmClose  = document.getElementById("cv-confirm-close");
-        const search        = document.getElementById("cv-search");
-        const filter        = document.getElementById("cv-status");
-        const sortSelect    = document.getElementById("cv-sort");
-        const exportBtn     = document.getElementById("cv-export");
-        const refreshBtn    = document.getElementById("cv-refresh");
-        const detailsWrap   = document.getElementById("cv-customer-details");
+  function init() {
+    db = firebase.firestore();
 
-        // Modal close handlers
-        if (modalClose) modalClose.onclick = () => modalBg.classList.remove("show");
-        if (closeBtn)   closeBtn.onclick   = () => modalBg.classList.remove("show");
-        if (modalBg) {
-          modalBg.onclick = (e) => {
-            if (e.target === modalBg) modalBg.classList.remove("show");
-          };
-        }
+    const tbody        = document.getElementById("cv-tbody");
+    const cardsDiv     = document.getElementById("cv-cards");
+    const modalBg      = document.getElementById("cv-modal-bg");
+    const modalClose   = document.getElementById("cv-modal-close");
+    const closeBtn     = document.getElementById("cv-close");
+    const confirmBg    = document.getElementById("cv-confirm-bg");
+    const confirmMsg   = document.getElementById("cv-confirm-msg");
+    const confirmOk    = document.getElementById("cv-confirm-ok");
+    const confirmCancel= document.getElementById("cv-confirm-cancel");
+    const confirmClose = document.getElementById("cv-confirm-close");
+    const search       = document.getElementById("cv-search");
+    const filter       = document.getElementById("cv-status");
+    const sortSelect   = document.getElementById("cv-sort");
+    const exportBtn    = document.getElementById("cv-export");
+    const refreshBtn   = document.getElementById("cv-refresh");
+    const detailsWrap  = document.getElementById("cv-customer-details");
 
-        if (confirmClose)  confirmClose.onclick  = () => confirmBg.classList.remove("show");
-        if (confirmCancel) confirmCancel.onclick = () => confirmBg.classList.remove("show");
-        if (confirmBg) {
-          confirmBg.onclick = (e) => {
-            if (e.target === confirmBg) confirmBg.classList.remove("show");
-          };
-        }
+    modalClose.onclick = () => modalBg.classList.remove("show");
+    closeBtn.onclick   = () => modalBg.classList.remove("show");
+    confirmClose.onclick = () => confirmBg.classList.remove("show");
+    confirmCancel.onclick = () => confirmBg.classList.remove("show");
 
-        // Load data
-        function load() {
-          tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading...</td></tr>';
-          cardsDiv.innerHTML = '<div class="customers-card muted">Loading...</div>';
+    function fmt(t) {
+      if (!t) return "Never";
+      return new Date(t).toLocaleString("en-IN");
+    }
 
-          db.collection("users").get().then((snapshot) => {
-            data = [];
-            snapshot.forEach((doc) => {
-              const v = doc.data();
-              const created = ts(v.createdAt || v.creationTime);
-              const last    = ts(v.lastLoginAt || v.lastSignInTime);
+    function ts(x) {
+      if (!x) return 0;
+      if (x.toDate) return x.toDate().getTime();
+      if (typeof x === "object" && x.seconds) return x.seconds * 1000;
+      if (typeof x === "string") return new Date(x).getTime();
+      return Number(x) || 0;
+    }
 
-              data.push({
-                id: doc.id,
-                name: v.name || v.displayName || "Unknown",
-                email: v.email || "No email",
-                phone: v.phone || v.phoneNumber || v.phone_number || v.mobile || v.mobileNumber || "-",
-                createdAt: created,
-                lastLogin: last,
-                orders: Array.isArray(v.orders) ? v.orders.length : (v.ordersCount || 0),
-                active: v.active !== false
-              });
+    function statusText(x) {
+      return x.active !== false ? "active" : "inactive";
+    }
 
-              // Log "new" only once per user
-              if (!v.activityLogged && typeof activityLogger !== "undefined") {
-                activityLogger.logActivity(
-                  "CUSTOMER_NEW",
-                  `New customer added: ${v.name || "Unknown"} (${v.email || "-"})`,
-                  { refId: doc.id }
-                );
-                db.collection("users").doc(doc.id).update({ activityLogged: true });
-              }
+    function statusClass(x) {
+      return x.active !== false ? "status-active" : "status-inactive";
+    }
 
-              // High-value check
-              if ((v.ordersCount || 0) >= 5 && typeof activityLogger !== "undefined") {
-                activityLogger.logActivity(
-                  "CUSTOMER_HIGH_VALUE",
-                  `High-value customer: ${v.name || "Unknown"} (${v.email || "-"})`,
-                  { refId: doc.id }
-                );
-              }
-            });
+    function S(t) {
+      return String(t || "").replace(/[<>&]/g, (c) => ({
+        "<": "&lt;",
+        ">": "&gt;",
+        "&": "&amp;"
+      }[c]));
+    }
 
-            apply();
-          }).catch((err) => {
-            console.error(err);
-            tbody.innerHTML = '<tr><td colspan="7" class="muted">Error loading customers</td></tr>';
-            cardsDiv.innerHTML = '<div class="customers-card muted">Error loading</div>';
+    function load() {
+      tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading...</td></tr>';
+      cardsDiv.innerHTML = "";
+
+      // INSTANT-FIX: Use SNAPSHOT instead of slow .get()
+      db.collection("users").onSnapshot((snapshot) => {
+        data = [];
+
+        snapshot.forEach((doc) => {
+          const v = doc.data();
+
+          data.push({
+            id: doc.id,
+            name: v.name || v.displayName || "Unknown",
+            email: v.email || "-",
+            phone: v.phone || v.mobile || "-",
+            createdAt: ts(v.createdAt || v.creationTime),
+            lastLogin: ts(v.lastLoginAt || v.lastSignInTime),
+            orders: v.ordersCount || 0,
+            active: v.active !== false
           });
-        }
-
-        function apply() {
-          let list = [...data];
-          const q = (search.value || "").trim().toLowerCase();
-
-          if (q) {
-            list = list.filter((x) =>
-              x.name.toLowerCase().includes(q) ||
-              x.email.toLowerCase().includes(q) ||
-              (x.phone || "").toLowerCase().includes(q)
-            );
-          }
-
-          const st = filter.value;
-          if (st !== "all") {
-            list = list.filter((x) => statusText(x) === st);
-          }
-
-          const sortVal = sortSelect.value;
-          if (sortVal === "newest")  list.sort((a, b) => b.createdAt - a.createdAt);
-          if (sortVal === "oldest")  list.sort((a, b) => a.createdAt - b.createdAt);
-          if (sortVal === "name")    list.sort((a, b) => a.name.localeCompare(b.name));
-
-          render(list);
-        }
-
-        function render(list) {
-          if (!list.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="muted">No customers</td></tr>';
-            cardsDiv.innerHTML = '<div class="customers-card muted">No customers</div>';
-            return;
-          }
-
-          tbody.innerHTML = list.map((x) => `
-            <tr>
-              <td>
-                <div class="customer-info">
-                  <div class="customer-avatar"><i class="fas fa-user"></i></div>
-                  <div>
-                    <div style="font-weight:700">${S(x.name)}</div>
-                    <div class="muted">ID: ${x.id.slice(0, 8)}</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div style="font-weight:600">${S(x.email)}</div>
-                <div class="muted">${S(x.phone)}</div>
-              </td>
-              <td class="muted">${fmt(x.createdAt)}</td>
-              <td class="muted">${fmt(x.lastLogin)}</td>
-              <td>${x.orders}</td>
-              <td><span class="status-pill ${statusClass(x)}">${statusText(x)}</span></td>
-              <td style="text-align:right">
-                <button class="action-btn v" data-id="${x.id}" type="button"><i class="fas fa-eye"></i></button>
-                <button class="action-btn d" data-id="${x.id}" type="button"><i class="fas fa-trash"></i></button>
-              </td>
-            </tr>
-          `).join("");
-
-          cardsDiv.innerHTML = list.map((x) => `
-            <div class="customers-card">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <div class="customer-info">
-                  <div class="customer-avatar"><i class="fas fa-user"></i></div>
-                  <div>
-                    <div style="font-weight:700">${S(x.name)}</div>
-                    <div class="muted">${S(x.email)}</div>
-                  </div>
-                </div>
-                <span class="status-pill ${statusClass(x)}">${statusText(x)}</span>
-              </div>
-              <div class="muted" style="margin-bottom:6px">
-                <div>Phone: ${S(x.phone)}</div>
-                <div>Registered: ${fmt(x.createdAt)}</div>
-                <div>Last Login: ${fmt(x.lastLogin)}</div>
-              </div>
-              <div style="display:flex;justify-content:space-between;margin-top:8px;align-items:center">
-                <div class="muted">Orders: ${x.orders}</div>
-                <div>
-                  <button class="action-btn v" data-id="${x.id}" type="button"><i class="fas fa-eye"></i></button>
-                  <button class="action-btn d" data-id="${x.id}" type="button"><i class="fas fa-trash"></i></button>
-                </div>
-              </div>
-            </div>
-          `).join("");
-        }
-
-        function openDetails(id) {
-          const x = data.find((z) => z.id === id);
-          if (!x) return;
-
-          if (typeof activityLogger !== "undefined") {
-            activityLogger.logActivity(
-              "CUSTOMER_VIEW",
-              `Viewed customer ${x.name} (${x.email})`,
-              { refId: x.id }
-            );
-          }
-
-          detailsWrap.innerHTML = `
-            <div class="col">
-              <div class="customer-info" style="margin-bottom:16px;">
-                <div class="customer-avatar" style="width:60px;height:60px;">
-                  <i class="fas fa-user" style="font-size:1.5rem"></i>
-                </div>
-                <div>
-                  <div style="font-weight:700;font-size:1.1rem">${S(x.name)}</div>
-                  <div class="muted">${x.id}</div>
-                </div>
-              </div>
-              <div class="col">
-                <label class="muted">Email</label>
-                <div>${S(x.email)}</div>
-              </div>
-              <div class="col">
-                <label class="muted">Phone</label>
-                <div>${S(x.phone)}</div>
-              </div>
-              <div class="col">
-                <label class="muted">Registration</label>
-                <div>${fmt(x.createdAt)}</div>
-              </div>
-              <div class="col">
-                <label class="muted">Last Login</label>
-                <div>${fmt(x.lastLogin)}</div>
-              </div>
-              <div class="col">
-                <label class="muted">Orders</label>
-                <div>${x.orders}</div>
-              </div>
-            </div>
-          `;
-
-          modalBg.classList.add("show");
-        }
-
-        function askDelete(id) {
-          deleteId = id;
-          confirmMsg.textContent = "Delete this customer?";
-          confirmBg.classList.add("show");
-        }
-
-        function removeCustomer() {
-          if (!deleteId) return;
-          const x = data.find((z) => z.id === deleteId);
-
-          db.collection("users").doc(deleteId).delete().then(() => {
-            if (typeof activityLogger !== "undefined") {
-              activityLogger.logActivity(
-                "CUSTOMER_DELETED",
-                `Deleted customer ${x?.name || "Unknown"} (${x?.email || "-"})`,
-                { refId: deleteId }
-              );
-            }
-            confirmBg.classList.remove("show");
-            deleteId = null;
-            load();
-          }).catch((err) => {
-            console.error(err);
-            confirmBg.classList.remove("show");
-            deleteId = null;
-          });
-        }
-
-        // CSV export of all current filtered customers
-        function exportCSV() {
-          if (!data.length) return;
-
-          let rows = [
-            ["ID", "Name", "Email", "Phone", "Registration", "Last Login", "Orders", "Status"]
-          ];
-
-          data.forEach((x) => {
-            rows.push([
-              x.id,
-              x.name,
-              x.email,
-              x.phone,
-              fmt(x.createdAt),
-              fmt(x.lastLogin),
-              x.orders,
-              statusText(x)
-            ]);
-          });
-
-          const csv = rows
-            .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(","))
-            .join("\n");
-
-          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "customers.csv";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }
-
-        // Delegate clicks (view / delete / refresh)
-        document.addEventListener("click", (e) => {
-          const viewBtn   = e.target.closest(".action-btn.v");
-          const deleteBtn = e.target.closest(".action-btn.d");
-          const refresh   = e.target.closest("#cv-refresh");
-
-          if (viewBtn) {
-            openDetails(viewBtn.dataset.id);
-            return;
-          }
-          if (deleteBtn) {
-            askDelete(deleteBtn.dataset.id);
-            return;
-          }
-          if (refresh) {
-            load();
-            return;
-          }
         });
 
-        if (confirmOk)     confirmOk.onclick     = removeCustomer;
-        if (search)        search.oninput        = apply;
-        if (filter)        filter.onchange       = apply;
-        if (sortSelect)    sortSelect.onchange   = apply;
-        if (exportBtn)     exportBtn.onclick     = exportCSV;
-        if (refreshBtn)    refreshBtn.onclick    = load;
+        apply();
+      });
+    }
 
-        // Helpers
-        function ts(x) {
-          if (!x) return 0;
-          if (x.toDate) return x.toDate().getTime();
-          if (typeof x === "object" && typeof x.seconds === "number") return x.seconds * 1000;
-          if (typeof x === "string") return new Date(x).getTime() || 0;
-          if (typeof x === "number") return x;
-          return 0;
-        }
+    function apply() {
+      let list = [...data];
 
-        function fmt(t) {
-          return t ? new Date(t).toLocaleString("en-IN") : "Never";
-        }
-
-        function S(str) {
-          return String(str || "").replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
-        }
-
-        function statusText(x) {
-          return x.active ? "active" : "inactive";
-        }
-
-        function statusClass(x) {
-          return x.active ? "status-active" : "status-inactive";
-        }
-
-        load();
+      const q = search.value.trim().toLowerCase();
+      if (q) {
+        list = list.filter((x) =>
+          x.name.toLowerCase().includes(q) ||
+          x.email.toLowerCase().includes(q) ||
+          (x.phone || "").toLowerCase().includes(q)
+        );
       }
 
-      // Delay a bit so dynamicPage + Firebase are ready
-      setTimeout(init, 40);
-    })();
-  </script>
-</div>
+      const st = filter.value;
+      if (st !== "all") {
+        list = list.filter((x) => statusText(x) === st);
+      }
+
+      const s = sortSelect.value;
+      if (s === "newest") list.sort((a, b) => b.createdAt - a.createdAt);
+      if (s === "oldest") list.sort((a, b) => a.createdAt - b.createdAt);
+      if (s === "name")   list.sort((a, b) => a.name.localeCompare(b.name));
+
+      render(list);
+    }
+
+    function render(list) {
+      if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">No customers</td></tr>';
+        cardsDiv.innerHTML = '';
+        return;
+      }
+
+      tbody.innerHTML = list.map(x => `
+        <tr>
+          <td>
+            <div class="customer-info">
+              <div class="customer-avatar"><i class="fas fa-user"></i></div>
+              <div>
+                <div style="font-weight:700">${S(x.name)}</div>
+                <div class="muted">ID: ${x.id.slice(0,8)}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="font-weight:600">${S(x.email)}</div>
+            <div class="muted">${S(x.phone)}</div>
+          </td>
+          <td class="muted">${fmt(x.createdAt)}</td>
+          <td class="muted">${fmt(x.lastLogin)}</td>
+          <td>${x.orders}</td>
+          <td><span class="status-pill ${statusClass(x)}">${statusText(x)}</span></td>
+          <td style="text-align:right">
+            <button class="action-btn v" data-id="${x.id}"><i class="fas fa-eye"></i></button>
+            <button class="action-btn d" data-id="${x.id}"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // HANDLERS
+    document.addEventListener("click", (e) => {
+      const v = e.target.closest(".action-btn.v");
+      const d = e.target.closest(".action-btn.d");
+      const r = e.target.closest("#cv-refresh");
+
+      if (v) {
+        const x = data.find(z => z.id === v.dataset.id);
+        if (!x) return;
+
+        detailsWrap.innerHTML = `
+          <div class="col">
+            <div class="customer-info" style="margin-bottom:16px;">
+              <div class="customer-avatar" style="width:60px;height:60px;">
+                <i class="fas fa-user" style="font-size:1.5rem"></i>
+              </div>
+              <div>
+                <div style="font-weight:700;font-size:1.1rem">${S(x.name)}</div>
+                <div class="muted">${x.id}</div>
+              </div>
+            </div>
+            <div class="col">
+              <label class="muted">Email</label>
+              <div>${S(x.email)}</div>
+            </div>
+            <div class="col">
+              <label class="muted">Phone</label>
+              <div>${S(x.phone)}</div>
+            </div>
+            <div class="col">
+              <label class="muted">Registration</label>
+              <div>${fmt(x.createdAt)}</div>
+            </div>
+            <div class="col">
+              <label class="muted">Last Login</label>
+              <div>${fmt(x.lastLogin)}</div>
+            </div>
+            <div class="col">
+              <label class="muted">Orders</label>
+              <div>${x.orders}</div>
+            </div>
+          </div>
+        `;
+
+        modalBg.classList.add("show");
+      }
+
+      if (d) {
+        deleteId = d.dataset.id;
+        confirmMsg.textContent = "Delete this customer?";
+        confirmBg.classList.add("show");
+      }
+
+      if (r) load();
+    });
+
+    confirmOk.onclick = function () {
+      if (!deleteId) return;
+
+      db.collection("users").doc(deleteId).delete().then(() => {
+        confirmBg.classList.remove("show");
+        deleteId = null;
+      });
+    };
+
+    search.oninput = apply;
+    filter.onchange = apply;
+    sortSelect.onchange = apply;
+
+    load();
+  }
+  waitForFirebaseAuth(init);
+})();
+</script>
+
