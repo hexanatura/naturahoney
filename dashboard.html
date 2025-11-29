@@ -2235,20 +2235,11 @@ function loadPromoPage()    { loadHTML("promo-codes.html"); }
 }
 
 function initMenuCounts() {
-    // Orders
-    db.collection("orders").onSnapshot(snap => {
-        updateBadge(document.getElementById("countOrders"), snap.size);
-    });
+    checkNewItems("orders", LAST_OPEN.orders, document.getElementById("countOrders"), "createdAt");
+    checkNewItems("users", LAST_OPEN.customers, document.getElementById("countCustomers"), "createdAt");
+    checkNewItems("contactSubmissions", LAST_OPEN.messages, document.getElementById("countMessages"), "timestamp");
 
-    // Customers
-    db.collection("users").onSnapshot(snap => {
-        updateBadge(document.getElementById("countCustomers"), snap.size);
-    });
 
-    // Messages
-    db.collection("contactSubmissions").onSnapshot(snap => {
-        updateBadge(document.getElementById("countMessages"), snap.size);
-    });
 }
 
 
@@ -2264,23 +2255,30 @@ function initMenuCounts() {
                 this.classList.add('active');
 
               switch (menuText) {
-    case 'Orders':
-        document.getElementById("countOrders").style.display = "none";
-        document.getElementById("countOrders").textContent = "";
-        loadOrdersPage();
-        break;
+ case 'Orders':
+    localStorage.setItem(LAST_OPEN.orders, Date.now());
+    document.getElementById("countOrders").style.display = "none";
+    initMenuCounts();     // <--- ADD THIS
+    loadOrdersPage();
+    break;
 
-    case 'Customers':
-        document.getElementById("countCustomers").style.display = "none";
-        document.getElementById("countCustomers").textContent = "";
-        loadCustomersPage();
-        break;
 
-    case 'Messages':
-        document.getElementById("countMessages").style.display = "none";
-        document.getElementById("countMessages").textContent = "";
-        loadMessagesPage();
-        break;
+case 'Customers':
+    localStorage.setItem(LAST_OPEN.customers, Date.now());
+    document.getElementById("countCustomers").style.display = "none";
+    initMenuCounts();
+    loadCustomersPage();
+    break;
+
+
+case 'Messages':
+    localStorage.setItem(LAST_OPEN.messages, Date.now());
+    document.getElementById("countMessages").style.display = "none";
+    initMenuCounts();
+    loadMessagesPage();
+    break;
+
+
 }
 
 
@@ -2312,7 +2310,35 @@ function initMenuCounts() {
         if (createBtn) createBtn.addEventListener('click', () => console.log("Create review clicked"));
     }
     
-    
+    const LAST_OPEN = {
+    orders: "lastOpenOrders",
+    customers: "lastOpenCustomers",
+    messages: "lastOpenMessages"
+};
+
+async function checkNewItems(collection, lastKey, badgeEl, field) {
+    const lastOpen = Number(localStorage.getItem(lastKey)) || 0;
+
+    db.collection(collection)
+      .where(field, ">", firebase.firestore.Timestamp.fromMillis(lastOpen))
+      .onSnapshot(snap => {
+          if (snap.size > 0) {
+              badgeEl.style.display = "inline-block";
+              badgeEl.textContent = snap.size;
+          } else {
+              badgeEl.style.display = "none";
+              badgeEl.textContent = "";
+          }
+      });
+}
+
+const menuListeners = {
+    orders: null,
+    customers: null,
+    messages: null
+};
+
+
 
    // REPLACE EXISTING initDashboard FUNCTION
 function initDashboard() {
@@ -2403,6 +2429,12 @@ async function updateDashboardMetrics() {
 
     // AUTH STATE OBSERVER – only allow users with admin custom claim
     firebase.auth().onAuthStateChanged(async (user) => {
+        
+        if (!localStorage.getItem(LAST_OPEN.orders)) localStorage.setItem(LAST_OPEN.orders, Date.now());
+if (!localStorage.getItem(LAST_OPEN.customers)) localStorage.setItem(LAST_OPEN.customers, Date.now());
+if (!localStorage.getItem(LAST_OPEN.messages)) localStorage.setItem(LAST_OPEN.messages, Date.now());
+
+
         if (!user) {
             // Not logged in → show login, hide dashboard
             if (loginModal) loginModal.style.display = "flex";
@@ -2438,6 +2470,8 @@ async function updateDashboardMetrics() {
 
         const adminName = document.getElementById("adminName");
         if (adminName && user.email) adminName.textContent = user.email;
+        
+        initMenuCounts();
 
         initDashboard();
     });
