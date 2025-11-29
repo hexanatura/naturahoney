@@ -2293,7 +2293,8 @@ function updatePendingOrdersCount() {
                 menuItems.forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
 
-                case 'Dashboard':
+    switch (menuText) {
+case 'Dashboard':
     location.reload();
     break;
 
