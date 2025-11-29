@@ -413,35 +413,430 @@
   <script src="activityLogger.js?v=1"></script>
 
 
-  <script>
-   (function(){
-const config={apiKey:"AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",authDomain:"hexahoney-96aed.firebaseapp.com",projectId:"hexahoney-96aed",storageBucket:"hexahoney-96aed.firebasestorage.app",messagingSenderId:"700458850837",appId:"1:700458850837:web:0eb4fca98a5f4acc2d0c1c",measurementId:"G-MQGKK9709H"};
-if(window.firebase){if(!firebase.apps.length)firebase.initializeApp(config);}
-const t=document.getElementById("ov-tbody"),c=document.getElementById("ov-cards"),m=document.getElementById("ov-modal-bg"),mc=document.getElementById("ov-modal-close"),mca=document.getElementById("ov-modal-cancel"),ms=document.getElementById("ov-modal-save"),mb=document.getElementById("ov-modal-body"),fs=document.getElementById("ov-status"),fd=document.getElementById("ov-date"),si=document.getElementById("ov-search"),rb=document.getElementById("ov-refresh"),xb=document.getElementById("ov-export"),tw=document.getElementById("oh-toast"),tt=document.getElementById("oh-toast-text");
-let orders=[],filtered=[],editing=null,db=window.db||firebase.firestore();
-function toast(m,y="success"){tt.textContent=m;tw.classList.add("show");if(y==="error"){tw.style.borderLeftColor="#ef4444";tw.querySelector("i").className="fas fa-exclamation-circle";tw.querySelector("i").style.color="#ef4444"}else if(y==="info"){tw.style.borderLeftColor="#3b82f6";tw.querySelector("i").className="fas fa-info-circle";tw.querySelector("i").style.color="#3b82f6"}else{tw.style.borderLeftColor="#10b981";tw.querySelector("i").className="fas fa-check-circle";tw.querySelector("i").style.color="#10b981"}setTimeout(()=>tw.classList.remove("show"),2600)}
-function esc(s){return String(s||"").replace(/[&<>"']/g,a=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[a]))}
-function sid(x){return x?x.substring(0,8):"—"}
-function fdn(d){if(!d)return"—";const x=d.toDate?d.toDate():new Date(d);return x.toLocaleDateString("en-IN")}
-function sc(s){return"status-"+s}
-function load(){t.innerHTML='<tr><td colspan="7" class="muted">Loading orders…</td></tr>';c.innerHTML="";db.collection("orders").orderBy("createdAt","desc").onSnapshot(q=>{orders=q.docs.map(d=>({id:d.id,...d.data()}));apply()},e=>{orders=[];empty();toast("Error loading orders","error")})}
-function empty(){t.innerHTML='<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>';c.innerHTML='<div class="order-card muted">No orders</div>'}
-function list(x){if(!x.length){empty();return}t.innerHTML=x.map(o=>{const it=(o.items||[]).length,tot=o.total||0,cu=o.shippingAddress?(o.shippingAddress.firstName||"")+" "+(o.shippingAddress.lastName||""):o.email||"Customer";return`<tr data-id="${esc(o.id)}"><td>#${esc(sid(o.id))}</td><td><div style="display:flex;gap:10px;align-items:center"><div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">${esc(cu.slice(0,2).toUpperCase())}</div><div><div style="font-weight:600">${esc(cu)}</div><div class="muted">${esc(o.email||"—")}</div></div></div></td><td class="muted">${fdn(o.createdAt)}</td><td class="muted">${it} item${it!==1?"s":""}</td><td>₹${Number(tot).toFixed(2)}</td><td><span class="status-pill ${sc(o.status)}">${esc(o.status||"pending")}</span></td><td style="text-align:right"><button class="action-btn view-btn" data-id="${o.id}"><i class="fas fa-eye"></i></button><button class="action-btn edit-btn" data-id="${o.id}"><i class="fas fa-edit"></i></button></td></tr>`}).join("");
-c.innerHTML=x.map(o=>{const it=(o.items||[]).length,tot=o.total||0,cu=o.shippingAddress?(o.shippingAddress.firstName||"")+" "+(o.shippingAddress.lastName||""):o.email||"Customer";return`<div class="order-card"><div class="card-header"><div><div class="customer-name">${esc(cu)}</div><div class="card-meta muted">${fdn(o.createdAt)} • ${it} item${it!==1?"s":""}</div></div><span class="status-pill ${sc(o.status)}">${esc(o.status||"pending")}</span></div><div style="margin:8px 0">${(o.items||[]).slice(0,2).map(i=>`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div style="width:30px;height:30px;border-radius:6px;background:#f5f5f5;display:flex;align-items:center;justify-content:center"><i class="fas fa-jar"></i></div><div style="flex:1">${esc(i.name)}</div><div class="muted">x${i.quantity}</div></div>`).join("")}${it>2?`<div class="muted">+${it-2} more</div>`:""}</div><div style="display:flex;justify-content:space-between"><div style="font-weight:700">₹${Number(tot).toFixed(2)}</div><div><button class="action-btn view-btn" data-id="${o.id}"><i class="fas fa-eye"></i></button><button class="action-btn edit-btn" data-id="${o.id}"><i class="fas fa-edit"></i></button></div></div></div>`}).join("");
-bind()}
-function bind(){document.querySelectorAll(".view-btn").forEach(b=>b.onclick=e=>open(e.currentTarget.dataset.id));document.querySelectorAll(".edit-btn").forEach(b=>b.onclick=e=>open(e.currentTarget.dataset.id))}
-function open(id){const o=orders.find(x=>x.id===id);if(!o)return;editing=id;const ad=o.shippingAddress?[o.shippingAddress.address,o.shippingAddress.city,o.shippingAddress.state,o.shippingAddress.zipCode,o.shippingAddress.country].filter(Boolean).join(", "):"No address";const it=(o.items||[]).map(i=>`<div style="display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid var(--border)"><div style="width:40px;height:40px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center"><i class="fas fa-jar"></i></div><div style="flex:1"><div style="font-weight:600">${esc(i.name)}</div><div class="muted">${esc(i.weight||"")}</div></div><div style="font-weight:700">x${i.quantity}</div><div style="font-weight:700">₹${(i.price*i.quantity).toFixed(2)}</div></div>`).join("")||"<div class='muted'>No items</div>";mb.innerHTML=`<div style="display:grid;gap:10px"><div><div class="muted">Order ID</div><div style="font-weight:700">#${esc(sid(id))}</div></div><div><div class="muted">Customer</div><div>${esc(o.shippingAddress?(o.shippingAddress.firstName+" "+o.shippingAddress.lastName):o.email)}</div></div><div style="display:flex;gap:12px"><div style="flex:1"><div class="muted">Email</div><div>${esc(o.email||"—")}</div></div><div style="flex:1"><div class="muted">Phone</div><div>${esc(o.shippingAddress?.phone||"—")}</div></div></div><div style="display:flex;gap:12px"><div style="flex:1"><div class="muted">Date</div><div>${fdn(o.createdAt)}</div></div><div style="flex:1"><div class="muted">Total</div><div style="font-weight:700">₹${Number(o.total||0).toFixed(2)}</div></div></div><div><div class="muted">Status</div><select id="ov-modal-status" style="padding:8px;border:1px solid var(--border);border-radius:8px;width:100%"> <option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div><div><div class="muted">Shipping Address</div><div>${esc(ad)}</div></div><div class="muted">Items</div><div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px">${it}</div></div>`;
-document.getElementById("ov-modal-status").value=o.status||"pending";
-m.classList.add("show")}
-function close(){m.classList.remove("show");editing=null}
-function save(){if(!editing)return;const st=document.getElementById("ov-modal-status").value;ms.disabled=true;const ot=ms.innerHTML;ms.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';db.collection("orders").doc(editing).update({status:st,updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{activityLogger.logActivity("ORDER_STATUS",`Order #${sid(editing)} updated to ${st}`,{refId:editing});if(st==="cancelled")activityLogger.logActivity("ORDER_CANCELLED",`Order #${sid(editing)} was cancelled`,{refId:editing});if(st==="delivered")activityLogger.logActivity("ORDER_DELIVERED",`Order #${sid(editing)} delivered successfully`,{refId:editing});ms.disabled=false;ms.innerHTML=ot;toast("Order updated");close()}).catch(()=>{ms.disabled=false;ms.innerHTML=ot;toast("Save failed","error")})}
-function apply(){let x=[...orders];const st=fs.value,d=fd.value,q=si.value.toLowerCase();if(st!=="all")x=x.filter(o=>(o.status||"").toLowerCase()===st);if(d!=="all"){const n=new Date();let S=null;if(d==="today")S=new Date(n.getFullYear(),n.getMonth(),n.getDate());if(d==="week")S=new Date(n.getTime()-7*864e5);if(d==="month")S=new Date(n.getFullYear(),n.getMonth()-1,n.getDate());if(S)x=x.filter(o=>{if(!o.createdAt)return false;const D=o.createdAt.toDate?o.createdAt.toDate():new Date(o.createdAt);return D>=S})}if(q)x=x.filter(o=>{const id=o.id.toLowerCase(),nm=((o.shippingAddress?.firstName||"")+" "+(o.shippingAddress?.lastName||"")).toLowerCase(),em=(o.email||"").toLowerCase();return id.includes(q)||nm.includes(q)||em.includes(q)});filtered=x;list(x)}
-function csv(x){if(!x.length){toast("No orders to export","info");return}const rows=[["Order ID","Customer","Email","Date","Items","Total","Status"]];x.forEach(o=>{const cu=(o.shippingAddress?.firstName||"")+" "+(o.shippingAddress?.lastName||"");rows.push([`#${sid(o.id)}`,cu.trim(),o.email||"",fdn(o.createdAt),(o.items||[]).length,o.total||0,o.status||""])});
-const out=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-const B=new Blob([out],{type:"text/csv"}),u=URL.createObjectURL(B),a=document.createElement("a");a.href=u;a.download="orders.csv";a.click();URL.revokeObjectURL(u);toast("Export started")}
-document.addEventListener("click",e=>{if(e.target===m)close()});
-mc.onclick=close;mca.onclick=close;ms.onclick=save;fs.onchange=apply;fd.onchange=apply;si.oninput=()=>setTimeout(apply,100);rb.onclick=()=>{load();toast("Refreshing...","info")};xb.onclick=()=>csv(filtered.length?filtered:orders);
-load();
-})();
+ <script>
+(function () {
+  const config = {
+    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+    authDomain: "hexahoney-96aed.firebaseapp.com",
+    projectId: "hexahoney-96aed",
+    storageBucket: "hexahoney-96aed.firebasestorage.app",
+    messagingSenderId: "700458850837",
+    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+    measurementId: "G-MQGKK9709H",
+  };
 
-  </script> 
+  if (window.firebase) {
+    if (!firebase.apps.length) firebase.initializeApp(config);
+  }
+
+  const db = firebase.firestore();
+
+  const t = document.getElementById("ov-tbody"),
+    c = document.getElementById("ov-cards"),
+    m = document.getElementById("ov-modal-bg"),
+    mc = document.getElementById("ov-modal-close"),
+    mca = document.getElementById("ov-modal-cancel"),
+    ms = document.getElementById("ov-modal-save"),
+    mb = document.getElementById("ov-modal-body"),
+    fs = document.getElementById("ov-status"),
+    fd = document.getElementById("ov-date"),
+    si = document.getElementById("ov-search"),
+    rb = document.getElementById("ov-refresh"),
+    xb = document.getElementById("ov-export"),
+    tw = document.getElementById("oh-toast"),
+    tt = document.getElementById("oh-toast-text");
+
+  let orders = [],
+    filtered = [],
+    editing = null;
+
+  function toast(m, y = "success") {
+    tt.textContent = m;
+    tw.classList.add("show");
+    setTimeout(() => tw.classList.remove("show"), 2600);
+  }
+
+  function esc(s) {
+    return String(s || "").replace(/[&<>"']/g, (a) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[a]));
+  }
+
+  function sid(x) {
+    return x ? x.substring(0, 8) : "—";
+  }
+
+  function fdn(d) {
+    if (!d) return "—";
+    const x = d.toDate ? d.toDate() : new Date(d);
+    return x.toLocaleDateString("en-IN");
+  }
+
+  function sc(s) {
+    return "status-" + s;
+  }
+
+  function load() {
+    t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
+    c.innerHTML = "";
+
+    db.collection("orders")
+      .orderBy("createdAt", "desc")
+      .onSnapshot(
+        (q) => {
+          orders = q.docs.map((d) => ({ id: d.id, ...d.data() }));
+          apply();
+        },
+        () => {
+          orders = [];
+          empty();
+          toast("Error loading orders", "error");
+        }
+      );
+  }
+
+  function empty() {
+    t.innerHTML = `<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>`;
+    c.innerHTML = `<div class="order-card muted">No orders</div>`;
+  }
+
+  function list(x) {
+    if (!x.length) {
+      empty();
+      return;
+    }
+
+    t.innerHTML = x
+      .map((o) => {
+        const it = (o.items || []).length,
+          tot = o.total || 0;
+        const cu = o.shippingAddress
+          ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
+          : o.email || "Customer";
+
+        return `
+          <tr data-id="${esc(o.id)}">
+            <td>#${esc(sid(o.id))}</td>
+            <td>
+              <div style="display:flex;gap:10px;align-items:center">
+                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
+                  ${esc(cu.slice(0, 2).toUpperCase())}
+                </div>
+                <div>
+                  <div style="font-weight:600">${esc(cu)}</div>
+                  <div class="muted">${esc(o.email || "—")}</div>
+                </div>
+              </div>
+            </td>
+            <td class="muted">${fdn(o.createdAt)}</td>
+            <td class="muted">${it} item${it !== 1 ? "s" : ""}</td>
+            <td>₹${Number(tot).toFixed(2)}</td>
+            <td>
+              <span class="status-pill ${sc(o.status)}">${esc(o.status || "pending")}</span>
+            </td>
+            <td style="text-align:right">
+              <button class="action-btn view-btn" data-id="${o.id}">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="action-btn edit-btn" data-id="${o.id}">
+                <i class="fas fa-edit"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    bind();
+  }
+
+  function bind() {
+    document.querySelectorAll(".view-btn").forEach((b) => {
+      b.onclick = (e) => open(e.currentTarget.dataset.id);
+    });
+
+    document.querySelectorAll(".edit-btn").forEach((b) => {
+      b.onclick = (e) => open(e.currentTarget.dataset.id);
+    });
+  }
+
+  function open(id) {
+    const o = orders.find((x) => x.id === id);
+    if (!o) return;
+
+    editing = id;
+
+    const ad = o.shippingAddress
+      ? [
+          o.shippingAddress.address,
+          o.shippingAddress.city,
+          o.shippingAddress.state,
+          o.shippingAddress.zipCode,
+          o.shippingAddress.country,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : "No address";
+
+    const it =
+      (o.items || [])
+        .map(
+          (i) => `
+        <div style="display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid var(--border)">
+          <div style="width:40px;height:40px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center">
+            <i class="fas fa-jar"></i>
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:600">${esc(i.name)}</div>
+            <div class="muted">${esc(i.weight || "")}</div>
+          </div>
+          <div style="font-weight:700">x${i.quantity}</div>
+          <div style="font-weight:700">₹${(i.price * i.quantity).toFixed(2)}</div>
+        </div>
+      `
+        )
+        .join("") || "<div class='muted'>No items</div>";
+
+    mb.innerHTML = `
+      <div style="display:grid;gap:10px">
+        <div>
+          <div class="muted">Order ID</div>
+          <div style="font-weight:700">#${esc(sid(id))}</div>
+        </div>
+
+        <div>
+          <div class="muted">Customer</div>
+          <div>${esc(
+            o.shippingAddress
+              ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
+              : o.email
+          )}</div>
+        </div>
+
+        <div style="display:flex;gap:12px">
+          <div style="flex:1">
+            <div class="muted">Email</div>
+            <div>${esc(o.email || "—")}</div>
+          </div>
+          <div style="flex:1">
+            <div class="muted">Phone</div>
+            <div>${esc(o.shippingAddress?.phone || "—")}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px">
+          <div style="flex:1">
+            <div class="muted">Date</div>
+            <div>${fdn(o.createdAt)}</div>
+          </div>
+          <div style="flex:1">
+            <div class="muted">Total</div>
+            <div style="font-weight:700">₹${Number(o.total || 0).toFixed(
+              2
+            )}</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="muted">Status</div>
+          <select id="ov-modal-status" style="padding:8px;border:1px solid var(--border);border-radius:8px;width:100%">
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="muted">Shipping Address</div>
+          <div>${esc(ad)}</div>
+        </div>
+
+        <div class="muted">Items</div>
+
+        <div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px">
+          ${it}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("ov-modal-status").value =
+      o.status || "pending";
+
+    m.classList.add("show");
+  }
+
+  function close() {
+    m.classList.remove("show");
+    editing = null;
+  }
+
+  // --------------------------------------------------------
+  //  ** FIXED SAVE FUNCTION — AUTO UPDATE ROOT + USER ORDER **
+  // --------------------------------------------------------
+  async function save() {
+    if (!editing) return;
+
+    const st = document.getElementById("ov-modal-status").value;
+    const rootRef = db.collection("orders").doc(editing);
+
+    ms.disabled = true;
+    const old = ms.innerHTML;
+    ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      const doc = await rootRef.get();
+
+      if (doc.exists) {
+        await rootRef.update({
+          status: st,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        toast("Order updated");
+        close();
+      } else {
+        const users = await db.collection("users").get();
+
+        let updated = false;
+
+        for (const u of users.docs) {
+          const userRef = db
+            .collection("users")
+            .doc(u.id)
+            .collection("orders")
+            .doc(editing);
+
+          const d = await userRef.get();
+          if (d.exists) {
+            await userRef.update({
+              status: st,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+            updated = true;
+            toast("Order updated");
+            close();
+            break;
+          }
+        }
+
+        if (!updated) toast("Order not found", "error");
+      }
+    } catch (e) {
+      toast("Save failed", "error");
+    }
+
+    ms.disabled = false;
+    ms.innerHTML = old;
+  }
+
+  function apply() {
+    let x = [...orders];
+    const st = fs.value,
+      d = fd.value,
+      q = si.value.toLowerCase();
+
+    if (st !== "all") x = x.filter((o) => (o.status || "").toLowerCase() === st);
+
+    if (d !== "all") {
+      const now = new Date();
+      let start = null;
+
+      if (d === "today") start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (d === "week") start = new Date(now.getTime() - 7 * 864e5);
+      if (d === "month") start = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+
+      if (start) {
+        x = x.filter((o) => {
+          if (!o.createdAt) return false;
+          const date = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+          return date >= start;
+        });
+      }
+    }
+
+    if (q) {
+      x = x.filter((o) => {
+        const id = o.id.toLowerCase(),
+          name = (
+            (o.shippingAddress?.firstName || "") +
+            " " +
+            (o.shippingAddress?.lastName || "")
+          ).toLowerCase(),
+          email = (o.email || "").toLowerCase();
+
+        return id.includes(q) || name.includes(q) || email.includes(q);
+      });
+    }
+
+    filtered = x;
+    list(x);
+  }
+
+  function csv(x) {
+    if (!x.length) {
+      toast("No orders to export", "info");
+      return;
+    }
+
+    const rows = [["Order ID", "Customer", "Email", "Date", "Items", "Total", "Status"]];
+
+    x.forEach((o) => {
+      const cu =
+        (o.shippingAddress?.firstName || "") +
+        " " +
+        (o.shippingAddress?.lastName || "");
+
+      rows.push([
+        `#${sid(o.id)}`,
+        cu.trim(),
+        o.email || "",
+        fdn(o.createdAt),
+        (o.items || []).length,
+        o.total || 0,
+        o.status || "",
+      ]);
+    });
+
+    const out = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const B = new Blob([out], { type: "text/csv" }),
+      u = URL.createObjectURL(B),
+      a = document.createElement("a");
+
+    a.href = u;
+    a.download = "orders.csv";
+    a.click();
+
+    URL.revokeObjectURL(u);
+    toast("Export started");
+  }
+
+  document.addEventListener("click", (e) => {
+    if (e.target === m) close();
+  });
+
+  mc.onclick = close;
+  mca.onclick = close;
+  ms.onclick = save;
+  fs.onchange = apply;
+  fd.onchange = apply;
+  si.oninput = () => setTimeout(apply, 100);
+  rb.onclick = () => {
+    load();
+    toast("Refreshing...", "info");
+  };
+  xb.onclick = () => csv(filtered.length ? filtered : orders);
+
+  load();
+})();
+</script>
+
