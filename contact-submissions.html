@@ -570,6 +570,14 @@ tr:hover{
 
 <script>
 (function () {
+let messagesListener = null;
+
+function cleanupMessages() {
+  if (messagesListener) {
+    messagesListener();
+    messagesListener = null;
+  }
+}
 
   if (window.__CONTACT_FIXED__) return;
   window.__CONTACT_FIXED__ = true;
@@ -775,7 +783,10 @@ ${x.message}
 
       logActivity("ENQUIRY_DELETED",`Deleted ${x.name}`,id);
 
-      window.db.collection("contactSubmissions").doc(id).delete().then(load);
+      window.db.collection("contactSubmissions").doc(id).delete().then(load).catch(error => {
+        console.error('Delete error:', error);
+        alert('Error deleting message');
+      });
     }
 
     function setStatus(id,st){
@@ -785,16 +796,23 @@ ${x.message}
           status:st,
           updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         })
-        .then(load);
+        .then(load)
+        .catch(error => {
+          console.error('Status update error:', error);
+        });
     }
 
+    // REPLACE EXISTING load FUNCTION IN MESSAGES
     function load(){
       showLoading();
 
-      window.db.collection("contactSubmissions")
+      // Cleanup previous
+      cleanupMessages();
+
+      messagesListener = window.db.collection("contactSubmissions")
         .orderBy("timestamp","desc")
-        .get()
-        .then(snap=>{
+        .limit(100) // ADD LIMIT
+        .onSnapshot(snap=>{
           data = snap.docs.map(d=>{
             const v = d.data()||{};
             return {
@@ -809,6 +827,9 @@ ${x.message}
             }
           });
           applyFilters();
+        }, error => {
+          console.error('Messages load error:', error);
+          showEmpty();
         });
     }
 
@@ -835,7 +856,9 @@ ${x.message}
         message:"This is a test.",
         status:"new",
         timestamp:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(load);
+      }).then(load).catch(error => {
+        console.error('Test data error:', error);
+      });
     };
 
     replyBtn.onclick = ()=> sendReply(currentId);
@@ -849,6 +872,9 @@ ${x.message}
 
     statusFilter.onchange = applyFilters;
     dateFilter.onchange = applyFilters;
+
+    // FIX: ONLY CLEANUP MESSAGES FOR THIS PAGE
+    window.addEventListener('beforeunload', cleanupMessages);
 
     // Load immediately (no lag)
     load();
