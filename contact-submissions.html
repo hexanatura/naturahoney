@@ -568,232 +568,532 @@ tr:hover{
 <script src="activityLogger.js?v=1"></script>
 
 
-<!-- Customer page script -->
 <script>
-(function(){
-const enquiryActivityCache=new Set();
-function logEnquiryActivity(type,message,refId=null){
-  if(!window.db||!window.db.collection) return;
-  const key=`${type}_${refId}`;
-  if(enquiryActivityCache.has(key)) return;
-  enquiryActivityCache.add(key);
-  window.db.collection("activities").add({
-    type,message,refId,time:firebase.firestore.FieldValue.serverTimestamp()
-  }).catch(()=>{});
-}
-function parseTs(x){
-  if(!x) return null;
-  if(typeof x.toDate==="function") return x.toDate();
-  if(x.seconds) return new Date(x.seconds*1000);
-  if(x instanceof Date) return x;
-  if(typeof x==="number") return new Date(x);
-  try{ return new Date(x); }catch(e){ return null; }
-}
-function start(){
-  if(!document.getElementById("submissions-table-body")) return;
-  const T=document.getElementById("submissions-table-body");
-  const C=document.getElementById("mobile-cards");
-  const M=document.getElementById("submission-modal");
-  const manualRefresh=document.getElementById("manual-refresh");
-  const testDataBtn=document.getElementById("testDataBtn");
-  const statusFilter=document.getElementById("status-filter");
-  const dateFilter=document.getElementById("date-filter");
-  let data=[];
-  function renderLoading(){
-    T.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:40px;"><i class='fas fa-spinner fa-spin'></i></td></tr>`;
-    C.innerHTML=`<div class='card' style='text-align:center;padding:30px;'><i class='fas fa-spinner fa-spin'></i></div>`;
+(function () {
+  // Prevent double-binding if this script is injected multiple times
+  if (window.__CONTACT_SUBMISSIONS_SCRIPT_LOADED__) return;
+  window.__CONTACT_SUBMISSIONS_SCRIPT_LOADED__ = true;
+
+  const enquiryActivityCache = new Set();
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[c]));
   }
-  function renderEmpty(){
-    T.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:40px;">No messages</td></tr>`;
-    C.innerHTML=`<div class='card' style='text-align:center;padding:30px;'>No messages</div>`;
-  }
-  function renderError(msg){
-    T.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:40px;color:red;">${escapeHtml(msg)}</td></tr>`;
-  }
-  function load(){
-    renderLoading();
-    const db = window.db || (firebase && firebase.firestore && firebase.firestore());
-    if(!db || !db.collection) return renderError("Firestore unavailable");
-    db.collection("contactSubmissions").orderBy("timestamp","desc").get().then(snap=>{
-      data = snap.docs.map(d=>{
-        const v=d.data();
-        if(!v) return { id:d.id, name:"", email:"", phone:"", subject:"", message:"", status:"new", timestamp:null };
-        if(!v.activityLogged){
-          logEnquiryActivity("ENQUIRY_NEW",`New message received from ${v.name||"Unknown"} (${v.email||"-"})`,d.id);
-          db.collection("contactSubmissions").doc(d.id).update({ activityLogged:true }).catch(()=>{});
-        }
-        const ts=parseTs(v.timestamp);
-        return {
-          id:d.id,
-          name:v.name||"",
-          email:v.email||"",
-          phone:v.phone||"",
-          subject:v.subject||"",
-          message:v.message||"",
-          status:v.status||"new",
-          timestamp:ts
-        };
-      });
-      const now=Date.now();
-      data.forEach(msg=>{
-        if(msg.status==="new" && msg.timestamp){
-          const ageHours=(now - msg.timestamp.getTime())/(1000*60*60);
-          if(ageHours>=24 && !msg.missedAlertSent){
-            logEnquiryActivity("ENQUIRY_MISSED",`Unread message for 24 hours from ${msg.name} (${msg.email})`,msg.id);
-            db.collection("contactSubmissions").doc(msg.id).update({ missedAlertSent:true }).catch(()=>{});
-            msg.missedAlertSent=true;
-          }
-        }
-      });
-      applyFilters();
-    }).catch(err=>{
-      renderError(err && err.message ? err.message : "Failed to load");
-    });
-  }
-  function render(list){
-    if(!list || !list.length) return renderEmpty();
-    T.innerHTML = list.map(x=>`
-      <tr>
-        <td>
-          <div class="user-info">
-            <div class="avatar">${initial(x.name)}</div>
-            <div>
-              <div style="font-weight:600">${escapeHtml(x.name)}</div>
-              <div style="font-size:.8rem;color:#666">${escapeHtml(x.email)}</div>
-            </div>
-          </div>
-        </td>
-        <td>${escapeHtml(short(x.subject))}</td>
-        <td>${fmt(x.timestamp)}</td>
-        <td><span class="status status-${escapeCss(x.status)}">${cap(x.status)}</span></td>
-        <td>
-          <div class="actions">
-            <button class="action-btn v" data-id="${escapeHtml(x.id)}"><i class="fas fa-eye"></i></button>
-            <button class="action-btn r" data-id="${escapeHtml(x.id)}"><i class="fas fa-reply"></i></button>
-            <button class="action-btn d" data-id="${escapeHtml(x.id)}"><i class="fas fa-trash"></i></button>
-          </div>
-        </td>
-      </tr>
-    `).join("");
-    C.innerHTML = list.map(x=>`
-      <div class="card">
-        <div class="card-row">
-          <div class="user-info">
-            <div class="avatar">${initial(x.name)}</div>
-            <div>
-              <div style="font-weight:600">${escapeHtml(x.name)}</div>
-              <div style="font-size:.8rem;color:#666">${escapeHtml(x.email)}</div>
-            </div>
-          </div>
-          <span class="status status-${escapeCss(x.status)}">${cap(x.status)}</span>
-        </div>
-        <div style="font-weight:500;margin:8px 0;">${escapeHtml(x.subject)}</div>
-        <div style="font-size:.8rem;color:#666">${fmt(x.timestamp)}</div>
-        <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
-          <button class="action-btn v" data-id="${escapeHtml(x.id)}"><i class="fas fa-eye"></i></button>
-          <button class="action-btn r" data-id="${escapeHtml(x.id)}"><i class="fas fa-reply"></i></button>
-          <button class="action-btn d" data-id="${escapeHtml(x.id)}"><i class="fas fa-trash"></i></button>
-        </div>
-      </div>
-    `).join("");
-  }
-  function applyFilters(){
-    let list=[...data];
-    const st=statusFilter.value;
-    const dv=dateFilter.value;
-    const q=(document.getElementById("submissions-table-body") && document.getElementById("submissions-table-body").dataset) ? "" : "";
-    if(st!=="all") list=list.filter(x=>x.status===st);
-    if(dv!=="all"){
-      const now=new Date();
-      let start=null;
-      if(dv==="today") start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      if(dv==="week") start = new Date(now.getTime() - 7*86400000);
-      if(dv==="month") start = new Date(now.getFullYear(), now.getMonth()-1, now.getDate());
-      if(start) list=list.filter(o=>o.timestamp && o.timestamp >= start);
+
+  function logEnquiryActivity(type, message, refId = null) {
+    try {
+      if (!window.db || !window.db.collection) return;
+      const key = `${type}_${refId || ""}`;
+      if (enquiryActivityCache.has(key)) return;
+      enquiryActivityCache.add(key);
+      window.db.collection("activities").add({
+        type,
+        message,
+        refId,
+        time: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(() => {});
+    } catch (e) {
+      // Silent fail – activity logging is non-critical
     }
-    const s=(document.getElementById("submissions-table-body") && document.getElementById("submissions-table-body").dataset && document.getElementById("submissions-table-body").dataset.q) || "";
-    render(list);
   }
-  document.addEventListener("click",function(e){
-    const viewBtn = e.target.closest(".v");
-    const replyBtn = e.target.closest(".r");
-    const delBtn = e.target.closest(".d");
-    if(viewBtn) { openMessage(viewBtn.dataset.id); return; }
-    if(replyBtn) { replyMessage(replyBtn.dataset.id); return; }
-    if(delBtn) { deleteMessage(delBtn.dataset.id); return; }
-    if(e.target && (e.target.id==="close-modal" || e.target.id==="close-modal-2")) M.style.display="none";
-    if(e.target && e.target.id==="manual-refresh") load();
-    if(e.target && e.target.id==="testDataBtn") addTest();
-  });
-  function openMessage(id){
-    const x=data.find(z=>z.id===id);
-    if(!x) return;
-    fill("detail-name",x.name||"-");
-    fill("detail-email",x.email||"-");
-    fill("detail-phone",x.phone||"-");
-    fill("detail-subject",x.subject||"-");
-    fill("detail-status",cap(x.status||""));
-    fill("detail-message",x.message||"-");
-    M.style.display="flex";
-    if(x.status==="new"){ logEnquiryActivity("ENQUIRY_READ",`Message opened from ${x.name} (${x.email})`,id); setStatus(id,"read"); }
+
+  function parseTs(x) {
+    if (!x) return null;
+    if (typeof x.toDate === "function") return x.toDate();
+    if (x.seconds) return new Date(x.seconds * 1000);
+    if (x instanceof Date) return x;
+    if (typeof x === "number") return new Date(x);
+    try {
+      return new Date(x);
+    } catch (e) {
+      return null;
+    }
   }
-  function setStatus(id,st){
-    const db = window.db || (firebase && firebase.firestore && firebase.firestore());
-    if(!db) return;
-    db.collection("contactSubmissions").doc(id).update({ status:st, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }).then(load).catch(()=>{});
+
+  function initial(name) {
+    const s = String(name || "").trim();
+    return s ? s[0].toUpperCase() : "?";
   }
-  function replyMessage(id){
-    const x=data.find(z=>z.id===id);
-    if(!x) return;
-    setStatus(id,"replied");
-    logEnquiryActivity("ENQUIRY_REPLIED",`Replied to message from ${x.name} (${x.email})`,id);
-    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(x.email)}&su=${encodeURIComponent("Re: "+x.subject)}&body=${encodeURIComponent(x.message)}`;
-    window.open(url,"_blank");
+
+  function cap(s) {
+    if (!s) return "";
+    const str = String(s);
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
-  function deleteMessage(id){
-    const x=data.find(z=>z.id===id);
-    if(!x) return;
-    if(!confirm("Delete this message?")) return;
-    logEnquiryActivity("ENQUIRY_DELETED",`Deleted message from ${x.name||"Unknown"} (${x.email||"-"})`,id);
-    const db = window.db || (firebase && firebase.firestore && firebase.firestore());
-    if(!db) return;
-    db.collection("contactSubmissions").doc(id).delete().then(load).catch(err=>renderError(err.message||"Delete failed"));
+
+  function shortText(t) {
+    if (!t) return "";
+    return t.length > 50 ? t.slice(0, 50) + "..." : t;
   }
-  function addTest(){
-    const db = window.db || (firebase && firebase.firestore && firebase.firestore());
-    if(!db) return;
-    db.collection("contactSubmissions").add({
-      name:"Demo User",email:"demo@example.com",phone:"1234567890",subject:"Test message",message:"This is a test.",status:"new",timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    }).then(load).catch(()=>{});
+
+  function fmt(d) {
+    if (!d) return "-";
+    try {
+      return new Date(d).toLocaleString("en-IN");
+    } catch (e) {
+      return "-";
+    }
   }
-  function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  function escapeCss(s){ return String(s||"").replace(/[^a-z0-9_-]/gi,''); }
-  function escapeHtmlAttr(s){ return escapeHtml(s); }
-  function escapeHtmlText(s){ return escapeHtml(s); }
-  function escapeHtmlInTemplate(s){ return escapeHtml(s); }
-  function escapeHtmlSimple(s){ return escapeHtml(s); }
-  function escapeHtmlForId(s){ return escapeHtml(s); }
-  function escapeHtmlAll(s){ return escapeHtml(s); }
-  function escapeHtmlMinimal(s){ return escapeHtml(s); }
-  function escapeHtmlFinal(s){ return escapeHtml(s); }
-  function escapeHtmlUsed(s){ return escapeHtml(s); }
-  function escapeHtmlUsed2(s){ return escapeHtml(s); }
-  function escapeHtmlUsed3(s){ return escapeHtml(s); }
-  function escapeHtmlUsed4(s){ return escapeHtml(s); }
-  function escapeHtmlUsed5(s){ return escapeHtml(s); }
-  function escapeHtmlUsed6(s){ return escapeHtml(s); }
-  function escapeHtmlUsed7(s){ return escapeHtml(s); }
-  function escapeHtmlUsed8(s){ return escapeHtml(s); }
-  function S(t){ return escapeHtml(String(t||"")); }
-  function I(n){ return (n && n[0] ? n[0] : "?").toUpperCase(); }
-  function initial(n){ return I(n); }
-  function cap(s){ if(!s) return ""; return String(s).charAt(0).toUpperCase()+String(s).slice(1); }
-  function short(t){ if(!t) return ""; return t.length>50? t.slice(0,50)+"...": t; }
-  function fmt(d){ if(!d) return "-"; try{ return new Date(d).toLocaleString("en-IN"); }catch(e){ return "-"; } }
-  function fill(id,v){ const el=document.getElementById(id); if(el) el.textContent = v; }
-  function escapeHtml(x){ return String(x||"").replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  setTimeout(load,50);
-}
-setTimeout(start,50);
+
+  function start() {
+    const T = document.getElementById("submissions-table-body");
+    const C = document.getElementById("mobile-cards");
+    const M = document.getElementById("submission-modal");
+
+    if (!T || !C || !M) return;
+
+    const manualRefresh = document.getElementById("manual-refresh");
+    const testDataBtn = document.getElementById("testDataBtn");
+    const statusFilter = document.getElementById("status-filter");
+    const dateFilter = document.getElementById("date-filter");
+    const closeModalBtn = document.getElementById("close-modal");
+    const closeModalBtn2 = document.getElementById("close-modal-2");
+    const gmailReplyBtn = document.getElementById("gmail-reply-btn");
+
+    let data = [];
+    let currentMessageId = null;
+
+    function renderLoading() {
+      T.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center;padding:40px;">
+            <i class="fas fa-spinner fa-spin"></i>
+          </td>
+        </tr>`;
+      C.innerHTML = `
+        <div class="card" style="text-align:center;padding:30px;">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>`;
+    }
+
+    function renderEmpty() {
+      T.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center;padding:40px;">
+            No messages
+          </td>
+        </tr>`;
+      C.innerHTML = `
+        <div class="card" style="text-align:center;padding:30px;">
+          No messages
+        </div>`;
+    }
+
+    function renderError(msg) {
+      T.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center;padding:40px;color:red;">
+            ${escapeHtml(msg)}
+          </td>
+        </tr>`;
+      C.innerHTML = `
+        <div class="card" style="text-align:center;padding:30px;color:red;">
+          ${escapeHtml(msg)}
+        </div>`;
+    }
+
+    function load() {
+      renderLoading();
+
+      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
+      if (!db || !db.collection) {
+        renderError("Firestore unavailable");
+        return;
+      }
+
+      db.collection("contactSubmissions")
+        .orderBy("timestamp", "desc")
+        .get()
+        .then((snap) => {
+          const now = Date.now();
+
+          data = snap.docs.map((d) => {
+            const v = d.data() || {};
+            const ts = parseTs(v.timestamp);
+
+            if (!v.activityLogged) {
+              logEnquiryActivity(
+                "ENQUIRY_NEW",
+                `New message received from ${v.name || "Unknown"} (${v.email || "-"})`,
+                d.id
+              );
+              db.collection("contactSubmissions").doc(d.id)
+                .update({ activityLogged: true })
+                .catch(() => {});
+            }
+
+            const item = {
+              id: d.id,
+              name: v.name || "",
+              email: v.email || "",
+              phone: v.phone || "",
+              subject: v.subject || "",
+              message: v.message || "",
+              status: v.status || "new",
+              timestamp: ts,
+              missedAlertSent: !!v.missedAlertSent
+            };
+
+            if (item.status === "new" && item.timestamp && !item.missedAlertSent) {
+              const ageHours = (now - item.timestamp.getTime()) / (1000 * 60 * 60);
+              if (ageHours >= 24) {
+                logEnquiryActivity(
+                  "ENQUIRY_MISSED",
+                  `Unread message for 24 hours from ${item.name} (${item.email})`,
+                  item.id
+                );
+                db.collection("contactSubmissions").doc(item.id)
+                  .update({ missedAlertSent: true })
+                  .catch(() => {});
+                item.missedAlertSent = true;
+              }
+            }
+
+            return item;
+          });
+
+          applyFilters();
+        })
+        .catch((err) => {
+          renderError(err && err.message ? err.message : "Failed to load messages");
+        });
+    }
+
+    function render(list) {
+      if (!list || !list.length) {
+        renderEmpty();
+        return;
+      }
+
+      T.innerHTML = list
+        .map((x) => `
+          <tr>
+            <td>
+              <div class="user-info">
+                <div class="avatar">${initial(x.name)}</div>
+                <div>
+                  <div style="font-weight:600">${escapeHtml(x.name)}</div>
+                  <div style="font-size:.8rem;color:#666">${escapeHtml(x.email)}</div>
+                </div>
+              </div>
+            </td>
+            <td>${escapeHtml(shortText(x.subject))}</td>
+            <td>${fmt(x.timestamp)}</td>
+            <td>
+              <span class="status status-${escapeHtml(x.status)}">${cap(x.status)}</span>
+            </td>
+            <td>
+              <div class="actions">
+                <button class="action-btn v" data-id="${escapeHtml(x.id)}">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn r" data-id="${escapeHtml(x.id)}">
+                  <i class="fas fa-reply"></i>
+                </button>
+                <button class="action-btn d" data-id="${escapeHtml(x.id)}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `)
+        .join("");
+
+      C.innerHTML = list
+        .map((x) => `
+          <div class="card">
+            <div class="card-row">
+              <div class="user-info">
+                <div class="avatar">${initial(x.name)}</div>
+                <div>
+                  <div style="font-weight:600">${escapeHtml(x.name)}</div>
+                  <div style="font-size:.8rem;color:#666">${escapeHtml(x.email)}</div>
+                </div>
+              </div>
+              <span class="status status-${escapeHtml(x.status)}">${cap(x.status)}</span>
+            </div>
+            <div style="font-weight:500;margin:8px 0;">
+              ${escapeHtml(x.subject)}
+            </div>
+            <div style="font-size:.8rem;color:#666">
+              ${fmt(x.timestamp)}
+            </div>
+            <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
+              <button class="action-btn v" data-id="${escapeHtml(x.id)}">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="action-btn r" data-id="${escapeHtml(x.id)}">
+                <i class="fas fa-reply"></i>
+              </button>
+              <button class="action-btn d" data-id="${escapeHtml(x.id)}">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `)
+        .join("");
+    }
+
+    function applyFilters() {
+      let list = [...data];
+
+      const st = statusFilter ? statusFilter.value : "all";
+      const dv = dateFilter ? dateFilter.value : "all";
+
+      if (st !== "all") {
+        list = list.filter((x) => x.status === st);
+      }
+
+      if (dv !== "all") {
+        const now = new Date();
+        let start = null;
+
+        if (dv === "today") {
+          start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        } else if (dv === "week") {
+          start = new Date(now.getTime() - 7 * 86400000);
+        } else if (dv === "month") {
+          start = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        }
+
+        if (start) {
+          list = list.filter((o) => o.timestamp && o.timestamp >= start);
+        }
+      }
+
+      render(list);
+    }
+
+    function openMessage(id) {
+      const x = data.find((z) => z.id === id);
+      if (!x) return;
+
+      currentMessageId = id;
+
+      fill("detail-name", x.name || "-");
+      fill("detail-email", x.email || "-");
+      fill("detail-phone", x.phone || "-");
+      fill("detail-subject", x.subject || "-");
+      fill("detail-status", cap(x.status || ""));
+      fill("detail-message", x.message || "-");
+
+      M.style.display = "flex";
+
+      if (x.status === "new") {
+        logEnquiryActivity(
+          "ENQUIRY_READ",
+          `Message opened from ${x.name} (${x.email})`,
+          id
+        );
+        setStatus(id, "read");
+      }
+    }
+
+    function setStatus(id, st) {
+      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
+      if (!db || !db.collection) return;
+
+      db.collection("contactSubmissions")
+        .doc(id)
+        .update({
+          status: st,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+          // Reload to reflect changes
+          load();
+        })
+        .catch(() => {});
+    }
+
+    function replyMessage(id) {
+      const x = data.find((z) => z.id === id);
+      if (!x || !x.email) return;
+
+      setStatus(id, "replied");
+      logEnquiryActivity(
+        "ENQUIRY_REPLIED",
+        `Replied to message from ${x.name} (${x.email})`,
+        id
+      );
+
+      const subject = `Re: ${x.subject || ""}`;
+      const bodyLines = [
+        `Hi ${x.name || ""},`,
+        "",
+        `Thanks for reaching out regarding "${x.subject || ""}".`,
+        "",
+        "Original message:",
+        x.message || "",
+        "",
+        "Best regards,",
+        "Hexahoney Team"
+      ];
+      const body = bodyLines.join("\n");
+
+      const url =
+        "https://mail.google.com/mail/?view=cm&fs=1" +
+        `&to=${encodeURIComponent(x.email)}` +
+        `&su=${encodeURIComponent(subject)}` +
+        `&body=${encodeURIComponent(body)}`;
+
+      window.open(url, "_blank", "noopener");
+    }
+
+    function deleteMessage(id) {
+      const x = data.find((z) => z.id === id);
+      if (!x) return;
+
+      if (!confirm("Delete this message?")) return;
+
+      logEnquiryActivity(
+        "ENQUIRY_DELETED",
+        `Deleted message from ${x.name || "Unknown"} (${x.email || "-"})`,
+        id
+      );
+
+      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
+      if (!db || !db.collection) return;
+
+      db.collection("contactSubmissions")
+        .doc(id)
+        .delete()
+        .then(() => {
+          load();
+        })
+        .catch((err) => {
+          renderError(err && err.message ? err.message : "Delete failed");
+        });
+    }
+
+    function addTest() {
+      const db = window.db || (window.firebase && firebase.firestore && firebase.firestore());
+      if (!db || !db.collection) return;
+
+      db.collection("contactSubmissions")
+        .add({
+          name: "Demo User",
+          email: "demo@example.com",
+          phone: "1234567890",
+          subject: "Test message",
+          message: "This is a test.",
+          status: "new",
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => load())
+        .catch(() => {});
+    }
+
+    function fill(id, v) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = v;
+    }
+
+    // Event wiring (NO duplicate global handlers)
+    if (manualRefresh) {
+      manualRefresh.addEventListener("click", function () {
+        load();
+      });
+    }
+
+    if (testDataBtn) {
+      testDataBtn.addEventListener("click", function () {
+        addTest();
+      });
+    }
+
+    if (statusFilter) {
+      statusFilter.addEventListener("change", applyFilters);
+    }
+
+    if (dateFilter) {
+      dateFilter.addEventListener("change", applyFilters);
+    }
+
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener("click", function () {
+        M.style.display = "none";
+      });
+    }
+
+    if (closeModalBtn2) {
+      closeModalBtn2.addEventListener("click", function () {
+        M.style.display = "none";
+      });
+    }
+
+    // Close modal on backdrop click
+    M.addEventListener("click", function (e) {
+      if (e.target === M) {
+        M.style.display = "none";
+      }
+    });
+
+    // Gmail reply from inside modal (uses last opened message)
+    if (gmailReplyBtn) {
+      gmailReplyBtn.addEventListener("click", function () {
+        if (currentMessageId) {
+          replyMessage(currentMessageId);
+        }
+      });
+    }
+
+    // Delegate clicks from table (desktop)
+    T.addEventListener("click", function (e) {
+      const viewBtn = e.target.closest(".v");
+      const replyBtn = e.target.closest(".r");
+      const delBtn = e.target.closest(".d");
+
+      if (viewBtn) {
+        openMessage(viewBtn.dataset.id);
+        return;
+      }
+      if (replyBtn) {
+        replyMessage(replyBtn.dataset.id);
+        return;
+      }
+      if (delBtn) {
+        deleteMessage(delBtn.dataset.id);
+        return;
+      }
+    });
+
+    // Delegate clicks from mobile cards
+    C.addEventListener("click", function (e) {
+      const viewBtn = e.target.closest(".v");
+      const replyBtn = e.target.closest(".r");
+      const delBtn = e.target.closest(".d");
+
+      if (viewBtn) {
+        openMessage(viewBtn.dataset.id);
+        return;
+      }
+      if (replyBtn) {
+        replyMessage(replyBtn.dataset.id);
+        return;
+      }
+      if (delBtn) {
+        deleteMessage(delBtn.dataset.id);
+        return;
+      }
+    });
+
+    // Initial load
+    load();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
 })();
+</script>
+
 </script>
