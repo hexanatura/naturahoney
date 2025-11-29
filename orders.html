@@ -410,6 +410,32 @@
   if (window.firebase) {
     if (!firebase.apps.length) firebase.initializeApp(config);
   }
+  
+  // ADD TO ORDERS SCRIPT (after Firebase init)
+let ordersCleanup = new Set();
+let ordersListener = null;
+
+function cleanupOrders() {
+  ordersCleanup.forEach(fn => fn());
+  ordersCleanup.clear();
+  if (ordersListener) {
+    ordersListener();
+    ordersListener = null;
+  }
+}
+
+// Debounce function
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
   const db = firebase.firestore();
 
@@ -462,42 +488,38 @@
     return "status-" + s;
   }
 
- function load() {
+// REPLACE EXISTING load FUNCTION IN ORDERS
+function load() {
   t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
   c.innerHTML = "";
 
-  db.collection("orders")
+  // Cleanup previous listener
+  cleanupOrders();
+
+  ordersListener = db.collection("orders")
     .orderBy("createdAt", "desc")
-    .get()
-    .then((q) => {
+    .limit(50) // ADD LIMIT FOR PERFORMANCE
+    .onSnapshot((q) => {
       orders = q.docs.map((d) => {
         const o = d.data();
         return {
           ...o,
           id: d.id,
-
-          // Precomputed fields for FAST filtering
-          _name:
-            (o.shippingAddress?.firstName || "") +
-            " " +
-            (o.shippingAddress?.lastName || ""),
-
+          _name: ((o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "")).toLowerCase(),
           _email: (o.email || "").toLowerCase(),
-
-          _created: o.createdAt?.toDate
-            ? o.createdAt.toDate().getTime()
-            : 0,
-
+          _created: o.createdAt?.toDate ? o.createdAt.toDate().getTime() : 0,
           items: o.items || [],
         };
       });
-
       requestAnimationFrame(apply);
-    })
-    .catch(() => {
+    }, (err) => {
       empty();
       toast("Error loading orders", "error");
     });
+
+  ordersCleanup.add(() => {
+    if (ordersListener) ordersListener();
+  });
 }
 
   function empty() {
@@ -833,7 +855,7 @@ if (d === "month") start = now - 30 * 864e5;
   ms.onclick = save;
   fs.onchange = apply;
   fd.onchange = apply;
-  si.oninput = () => setTimeout(apply, 100);
+si.oninput = debounce(apply, 300);
   rb.onclick = () => {
     load();
     toast("Refreshing...", "info");
@@ -843,4 +865,3 @@ if (d === "month") start = now - 30 * 864e5;
   load();
 })();
 </script>
-
