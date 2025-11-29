@@ -219,10 +219,122 @@
       color: #ef4444;
     }
 
+    /* Mobile Cards Styles - FIXED */
     .mobile-cards {
       display: none;
       gap: 12px;
       margin-top: 12px;
+    }
+
+    .customer-card {
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+
+    .customer-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .card-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-content {
+      margin-bottom: 12px;
+    }
+
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .card-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .card-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .card-value {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    /* Empty State Styles */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .empty-state .muted {
+      font-size: 0.9rem;
+    }
+
+    /* Loading State */
+    .loading-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+
+    .loading-spinner {
+      font-size: 2rem;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+
+    /* Error State */
+    .error-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #dc2626;
+    }
+
+    .error-icon {
+      font-size: 2rem;
+      margin-bottom: 16px;
     }
 
     @media (max-width: 1023px) {
@@ -239,6 +351,10 @@
     @media (min-width: 1024px) {
       .table-wrapper {
         display: block;
+      }
+      
+      .mobile-cards {
+        display: none !important;
       }
     }
 
@@ -450,9 +566,7 @@
     </div>
   </div>
 
-  <script src="activityLogger.js?v=1"></script>
-
-<script>
+  <script>
 (function () {
     
 let customersListener = null;
@@ -464,7 +578,7 @@ function cleanupCustomers() {
   }
 }
 
-// ADD DEBOUNCE FUNCTION
+// DEBOUNCE FUNCTION
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -545,16 +659,80 @@ function debounce(func, wait) {
       }[c]));
     }
 
-    // REPLACE EXISTING load FUNCTION IN CUSTOMERS
+    // SHOW LOADING STATE
+    function showLoading() {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="loading-state">
+              <i class="fas fa-spinner fa-spin loading-spinner"></i>
+              <p>Loading customers...</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      
+      cardsDiv.innerHTML = `
+        <div class="loading-state">
+          <i class="fas fa-spinner fa-spin loading-spinner"></i>
+          <p>Loading customers...</p>
+        </div>
+      `;
+    }
+
+    // SHOW EMPTY STATE
+    function showEmpty() {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="fas fa-users empty-icon"></i>
+              <p>No customers found</p>
+              <div class="muted">Customers will appear here once they register</div>
+            </div>
+          </td>
+        </tr>
+      `;
+      
+      cardsDiv.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-users empty-icon"></i>
+          <p>No customers found</p>
+          <div class="muted">Customers will appear here once they register</div>
+        </div>
+      `;
+    }
+
+    // SHOW ERROR STATE
+    function showError(message) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="error-state">
+              <i class="fas fa-exclamation-triangle error-icon"></i>
+              <p>${message}</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      
+      cardsDiv.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle error-icon"></i>
+          <p>${message}</p>
+        </div>
+      `;
+    }
+
+    // LOAD CUSTOMERS
     function load() {
-      tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading...</td></tr>';
-      cardsDiv.innerHTML = "";
+      showLoading();
 
       // Cleanup previous
       cleanupCustomers();
 
       customersListener = db.collection("users")
-        .limit(100) // ADD LIMIT
+        .limit(100)
         .onSnapshot((snapshot) => {
           data = [];
           snapshot.forEach((doc) => {
@@ -571,10 +749,9 @@ function debounce(func, wait) {
             });
           });
           apply();
-        }, (error) => { // ADD ERROR HANDLING
+        }, (error) => {
           console.error("Customers load error:", error);
-          tbody.innerHTML = '<tr><td colspan="7" class="muted">Error loading customers</td></tr>';
-          cardsDiv.innerHTML = '<div class="card">Error loading customers</div>';
+          showError("Failed to load customers. Please check your connection.");
         });
     }
 
@@ -603,13 +780,14 @@ function debounce(func, wait) {
       render(list);
     }
 
+    // RENDER FUNCTION - FIXED FOR MOBILE
     function render(list) {
       if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="muted">No customers</td></tr>';
-        cardsDiv.innerHTML = '';
+        showEmpty();
         return;
       }
 
+      // Render table (desktop)
       tbody.innerHTML = list.map(x => `
         <tr>
           <td>
@@ -635,59 +813,145 @@ function debounce(func, wait) {
           </td>
         </tr>
       `).join("");
+
+      // Render mobile cards (tablet/mobile)
+      cardsDiv.innerHTML = list.map(x => `
+        <div class="customer-card">
+          <div class="card-header">
+            <div class="card-user">
+              <div class="customer-avatar"><i class="fas fa-user"></i></div>
+              <div>
+                <div style="font-weight:700">${S(x.name)}</div>
+                <div class="muted">ID: ${x.id.slice(0,8)}</div>
+              </div>
+            </div>
+            <span class="status-pill ${statusClass(x)}">${statusText(x)}</span>
+          </div>
+          
+          <div class="card-content">
+            <div class="card-row">
+              <span class="card-label">Email</span>
+              <span class="card-value">${S(x.email)}</span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Phone</span>
+              <span class="card-value">${S(x.phone)}</span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Registration</span>
+              <span class="card-value muted">${fmt(x.createdAt)}</span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Last Login</span>
+              <span class="card-value muted">${fmt(x.lastLogin)}</span>
+            </div>
+            <div class="card-row">
+              <span class="card-label">Orders</span>
+              <span class="card-value">${x.orders}</span>
+            </div>
+          </div>
+          
+          <div class="card-actions">
+            <button class="action-btn v" data-id="${x.id}" title="View">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="action-btn d" data-id="${x.id}" title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `).join("");
+
+      // Add event listeners to mobile card buttons
+      bindMobileCardActions();
     }
 
-    // HANDLERS
+    // BIND MOBILE CARD ACTIONS
+    function bindMobileCardActions() {
+      const viewButtons = cardsDiv.querySelectorAll('.action-btn.v');
+      const deleteButtons = cardsDiv.querySelectorAll('.action-btn.d');
+      
+      viewButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const customerId = e.currentTarget.getAttribute('data-id');
+          showCustomerDetails(customerId);
+        });
+      });
+      
+      deleteButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const customerId = e.currentTarget.getAttribute('data-id');
+          confirmDelete(customerId);
+        });
+      });
+    }
+
+    // SHOW CUSTOMER DETAILS
+    function showCustomerDetails(customerId) {
+      const customer = data.find(c => c.id === customerId);
+      if (!customer) return;
+
+      detailsWrap.innerHTML = `
+        <div class="col">
+          <div class="customer-info" style="margin-bottom:16px;">
+            <div class="customer-avatar" style="width:60px;height:60px;">
+              <i class="fas fa-user" style="font-size:1.5rem"></i>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:1.1rem">${S(customer.name)}</div>
+              <div class="muted">${customer.id}</div>
+            </div>
+          </div>
+          <div class="col">
+            <label class="muted">Email</label>
+            <div>${S(customer.email)}</div>
+          </div>
+          <div class="col">
+            <label class="muted">Phone</label>
+            <div>${S(customer.phone)}</div>
+          </div>
+          <div class="col">
+            <label class="muted">Registration</label>
+            <div>${fmt(customer.createdAt)}</div>
+          </div>
+          <div class="col">
+            <label class="muted">Last Login</label>
+            <div>${fmt(customer.lastLogin)}</div>
+          </div>
+          <div class="col">
+            <label class="muted">Orders</label>
+            <div>${customer.orders}</div>
+          </div>
+          <div class="col">
+            <label class="muted">Status</label>
+            <div><span class="status-pill ${statusClass(customer)}">${statusText(customer)}</span></div>
+          </div>
+        </div>
+      `;
+
+      modalBg.classList.add("show");
+    }
+
+    // CONFIRM DELETE
+    function confirmDelete(customerId) {
+      deleteId = customerId;
+      const customer = data.find(c => c.id === customerId);
+      confirmMsg.textContent = `Delete customer "${customer?.name}"? This action cannot be undone.`;
+      confirmBg.classList.add("show");
+    }
+
+    // EVENT HANDLERS
     document.addEventListener("click", (e) => {
       const v = e.target.closest(".action-btn.v");
       const d = e.target.closest(".action-btn.d");
       const r = e.target.closest("#cv-refresh");
 
       if (v) {
-        const x = data.find(z => z.id === v.dataset.id);
-        if (!x) return;
-
-        detailsWrap.innerHTML = `
-          <div class="col">
-            <div class="customer-info" style="margin-bottom:16px;">
-              <div class="customer-avatar" style="width:60px;height:60px;">
-                <i class="fas fa-user" style="font-size:1.5rem"></i>
-              </div>
-              <div>
-                <div style="font-weight:700;font-size:1.1rem">${S(x.name)}</div>
-                <div class="muted">${x.id}</div>
-              </div>
-            </div>
-            <div class="col">
-              <label class="muted">Email</label>
-              <div>${S(x.email)}</div>
-            </div>
-            <div class="col">
-              <label class="muted">Phone</label>
-              <div>${S(x.phone)}</div>
-            </div>
-            <div class="col">
-              <label class="muted">Registration</label>
-              <div>${fmt(x.createdAt)}</div>
-            </div>
-            <div class="col">
-              <label class="muted">Last Login</label>
-              <div>${fmt(x.lastLogin)}</div>
-            </div>
-            <div class="col">
-              <label class="muted">Orders</label>
-              <div>${x.orders}</div>
-            </div>
-          </div>
-        `;
-
-        modalBg.classList.add("show");
+        showCustomerDetails(v.dataset.id);
       }
 
       if (d) {
-        deleteId = d.dataset.id;
-        confirmMsg.textContent = "Delete this customer?";
-        confirmBg.classList.add("show");
+        confirmDelete(d.dataset.id);
       }
 
       if (r) load();
@@ -702,15 +966,16 @@ function debounce(func, wait) {
       }).catch(error => {
         console.error("Delete error:", error);
         confirmBg.classList.remove("show");
+        showError("Failed to delete customer. Please try again.");
       });
     };
 
-    // FIX: ADD DEBOUNCED SEARCH
+    // DEBOUNCED SEARCH AND FILTERS
     search.oninput = debounce(apply, 300);
     filter.onchange = apply;
     sortSelect.onchange = apply;
 
-    // ADD EXPORT FUNCTIONALITY
+    // EXPORT FUNCTIONALITY
     if (exportBtn) {
       exportBtn.onclick = function() {
         // Add your export logic here
@@ -725,4 +990,5 @@ function debounce(func, wait) {
   window.addEventListener('beforeunload', cleanupCustomers);
 
 })();
-</script>
+  </script>
+</div>
