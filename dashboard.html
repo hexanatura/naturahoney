@@ -1620,6 +1620,35 @@ body {
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    
+    // ADD TO TOP OF DASHBOARD SCRIPT (after Firebase init)
+class QueryManager {
+  constructor() { this.cache = new Map(); this.pending = new Map(); }
+  async getCached(collection, queryFn, cacheKey, ttl = 60000) {
+    const now = Date.now();
+    const cached = this.cache.get(cacheKey);
+    if (cached && (now - cached.timestamp) < ttl) return cached.data;
+    if (this.pending.has(cacheKey)) return this.pending.get(cacheKey);
+    
+    const promise = queryFn();
+    this.pending.set(cacheKey, promise);
+    try {
+      const data = await promise;
+      this.cache.set(cacheKey, { data, timestamp: now });
+      return data;
+    } finally { this.pending.delete(cacheKey); }
+  }
+  clearCache() { this.cache.clear(); this.pending.clear(); }
+}
+
+class CleanupManager {
+  constructor() { this.cleanups = new Set(); }
+  add(cleanupFn) { this.cleanups.add(cleanupFn); }
+  cleanup() { this.cleanups.forEach(fn => fn()); this.cleanups.clear(); }
+}
+
+const queryManager = new QueryManager();
+const cleanupManager = new CleanupManager();
 
 profileMenu.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -2011,50 +2040,54 @@ profileMenu.addEventListener("click", (e) => {
         list.appendChild(div);
     }
 
-    function loadDashboardRecentOrders() {
-        const list = document.getElementById("dashboardRecentOrders");
-        if (!list) return;
+// IN DASHBOARD SCRIPT - FIND AND REPLACE THIS FUNCTION:
+function loadDashboardRecentOrders() {
+  const list = document.getElementById("dashboardRecentOrders");
+  if (!list) return;
 
+  renderDashboardEmptyOrders(list);
+
+  // ADD CLEANUP AND LIMIT
+  if (window.dashboardOrdersListener) {
+    window.dashboardOrdersListener();
+  }
+
+  window.dashboardOrdersListener = db.collection("orders")
+    .orderBy("createdAt", "desc")
+    .limit(5) // KEEP 5 FOR DASHBOARD (small preview)
+    .onSnapshot(snapshot => {
+      if (snapshot.empty) {
         renderDashboardEmptyOrders(list);
+        return;
+      }
 
-        db.collection("orders")
-            .orderBy("createdAt", "desc")
-            .limit(5)
-            .onSnapshot(snapshot => {
-                if (snapshot.empty) {
-                    renderDashboardEmptyOrders(list);
-                    return;
-                }
+      list.innerHTML = "";
+      snapshot.forEach(doc => {
+        const o = doc.data();
+        const div = document.createElement("div");
+        div.className = "order-item fade-in";
 
-                list.innerHTML = "";
+        const total = Number(o.total || 0).toFixed(2);
+        const status = (o.status || "pending").toLowerCase();
+        const label = status.charAt(0).toUpperCase() + status.slice(1);
 
-                snapshot.forEach(doc => {
-                    const o = doc.data();
-                    const div = document.createElement("div");
-                    div.className = "order-item fade-in";
+        div.innerHTML = `
+          <div class="order-info">
+            <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
+            <div class="order-details">
+              <div class="order-id">#${doc.id.substring(0, 8)}</div>
+              <div class="order-amount">₹${total}</div>
+            </div>
+          </div>
+          <div class="order-status ${statusClass(status)}">${label}</div>
+        `;
 
-                    const total = Number(o.total || 0).toFixed(2);
-                    const status = (o.status || "pending").toLowerCase();
-                    const label = status.charAt(0).toUpperCase() + status.slice(1);
-
-                    div.innerHTML = `
-                        <div class="order-info">
-                            <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                            <div class="order-details">
-                                <div class="order-id">#${doc.id.substring(0, 8)}</div>
-                                <div class="order-amount">₹${total}</div>
-                            </div>
-                        </div>
-                        <div class="order-status ${statusClass(status)}">${label}</div>
-                    `;
-
-                    list.appendChild(div);
-                });
-            }, () => {
-                renderDashboardEmptyOrders(list);
-            });
-    }
-
+        list.appendChild(div);
+      });
+    }, () => {
+      renderDashboardEmptyOrders(list);
+    });
+}
     // ------------------------------
     // PAGE LOADING (OTHER PAGES)
     // ------------------------------
@@ -2068,36 +2101,67 @@ profileMenu.addEventListener("click", (e) => {
         dynamic.innerHTML = "";
     }
 
-    function loadHTML(page) {
-        const dynamic = document.getElementById("dynamicPage");
-        const dashboard = document.getElementById("dashboardBody");
+// REPLACE EXISTING loadHTML FUNCTION IN DASHBOARD
+async function loadHTML(page) {
+  const dynamic = document.getElementById("dynamicPage");
+  const dashboard = document.getElementById("dashboardBody");
+  if (!dynamic || !dashboard) return;
 
-        if (!dynamic || !dashboard) return;
+  // Cleanup previous page
+  cleanupManager.cleanup();
+  
+  // Show loading state
+  dynamic.innerHTML = `
+    <div style="display:flex;justify-content:center;align-items:center;min-height:400px">
+      <div style="text-align:center">
+        <i class="fas fa-spinner fa-spin" style="font-size:32px;color:var(--accent);margin-bottom:16px"></i>
+        <div style="color:var(--muted);font-size:0.9rem">Loading...</div>
+      </div>
+    </div>
+  `;
+  
+  dashboard.style.display = "none";
+  dynamic.style.display = "block";
 
-        dashboard.style.display = "none";
-        dynamic.style.display = "block";
-        dynamic.style.width = "100%";
-
-        fetch(page)
-            .then(r => r.text())
-            .then(html => {
-                dynamic.innerHTML = html;
-                const scripts = [...dynamic.querySelectorAll("script")];
-                scripts.forEach(s => {
-                    const tag = document.createElement("script");
-                    if (s.src) {
-                        tag.src = s.src + "?v=" + Date.now();
-                    } else {
-                        tag.textContent = s.textContent;
-                    }
-                    document.body.appendChild(tag);
-                    s.remove();
-                });
-            })
-            .catch(() => {
-                dynamic.innerHTML = "Failed to load page";
-            });
+  try {
+    const response = await fetch(page + '?v=' + Date.now());
+    if (!response.ok) throw new Error('Failed to load');
+    
+    const html = await response.text();
+    dynamic.innerHTML = html;
+    
+    // Execute scripts safely with cleanup
+    const scripts = dynamic.querySelectorAll('script');
+    for (const script of scripts) {
+      try {
+        if (script.src) {
+          await new Promise((resolve, reject) => {
+            const newScript = document.createElement('script');
+            newScript.src = script.src;
+            cleanupManager.add(() => newScript.remove());
+            newScript.onload = resolve;
+            newScript.onerror = reject;
+            document.head.appendChild(newScript);
+          });
+        } else {
+          const executeFn = new Function(script.textContent);
+          executeFn();
+        }
+      } catch (err) {
+        console.warn('Script execution failed:', err);
+      }
     }
+  } catch (error) {
+    dynamic.innerHTML = `
+      <div style="text-align:center;padding:60px;color:var(--danger)">
+        <i class="fas fa-exclamation-triangle" style="font-size:48px;margin-bottom:16px"></i>
+        <div style="font-weight:600;margin-bottom:8px">Failed to load page</div>
+        <div style="color:var(--muted);font-size:0.9rem">Please try refreshing</div>
+      </div>
+    `;
+  }
+}
+
 
     function loadMessagesPage() { loadHTML("contact-submissions.html"); }
     function loadPromoPage()    { loadHTML("promo-codes.html"); }
@@ -2192,33 +2256,47 @@ profileMenu.addEventListener("click", (e) => {
         if (createBtn) createBtn.addEventListener('click', () => console.log("Create review clicked"));
     }
 
-    // ------------------------------
-    // INIT DASHBOARD (AFTER AUTH)
-    // ------------------------------
-    function initDashboard() {
-        if (dashboardInitialized) return;
-        dashboardInitialized = true;
+   // REPLACE EXISTING initDashboard FUNCTION
+function initDashboard() {
+  if (dashboardInitialized) return;
+  dashboardInitialized = true;
 
-        setupEventListeners();
-        setupMobileMenu();
-        updateDateWidget();
-        initCalendar();
-        loadDashboardRecentOrders();
-        updatePendingOrdersCount();
+  // Phase 1: Immediate UI setup
+  setupEventListeners();
+  setupMobileMenu();
+  updateDateWidget();
+  initCalendar();
 
-        updateMonthlyRevenueMetric();
-        updateTotalCustomersMetric();
-        updateTotalOrdersMetric();
-        updateTotalMessagesMetric();
+  // Phase 2: Light data (after 200ms)
+  setTimeout(() => {
+    loadDashboardRecentOrders();
+    updatePendingOrdersCount();
+  }, 200);
 
-        updateStatsForDate(new Date());
+  // Phase 3: Heavy data (after 500ms)  
+  setTimeout(() => {
+    updateDashboardMetrics();
+  }, 500);
 
-        const dynamicPage = document.getElementById("dynamicPage");
-        if (dynamicPage) dynamicPage.style.display = "none";
-    }
+  const dynamicPage = document.getElementById("dynamicPage");
+  if (dynamicPage) dynamicPage.style.display = "none";
+}
 
-    // ------------------------------
-    // AUTH: MANDATORY ADMIN LOGIN (CUSTOM CLAIMS)
+// NEW: Combined metrics function
+async function updateDashboardMetrics() {
+  try {
+    await Promise.all([
+      updateMonthlyRevenueMetric(),
+      updateTotalCustomersMetric(), 
+      updateTotalOrdersMetric(),
+      updateTotalMessagesMetric(),
+      updateStatsForDate(new Date())
+    ]);
+  } catch (error) {
+    console.warn('Dashboard metrics loading failed:', error);
+  }
+}
+
     // ------------------------------
     const loginModal   = document.getElementById("loginModal");
     const dashboardEl  = document.getElementById("dashboardBody");
