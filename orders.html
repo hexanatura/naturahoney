@@ -1,411 +1,352 @@
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-            --primary: #000000;
-            --secondary: #ffffff;
-            --accent: #888888;
-            --dark: #000000;
-            --light: #f5f5f5;
-            --gray: #666666;
-            --border: #e0e0e0;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
-        }
+<style>
+/* ------------------------------
+   Orders Page – Dashboard Matched
+   ------------------------------ */
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+:root {
+    --primary: #0f172a;
+    --secondary: #ffffff;
+    --accent: #22c55e;
+    --accent-soft: #bbf7d0;
+    --dark: #020617;
+    --light: #f8fafc;
+    --gray: #64748b;
+    --muted: #94a3b8;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --border: rgba(15, 23, 42, 0.12);
 
-        body {
-            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
-            color: var(--dark);
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        
-     
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+
+    --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.25);
+    --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.18);
+    --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.15);
+}
+
+/* Global reset */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: transparent;
+    color: var(--primary);
+}
+
+/* Page container flattened for dynamicPage */
 .orders-view {
-  padding:22px;
-  background:transparent;
-  min-height:100vh;
+    width: 100%;
+    padding: 20px;
 }
 
-.orders-modal .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-
+/* Header block */
 .orders-top {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:18px;
-  flex-wrap:wrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .orders-title {
-  font-family:'Outfit',sans-serif;
-  font-size:1.2rem;
-  font-weight:700;
-  color:var(--dark);
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--primary);
 }
 
 .orders-sub {
-  font-size:0.9rem;
-  color:var(--muted);
-  margin-top:4px;
+    font-size: 0.9rem;
+    color: var(--muted);
 }
 
+/* Filters row */
 .orders-controls {
-  display:flex;
-  gap:12px;
-  align-items:center;
-  flex-wrap:wrap;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .orders-card {
-  background:var(--card-bg);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:14px;
-  border:1px solid var(--border);
-  display:flex;
-  gap:12px;
-  align-items:center;
-  flex-wrap:wrap;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
 }
 
+/* Inputs */
 .filter-select,
-.search-box {
-  padding:10px 14px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:transparent;
-  font-size:0.95rem;
-  min-width:160px;
+.search-box input {
+    font-size: 0.92rem;
+}
+
+.filter-select {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: #ffffff;
+    min-width: 150px;
 }
 
 .search-box {
-  display:flex;
-  gap:8px;
-  align-items:center;
-  min-width:260px;
-  max-width:420px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    min-width: 260px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: #ffffff;
 }
+
+.search-box i { color: var(--gray); }
 
 .search-box input {
-  border:0;
-  outline:none;
-  background:transparent;
-  width:100%;
-  font-size:0.95rem;
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.92rem;
+}
+
+/* Buttons */
+.btn-ghost {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: #ffffff;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+}
+
+.btn-ghost:hover {
+    background: rgba(34, 197, 94, 0.08);
 }
 
 .btn-primary {
-  background:var(--dark);
-  color:var(--secondary);
-  border-radius:10px;
-  padding:9px 14px;
-  border:none;
-  cursor:pointer;
-  font-weight:700;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    border: 1px solid rgba(22,163,74,0.7);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
 }
 
-.btn-ghost {
-  background:transparent;
-  border:1px solid var(--border);
-  padding:8px 12px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:600;
+.btn-primary:hover {
+    box-shadow: var(--shadow-md);
 }
 
+/* Table container */
 .table-card {
-  margin-top:16px;
-  background:var(--card-bg);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:16px;
-  border:1px solid var(--border);
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: var(--shadow-md);
 }
 
 .table-wrapper {
-  overflow:auto;
+    overflow-x: auto;
 }
 
+/* Orders table */
 .orders-table {
-  width:100%;
-  border-collapse:collapse;
-  min-width:900px;
-  font-size:0.95rem;
+    width: 100%;
+    border-collapse: collapse;
 }
 
-.orders-table thead th {
-  text-align:left;
-  padding:12px 16px;
-  font-weight:700;
-  color:var(--dark);
-  border-bottom:1px solid var(--border);
+.orders-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
 }
 
 .orders-table td {
-  padding:12px 16px;
-  border-bottom:1px solid var(--border);
-  vertical-align:middle;
-  color:var(--dark);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+    color: var(--primary);
 }
 
+/* Status pills (matches dashboard colors) */
 .status-pill {
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  font-weight:700;
-  font-size:0.75rem;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
 }
 
-.status-pending {background:rgba(245,158,11,0.08); color:#f59e0b; border:1px solid rgba(245,158,11,0.12);}
-.status-confirmed {background:rgba(59,130,246,0.08); color:#3b82f6; border:1px solid rgba(59,130,246,0.12);}
-.status-shipped {background:rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.12);}
-.status-delivered {background:rgba(101,163,13,0.08); color:#65a30d; border:1px solid rgba(101,163,13,0.12);}
-.status-cancelled {background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.12);}
+.status-pending    { background: #fff7d6; color: #854d0e; }
+.status-confirmed  { background: #e0f2fe; color: #075985; }
+.status-shipped    { background: #dbeafe; color: #1d4ed8; }
+.status-delivered  { background: #dcfce7; color: #166534; }
+.status-cancelled  { background: rgba(239,68,68,0.08); color: #b91c1c; }
 
-.action-btn {
-  border-radius:8px;
-  border:0;
-  padding:8px;
-  background:transparent;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  font-size:0.95rem;
+/* Mobile cards */
+@media(max-width:1023px) {
+    .table-wrapper { display: none; }
+    .mobile-cards { display: flex; flex-direction: column; gap: 12px; }
 }
 
-.action-btn .fa-eye {color:var(--dark);}
-.action-btn .fa-edit {color:var(--success);}
-
-.mobile-cards {
-  display:none;
-  gap:12px;
-  margin-top:12px;
-}
+.mobile-cards { display: none; }
 
 .order-card {
-  background:var(--card-bg);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:14px;
-  border:1px solid var(--border);
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
 }
 
-.card-header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:8px;
-}
-
-.customer-name {
-  font-weight:600;
-  color:var(--dark);
-}
-
-.card-meta {
-  color:var(--muted);
-  font-size:0.85rem;
-}
-
+/* Modal */
 .orders-modal-bg {
-  position:fixed;
-  inset:0;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(6,8,15,0.6);
-  z-index:1200;
-  padding:20px;
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 23, 0.55);
+    z-index: 1400;
 }
 
-.orders-modal-bg.show {
-  display:flex;
-}
+.orders-modal-bg.show { display: flex; }
 
 .orders-modal {
-  width:100%;
-  max-width:760px;
-  border-radius:12px;
-  overflow:hidden;
-  background:var(--card-bg);
-  box-shadow:var(--shadow);
-  border:1px solid var(--border);
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 760px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
 }
 
 .orders-modal .modal-header,
 .orders-modal .modal-body,
 .orders-modal .modal-footer {
-  padding:14px 16px;
+    padding: 18px 20px;
 }
 
-.empty-state {
-  text-align:center;
-  padding:36px 12px;
-  color:var(--muted);
-}
-
+/* Toast */
 .oh-toast {
-  position:fixed;
-  right:22px;
-  bottom:22px;
-  padding:12px 16px;
-  background:var(--card-bg);
-  border:1px solid var(--border);
-  box-shadow:var(--shadow);
-  border-left:4px solid var(--success);
-  z-index:1400;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  transform:translateY(10px);
-  opacity:0;
-  transition:all .2s ease;
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    background: #ffffff;
+    border-left: 4px solid var(--success);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    padding: 12px 16px;
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+    z-index: 2000;
 }
 
 .oh-toast.show {
-  opacity:1;
-  transform:translateY(0);
+    opacity: 1;
+    transform: translateY(0);
 }
+</style>
 
-@media (max-width:1023px) {
-  .table-wrapper { display:none; }
-  .mobile-cards { display:flex; flex-direction:column; }
-  .orders-controls { width:100%; flex-direction:column; }
-  .orders-card { width:100%; flex-direction:column; }
-  .search-box, .filter-select {
-    width:100%;
-    max-width:100%;
-  }
-}
+<div class="orders-view fade-in">
 
-@media (max-width:768px) {
-  .orders-title { font-size:1.1rem; }
-  .orders-sub { font-size:0.85rem; }
-  .orders-card { padding:12px; }
-  .orders-modal { width:100%; max-width:90%; }
-}
-
-@media (max-width:480px) {
-  body { padding:14px; }
-  .orders-view { padding:14px; }
-  .orders-card { padding:10px; }
-  .orders-table td, 
-  .orders-table th {
-    padding:8px 10px;
-  }
-  .orders-modal {
-    width:calc(100% - 20px);
-  }
-}
-
-  </style>
-</head>
-<body>
-  <div class="page-container">
-    <div class="orders-view fade-in">
-
-      <div class="orders-top">
+    <div class="orders-top">
         <div>
-          <div class="orders-title">Order Management</div>
-          <div class="orders-sub muted">Manage and track customer orders</div>
+            <div class="orders-title">Order Management</div>
+            <div class="orders-sub">Manage and track customer orders</div>
         </div>
 
         <div class="orders-controls">
-          <div class="orders-card filters-row">
-            <select id="ov-status" class="filter-select" title="Filter by status">
-              <option value="all">All Orders</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+            <div class="orders-card">
+                <select id="ov-status" class="filter-select">
+                    <option value="all">All Orders</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
 
-            <select id="ov-date" class="filter-select" title="Filter by date">
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select>
+                <select id="ov-date" class="filter-select">
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
 
-            <div class="search-box">
-              <i class="fas fa-search muted"></i>
-              <input id="ov-search" placeholder="Search order ID, customer, email">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input id="ov-search" placeholder="Search order ID, customer, email">
+                </div>
             </div>
-          </div>
 
-          <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-          <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
+            <button id="ov-refresh" class="btn-ghost"><i class="fas fa-sync"></i></button>
+            <button id="ov-export" class="btn-primary"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
         </div>
-      </div>
-
-      <div class="table-card">
-        <div class="table-wrapper">
-          <table class="orders-table" aria-label="Orders table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="ov-tbody">
-              <tr><td colspan="7" class="muted">Loading orders…</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
-      </div>
-
-      <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
-        <div class="orders-modal" role="document" aria-modal="true">
-          <div class="modal-header">
-            <div style="font-weight:700" id="ov-modal-title">Order Details</div>
-            <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
-          </div>
-
-          <div class="modal-body" id="ov-modal-body"></div>
-
-          <div class="modal-footer">
-            <button id="ov-modal-cancel" class="btn-ghost">Close</button>
-            <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
-          </div>
-        </div>
-      </div>
-
     </div>
-  </div>
 
-  <div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
+    <div class="table-card">
+        <div class="table-wrapper">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ov-tbody">
+                    <tr><td colspan="7" class="muted">Loading orders…</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-cards" id="ov-cards"></div>
+    </div>
+
+    <div class="orders-modal-bg" id="ov-modal-bg">
+        <div class="orders-modal">
+            <div class="modal-header">
+                <div style="font-weight:700" id="ov-modal-title">Order Details</div>
+                <button id="ov-modal-close" class="btn-ghost"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="modal-body" id="ov-modal-body"></div>
+
+            <div class="modal-footer">
+                <button id="ov-modal-cancel" class="btn-ghost">Close</button>
+                <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="oh-toast" class="oh-toast">
     <i class="fas fa-check-circle" style="color:var(--success)"></i>
     <div id="oh-toast-text">Saved</div>
-  </div>
+</div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
