@@ -1352,9 +1352,9 @@ body {
     <span class="menu-count" id="countMessages"></span>
 </div>
 
-                <div class="menu-item">
-                    <div class="menu-icon"><i class="fas fa-cog"></i></div>
-                    <div class="menu-text">Settings</div>
+<div class="menu-item" id="menuReviews">
+                    <div class="menu-icon"><i class="fas fa-star"></i></div>
+                    <div class="menu-text">Reviews</div>
                 </div>
             </div>
 
@@ -2194,6 +2194,7 @@ function loadMessagesPage() {
 function loadPromoPage()    { loadHTML("promo-codes.html"); }
     function loadOrdersPage()   { loadHTML("orders.html"); }
     function loadCustomersPage(){ loadHTML("customers.html"); }
+    function loadReviewsPage() { loadHTML("reviews.html"); }
 
     // ------------------------------
     // MOBILE MENU
@@ -2276,6 +2277,10 @@ case 'Messages':
     document.getElementById("countMessages").style.display = "none";
     initMenuCounts();
     loadMessagesPage();
+    break;
+
+case 'Reviews':
+    loadReviewsPage();
     break;
 
 
