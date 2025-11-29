@@ -1620,9 +1620,6 @@ body {
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script>
-    // ------------------------------
-    // FIREBASE INIT
-    // ------------------------------
     var firebaseConfig = {
         apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
         authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -1635,43 +1632,52 @@ body {
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    
-    // ADD TO TOP OF DASHBOARD SCRIPT (after Firebase init)
-class QueryManager {
-  constructor() { this.cache = new Map(); this.pending = new Map(); }
-  async getCached(collection, queryFn, cacheKey, ttl = 60000) {
-    const now = Date.now();
-    const cached = this.cache.get(cacheKey);
-    if (cached && (now - cached.timestamp) < ttl) return cached.data;
-    if (this.pending.has(cacheKey)) return this.pending.get(cacheKey);
-    
-    const promise = queryFn();
-    this.pending.set(cacheKey, promise);
-    try {
-      const data = await promise;
-      this.cache.set(cacheKey, { data, timestamp: now });
-      return data;
-    } finally { this.pending.delete(cacheKey); }
-  }
-  clearCache() { this.cache.clear(); this.pending.clear(); }
-}
 
-class CleanupManager {
-  constructor() { this.cleanups = new Set(); }
-  add(cleanupFn) { this.cleanups.add(cleanupFn); }
-  cleanup() { this.cleanups.forEach(fn => fn()); this.cleanups.clear(); }
-}
+    class QueryManager {
+        constructor() { this.cache = new Map(); this.pending = new Map(); }
+        async getCached(collection, queryFn, cacheKey, ttl = 60000) {
+            const now = Date.now();
+            const cached = this.cache.get(cacheKey);
+            if (cached && (now - cached.timestamp) < ttl) return cached.data;
+            if (this.pending.has(cacheKey)) return this.pending.get(cacheKey);
+            const promise = queryFn();
+            this.pending.set(cacheKey, promise);
+            try {
+                const data = await promise;
+                this.cache.set(cacheKey, { data, timestamp: now });
+                return data;
+            } finally { this.pending.delete(cacheKey); }
+        }
+        clearCache() { this.cache.clear(); this.pending.clear(); }
+    }
 
-const queryManager = new QueryManager();
-const cleanupManager = new CleanupManager();
+    class CleanupManager {
+        constructor() { this.cleanups = new Set(); }
+        add(cleanupFn) { this.cleanups.add(cleanupFn); }
+        cleanup() { this.cleanups.forEach(fn => fn()); this.cleanups.clear(); }
+    }
 
-profileMenu.addEventListener("click", (e) => {
-    e.stopPropagation();
-});
+    const queryManager = new QueryManager();
+    const cleanupManager = new CleanupManager();
 
-    // ------------------------------
-    // UTILS
-    // ------------------------------
+    const LAST_OPEN = {
+        orders: "lastOpenOrders",
+        customers: "lastOpenCustomers",
+        messages: "lastOpenMessages",
+        reviews: "lastOpenReviews"
+    };
+
+    const menuListeners = {
+        orders: null,
+        customers: null,
+        messages: null,
+        reviews: null
+    };
+
+    profileMenu.addEventListener("click", (e) => {
+        e.stopPropagation();
+    });
+
     function getDayRange(date) {
         const d = new Date(date);
         const yyyy = d.getFullYear();
@@ -1705,9 +1711,6 @@ profileMenu.addEventListener("click", (e) => {
         return map[s] || "status-pending";
     }
 
-    // ------------------------------
-    // GLOBAL DATE RANGES
-    // ------------------------------
     const now = new Date();
     const CUR = getMonthRange(now.getFullYear(), now.getMonth());
     const PREV = getMonthRange(now.getFullYear(), now.getMonth() - 1);
@@ -1718,9 +1721,6 @@ profileMenu.addEventListener("click", (e) => {
     let currentYear = currentDate.getFullYear();
     let dashboardInitialized = false;
 
-    // ------------------------------
-    // DATE WIDGET
-    // ------------------------------
     function updateDateWidget() {
         const now = new Date();
         const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1740,9 +1740,6 @@ profileMenu.addEventListener("click", (e) => {
         monthYearEl.textContent = monthNames[now.getMonth()] + " " + now.getFullYear();
     }
 
-    // ------------------------------
-    // CALENDAR
-    // ------------------------------
     function handleCalendarDayClick(year, month, day, element) {
         const calendarDays = document.getElementById('calendar-days');
         if (!calendarDays) return;
@@ -1773,7 +1770,6 @@ profileMenu.addEventListener("click", (e) => {
 
         const today = new Date();
 
-        // previous month days
         for (let i = firstDay - 1; i >= 0; i--) {
             const d = document.createElement('div');
             d.className = 'calendar-day other-month';
@@ -1781,7 +1777,6 @@ profileMenu.addEventListener("click", (e) => {
             calendarDays.appendChild(d);
         }
 
-        // current month days
         for (let i = 1; i <= daysInMonth; i++) {
             const d = document.createElement('div');
             d.className = 'calendar-day';
@@ -1804,7 +1799,6 @@ profileMenu.addEventListener("click", (e) => {
             calendarDays.appendChild(d);
         }
 
-        // next month days
         const totalCells = 42;
         const usedCells = firstDay + daysInMonth;
         const remaining = totalCells - usedCells;
@@ -1839,9 +1833,6 @@ profileMenu.addEventListener("click", (e) => {
         }
     }
 
-    // ------------------------------
-    // DASHBOARD STATS (WELCOME CARDS)
-    // ------------------------------
     function updateRevenueForDate(date) {
         const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(1) .stat-number');
         if (!target) return;
@@ -1916,9 +1907,6 @@ profileMenu.addEventListener("click", (e) => {
         updateMessagesForDate(selectedDate);
     }
 
-    // ------------------------------
-    // SIDEBAR METRICS (MONTHLY)
-    // ------------------------------
     function updateMonthlyRevenueMetric() {
         const valueEl = document.querySelector('.metric-row:nth-child(1) .metric-value');
         const changeEl = document.querySelector('.metric-row:nth-child(1) .metric-change');
@@ -2032,9 +2020,6 @@ profileMenu.addEventListener("click", (e) => {
         });
     }
 
-    // ------------------------------
-    // RECENT ORDERS
-    // ------------------------------
     function renderDashboardEmptyOrders(list) {
         list.innerHTML = "";
         const div = document.createElement("div");
@@ -2055,57 +2040,53 @@ profileMenu.addEventListener("click", (e) => {
         list.appendChild(div);
     }
 
-// IN DASHBOARD SCRIPT - FIND AND REPLACE THIS FUNCTION:
-function loadDashboardRecentOrders() {
-  const list = document.getElementById("dashboardRecentOrders");
-  if (!list) return;
+    function loadDashboardRecentOrders() {
+        const list = document.getElementById("dashboardRecentOrders");
+        if (!list) return;
 
-  renderDashboardEmptyOrders(list);
-
-  // ADD CLEANUP AND LIMIT
-  if (window.dashboardOrdersListener) {
-    window.dashboardOrdersListener();
-  }
-
-  window.dashboardOrdersListener = db.collection("orders")
-    .orderBy("createdAt", "desc")
-    .limit(5) // KEEP 5 FOR DASHBOARD (small preview)
-    .onSnapshot(snapshot => {
-      if (snapshot.empty) {
         renderDashboardEmptyOrders(list);
-        return;
-      }
 
-      list.innerHTML = "";
-      snapshot.forEach(doc => {
-        const o = doc.data();
-        const div = document.createElement("div");
-        div.className = "order-item fade-in";
+        if (window.dashboardOrdersListener) {
+            window.dashboardOrdersListener();
+        }
 
-        const total = Number(o.total || 0).toFixed(2);
-        const status = (o.status || "pending").toLowerCase();
-        const label = status.charAt(0).toUpperCase() + status.slice(1);
+        window.dashboardOrdersListener = db.collection("orders")
+            .orderBy("createdAt", "desc")
+            .limit(5)
+            .onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    renderDashboardEmptyOrders(list);
+                    return;
+                }
 
-        div.innerHTML = `
-          <div class="order-info">
-            <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-            <div class="order-details">
-              <div class="order-id">#${doc.id.substring(0, 8)}</div>
-              <div class="order-amount">₹${total}</div>
-            </div>
-          </div>
-          <div class="order-status ${statusClass(status)}">${label}</div>
-        `;
+                list.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const o = doc.data();
+                    const div = document.createElement("div");
+                    div.className = "order-item fade-in";
 
-        list.appendChild(div);
-      });
-    }, () => {
-      renderDashboardEmptyOrders(list);
-    });
-}
-    // ------------------------------
-    // PAGE LOADING (OTHER PAGES)
-    // ------------------------------
+                    const total = Number(o.total || 0).toFixed(2);
+                    const status = (o.status || "pending").toLowerCase();
+                    const label = status.charAt(0).toUpperCase() + status.slice(1);
+
+                    div.innerHTML = `
+                        <div class="order-info">
+                            <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
+                            <div class="order-details">
+                                <div class="order-id">#${doc.id.substring(0, 8)}</div>
+                                <div class="order-amount">₹${total}</div>
+                            </div>
+                        </div>
+                        <div class="order-status ${statusClass(status)}">${label}</div>
+                    `;
+
+                    list.appendChild(div);
+                });
+            }, () => {
+                renderDashboardEmptyOrders(list);
+            });
+    }
+
     function showDashboard() {
         const dynamic = document.getElementById("dynamicPage");
         const dashboard = document.getElementById("dashboardBody");
@@ -2116,90 +2097,82 @@ function loadDashboardRecentOrders() {
         dynamic.innerHTML = "";
     }
 
-// REPLACE EXISTING loadHTML FUNCTION IN DASHBOARD
-async function loadHTML(page) {
-  const dynamic = document.getElementById("dynamicPage");
-  const dashboard = document.getElementById("dashboardBody");
-  if (!dynamic || !dashboard) return;
+    async function loadHTML(page) {
+        const dynamic = document.getElementById("dynamicPage");
+        const dashboard = document.getElementById("dashboardBody");
+        if (!dynamic || !dashboard) return;
 
-  // Cleanup previous page
-  cleanupManager.cleanup();
-  
-  // Show loading state
-  dynamic.innerHTML = `
-    <div style="display:flex;justify-content:center;align-items:center;min-height:400px">
-      <div style="text-align:center">
-        <i class="fas fa-spinner fa-spin" style="font-size:32px;color:var(--accent);margin-bottom:16px"></i>
-        <div style="color:var(--muted);font-size:0.9rem">Loading...</div>
-      </div>
-    </div>
-  `;
-  
-  dashboard.style.display = "none";
-  dynamic.style.display = "block";
+        cleanupManager.cleanup();
+        
+        dynamic.innerHTML = `
+            <div style="display:flex;justify-content:center;align-items:center;min-height:400px">
+                <div style="text-align:center">
+                    <i class="fas fa-spinner fa-spin" style="font-size:32px;color:var(--accent);margin-bottom:16px"></i>
+                    <div style="color:var(--muted);font-size:0.9rem">Loading...</div>
+                </div>
+            </div>
+        `;
+        
+        dashboard.style.display = "none";
+        dynamic.style.display = "block";
 
-  try {
-    const response = await fetch(page + '?v=' + Date.now());
-    if (!response.ok) throw new Error('Failed to load');
-    
-    const html = await response.text();
-    dynamic.innerHTML = html;
-    
-    // Execute scripts safely with cleanup
-    const scripts = dynamic.querySelectorAll('script');
-    for (const script of scripts) {
-      try {
-        if (script.src) {
-          await new Promise((resolve, reject) => {
-            const newScript = document.createElement('script');
-            newScript.src = script.src;
-            cleanupManager.add(() => newScript.remove());
-            newScript.onload = resolve;
-            newScript.onerror = reject;
-            document.head.appendChild(newScript);
-          });
-        } else {
-          const executeFn = new Function(script.textContent);
-          executeFn();
-        }
-      } catch (err) {
-        console.warn('Script execution failed:', err);
-      }
-    }
-  } catch (error) {
-    dynamic.innerHTML = `
-      <div style="text-align:center;padding:60px;color:var(--danger)">
-        <i class="fas fa-exclamation-triangle" style="font-size:48px;margin-bottom:16px"></i>
-        <div style="font-weight:600;margin-bottom:8px">Failed to load page</div>
-        <div style="color:var(--muted);font-size:0.9rem">Please try refreshing</div>
-      </div>
-    `;
-  }
-}
-
-
-function loadMessagesPage() {
-    loadHTML("contact-submissions.html").then(() => {
-        const user = firebase.auth().currentUser;
-        if (user) {
-            setTimeout(() => {
-                if (window.messagesManager) {
-                    window.messagesManager.cleanup();
+        try {
+            const response = await fetch(page + '?v=' + Date.now());
+            if (!response.ok) throw new Error('Failed to load');
+            
+            const html = await response.text();
+            dynamic.innerHTML = html;
+            
+            const scripts = dynamic.querySelectorAll('script');
+            for (const script of scripts) {
+                try {
+                    if (script.src) {
+                        await new Promise((resolve, reject) => {
+                            const newScript = document.createElement('script');
+                            newScript.src = script.src;
+                            cleanupManager.add(() => newScript.remove());
+                            newScript.onload = resolve;
+                            newScript.onerror = reject;
+                            document.head.appendChild(newScript);
+                        });
+                    } else {
+                        const executeFn = new Function(script.textContent);
+                        executeFn();
+                    }
+                } catch (err) {
+                    console.warn('Script execution failed:', err);
                 }
-                window.messagesManager = new MessagesManager();
-            }, 100);
+            }
+        } catch (error) {
+            dynamic.innerHTML = `
+                <div style="text-align:center;padding:60px;color:var(--danger)">
+                    <i class="fas fa-exclamation-triangle" style="font-size:48px;margin-bottom:16px"></i>
+                    <div style="font-weight:600;margin-bottom:8px">Failed to load page</div>
+                    <div style="color:var(--muted);font-size:0.9rem">Please try refreshing</div>
+                </div>
+            `;
         }
-    });
-}
+    }
 
-function loadPromoPage()    { loadHTML("promo-codes.html"); }
+    function loadMessagesPage() {
+        loadHTML("contact-submissions.html").then(() => {
+            const user = firebase.auth().currentUser;
+            if (user) {
+                setTimeout(() => {
+                    if (window.messagesManager) {
+                        window.messagesManager.cleanup();
+                    }
+                    window.messagesManager = new MessagesManager();
+                }, 100);
+            }
+        });
+    }
+
+    function loadPromoPage()    { loadHTML("promo-codes.html"); }
     function loadOrdersPage()   { loadHTML("orders.html"); }
     function loadCustomersPage(){ loadHTML("customers.html"); }
     function loadReviewsPage() { loadHTML("reviews.html"); }
 
-    // ------------------------------
-    // MOBILE MENU
-    // ------------------------------
     function toggleMobileMenu() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
@@ -2226,30 +2199,51 @@ function loadPromoPage()    { loadHTML("promo-codes.html"); }
     }
     
     function updateBadge(el, count) {
-    if (!el) return;
-    if (count > 0) {
-        el.style.display = "inline-block";
-        el.textContent = count;
-    } else {
-        el.style.display = "none";
-        el.textContent = "";
+        if (!el) return;
+        if (count > 0) {
+            el.style.display = "inline-block";
+            el.textContent = count > 99 ? '99+' : count.toString();
+        } else {
+            el.style.display = "none";
+            el.textContent = "";
+        }
     }
-}
 
-function initMenuCounts() {
-    checkNewItems("orders", LAST_OPEN.orders, document.getElementById("countOrders"), "createdAt");
-    checkNewItems("users", LAST_OPEN.customers, document.getElementById("countCustomers"), "createdAt");
-    checkNewItems("contactSubmissions", LAST_OPEN.messages, document.getElementById("countMessages"), "timestamp");
-    checkNewItems("reviews", LAST_OPEN.reviews, document.getElementById("countReviews"), "createdAt");
+    function initMenuCounts() {
+        checkNewItems("orders", LAST_OPEN.orders, document.getElementById("countOrders"), "createdAt");
+        checkNewItems("users", LAST_OPEN.customers, document.getElementById("countCustomers"), "createdAt");
+        checkNewItems("contactSubmissions", LAST_OPEN.messages, document.getElementById("countMessages"), "timestamp");
+        checkNewItems("reviews", LAST_OPEN.reviews, document.getElementById("countReviews"), "createdAt");
+    }
 
+    function checkNewItems(collection, lastKey, badgeEl, field) {
+        if (!badgeEl) return;
+        
+        const lastOpen = Number(localStorage.getItem(lastKey)) || Date.now();
+        
+        if (menuListeners[collection.split('/')[0]]) {
+            menuListeners[collection.split('/')[0]]();
+        }
+        
+        menuListeners[collection.split('/')[0]] = db.collection(collection)
+            .where(field, ">", firebase.firestore.Timestamp.fromMillis(lastOpen))
+            .onSnapshot(snap => {
+                if (!badgeEl) return;
+                const newCount = snap.size;
+                updateBadge(badgeEl, newCount);
+            }, error => {
+                console.error(`Error listening to ${collection}:`, error);
+            });
+    }
 
+    function cleanupMenuListeners() {
+        Object.values(menuListeners).forEach(unsubscribe => {
+            if (unsubscribe && typeof unsubscribe === 'function') {
+                unsubscribe();
+            }
+        });
+    }
 
-}
-
-
-    // ------------------------------
-    // MENU CLICK EVENTS
-    // ------------------------------
     function setupEventListeners() {
         const menuItems = document.querySelectorAll('.menu-item');
         menuItems.forEach(item => {
@@ -2258,52 +2252,36 @@ function initMenuCounts() {
                 menuItems.forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
 
-              switch (menuText) {
-                  
-                  case 'Dashboard':
-    showDashboard();
-    break;
-
- case 'Orders':
-    localStorage.setItem(LAST_OPEN.orders, Date.now());
-    document.getElementById("countOrders").style.display = "none";
-    initMenuCounts();     // <--- ADD THIS
-    loadOrdersPage();
-    break;
-
-
-case 'Customers':
-    localStorage.setItem(LAST_OPEN.customers, Date.now());
-    document.getElementById("countCustomers").style.display = "none";
-    initMenuCounts();
-    loadCustomersPage();
-    break;
-
-
-case 'Messages':
-    localStorage.setItem(LAST_OPEN.messages, Date.now());
-    document.getElementById("countMessages").style.display = "none";
-    initMenuCounts();
-    loadMessagesPage();
-    break;
-
-case 'Reviews':
-    localStorage.setItem(LAST_OPEN.reviews, Date.now());
-    document.getElementById("countReviews").style.display = "none";
-    initMenuCounts();
-    loadReviewsPage();
-    break;
-
-
-
-}
-
+                switch (menuText) {
+                    case 'Dashboard':
+                        showDashboard();
+                        break;
+                    case 'Orders':
+                        localStorage.setItem(LAST_OPEN.orders, Date.now());
+                        updateBadge(document.getElementById("countOrders"), 0);
+                        loadOrdersPage();
+                        break;
+                    case 'Customers':
+                        localStorage.setItem(LAST_OPEN.customers, Date.now());
+                        updateBadge(document.getElementById("countCustomers"), 0);
+                        loadCustomersPage();
+                        break;
+                    case 'Messages':
+                        localStorage.setItem(LAST_OPEN.messages, Date.now());
+                        updateBadge(document.getElementById("countMessages"), 0);
+                        loadMessagesPage();
+                        break;
+                    case 'Reviews':
+                        localStorage.setItem(LAST_OPEN.reviews, Date.now());
+                        updateBadge(document.getElementById("countReviews"), 0);
+                        loadReviewsPage();
+                        break;
+                }
 
                 if (window.innerWidth <= 992) closeMobileMenu();
             });
         });
 
-        // profile dropdown
         const adminProfile = document.getElementById("adminProfile");
         const profileMenu = document.getElementById("profileMenu");
         if (adminProfile && profileMenu) {
@@ -2317,7 +2295,6 @@ case 'Reviews':
             });
         }
 
-        // placeholder review actions
         const publishBtn = document.getElementById("publishReviewBtn");
         const removeBtn = document.getElementById("removeReviewBtn");
         const createBtn = document.getElementById("createReviewBtn");
@@ -2326,81 +2303,43 @@ case 'Reviews':
         if (removeBtn) removeBtn.addEventListener('click', () => console.log("Remove reviews clicked"));
         if (createBtn) createBtn.addEventListener('click', () => console.log("Create review clicked"));
     }
-    
-const LAST_OPEN = {
-    orders: "lastOpenOrders",
-    customers: "lastOpenCustomers",
-    messages: "lastOpenMessages",
-    reviews: "lastOpenReviews"
-};
 
+    function initDashboard() {
+        if (dashboardInitialized) return;
+        dashboardInitialized = true;
 
-async function checkNewItems(collection, lastKey, badgeEl, field) {
-    const lastOpen = Number(localStorage.getItem(lastKey)) || 0;
+        setupEventListeners();
+        setupMobileMenu();
+        updateDateWidget();
+        initCalendar();
 
-    db.collection(collection)
-      .where(field, ">", firebase.firestore.Timestamp.fromMillis(lastOpen))
-      .onSnapshot(snap => {
-          if (snap.size > 0) {
-              badgeEl.style.display = "inline-block";
-              badgeEl.textContent = snap.size;
-          } else {
-              badgeEl.style.display = "none";
-              badgeEl.textContent = "";
-          }
-      });
-}
+        setTimeout(() => {
+            loadDashboardRecentOrders();
+            updatePendingOrdersCount();
+        }, 200);
 
-const menuListeners = {
-    orders: null,
-    customers: null,
-    messages: null
-};
+        setTimeout(() => {
+            updateDashboardMetrics();
+        }, 500);
 
+        const dynamicPage = document.getElementById("dynamicPage");
+        if (dynamicPage) dynamicPage.style.display = "none";
+    }
 
+    async function updateDashboardMetrics() {
+        try {
+            await Promise.all([
+                updateMonthlyRevenueMetric(),
+                updateTotalCustomersMetric(), 
+                updateTotalOrdersMetric(),
+                updateTotalMessagesMetric(),
+                updateStatsForDate(new Date())
+            ]);
+        } catch (error) {
+            console.warn('Dashboard metrics loading failed:', error);
+        }
+    }
 
-   // REPLACE EXISTING initDashboard FUNCTION
-function initDashboard() {
-  if (dashboardInitialized) return;
-  dashboardInitialized = true;
-
-  // Phase 1: Immediate UI setup
-  setupEventListeners();
-  setupMobileMenu();
-  updateDateWidget();
-  initCalendar();
-
-  // Phase 2: Light data (after 200ms)
-  setTimeout(() => {
-    loadDashboardRecentOrders();
-    updatePendingOrdersCount();
-  }, 200);
-
-  // Phase 3: Heavy data (after 500ms)  
-  setTimeout(() => {
-    updateDashboardMetrics();
-  }, 500);
-
-  const dynamicPage = document.getElementById("dynamicPage");
-  if (dynamicPage) dynamicPage.style.display = "none";
-}
-
-// NEW: Combined metrics function
-async function updateDashboardMetrics() {
-  try {
-    await Promise.all([
-      updateMonthlyRevenueMetric(),
-      updateTotalCustomersMetric(), 
-      updateTotalOrdersMetric(),
-      updateTotalMessagesMetric(),
-      updateStatsForDate(new Date())
-    ]);
-  } catch (error) {
-    console.warn('Dashboard metrics loading failed:', error);
-  }
-}
-
-    // ------------------------------
     const loginModal   = document.getElementById("loginModal");
     const dashboardEl  = document.getElementById("dashboardBody");
     const sidebarEl    = document.getElementById("sidebar");
@@ -2411,13 +2350,11 @@ async function updateDashboardMetrics() {
     const loginBtn     = document.getElementById("loginSubmit");
     const logoutBtn    = document.getElementById("logoutBtn");
 
-    // Initial UI state – force login first
     if (dashboardEl) dashboardEl.style.display = "none";
     if (sidebarEl) sidebarEl.style.display = "none";
     if (topHeaderEl) topHeaderEl.style.display = "none";
     if (loginModal) loginModal.style.display = "flex";
 
-    // LOGIN BUTTON HANDLER
     if (loginBtn) {
         loginBtn.addEventListener("click", () => {
             const email = loginEmailEl ? loginEmailEl.value.trim() : "";
@@ -2438,7 +2375,6 @@ async function updateDashboardMetrics() {
         });
     }
 
-    // LOGOUT BUTTON HANDLER
     if (logoutBtn) {
         logoutBtn.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -2446,31 +2382,30 @@ async function updateDashboardMetrics() {
         });
     }
 
-    // AUTH STATE OBSERVER – only allow users with admin custom claim
-    firebase.auth().onAuthStateChanged(async (user) => {
-        
-        if (!localStorage.getItem(LAST_OPEN.orders)) localStorage.setItem(LAST_OPEN.orders, Date.now());
-if (!localStorage.getItem(LAST_OPEN.customers)) localStorage.setItem(LAST_OPEN.customers, Date.now());
-if (!localStorage.getItem(LAST_OPEN.messages)) localStorage.setItem(LAST_OPEN.messages, Date.now());
+    cleanupManager.add(() => {
+        cleanupMenuListeners();
+    });
 
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (!localStorage.getItem(LAST_OPEN.orders)) localStorage.setItem(LAST_OPEN.orders, Date.now());
+        if (!localStorage.getItem(LAST_OPEN.customers)) localStorage.setItem(LAST_OPEN.customers, Date.now());
+        if (!localStorage.getItem(LAST_OPEN.messages)) localStorage.setItem(LAST_OPEN.messages, Date.now());
+        if (!localStorage.getItem(LAST_OPEN.reviews)) localStorage.setItem(LAST_OPEN.reviews, Date.now());
 
         if (!user) {
-            // Not logged in → show login, hide dashboard
             if (loginModal) loginModal.style.display = "flex";
             if (dashboardEl) dashboardEl.style.display = "none";
             if (sidebarEl) sidebarEl.style.display = "none";
             if (topHeaderEl) topHeaderEl.style.display = "none";
             dashboardInitialized = false;
+            cleanupMenuListeners();
             return;
         }
 
         try {
-            // Force refresh token to read latest custom claims
             const tokenResult = await user.getIdTokenResult(true);
 
-            // Check for admin flag set via custom claims
             if (!tokenResult.claims || tokenResult.claims.admin !== true) {
-                // Not admin → kick out
                 await firebase.auth().signOut();
                 alert("Access denied. Admin only.");
                 return;
@@ -2481,7 +2416,6 @@ if (!localStorage.getItem(LAST_OPEN.messages)) localStorage.setItem(LAST_OPEN.me
             return;
         }
 
-        // If we reach here → user is admin
         if (loginModal) loginModal.style.display = "none";
         if (dashboardEl) dashboardEl.style.display = "block";
         if (sidebarEl) sidebarEl.style.display = "block";
@@ -2491,7 +2425,6 @@ if (!localStorage.getItem(LAST_OPEN.messages)) localStorage.setItem(LAST_OPEN.me
         if (adminName && user.email) adminName.textContent = user.email;
         
         initMenuCounts();
-
         initDashboard();
     });
 </script>
