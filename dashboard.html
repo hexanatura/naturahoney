@@ -1869,26 +1869,48 @@ body {
             });
     }
 
-    function updateMessagesForDate(date) {
-        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
-        if (!target) return;
+function updateMessagesForDate(date) {
+    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
+    if (!target) return;
 
-        const { start, end } = getDayRange(date);
+    const { start, end } = getDayRange(date);
+    
+    console.log("Fetching messages for date:", date);
+    console.log("Date range:", start, "to", end);
 
-        db.collection("contactSubmissions")
-            .where("timestamp", ">=", start)
-            .where("timestamp", "<=", end)
-            .get()
-            .then(snapshot => {
-                target.textContent = snapshot.size;
-            })
-            .catch((error) => {
-                console.error("Error fetching messages:", error);
-                target.textContent = "0";
+    // First, let's check what messages exist for this date regardless of status
+    db.collection("contactSubmissions")
+        .where("timestamp", ">=", start)
+        .where("timestamp", "<=", end)
+        .get()
+        .then(snapshot => {
+            console.log(`Total messages found for today: ${snapshot.size}`);
+            
+            let newMessagesCount = 0;
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                console.log(`Message ${doc.id}:`, {
+                    status: data.status,
+                    timestamp: data.timestamp,
+                    name: data.name
+                });
+                
+                // Count messages with status 'new' or undefined (default to new)
+                if (!data.status || data.status === 'new') {
+                    newMessagesCount++;
+                }
             });
-    }
+            
+            console.log(`New messages count: ${newMessagesCount}`);
+            target.textContent = newMessagesCount;
+        })
+        .catch((error) => {
+            console.error("Error fetching messages:", error);
+            target.textContent = "0";
+        });
+}
 
-    function updatePendingOrdersCount() {
+function updatePendingOrdersCount() {
         const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
         if (!target) return;
 
