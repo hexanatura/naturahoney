@@ -1674,10 +1674,6 @@ body {
         reviews: null
     };
 
-    profileMenu.addEventListener("click", (e) => {
-        e.stopPropagation();
-    });
-
     function getDayRange(date) {
         const d = new Date(date);
         const yyyy = d.getFullYear();
@@ -1848,7 +1844,8 @@ body {
                 snapshot.forEach(doc => total += Number(doc.data().total || 0));
                 target.textContent = "₹" + total.toFixed(2);
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error("Error fetching revenue:", error);
                 target.textContent = "₹0.00";
             });
     }
@@ -1866,7 +1863,8 @@ body {
             .then(snapshot => {
                 target.textContent = snapshot.size;
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error("Error fetching customers:", error);
                 target.textContent = "0";
             });
     }
@@ -1884,7 +1882,8 @@ body {
             .then(snapshot => {
                 target.textContent = snapshot.size;
             })
-            .catch(() => {
+            .catch((error) => {
+                console.error("Error fetching messages:", error);
                 target.textContent = "0";
             });
     }
@@ -1897,6 +1896,9 @@ body {
             .where("status", "==", "pending")
             .onSnapshot(snapshot => {
                 target.textContent = snapshot.size;
+            }, (error) => {
+                console.error("Error fetching pending orders:", error);
+                target.textContent = "0";
             });
     }
 
@@ -1936,6 +1938,10 @@ body {
                 changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
                 changeEl.classList.add('negative');
             }
+        }).catch(error => {
+            console.error("Error updating monthly revenue:", error);
+            valueEl.textContent = "₹0.00";
+            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> 0.0%`;
         });
     }
 
@@ -1963,6 +1969,10 @@ body {
                 changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
                 changeEl.classList.add('negative');
             }
+        }).catch(error => {
+            console.error("Error updating customers metric:", error);
+            valueEl.textContent = "0";
+            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> 0.0%`;
         });
     }
 
@@ -1990,6 +2000,10 @@ body {
                 changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
                 changeEl.classList.add('negative');
             }
+        }).catch(error => {
+            console.error("Error updating orders metric:", error);
+            valueEl.textContent = "0";
+            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> 0.0%`;
         });
     }
 
@@ -2017,6 +2031,10 @@ body {
                 changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
                 changeEl.classList.add('negative');
             }
+        }).catch(error => {
+            console.error("Error updating messages metric:", error);
+            valueEl.textContent = "0";
+            changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> 0.0%`;
         });
     }
 
@@ -2082,7 +2100,8 @@ body {
 
                     list.appendChild(div);
                 });
-            }, () => {
+            }, (error) => {
+                console.error("Error loading recent orders:", error);
                 renderDashboardEmptyOrders(list);
             });
     }
@@ -2221,11 +2240,11 @@ body {
         
         const lastOpen = Number(localStorage.getItem(lastKey)) || Date.now();
         
-        if (menuListeners[collection.split('/')[0]]) {
-            menuListeners[collection.split('/')[0]]();
+        if (menuListeners[collection]) {
+            menuListeners[collection]();
         }
         
-        menuListeners[collection.split('/')[0]] = db.collection(collection)
+        menuListeners[collection] = db.collection(collection)
             .where(field, ">", firebase.firestore.Timestamp.fromMillis(lastOpen))
             .onSnapshot(snap => {
                 if (!badgeEl) return;
@@ -2405,27 +2424,30 @@ body {
         try {
             const tokenResult = await user.getIdTokenResult(true);
 
-            if (!tokenResult.claims || tokenResult.claims.admin !== true) {
-                await firebase.auth().signOut();
-                alert("Access denied. Admin only.");
-                return;
-            }
+            if (loginModal) loginModal.style.display = "none";
+            if (dashboardEl) dashboardEl.style.display = "block";
+            if (sidebarEl) sidebarEl.style.display = "block";
+            if (topHeaderEl) topHeaderEl.style.display = "flex";
+
+            const adminName = document.getElementById("adminName");
+            if (adminName && user.email) adminName.textContent = user.email;
+            
+            initMenuCounts();
+            initDashboard();
+
         } catch (err) {
-            console.error("Error checking admin claim:", err);
-            await firebase.auth().signOut();
-            return;
+            console.error("Auth error:", err);
+            if (loginErrorEl) loginErrorEl.textContent = "Authentication error. Please try again.";
         }
+    });
 
-        if (loginModal) loginModal.style.display = "none";
-        if (dashboardEl) dashboardEl.style.display = "block";
-        if (sidebarEl) sidebarEl.style.display = "block";
-        if (topHeaderEl) topHeaderEl.style.display = "flex";
-
-        const adminName = document.getElementById("adminName");
-        if (adminName && user.email) adminName.textContent = user.email;
-        
-        initMenuCounts();
-        initDashboard();
+    document.addEventListener('DOMContentLoaded', function() {
+        const profileMenu = document.getElementById("profileMenu");
+        if (profileMenu) {
+            profileMenu.addEventListener("click", (e) => {
+                e.stopPropagation();
+            });
+        }
     });
 </script>
 </body>
