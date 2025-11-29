@@ -1,951 +1,1074 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<style>
-:root{
-  --dark:#000;
-  --light:#f5f5f5;
-  --gray:#666;
-  --border:#e0e0e0;
-  --card-bg:rgba(255,255,255,0.95);
-  --radius:12px;
-  --shadow:0 4px 12px rgba(0,0,0,0.1);
-}
-
-*{box-sizing:border-box;margin:0;padding:0}
-
-.page-container{
-  max-width:1400px;
-  margin:24px auto;
-  padding:20px;
-  width:100%;
-  overflow-x:auto;
-}
-
-.page-title{
-  font-family:'Outfit',sans-serif;
-  font-size:1.9rem;
-  font-weight:700
-}
-
-.page-subtitle{
-  color:var(--gray);
-  margin-bottom:18px
-}
-
-.filters-bar{
-  background:var(--card-bg);
-  box-shadow:var(--shadow);
-  border-radius:var(--radius);
-  padding:14px 16px;
-  margin-bottom:20px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:16px
-}
-
-.filter-group{
-  flex:1;
-  min-width:180px;
-  display:flex;
-  flex-direction:column
-}
-
-.filter-label{
-  font-size:.8rem;
-  color:var(--gray);
-  margin-bottom:6px;
-  font-weight:600
-}
-
-.filter-select{
-  padding:10px 12px;
-  border-radius:8px;
-  border:1px solid var(--border);
-  background:var(--card-bg);
-  font-size:.95rem;
-  box-shadow:var(--shadow)
-}
-
-.table-container{
-  background:var(--card-bg);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  overflow:hidden;
-  margin-bottom:22px;
-  overflow-x:auto;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:650px;
-}
-
-thead{
-  background:rgba(0,0,0,0.04)
-}
-
-th{
-  padding:14px 16px;
-  text-align:left;
-  font-weight:600;
-  font-size:.95rem;
-  border-bottom:1px solid var(--border)
-}
-
-td{
-  padding:12px 16px;
-  font-size:.95rem;
-  border-bottom:1px solid var(--border);
-  vertical-align:middle
-}
-
-tr:hover{
-  background:rgba(0,0,0,0.03)
-}
-
-.user-info{
-  display:flex;
-  align-items:center;
-  gap:12px
-}
-
-.avatar{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  background:#000;
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:700
-}
-
-.status{
-  padding:6px 14px;
-  border-radius:25px;
-  font-size:.75rem;
-  font-weight:700;
-  display:inline-block
-}
-
-.status-new{background:#fff3f3;color:#b71c1c}
-.status-read{background:#eaf4ff;color:#054a9b}
-.status-replied{background:#e9fbef;color:#0f7a47}
-
-.actions{
-  display:flex;
-  gap:8px
-}
-
-.action-btn{
-  width:38px;
-  height:38px;
-  border-radius:10px;
-  background:rgba(0,0,0,0.06);
-  border:none;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:all .14s
-}
-
-.action-btn:hover{
-  transform:translateY(-3px);
-  background:rgba(0,0,0,0.12)
-}
-
-.mobile-cards{
-  display:none;
-  flex-direction:column;
-  gap:14px
-}
-
-.card{
-  background:var(--card-bg);
-  padding:16px;
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  display:flex;
-  flex-direction:column;
-  gap:10px
-}
-
-.card-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center
-}
-
-.card .meta{
-  color:var(--gray);
-  font-size:.85rem
-}
-
-.modal{
-  position:fixed;
-  inset:0;
-  display:none;
-  background:rgba(0,0,0,0.45);
-  backdrop-filter:blur(4px);
-  align-items:center;
-  justify-content:center;
-  z-index:1200;
-  padding:20px;
-}
-
-.modal-content{
-  background:var(--card-bg);
-  width:100%;
-  max-width:520px;
-  border-radius:var(--radius);
-  overflow:hidden;
-  box-shadow:var(--shadow);
-  animation:pop .2s ease;
-  max-height:90vh;
-  overflow-y:auto;
-}
-
-@keyframes pop{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:none}
-}
-
-.modal-header{
-  padding:16px;
-  background:#000;
-  color:#fff;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  position:sticky;
-  top:0;
-  z-index:10;
-}
-
-.modal-body{
-  padding:18px
-}
-
-.detail-label{
-  font-size:.8rem;
-  color:var(--gray);
-  margin-bottom:6px;
-  font-weight:600
-}
-
-.detail-value{
-  background:rgba(0,0,0,0.04);
-  padding:12px;
-  border-radius:10px;
-  margin-bottom:12px;
-  word-break:break-word;
-}
-
-.message-box{
-  min-height:120px;
-  max-height:200px;
-  overflow:auto;
-  white-space:pre-wrap;
-  word-break:break-word;
-}
-
-.modal-footer{
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  padding:14px;
-  border-top:1px solid var(--border);
-  position:sticky;
-  bottom:0;
-  background:var(--card-bg);
-}
-
-.btn{
-  padding:9px 16px;
-  border-radius:10px;
-  border:none;
-  cursor:pointer;
-  font-weight:700;
-  font-size:14px;
-}
-
-.btn-primary{background:#000;color:#fff}
-.btn-secondary{background:rgba(0,0,0,0.07)}
-
-.toast{
-  position:fixed;
-  right:20px;
-  bottom:20px;
-  background:var(--card-bg);
-  padding:12px 16px;
-  border-radius:12px;
-  box-shadow:var(--shadow);
-  display:flex;
-  gap:10px;
-  align-items:center;
-  transform:translateY(24px);
-  opacity:0;
-  transition:.25s;
-  z-index:1300;
-  max-width:300px;
-  word-break:break-word;
-}
-
-.toast.show{
-  transform:none;
-  opacity:1
-}
-
-/* RESPONSIVE DESIGN */
-@media(max-width:1024px){
-  .table-container{
-    display:none !important;
-  }
-
-  .mobile-cards{
-    display:flex;
-  }
-  
-  .filters-bar{
-    flex-direction:column;
-  }
-  
-  .filter-group{
-    min-width:100%;
-  }
-}
-
-@media(max-width:768px){
-  .page-container{
-    padding:12px;
-    margin:16px auto;
-  }
-  
-  .page-title{
-    font-size:1.6rem;
-  }
-  
-  .modal{
-    padding:10px;
-  }
-  
-  .modal-content{
-    max-height:95vh;
-  }
-  
-  .modal-body{
-    padding:14px;
-  }
-  
-  .modal-footer{
-    flex-direction:column;
-  }
-  
-  .btn{
-    width:100%;
-    text-align:center;
-  }
-  
-  .filters-bar{
-    padding:12px;
-  }
-}
-
-@media(max-width:480px){
-  .page-container{
-    padding:8px;
-    margin:12px auto;
-  }
-  
-  .page-title{
-    font-size:1.4rem;
-  }
-  
-  .page-subtitle{
-    font-size:0.9rem;
-  }
-  
-  .card{
-    padding:12px;
-  }
-  
-  .user-info{
-    gap:8px;
-  }
-  
-  .avatar{
-    width:32px;
-    height:32px;
-    font-size:0.8rem;
-  }
-  
-  .actions{
-    gap:6px;
-  }
-  
-  .action-btn{
-    width:32px;
-    height:32px;
-    font-size:0.8rem;
-  }
-  
-  .modal{
-    padding:5px;
-  }
-  
-  .modal-header{
-    padding:12px;
-    font-size:0.9rem;
-  }
-  
-  .modal-body{
-    padding:12px;
-  }
-  
-  .detail-value{
-    padding:10px;
-    font-size:0.9rem;
-  }
-  
-  .message-box{
-    max-height:150px;
-    font-size:0.9rem;
-  }
-  
-  .toast{
-    right:10px;
-    left:10px;
-    bottom:10px;
-    max-width:none;
-  }
-}
-
-/* Fix for mobile cards duplicate issue */
-.mobile-cards .card {
-  display: flex !important;
-}
-
-.table-container table {
-  display: table !important;
-}
-
-/* Ensure proper hiding on different screens */
-@media(max-width:1024px){
-  .table-container{
-    display:none;
-  }
-  
-  .mobile-cards{
-    display:flex;
-  }
-}
-
-@media(min-width:1025px){
-  .table-container{
-    display:block;
-  }
-  
-  .mobile-cards{
-    display:none;
-  }
-}
-</style>
-
-<div class="page-container fade-in">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-    <div style="flex:1;min-width:250px;">
-      <div class="page-title">Contact Submissions</div>
-      <div class="page-subtitle">Manage and respond to customer inquiries</div>
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button id="manual-refresh" style="padding:8px 16px;background:#f5f5f5;color:#333;border:1px solid #ddd;border-radius:5px;cursor:pointer;font-size:14px;white-space:nowrap;">
-        <i class="fas fa-sync-alt"></i> Refresh
-      </button>
-      <button id="testDataBtn" style="padding:8px 16px;background:#000;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;white-space:nowrap;">
-        Add Test Data
-      </button>
-    </div>
-  </div>
-
-  <div class="filters-bar">
-    <div class="filter-group">
-      <div class="filter-label">Status</div>
-      <select id="status-filter" class="filter-select">
-        <option value="all">All</option>
-        <option value="new">New</option>
-        <option value="read">Read</option>
-        <option value="replied">Replied</option>
-      </select>
-    </div>
-    <div class="filter-group">
-      <div class="filter-label">Date Range</div>
-      <select id="date-filter" class="filter-select">
-        <option value="all">All Time</option>
-        <option value="today">Today</option>
-        <option value="week">This Week</option>
-        <option value="month">This Month</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Desktop Table -->
-  <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>Contact</th>
-          <th>Subject</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th style="width:140px">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="submissions-table-body">
-        <tr>
-          <td colspan="5" style="text-align:center;padding:40px;color:#666;">
-            <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
-            <p>Loading messages...</p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Mobile Cards -->
-  <div id="mobile-cards" class="mobile-cards">
-    <div class="card" style="text-align:center;padding:30px;">
-      <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:10px;"></i>
-      <p>Loading messages...</p>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div id="submission-modal" class="modal" role="dialog" aria-modal="true">
-  <div class="modal-content">
-    <div class="modal-header">
-      <div style="font-weight:600;">Message Details</div>
-      <button id="close-modal" class="btn-secondary btn" style="min-width:auto;padding:8px;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="detail-label">Name</div>
-      <div id="detail-name" class="detail-value">-</div>
-
-      <div class="detail-label">Email</div>
-      <div id="detail-email" class="detail-value">-</div>
-
-      <div class="detail-label">Phone</div>
-      <div id="detail-phone" class="detail-value">-</div>
-
-      <div class="detail-label">Subject</div>
-      <div id="detail-subject" class="detail-value">-</div>
-
-      <div class="detail-label">Status</div>
-      <div id="detail-status" class="detail-value">-</div>
-
-      <div class="detail-label">Message</div>
-      <div id="detail-message" class="detail-value message-box">-</div>
-    </div>
-
-    <div class="modal-footer">
-      <button id="close-modal-2" class="btn-secondary btn">Close</button>
-      <button id="gmail-reply-btn" class="btn btn-secondary">Reply via Gmail</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast" class="toast">
-  <i class="fas fa-check-circle"></i>
-  <div id="toast-message">Updated</div>
-</div>
-
-<script src="activityLogger.js?v=1"></script>
-
-
-<script>
-(function () {
-let messagesListener = null;
-
-function cleanupMessages() {
-  if (messagesListener) {
-    messagesListener();
-    messagesListener = null;
-  }
-}
-
-  if (window.__CONTACT_FIXED__) return;
-  window.__CONTACT_FIXED__ = true;
-
-  const enquiryActivityCache = new Set();
-
-  function escape(s){
-    return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))
-  }
-
-  function logActivity(type,msg,id=null){
-    if(!window.db) return;
-    const key = type+"_"+id;
-    if(enquiryActivityCache.has(key)) return;
-    enquiryActivityCache.add(key);
-    window.db.collection("activities").add({
-      type,message:msg,refId:id,
-      time:firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
-
-  function parseTs(x){
-    try{
-      if(!x) return null;
-      if(x.toDate) return x.toDate();
-      if(x.seconds) return new Date(x.seconds*1000);
-      if(typeof x==="number") return new Date(x);
-      return new Date(x);
-    }catch{ return null; }
-  }
-
-  // FIX: SIMPLIFIED INIT - NO COMPLEX WAITING
-  function initMessages() {
-    // Wait for Firebase to be ready
-    if (!window.firebase || !firebase.firestore) {
-      setTimeout(initMessages, 100);
-      return;
-    }
-
-    // Set db reference
-    if (!window.db) {
-      window.db = firebase.firestore();
-    }
-
-    startMessages();
-  }
-
-  function startMessages() {
-    const T = document.getElementById("submissions-table-body");
-    const C = document.getElementById("mobile-cards");
-    const M = document.getElementById("submission-modal");
-
-    if(!T) {
-      console.error('Table element not found');
-      return;
-    }
-
-    const statusFilter = document.getElementById("status-filter");
-    const dateFilter = document.getElementById("date-filter");
-    const manualRefresh = document.getElementById("manual-refresh");
-    const testBtn = document.getElementById("testDataBtn");
-    const replyBtn = document.getElementById("gmail-reply-btn");
-
-    let data = [];
-    let currentId = null;
-
-    function showLoading(){
-      T.innerHTML = `
-        <tr><td colspan="5" style="text-align:center;padding:40px;">
-        <i class="fas fa-spinner fa-spin"></i>
-        <p>Loading messages...</p>
-        </td></tr>`;
-      if (C) {
-        C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>
-          <i class='fas fa-spinner fa-spin'></i>
-          <p>Loading messages...</p>
-        </div>`;
-      }
-    }
-
-    function showEmpty(){
-      T.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;">No messages found</td></tr>`;
-      if (C) {
-        C.innerHTML = `<div class='card' style='text-align:center;padding:30px;'>No messages found</div>`;
-      }
-    }
-
-    function showError(message){
-      T.innerHTML = `
-        <tr><td colspan="5" style="text-align:center;padding:40px;color:#ef4444;">
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>${message}</p>
-        </td></tr>`;
-      if (C) {
-        C.innerHTML = `<div class='card' style='text-align:center;padding:30px;color:#ef4444;'>
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>${message}</p>
-        </div>`;
-      }
-    }
-
-    function applyFilters(){
-      let list = [...data];
-      const st = statusFilter ? statusFilter.value : 'all';
-      const dv = dateFilter ? dateFilter.value : 'all';
-
-      if(st !== "all") list = list.filter(x => x.status === st);
-
-      if(dv !== "all"){
-        const now = new Date();
-        let s = null;
-        if(dv === "today") s = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        if(dv === "week") s = new Date(now.getTime() - 7 * 864e5);
-        if(dv === "month") s = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        if(s) list = list.filter(x => x.timestamp && x.timestamp >= s);
-      }
-
-      render(list);
-    }
-
-    function render(list){
-      if(!list.length) return showEmpty();
-
-      // TABLE
-      T.innerHTML = list.map(x => `
-        <tr>
-          <td>
-            <div class="user-info">
-              <div class="avatar">${(x.name||"?")[0].toUpperCase()}</div>
-              <div>
-                <div style="font-weight:600">${escape(x.name)}</div>
-                <div style="font-size:.8rem;color:#666">${escape(x.email)}</div>
-              </div>
-            </div>
-          </td>
-          <td>${escape(x.subject.length > 50 ? x.subject.slice(0,50) + "..." : x.subject)}</td>
-          <td>${(x.timestamp ? new Date(x.timestamp).toLocaleString("en-IN") : "-")}</td>
-          <td><span class="status status-${escape(x.status)}">${x.status[0].toUpperCase() + x.status.slice(1)}</span></td>
-          <td>
-            <div class="actions">
-              <button class="action-btn v" data-id="${x.id}" title="View"><i class="fas fa-eye"></i></button>
-              <button class="action-btn r" data-id="${x.id}" title="Reply"><i class="fas fa-reply"></i></button>
-              <button class="action-btn d" data-id="${x.id}" title="Delete"><i class="fas fa-trash"></i></button>
-            </div>
-          </td>
-        </tr>
-      `).join("");
-
-      // MOBILE CARDS
-      if (C) {
-        C.innerHTML = list.map(x => `
-          <div class="card">
-            <div class="card-row">
-              <div class="user-info">
-                <div class="avatar">${(x.name||"?")[0].toUpperCase()}</div>
-                <div>
-                  <div style="font-weight:600">${escape(x.name)}</div>
-                  <div style="font-size:.8rem;color:#666">${escape(x.email)}</div>
-                </div>
-              </div>
-              <span class="status status-${escape(x.status)}">${x.status[0].toUpperCase() + x.status.slice(1)}</span>
-            </div>
-            <div style="font-weight:500;margin:8px 0;">${escape(x.subject)}</div>
-            <div style="font-size:.8rem;color:#666">${(x.timestamp ? new Date(x.timestamp).toLocaleString("en-IN") : "-")}</div>
-            <div class="card-row" style="justify-content:flex-end;margin-top:10px;">
-              <button class="action-btn v" data-id="${x.id}" title="View"><i class="fas fa-eye"></i></button>
-              <button class="action-btn r" data-id="${x.id}" title="Reply"><i class="fas fa-reply"></i></button>
-              <button class="action-btn d" data-id="${x.id}" title="Delete"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>
-        `).join("");
-      }
-    }
-
-    function openMessage(id){
-      const x = data.find(a => a.id === id);
-      if(!x) return;
-
-      currentId = id;
-
-      document.getElementById("detail-name").textContent = x.name || "-";
-      document.getElementById("detail-email").textContent = x.email || "-";
-      document.getElementById("detail-phone").textContent = x.phone || "-";
-      document.getElementById("detail-subject").textContent = x.subject || "-";
-      document.getElementById("detail-status").textContent = x.status || "-";
-      document.getElementById("detail-message").textContent = x.message || "-";
-
-      M.style.display = "flex";
-
-      if(x.status === "new"){
-        setStatus(id, "read");
-        logActivity("ENQUIRY_READ", `Opened by admin — ${x.name}`, id);
-      }
-    }
-
-    function sendReply(id){
-      const x = data.find(a => a.id === id);
-      if(!x) return;
-
-      setStatus(id, "replied");
-      logActivity("ENQUIRY_REPLIED", `Replied to ${x.name}`, id);
-
-      const dateStr = x.timestamp
-        ? new Date(x.timestamp).toLocaleString("en-IN")
-        : "";
-
-      const emailBody =
-`Hi ${x.name},
-
-Thanks for reaching out.
-[Your reply message goes here — clear, short, direct.]
-
-Let me know if you need anything else.
-
-On ${dateStr}, ${x.name} wrote:
-
-${x.message}
-`;
-
-      const url =
-        "https://mail.google.com/mail/?view=cm&fs=1" +
-        `&to=${encodeURIComponent(x.email)}` +
-        `&su=${encodeURIComponent("Re: " + x.subject)}` +
-        `&body=${encodeURIComponent(emailBody)}`;
-
-      window.open(url, "_blank", "noopener");
-    }
-
-    function deleteMsg(id){
-      const x = data.find(a => a.id === id);
-      if(!x) return;
-      if(!confirm("Delete this message?")) return;
-
-      logActivity("ENQUIRY_DELETED", `Deleted ${x.name}`, id);
-
-      window.db.collection("contactSubmissions").doc(id).delete()
-        .then(load)
-        .catch(error => {
-          console.error('Delete error:', error);
-          alert('Error deleting message');
-        });
-    }
-
-    function setStatus(id, st){
-      window.db.collection("contactSubmissions")
-        .doc(id)
-        .update({
-          status: st,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        })
-        .then(load)
-        .catch(error => {
-          console.error('Status update error:', error);
-        });
-    }
-
-    function load(){
-      showLoading();
-
-      // Cleanup previous listener
-      cleanupMessages();
-
-      try {
-        messagesListener = window.db.collection("contactSubmissions")
-          .orderBy("timestamp", "desc")
-          .limit(100)
-          .onSnapshot(
-            snap => {
-              data = snap.docs.map(d => {
-                const v = d.data() || {};
-                return {
-                  id: d.id,
-                  name: v.name || "",
-                  email: v.email || "",
-                  phone: v.phone || "",
-                  subject: v.subject || "",
-                  message: v.message || "",
-                  status: v.status || "new",
-                  timestamp: parseTs(v.timestamp)
-                }
-              });
-              applyFilters();
-            }, 
-            error => {
-              console.error('Messages load error:', error);
-              showError('Failed to load messages. Please refresh the page.');
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f172a;
+            --secondary: #ffffff;
+            --accent: #22c55e;
+            --muted: #64748b;
+            --border: rgba(15, 23, 42, 0.12);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.18);
+            --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            color: var(--primary);
+        }
+
+        .messages-container {
+            padding: 20px;
+            min-height: 100vh;
+            background: transparent;
+        }
+
+        .messages-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-text h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .header-text p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--secondary);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--secondary);
+            border-color: var(--primary);
+        }
+
+        .filters-section {
+            background: var(--secondary);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 180px;
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .filter-select {
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .messages-content {
+            background: var(--secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .messages-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .messages-table thead {
+            background: rgba(15, 23, 42, 0.03);
+        }
+
+        .messages-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .messages-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .messages-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .messages-table tbody tr:hover {
+            background: rgba(15, 23, 42, 0.02);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .user-email {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .status-new {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .status-read {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #dbeafe;
+        }
+
+        .status-replied {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #dcfce7;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: var(--primary);
+        }
+
+        .action-btn:hover {
+            background: rgba(15, 23, 42, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .mobile-cards {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .message-card {
+            background: var(--secondary);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .card-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-content {
+            margin-bottom: 12px;
+        }
+
+        .card-subject {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .card-date {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .card-message {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: var(--primary);
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .detail-group {
+            margin-bottom: 16px;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .detail-value {
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.02);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .message-content {
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .loading-spinner {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #dc2626;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 1024px) {
+            .table-container {
+                display: none;
             }
-          );
-      } catch (error) {
-        console.error('Listener setup error:', error);
-        showError('Error setting up messages listener.');
-      }
-    }
+            .mobile-cards {
+                display: flex;
+            }
+        }
 
-    // Event handlers
-    if (T) {
-      T.onclick = e => {
-        const btn = e.target.closest("button");
-        if(!btn) return;
-        const id = btn.dataset.id;
-        if(btn.classList.contains("v")) openMessage(id);
-        if(btn.classList.contains("r")) sendReply(id);
-        if(btn.classList.contains("d")) deleteMsg(id);
-      };
-    }
+        @media (max-width: 768px) {
+            .messages-container {
+                padding: 16px;
+            }
+            .messages-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .filters-section {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .filter-group {
+                min-width: 100%;
+            }
+            .modal {
+                margin: 10px;
+            }
+        }
 
-    if (C) {
-      C.onclick = T.onclick;
-    }
+        @media (max-width: 480px) {
+            .messages-container {
+                padding: 12px;
+            }
+            .header-text h1 {
+                font-size: 1.5rem;
+            }
+            .btn {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+            .modal-header,
+            .modal-body,
+            .modal-footer {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="messages-container">
+        <!-- Header -->
+        <div class="messages-header">
+            <div class="header-text">
+                <h1>Contact Messages</h1>
+                <p>Manage and respond to customer inquiries</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+                <button class="btn btn-primary" id="testDataBtn">
+                    <i class="fas fa-plus"></i>
+                    Add Test Data
+                </button>
+            </div>
+        </div>
 
-    if (manualRefresh) {
-      manualRefresh.onclick = load;
-    }
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="new">New</option>
+                    <option value="read">Read</option>
+                    <option value="replied">Replied</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Date Range</label>
+                <select class="filter-select" id="dateFilter">
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+            </div>
+        </div>
 
-    if (testBtn) {
-      testBtn.onclick = () => {
-        window.db.collection("contactSubmissions").add({
-          name: "Demo User",
-          email: "demo@example.com",
-          phone: "1234567890",
-          subject: "Test message",
-          message: "This is a test message from the admin panel.",
-          status: "new",
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(load).catch(error => {
-          console.error('Test data error:', error);
-          alert('Error creating test message');
+        <!-- Messages Content -->
+        <div class="messages-content">
+            <!-- Desktop Table -->
+            <div class="table-container">
+                <table class="messages-table">
+                    <thead>
+                        <tr>
+                            <th>Contact</th>
+                            <th>Subject</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th style="width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messagesTableBody">
+                        <tr>
+                            <td colspan="5">
+                                <div class="loading-state">
+                                    <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                    <p>Loading messages...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="mobile-cards" id="mobileCards">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                    <p>Loading messages...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Detail Modal -->
+    <div class="modal-overlay" id="messageModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Message Details</h2>
+                <button class="action-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-group">
+                    <div class="detail-label">Name</div>
+                    <div class="detail-value" id="detailName">-</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value" id="detailEmail">-</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Phone</div>
+                    <div class="detail-value" id="detailPhone">-</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Subject</div>
+                    <div class="detail-value" id="detailSubject">-</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value" id="detailStatus">-</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">Message</div>
+                    <div class="detail-value message-content" id="detailMessage">-</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="closeModalBtn">Close</button>
+                <button class="btn btn-primary" id="replyBtn">
+                    <i class="fas fa-reply"></i>
+                    Reply via Gmail
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+            authDomain: "hexahoney-96aed.firebaseapp.com",
+            projectId: "hexahoney-96aed",
+            storageBucket: "hexahoney-96aed.firebasestorage.app",
+            messagingSenderId: "700458850837",
+            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+            measurementId: "G-MQGKK9709H"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // Messages Manager
+        class MessagesManager {
+            constructor() {
+                this.messages = [];
+                this.filteredMessages = [];
+                this.currentMessageId = null;
+                this.listener = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadMessages();
+            }
+
+            bindEvents() {
+                // Refresh button
+                document.getElementById('refreshBtn').addEventListener('click', () => {
+                    this.loadMessages();
+                });
+
+                // Test data button
+                document.getElementById('testDataBtn').addEventListener('click', () => {
+                    this.createTestMessage();
+                });
+
+                // Filters
+                document.getElementById('statusFilter').addEventListener('change', () => {
+                    this.applyFilters();
+                });
+
+                document.getElementById('dateFilter').addEventListener('change', () => {
+                    this.applyFilters();
+                });
+
+                // Modal
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    this.closeModal();
+                });
+
+                document.getElementById('closeModalBtn').addEventListener('click', () => {
+                    this.closeModal();
+                });
+
+                document.getElementById('replyBtn').addEventListener('click', () => {
+                    this.replyToMessage();
+                });
+
+                // Close modal when clicking outside
+                document.getElementById('messageModal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) {
+                        this.closeModal();
+                    }
+                });
+            }
+
+            loadMessages() {
+                this.showLoading();
+
+                // Clean up previous listener
+                if (this.listener) {
+                    this.listener();
+                }
+
+                this.listener = db.collection('contactSubmissions')
+                    .orderBy('timestamp', 'desc')
+                    .limit(100)
+                    .onSnapshot(
+                        (snapshot) => {
+                            this.messages = snapshot.docs.map(doc => {
+                                const data = doc.data();
+                                return {
+                                    id: doc.id,
+                                    name: data.name || 'Unknown',
+                                    email: data.email || '',
+                                    phone: data.phone || '',
+                                    subject: data.subject || 'No Subject',
+                                    message: data.message || '',
+                                    status: data.status || 'new',
+                                    timestamp: data.timestamp?.toDate() || new Date()
+                                };
+                            });
+                            this.applyFilters();
+                        },
+                        (error) => {
+                            console.error('Error loading messages:', error);
+                            this.showError('Failed to load messages. Please check your connection.');
+                        }
+                    );
+            }
+
+            applyFilters() {
+                const statusFilter = document.getElementById('statusFilter').value;
+                const dateFilter = document.getElementById('dateFilter').value;
+
+                let filtered = [...this.messages];
+
+                // Status filter
+                if (statusFilter !== 'all') {
+                    filtered = filtered.filter(msg => msg.status === statusFilter);
+                }
+
+                // Date filter
+                if (dateFilter !== 'all') {
+                    const now = new Date();
+                    let startDate = new Date();
+
+                    switch (dateFilter) {
+                        case 'today':
+                            startDate.setHours(0, 0, 0, 0);
+                            break;
+                        case 'week':
+                            startDate.setDate(now.getDate() - 7);
+                            break;
+                        case 'month':
+                            startDate.setMonth(now.getMonth() - 1);
+                            break;
+                    }
+
+                    filtered = filtered.filter(msg => msg.timestamp >= startDate);
+                }
+
+                this.filteredMessages = filtered;
+                this.renderMessages();
+            }
+
+            renderMessages() {
+                const tableBody = document.getElementById('messagesTableBody');
+                const mobileCards = document.getElementById('mobileCards');
+
+                if (this.filteredMessages.length === 0) {
+                    this.showEmpty();
+                    return;
+                }
+
+                // Render table
+                tableBody.innerHTML = this.filteredMessages.map(message => this.renderTableRow(message)).join('');
+
+                // Render mobile cards
+                mobileCards.innerHTML = this.filteredMessages.map(message => this.renderMobileCard(message)).join('');
+
+                // Add event listeners to action buttons
+                this.bindActionButtons();
+            }
+
+            renderTableRow(message) {
+                const date = message.timestamp.toLocaleDateString('en-IN');
+                const time = message.timestamp.toLocaleTimeString('en-IN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    ${message.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="user-details">
+                                    <div class="user-name">${this.escapeHtml(message.name)}</div>
+                                    <div class="user-email">${this.escapeHtml(message.email)}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${this.escapeHtml(message.subject)}</td>
+                        <td>${date}<br><small>${time}</small></td>
+                        <td>
+                            <span class="status-badge status-${message.status}">
+                                ${message.status}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn view-btn" data-id="${message.id}" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="action-btn reply-btn" data-id="${message.id}" title="Reply">
+                                    <i class="fas fa-reply"></i>
+                                </button>
+                                <button class="action-btn delete-btn" data-id="${message.id}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            renderMobileCard(message) {
+                const date = message.timestamp.toLocaleDateString('en-IN');
+                const time = message.timestamp.toLocaleTimeString('en-IN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+
+                return `
+                    <div class="message-card">
+                        <div class="card-header">
+                            <div class="card-user">
+                                <div class="user-avatar">
+                                    ${message.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="user-name">${this.escapeHtml(message.name)}</div>
+                                    <div class="user-email">${this.escapeHtml(message.email)}</div>
+                                </div>
+                            </div>
+                            <span class="status-badge status-${message.status}">
+                                ${message.status}
+                            </span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-subject">${this.escapeHtml(message.subject)}</div>
+                            <div class="card-date">${date} at ${time}</div>
+                            <div class="card-message">
+                                ${this.escapeHtml(message.message.substring(0, 100))}${message.message.length > 100 ? '...' : ''}
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn view-btn" data-id="${message.id}" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn reply-btn" data-id="${message.id}" title="Reply">
+                                <i class="fas fa-reply"></i>
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${message.id}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            bindActionButtons() {
+                // View buttons
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const messageId = e.currentTarget.getAttribute('data-id');
+                        this.viewMessage(messageId);
+                    });
+                });
+
+                // Reply buttons
+                document.querySelectorAll('.reply-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const messageId = e.currentTarget.getAttribute('data-id');
+                        this.replyToMessage(messageId);
+                    });
+                });
+
+                // Delete buttons
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const messageId = e.currentTarget.getAttribute('data-id');
+                        this.deleteMessage(messageId);
+                    });
+                });
+            }
+
+            viewMessage(messageId) {
+                const message = this.messages.find(msg => msg.id === messageId);
+                if (!message) return;
+
+                this.currentMessageId = messageId;
+
+                // Update modal content
+                document.getElementById('detailName').textContent = message.name;
+                document.getElementById('detailEmail').textContent = message.email;
+                document.getElementById('detailPhone').textContent = message.phone || 'Not provided';
+                document.getElementById('detailSubject').textContent = message.subject;
+                document.getElementById('detailStatus').textContent = message.status;
+                document.getElementById('detailMessage').textContent = message.message;
+
+                // Show modal
+                document.getElementById('messageModal').classList.add('show');
+
+                // Update status to "read" if it's new
+                if (message.status === 'new') {
+                    this.updateMessageStatus(messageId, 'read');
+                }
+            }
+
+            replyToMessage(messageId = null) {
+                const id = messageId || this.currentMessageId;
+                const message = this.messages.find(msg => msg.id === id);
+                if (!message) return;
+
+                // Update status to "replied"
+                this.updateMessageStatus(id, 'replied');
+
+                // Create Gmail compose URL
+                const subject = `Re: ${message.subject}`;
+                const body = `Hi ${message.name},\n\nThank you for your message. We have received your inquiry and will get back to you shortly.\n\nBest regards,\nNatura Honey Team\n\nOriginal message:\n${message.message}`;
+
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(message.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                
+                window.open(gmailUrl, '_blank');
+                this.closeModal();
+            }
+
+            deleteMessage(messageId) {
+                const message = this.messages.find(msg => msg.id === messageId);
+                if (!message) return;
+
+                if (confirm(`Are you sure you want to delete the message from ${message.name}?`)) {
+                    db.collection('contactSubmissions').doc(messageId).delete()
+                        .then(() => {
+                            console.log('Message deleted successfully');
+                        })
+                        .catch((error) => {
+                            console.error('Error deleting message:', error);
+                            alert('Error deleting message. Please try again.');
+                        });
+                }
+            }
+
+            updateMessageStatus(messageId, newStatus) {
+                db.collection('contactSubmissions').doc(messageId).update({
+                    status: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch((error) => {
+                    console.error('Error updating status:', error);
+                });
+            }
+
+            createTestMessage() {
+                const testMessage = {
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    phone: '+91 9876543210',
+                    subject: 'Test Message from Admin',
+                    message: 'This is a test message created from the admin panel to verify that the messages system is working correctly.',
+                    status: 'new',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                db.collection('contactSubmissions').add(testMessage)
+                    .then(() => {
+                        console.log('Test message created successfully');
+                    })
+                    .catch((error) => {
+                        console.error('Error creating test message:', error);
+                        alert('Error creating test message. Please try again.');
+                    });
+            }
+
+            closeModal() {
+                document.getElementById('messageModal').classList.remove('show');
+                this.currentMessageId = null;
+            }
+
+            showLoading() {
+                const tableBody = document.getElementById('messagesTableBody');
+                const mobileCards = document.getElementById('mobileCards');
+
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                <p>Loading messages...</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                mobileCards.innerHTML = `
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                        <p>Loading messages...</p>
+                    </div>
+                `;
+            }
+
+            showEmpty() {
+                const tableBody = document.getElementById('messagesTableBody');
+                const mobileCards = document.getElementById('mobileCards');
+
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox empty-icon"></i>
+                                <p>No messages found</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                mobileCards.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox empty-icon"></i>
+                        <p>No messages found</p>
+                    </div>
+                `;
+            }
+
+            showError(message) {
+                const tableBody = document.getElementById('messagesTableBody');
+                const mobileCards = document.getElementById('mobileCards');
+
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="error-state">
+                                <i class="fas fa-exclamation-triangle error-icon"></i>
+                                <p>${message}</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                mobileCards.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-triangle error-icon"></i>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            cleanup() {
+                if (this.listener) {
+                    this.listener();
+                }
+            }
+        }
+
+        // Initialize the messages manager when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.messagesManager = new MessagesManager();
         });
-      };
-    }
 
-    if (replyBtn) {
-      replyBtn.onclick = () => {
-        if (currentId) sendReply(currentId);
-      };
-    }
-
-    const closeModal1 = document.getElementById("close-modal");
-    const closeModal2 = document.getElementById("close-modal-2");
-    
-    if (closeModal1) closeModal1.onclick = () => M.style.display = "none";
-    if (closeModal2) closeModal2.onclick = () => M.style.display = "none";
-
-    if (M) {
-      M.onclick = e => {
-        if(e.target === M) M.style.display = "none";
-      };
-    }
-
-    if (statusFilter) {
-      statusFilter.onchange = applyFilters;
-    }
-
-    if (dateFilter) {
-      dateFilter.onchange = applyFilters;
-    }
-
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', cleanupMessages);
-
-    // Start loading
-    load();
-  }
-
-  // Initialize when page loads
-  document.addEventListener('DOMContentLoaded', function() {
-    initMessages();
-  });
-
-})();
-</script>
+        // Cleanup when leaving the page
+        window.addEventListener('beforeunload', () => {
+            if (window.messagesManager) {
+                window.messagesManager.cleanup();
+            }
+        });
+    </script>
