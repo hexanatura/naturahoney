@@ -852,6 +852,18 @@ body {
     width: 100%;
 }
 
+.menu-count {
+    background: #dc2626;
+    color: #fff;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-left: auto;
+    display: none; /* hidden when empty */
+}
+
+
 .reviews-title {
     font-family: 'Outfit', sans-serif;
     font-size: 1.25rem;
@@ -1322,22 +1334,24 @@ body {
                     <div class="menu-icon"><i class="fas fa-home"></i></div>
                     <div class="menu-text">Dashboard</div>
                 </div>
-                <div class="menu-item">
-                    <div class="menu-icon"><i class="fas fa-shopping-bag"></i></div>
-                    <div class="menu-text">Orders</div>
-                </div>
-                <div class="menu-item">
-                    <div class="menu-icon"><i class="fas fa-users"></i></div>
-                    <div class="menu-text">Customers</div>
-                </div>
-                <div class="menu-item">
-                    <div class="menu-icon"><i class="fas fa-envelope"></i></div>
-                    <div class="menu-text">Messages</div>
-                </div>
-                <div class="menu-item">
-                    <div class="menu-icon"><i class="fas fa-tags"></i></div>
-                    <div class="menu-text">Promo Codes</div>
-                </div>
+                <div class="menu-item" id="menuOrders">
+    <div class="menu-icon"><i class="fas fa-shopping-bag"></i></div>
+    <div class="menu-text">Orders</div>
+    <span class="menu-count" id="countOrders"></span>
+</div>
+
+<div class="menu-item" id="menuCustomers">
+    <div class="menu-icon"><i class="fas fa-users"></i></div>
+    <div class="menu-text">Customers</div>
+    <span class="menu-count" id="countCustomers"></span>
+</div>
+
+<div class="menu-item" id="menuMessages">
+    <div class="menu-icon"><i class="fas fa-envelope"></i></div>
+    <div class="menu-text">Messages</div>
+    <span class="menu-count" id="countMessages"></span>
+</div>
+
                 <div class="menu-item">
                     <div class="menu-icon"><i class="fas fa-cog"></i></div>
                     <div class="menu-text">Settings</div>
@@ -2208,6 +2222,35 @@ function loadPromoPage()    { loadHTML("promo-codes.html"); }
         if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
         if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileMenu);
     }
+    
+    function updateBadge(el, count) {
+    if (!el) return;
+    if (count > 0) {
+        el.style.display = "inline-block";
+        el.textContent = count;
+    } else {
+        el.style.display = "none";
+        el.textContent = "";
+    }
+}
+
+function initMenuCounts() {
+    // Orders
+    db.collection("orders").onSnapshot(snap => {
+        updateBadge(document.getElementById("countOrders"), snap.size);
+    });
+
+    // Customers
+    db.collection("users").onSnapshot(snap => {
+        updateBadge(document.getElementById("countCustomers"), snap.size);
+    });
+
+    // Messages
+    db.collection("contactSubmissions").onSnapshot(snap => {
+        updateBadge(document.getElementById("countMessages"), snap.size);
+    });
+}
+
 
     // ------------------------------
     // MENU CLICK EVENTS
@@ -2220,26 +2263,26 @@ function loadPromoPage()    { loadHTML("promo-codes.html"); }
                 menuItems.forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
 
-                switch(menuText) {
-                    case 'Dashboard':
-                        showDashboard();
-                        break;
-                    case 'Messages':
-                        loadMessagesPage();
-                        break;
-                    case 'Promo Codes':
-                        loadPromoPage();
-                        break;
-                    case 'Orders':
-                        loadOrdersPage();
-                        break;
-                    case 'Customers':
-                        loadCustomersPage();
-                        break;
-                    default:
-                        showDashboard();
-                        break;
-                }
+              switch (menuText) {
+    case 'Orders':
+        document.getElementById("countOrders").style.display = "none";
+        document.getElementById("countOrders").textContent = "";
+        loadOrdersPage();
+        break;
+
+    case 'Customers':
+        document.getElementById("countCustomers").style.display = "none";
+        document.getElementById("countCustomers").textContent = "";
+        loadCustomersPage();
+        break;
+
+    case 'Messages':
+        document.getElementById("countMessages").style.display = "none";
+        document.getElementById("countMessages").textContent = "";
+        loadMessagesPage();
+        break;
+}
+
 
                 if (window.innerWidth <= 992) closeMobileMenu();
             });
@@ -2268,6 +2311,8 @@ function loadPromoPage()    { loadHTML("promo-codes.html"); }
         if (removeBtn) removeBtn.addEventListener('click', () => console.log("Remove reviews clicked"));
         if (createBtn) createBtn.addEventListener('click', () => console.log("Create review clicked"));
     }
+    
+    
 
    // REPLACE EXISTING initDashboard FUNCTION
 function initDashboard() {
