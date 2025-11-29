@@ -4,34 +4,11 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 
   <style>
-    :root {
-            --primary: #000000;
-            --secondary: #ffffff;
-            --accent: #888888;
-            --dark: #000000;
-            --light: #f5f5f5;
-            --gray: #666666;
-            --border: #e0e0e0;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
-        body {
-            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
-            color: var(--dark);
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        
      
 .orders-view {
   padding:22px;
@@ -307,7 +284,6 @@
 }
 
 @media (max-width:480px) {
-  body { padding:14px; }
   .orders-view { padding:14px; }
   .orders-card { padding:10px; }
   .orders-table td, 
@@ -480,24 +456,43 @@
     return "status-" + s;
   }
 
-  function load() {
-    t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
-    c.innerHTML = "";
+ function load() {
+  t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
+  c.innerHTML = "";
 
-    db.collection("orders")
-      .orderBy("createdAt", "desc")
-      .onSnapshot(
-        (q) => {
-          orders = q.docs.map((d) => ({ id: d.id, ...d.data() }));
-          apply();
-        },
-        () => {
-          orders = [];
-          empty();
-          toast("Error loading orders", "error");
-        }
-      );
-  }
+  db.collection("orders")
+    .orderBy("createdAt", "desc")
+    .get()
+    .then((q) => {
+      orders = q.docs.map((d) => {
+        const o = d.data();
+        return {
+          ...o,
+          id: d.id,
+
+          // Precomputed fields for FAST filtering
+          _name:
+            (o.shippingAddress?.firstName || "") +
+            " " +
+            (o.shippingAddress?.lastName || ""),
+
+          _email: (o.email || "").toLowerCase(),
+
+          _created: o.createdAt?.toDate
+            ? o.createdAt.toDate().getTime()
+            : 0,
+
+          items: o.items || [],
+        };
+      });
+
+      requestAnimationFrame(apply);
+    })
+    .catch(() => {
+      empty();
+      toast("Error loading orders", "error");
+    });
+}
 
   function empty() {
     t.innerHTML = `<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>`;
@@ -739,48 +734,48 @@
 }
 
 
-  function apply() {
-    let x = [...orders];
-    const st = fs.value,
-      d = fd.value,
-      q = si.value.toLowerCase();
+function apply() {
+  let x = [...orders];
+  const st = fs.value;
+  const d = fd.value;
+  const q = si.value.toLowerCase();
 
-    if (st !== "all") x = x.filter((o) => (o.status || "").toLowerCase() === st);
-
-    if (d !== "all") {
-      const now = new Date();
-      let start = null;
-
-      if (d === "today") start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      if (d === "week") start = new Date(now.getTime() - 7 * 864e5);
-      if (d === "month") start = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-
-      if (start) {
-        x = x.filter((o) => {
-          if (!o.createdAt) return false;
-          const date = o.createdAt.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
-          return date >= start;
-        });
-      }
-    }
-
-    if (q) {
-      x = x.filter((o) => {
-        const id = o.id.toLowerCase(),
-          name = (
-            (o.shippingAddress?.firstName || "") +
-            " " +
-            (o.shippingAddress?.lastName || "")
-          ).toLowerCase(),
-          email = (o.email || "").toLowerCase();
-
-        return id.includes(q) || name.includes(q) || email.includes(q);
-      });
-    }
-
-    filtered = x;
-    list(x);
+  // STATUS filter
+  if (st !== "all") {
+    x = x.filter(o => (o.status || "").toLowerCase() === st);
   }
+
+  // DATE filter
+  if (d !== "all") {
+    const now = Date.now();
+    let start = null;
+
+if (d === "today") {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  start = today.getTime();
+}
+
+if (d === "week") start = now - 7 * 864e5;
+if (d === "month") start = now - 30 * 864e5;
+
+    if (start !== null) {
+      x = x.filter(o => o._created >= start);
+    }
+  }
+
+  // SEARCH filter → now uses FAST precomputed fields
+  if (q) {
+    x = x.filter(o => 
+      o.id.toLowerCase().includes(q) ||
+      o._name.toLowerCase().includes(q) ||
+      o._email.includes(q)
+    );
+  }
+
+  filtered = x;
+  requestAnimationFrame(() => list(x)); 
+}
 
   function csv(x) {
     if (!x.length) {
