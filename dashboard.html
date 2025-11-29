@@ -2163,8 +2163,21 @@ async function loadHTML(page) {
 }
 
 
-    function loadMessagesPage() { loadHTML("contact-submissions.html"); }
-    function loadPromoPage()    { loadHTML("promo-codes.html"); }
+function loadMessagesPage() {
+    loadHTML("contact-submissions.html").then(() => {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            setTimeout(() => {
+                if (window.messagesManager) {
+                    window.messagesManager.cleanup();
+                }
+                window.messagesManager = new MessagesManager();
+            }, 100);
+        }
+    });
+}
+
+function loadPromoPage()    { loadHTML("promo-codes.html"); }
     function loadOrdersPage()   { loadHTML("orders.html"); }
     function loadCustomersPage(){ loadHTML("customers.html"); }
 
