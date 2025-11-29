@@ -1441,492 +1441,702 @@
 
 
 <script>
-// ------------------------------
-// DASHBOARD SCRIPT (FINAL FIXED)
-// ------------------------------
-
-var firebaseConfig = {
-    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
-    projectId: "hexahoney-96aed",
-    storageBucket: "hexahoney-96aed.firebasestorage.app",
-    messagingSenderId: "700458850837",
-    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-    measurementId: "G-MQGKK9709H"
-};
-
-firebase.initializeApp(firebaseConfig);
-window.db = firebase.firestore();
-
-// ------------------------------
-// UTILS
-// ------------------------------
-
-function timeAgo(date) {
-    const seconds = (Date.now() - date.getTime()) / 1000;
-    if (seconds < 60) return "just now";
-    if (seconds < 3600) return Math.floor(seconds / 60) + " mins ago";
-    if (seconds < 86400) return Math.floor(seconds / 3600) + " hours ago";
-    return Math.floor(seconds / 86400) + " days ago";
-}
-
-function calcPercentChange(current, previous) {
-    if (previous === 0) return 100;
-    return ((current - previous) / previous) * 100;
-}
-
-function getDayRange(date) {
-    const d = new Date(date);
-    const yyyy = d.getFullYear();
-    const mm = d.getMonth();
-    const dd = d.getDate();
-
-    return {
-        start: new Date(yyyy, mm, dd, 0, 0, 0),
-        end: new Date(yyyy, mm, dd, 23, 59, 59)
+    // ------------------------------
+    // FIREBASE INIT
+    // ------------------------------
+    var firebaseConfig = {
+        apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+        authDomain: "hexahoney-96aed.firebaseapp.com",
+        projectId: "hexahoney-96aed",
+        storageBucket: "hexahoney-96aed.firebasestorage.app",
+        messagingSenderId: "700458850837",
+        appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+        measurementId: "G-MQGKK9709H"
     };
-}
 
-function getMonthRange(year, month) {
-    return {
-        start: new Date(year, month, 1, 0, 0, 0),
-        end: new Date(year, month + 1, 0, 23, 59, 59)
-    };
-}
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-// ------------------------------
-// ACTIVITY ICON MAP (FIXED)
-// ------------------------------
+    // ------------------------------
+    // UTILS
+    // ------------------------------
+    function getDayRange(date) {
+        const d = new Date(date);
+        const yyyy = d.getFullYear();
+        const mm = d.getMonth();
+        const dd = d.getDate();
+        const start = new Date(yyyy, mm, dd, 0, 0, 0, 0);
+        const end   = new Date(yyyy, mm, dd, 23, 59, 59, 999);
+        return { start, end };
+    }
 
-const ACTIVITY_ICONS = {
-    NEW_CUSTOMER: "fa-user-plus",
-    CUSTOMER_VIEW: "fa-eye",
-    CUSTOMER_DELETED: "fa-trash",
-    CUSTOMER_HIGH_VALUE: "fa-star",
+    function getMonthRange(year, month) {
+        const start = new Date(year, month, 1, 0, 0, 0);
+        const end   = new Date(year, month + 1, 0, 23, 59, 59);
+        return { start, end };
+    }
 
-    NEW_ORDER: "fa-shopping-bag",
-    ORDER_STATUS: "fa-clipboard-check",
-    ORDER_CANCELLED: "fa-ban",
-    ORDER_DELIVERED: "fa-check-circle",
+    function calcPercentChange(current, previous) {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return ((current - previous) / previous) * 100;
+    }
 
-    NEW_MESSAGE: "fa-comment",
-    ENQUIRY_NEW: "fa-comment",
-    ENQUIRY_READ: "fa-envelope-open",
-    ENQUIRY_REPLIED: "fa-reply",
-    ENQUIRY_DELETED: "fa-trash",
-    ENQUIRY_MISSED: "fa-clock",
+    function statusClass(s) {
+        const map = {
+            pending: "status-pending",
+            confirmed: "status-confirmed",
+            shipped: "status-shipped",
+            delivered: "status-delivered",
+            cancelled: "status-cancelled",
+            processing: "status-processing"
+        };
+        return map[s] || "status-pending";
+    }
 
-    PROMO_CREATED: "fa-tag",
-    PROMO_UPDATED: "fa-tag",
-    PROMO_DELETED: "fa-tag",
-    PROMO_USED: "fa-percent",
-    PROMO_LIMIT_REACHED: "fa-exclamation-triangle",
+    // ------------------------------
+    // GLOBAL DATE RANGES
+    // ------------------------------
+    const now = new Date();
+    const CUR = getMonthRange(now.getFullYear(), now.getMonth());
+    const PREV = getMonthRange(now.getFullYear(), now.getMonth() - 1);
 
-    REVENUE_MILESTONE: "fa-chart-line",
-    CUSTOMER_MILESTONE: "fa-users",
-};
+    let selectedDate = new Date();
+    let currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+    let dashboardInitialized = false;
 
-// ------------------------------
-// LOAD RECENT ACTIVITIES (FIXED)
-// ------------------------------
+    // ------------------------------
+    // DATE WIDGET
+    // ------------------------------
+    function updateDateWidget() {
+        const now = new Date();
+        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const monthNames = [
+            'January','February','March','April','May','June',
+            'July','August','September','October','November','December'
+        ];
 
-function loadRecentActivities() {
-    const list = document.getElementById("activitiesList");
-    if (!list) return;
+        const dayEl = document.getElementById('current-day');
+        const dayNameEl = document.getElementById('current-day-name');
+        const monthYearEl = document.getElementById('current-month-year');
 
-    db.collection("activities")
-        .orderBy("time", "desc")
-        .limit(6)
-        .onSnapshot(snapshot => {
-            list.innerHTML = "";
+        if (!dayEl || !dayNameEl || !monthYearEl) return;
 
-            if (snapshot.empty) return;
+        dayEl.textContent = now.getDate();
+        dayNameEl.textContent = dayNames[now.getDay()] + ",";
+        monthYearEl.textContent = monthNames[now.getMonth()] + " " + now.getFullYear();
+    }
 
-            snapshot.forEach(doc => {
-                const a = doc.data();
+    // ------------------------------
+    // CALENDAR
+    // ------------------------------
+    function handleCalendarDayClick(year, month, day, element) {
+        const calendarDays = document.getElementById('calendar-days');
+        if (!calendarDays) return;
 
-                const icon = ACTIVITY_ICONS[a.type] || "fa-info-circle";
+        calendarDays.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
 
-                let ts = a.time;
-                let timeText = ts && ts.toDate ? timeAgo(ts.toDate()) : "just now";
+        const clickedDate = new Date(year, month, day);
+        updateStatsForDate(clickedDate);
+    }
 
-                const item = document.createElement("div");
-                item.className = "activity-item fade-in";
+    function renderCalendar(month, year) {
+        const monthNames = [
+            "January","February","March","April","May","June",
+            "July","August","September","October","November","December"
+        ];
 
-                item.innerHTML = `
-                    <div class="activity-icon"><i class="fas ${icon}"></i></div>
-                    <div class="activity-content">
-                        <div class="activity-message">${a.message || ""}</div>
-                        <div class="activity-time">${timeText}</div>
-                    </div>
-                `;
+        const monthLabel = document.getElementById('calendar-month');
+        const calendarDays = document.getElementById('calendar-days');
+        if (!monthLabel || !calendarDays) return;
 
-                list.appendChild(item);
+        monthLabel.textContent = `${monthNames[month]} ${year}`;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+        calendarDays.innerHTML = '';
+
+        const today = new Date();
+
+        // previous month days
+        for (let i = firstDay - 1; i >= 0; i--) {
+            const d = document.createElement('div');
+            d.className = 'calendar-day other-month';
+            d.textContent = daysInPrevMonth - i;
+            calendarDays.appendChild(d);
+        }
+
+        // current month days
+        for (let i = 1; i <= daysInMonth; i++) {
+            const d = document.createElement('div');
+            d.className = 'calendar-day';
+            d.textContent = i;
+
+            if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                d.classList.add('today');
+            }
+
+            if (
+                selectedDate &&
+                selectedDate.getFullYear() === year &&
+                selectedDate.getMonth() === month &&
+                selectedDate.getDate() === i
+            ) {
+                d.classList.add('selected');
+            }
+
+            d.addEventListener('click', () => handleCalendarDayClick(year, month, i, d));
+            calendarDays.appendChild(d);
+        }
+
+        // next month days
+        const totalCells = 42;
+        const usedCells = firstDay + daysInMonth;
+        const remaining = totalCells - usedCells;
+        for (let i = 1; i <= remaining; i++) {
+            const d = document.createElement('div');
+            d.className = 'calendar-day other-month';
+            d.textContent = i;
+            calendarDays.appendChild(d);
+        }
+    }
+
+    function initCalendar() {
+        renderCalendar(currentMonth, currentYear);
+
+        const prevBtn = document.getElementById('prev-month');
+        const nextBtn = document.getElementById('next-month');
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function () {
+                currentMonth--;
+                if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                renderCalendar(currentMonth, currentYear);
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function () {
+                currentMonth++;
+                if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                renderCalendar(currentMonth, currentYear);
+            });
+        }
+    }
+
+    // ------------------------------
+    // DASHBOARD STATS (WELCOME CARDS)
+    // ------------------------------
+    function updateRevenueForDate(date) {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(1) .stat-number');
+        if (!target) return;
+
+        const { start, end } = getDayRange(date);
+
+        db.collection("orders")
+            .where("createdAt", ">=", start)
+            .where("createdAt", "<=", end)
+            .get()
+            .then(snapshot => {
+                let total = 0;
+                snapshot.forEach(doc => total += Number(doc.data().total || 0));
+                target.textContent = "₹" + total.toFixed(2);
+            })
+            .catch(() => {
+                target.textContent = "₹0.00";
+            });
+    }
+
+    function updateNewCustomersForDate(date) {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(3) .stat-number');
+        if (!target) return;
+
+        const { start, end } = getDayRange(date);
+
+        db.collection("users")
+            .where("createdAt", ">=", start)
+            .where("createdAt", "<=", end)
+            .get()
+            .then(snapshot => {
+                target.textContent = snapshot.size;
+            })
+            .catch(() => {
+                target.textContent = "0";
+            });
+    }
+
+    function updateMessagesForDate(date) {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
+        if (!target) return;
+
+        const { start, end } = getDayRange(date);
+
+        db.collection("contactSubmissions")
+            .where("timestamp", ">=", start)
+            .where("timestamp", "<=", end)
+            .get()
+            .then(snapshot => {
+                target.textContent = snapshot.size;
+            })
+            .catch(() => {
+                target.textContent = "0";
+            });
+    }
+
+    function updatePendingOrdersCount() {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
+        if (!target) return;
+
+        db.collection("orders")
+            .where("status", "==", "pending")
+            .onSnapshot(snapshot => {
+                target.textContent = snapshot.size;
+            });
+    }
+
+    function updateStatsForDate(date) {
+        selectedDate = new Date(date.getTime());
+        updateRevenueForDate(selectedDate);
+        updateNewCustomersForDate(selectedDate);
+        updateMessagesForDate(selectedDate);
+    }
+
+    // ------------------------------
+    // SIDEBAR METRICS (MONTHLY)
+    // ------------------------------
+    function updateMonthlyRevenueMetric() {
+        const valueEl = document.querySelector('.metric-row:nth-child(1) .metric-value');
+        const changeEl = document.querySelector('.metric-row:nth-child(1) .metric-change');
+        if (!valueEl || !changeEl) return;
+
+        Promise.all([
+            db.collection("orders")
+                .where("createdAt", ">=", CUR.start)
+                .where("createdAt", "<=", CUR.end)
+                .get(),
+            db.collection("orders")
+                .where("createdAt", ">=", PREV.start)
+                .where("createdAt", "<=", PREV.end)
+                .get()
+        ]).then(([curSnap, prevSnap]) => {
+            let curTotal = 0, prevTotal = 0;
+            curSnap.forEach(d => curTotal += Number(d.data().total || 0));
+            prevSnap.forEach(d => prevTotal += Number(d.data().total || 0));
+
+            valueEl.textContent = "₹" + curTotal.toFixed(2);
+
+            const pct = calcPercentChange(curTotal, prevTotal);
+            if (pct >= 0) {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+                changeEl.classList.remove('negative');
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+                changeEl.classList.add('negative');
+            }
+        });
+    }
+
+    function updateTotalCustomersMetric() {
+        const valueEl = document.querySelector('.metric-row:nth-child(2) .metric-value');
+        const changeEl = document.querySelector('.metric-row:nth-child(2) .metric-change');
+        if (!valueEl || !changeEl) return;
+
+        Promise.all([
+            db.collection("users").get(),
+            db.collection("users").where("createdAt", ">=", CUR.start).where("createdAt", "<=", CUR.end).get(),
+            db.collection("users").where("createdAt", ">=", PREV.start).where("createdAt", "<=", PREV.end).get()
+        ]).then(([allSnap, curSnap, prevSnap]) => {
+            const allCount = allSnap.size;
+            const curCount = curSnap.size;
+            const prevCount = prevSnap.size;
+
+            valueEl.textContent = allCount;
+            const pct = calcPercentChange(curCount, prevCount);
+
+            if (pct >= 0) {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+                changeEl.classList.remove('negative');
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+                changeEl.classList.add('negative');
+            }
+        });
+    }
+
+    function updateTotalOrdersMetric() {
+        const valueEl = document.querySelector('.metric-row:nth-child(3) .metric-value');
+        const changeEl = document.querySelector('.metric-row:nth-child(3) .metric-change');
+        if (!valueEl || !changeEl) return;
+
+        Promise.all([
+            db.collection("orders").get(),
+            db.collection("orders").where("createdAt", ">=", CUR.start).where("createdAt", "<=", CUR.end).get(),
+            db.collection("orders").where("createdAt", ">=", PREV.start).where("createdAt", "<=", PREV.end).get()
+        ]).then(([allSnap, curSnap, prevSnap]) => {
+            const allCount = allSnap.size;
+            const curCount = curSnap.size;
+            const prevCount = prevSnap.size;
+
+            valueEl.textContent = allCount;
+            const pct = calcPercentChange(curCount, prevCount);
+
+            if (pct >= 0) {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+                changeEl.classList.remove('negative');
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+                changeEl.classList.add('negative');
+            }
+        });
+    }
+
+    function updateTotalMessagesMetric() {
+        const valueEl = document.querySelector('.metric-row:nth-child(4) .metric-value');
+        const changeEl = document.querySelector('.metric-row:nth-child(4) .metric-change');
+        if (!valueEl || !changeEl) return;
+
+        Promise.all([
+            db.collection("contactSubmissions").get(),
+            db.collection("contactSubmissions").where("timestamp", ">=", CUR.start).where("timestamp", "<=", CUR.end).get(),
+            db.collection("contactSubmissions").where("timestamp", ">=", PREV.start).where("timestamp", "<=", PREV.end).get()
+        ]).then(([allSnap, curSnap, prevSnap]) => {
+            const allCount = allSnap.size;
+            const curCount = curSnap.size;
+            const prevCount = prevSnap.size;
+
+            valueEl.textContent = allCount;
+            const pct = calcPercentChange(curCount, prevCount);
+
+            if (pct >= 0) {
+                changeEl.innerHTML = `<i class="fas fa-arrow-up"></i> ${pct.toFixed(1)}%`;
+                changeEl.classList.remove('negative');
+            } else {
+                changeEl.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(pct).toFixed(1)}%`;
+                changeEl.classList.add('negative');
+            }
+        });
+    }
+
+    // ------------------------------
+    // RECENT ORDERS
+    // ------------------------------
+    function renderDashboardEmptyOrders(list) {
+        list.innerHTML = "";
+        const div = document.createElement("div");
+        div.className = "order-item order-item-empty fade-in";
+        div.style.width = "100%";
+        div.style.minWidth = "100%";
+        div.style.textAlign = "center";
+        div.style.padding = "22px";
+
+        div.innerHTML = `
+            <div style="font-size: 1rem; font-weight: 600; margin-bottom: 6px;">
+                No orders yet
+            </div>
+            <div style="font-size: 0.85rem; color: #64748b;">
+                New orders will appear here as soon as they are placed.
+            </div>
+        `;
+        list.appendChild(div);
+    }
+
+    function loadDashboardRecentOrders() {
+        const list = document.getElementById("dashboardRecentOrders");
+        if (!list) return;
+
+        renderDashboardEmptyOrders(list);
+
+        db.collection("orders")
+            .orderBy("createdAt", "desc")
+            .limit(5)
+            .onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    renderDashboardEmptyOrders(list);
+                    return;
+                }
+
+                list.innerHTML = "";
+
+                snapshot.forEach(doc => {
+                    const o = doc.data();
+                    const div = document.createElement("div");
+                    div.className = "order-item fade-in";
+
+                    const total = Number(o.total || 0).toFixed(2);
+                    const status = (o.status || "pending").toLowerCase();
+                    const label = status.charAt(0).toUpperCase() + status.slice(1);
+
+                    div.innerHTML = `
+                        <div class="order-info">
+                            <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
+                            <div class="order-details">
+                                <div class="order-id">#${doc.id.substring(0, 8)}</div>
+                                <div class="order-amount">₹${total}</div>
+                            </div>
+                        </div>
+                        <div class="order-status ${statusClass(status)}">${label}</div>
+                    `;
+
+                    list.appendChild(div);
+                });
+            }, () => {
+                renderDashboardEmptyOrders(list);
+            });
+    }
+
+    // ------------------------------
+    // PAGE LOADING (OTHER PAGES)
+    // ------------------------------
+    function showDashboard() {
+        const dynamic = document.getElementById("dynamicPage");
+        const dashboard = document.getElementById("dashboardBody");
+        if (!dynamic || !dashboard) return;
+
+        dashboard.style.display = "block";
+        dynamic.style.display = "none";
+        dynamic.innerHTML = "";
+    }
+
+    function loadHTML(page) {
+        const dynamic = document.getElementById("dynamicPage");
+        const dashboard = document.getElementById("dashboardBody");
+
+        if (!dynamic || !dashboard) return;
+
+        dashboard.style.display = "none";
+        dynamic.style.display = "block";
+        dynamic.style.width = "100%";
+
+        fetch(page)
+            .then(r => r.text())
+            .then(html => {
+                dynamic.innerHTML = html;
+                const scripts = [...dynamic.querySelectorAll("script")];
+                scripts.forEach(s => {
+                    const tag = document.createElement("script");
+                    if (s.src) {
+                        tag.src = s.src + "?v=" + Date.now();
+                    } else {
+                        tag.textContent = s.textContent;
+                    }
+                    document.body.appendChild(tag);
+                    s.remove();
+                });
+            })
+            .catch(() => {
+                dynamic.innerHTML = "Failed to load page";
+            });
+    }
+
+    function loadMessagesPage() { loadHTML("contact-submissions.html"); }
+    function loadPromoPage()    { loadHTML("promo-codes.html"); }
+    function loadOrdersPage()   { loadHTML("orders.html"); }
+    function loadCustomersPage(){ loadHTML("customers.html"); }
+
+    // ------------------------------
+    // MOBILE MENU
+    // ------------------------------
+    function toggleMobileMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (!sidebar || !overlay) return;
+
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+
+    function closeMobileMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (!sidebar || !overlay) return;
+
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    }
+
+    function setupMobileMenu() {
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileMenu);
+    }
+
+    // ------------------------------
+    // MENU CLICK EVENTS
+    // ------------------------------
+    function setupEventListeners() {
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+            item.addEventListener('click', function () {
+                const menuText = this.querySelector('.menu-text').textContent.trim();
+                menuItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+
+                switch(menuText) {
+                    case 'Dashboard':
+                        showDashboard();
+                        break;
+                    case 'Messages':
+                        loadMessagesPage();
+                        break;
+                    case 'Promo Codes':
+                        loadPromoPage();
+                        break;
+                    case 'Orders':
+                        loadOrdersPage();
+                        break;
+                    case 'Customers':
+                        loadCustomersPage();
+                        break;
+                    default:
+                        showDashboard();
+                        break;
+                }
+
+                if (window.innerWidth <= 992) closeMobileMenu();
             });
         });
-}
 
-// ------------------------------
-// DASHBOARD RECENT ORDERS
-// ------------------------------
+        // profile dropdown
+        const adminProfile = document.getElementById("adminProfile");
+        const profileMenu = document.getElementById("profileMenu");
+        if (adminProfile && profileMenu) {
+            adminProfile.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileMenu.style.display = (profileMenu.style.display === "block") ? "none" : "block";
+            });
 
-function statusClass(s) {
-    const map = {
-        pending: "status-pending",
-        confirmed: "status-confirmed",
-        shipped: "status-shipped",
-        delivered: "status-delivered",
-        cancelled: "status-cancelled",
-        processing: "status-processing"
-    };
-    return map[s] || "status-pending";
-}
+            document.addEventListener('click', () => {
+                profileMenu.style.display = "none";
+            });
+        }
 
-function renderDashboardEmptyOrders(list) {
-    list.innerHTML = `
-        <div class="order-item order-item-empty fade-in" style="width:100%;min-width:100%; text-align:center; padding:25px;">
-            <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">No orders yet</div>
-            <div style="font-size:0.9rem;color:#666;">New orders will appear here as soon as they are placed.</div>
-        </div>
-    `;
-}
+        // placeholder review actions
+        const publishBtn = document.getElementById("publishReviewBtn");
+        const removeBtn = document.getElementById("removeReviewBtn");
+        const createBtn = document.getElementById("createReviewBtn");
 
-function loadDashboardRecentOrders() {
-    const list = document.getElementById("dashboardRecentOrders");
-    if (!list) return;
+        if (publishBtn) publishBtn.addEventListener('click', () => console.log("Publish reviews clicked"));
+        if (removeBtn) removeBtn.addEventListener('click', () => console.log("Remove reviews clicked"));
+        if (createBtn) createBtn.addEventListener('click', () => console.log("Create review clicked"));
+    }
 
-    renderDashboardEmptyOrders(list);
+    // ------------------------------
+    // INIT DASHBOARD (AFTER AUTH)
+    // ------------------------------
+    function initDashboard() {
+        if (dashboardInitialized) return;
+        dashboardInitialized = true;
 
-    db.collection("orders")
-        .orderBy("createdAt", "desc")
-        .limit(5)
-        .onSnapshot(snapshot => {
-            if (snapshot.empty) {
-                renderDashboardEmptyOrders(list);
+        setupEventListeners();
+        setupMobileMenu();
+        updateDateWidget();
+        initCalendar();
+        loadDashboardRecentOrders();
+        updatePendingOrdersCount();
+
+        updateMonthlyRevenueMetric();
+        updateTotalCustomersMetric();
+        updateTotalOrdersMetric();
+        updateTotalMessagesMetric();
+
+        updateStatsForDate(new Date());
+
+        const dynamicPage = document.getElementById("dynamicPage");
+        if (dynamicPage) dynamicPage.style.display = "none";
+    }
+
+    // ------------------------------
+    // AUTH: MANDATORY ADMIN LOGIN (CUSTOM CLAIMS)
+    // ------------------------------
+    const loginModal   = document.getElementById("loginModal");
+    const dashboardEl  = document.getElementById("dashboardBody");
+    const sidebarEl    = document.getElementById("sidebar");
+    const topHeaderEl  = document.querySelector(".top-header");
+    const loginEmailEl = document.getElementById("loginEmail");
+    const loginPassEl  = document.getElementById("loginPassword");
+    const loginErrorEl = document.getElementById("loginError");
+    const loginBtn     = document.getElementById("loginSubmit");
+    const logoutBtn    = document.getElementById("logoutBtn");
+
+    // Initial UI state – force login first
+    if (dashboardEl) dashboardEl.style.display = "none";
+    if (sidebarEl) sidebarEl.style.display = "none";
+    if (topHeaderEl) topHeaderEl.style.display = "none";
+    if (loginModal) loginModal.style.display = "flex";
+
+    // LOGIN BUTTON HANDLER
+    if (loginBtn) {
+        loginBtn.addEventListener("click", () => {
+            const email = loginEmailEl ? loginEmailEl.value.trim() : "";
+            const password = loginPassEl ? loginPassEl.value : "";
+
+            if (loginErrorEl) loginErrorEl.textContent = "";
+
+            if (!email || !password) {
+                if (loginErrorEl) loginErrorEl.textContent = "Enter email and password.";
                 return;
             }
 
-            list.innerHTML = "";
-
-            snapshot.forEach(doc => {
-                const o = doc.data();
-                const total = Number(o.total || 0).toFixed(2);
-                const status = (o.status || "pending").toLowerCase();
-                const label = status.charAt(0).toUpperCase() + status.slice(1);
-
-                const div = document.createElement("div");
-                div.className = "order-item fade-in";
-
-                div.innerHTML = `
-                    <div class="order-info">
-                        <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
-                        <div class="order-details">
-                            <div class="order-id">#${doc.id.substring(0,8)}</div>
-                            <div class="order-amount">₹${total}</div>
-                        </div>
-                    </div>
-                    <div class="order-status ${statusClass(status)}">${label}</div>
-                `;
-
-                list.appendChild(div);
-            });
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .catch(err => {
+                    console.error(err);
+                    if (loginErrorEl) loginErrorEl.textContent = "Invalid email or password.";
+                });
         });
-}
-
-// ------------------------------
-// DATE WIDGET
-// ------------------------------
-
-function updateDateWidget() {
-    const now = new Date();
-    document.getElementById('current-day').textContent = now.getDate();
-
-    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    document.getElementById('current-day-name').textContent =
-        dayNames[now.getDay()] + ",";
-
-    const monthNames = [
-        'January','February','March','April','May','June',
-        'July','August','September','October','November','December'
-    ];
-    document.getElementById('current-month-year').textContent =
-        `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-}
-
-// ------------------------------
-// CALENDAR SYSTEM (UNCHANGED EXCEPT FIXES)
-// ------------------------------
-
-let selectedDate = new Date();
-let currentDate = new Date();
-let currentMonth = currentDate.getMonth();
-let currentYear = currentDate.getFullYear();
-
-function handleCalendarDayClick(year, month, day, element) {
-    const calendarDays = document.getElementById('calendar-days');
-    calendarDays.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
-
-    element.classList.add('selected');
-
-    const clickedDate = new Date(year, month, day);
-    updateStatsForDate(clickedDate);
-}
-
-function initCalendar() {
-    renderCalendar(currentMonth, currentYear);
-}
-
-function renderCalendar(month, year) {
-    const monthNames = [
-        "January","February","March","April","May","June",
-        "July","August","September","October","November","December"
-    ];
-
-    document.getElementById('calendar-month').textContent =
-        `${monthNames[month]} ${year}`;
-
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
-    const calendarDays = document.getElementById('calendar-days');
-    calendarDays.innerHTML = '';
-
-    const today = new Date();
-
-    // PREVIOUS MONTH
-    for (let i = firstDay - 1; i >= 0; i--) {
-        const d = document.createElement('div');
-        d.className = 'calendar-day other-month';
-        d.textContent = daysInPrevMonth - i;
-        calendarDays.appendChild(d);
     }
 
-    // CURRENT MONTH
-    for (let i = 1; i <= daysInMonth; i++) {
-        const d = document.createElement('div');
-        d.className = 'calendar-day';
-        d.textContent = i;
+    // LOGOUT BUTTON HANDLER
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            firebase.auth().signOut().catch(console.error);
+        });
+    }
 
-        if (
-            i === today.getDate() &&
-            month === today.getMonth() &&
-            year === today.getFullYear()
-        ) {
-            d.classList.add('today');
+    // AUTH STATE OBSERVER – only allow users with admin custom claim
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (!user) {
+            // Not logged in → show login, hide dashboard
+            if (loginModal) loginModal.style.display = "flex";
+            if (dashboardEl) dashboardEl.style.display = "none";
+            if (sidebarEl) sidebarEl.style.display = "none";
+            if (topHeaderEl) topHeaderEl.style.display = "none";
+            dashboardInitialized = false;
+            return;
         }
 
-        if (
-            selectedDate.getFullYear() === year &&
-            selectedDate.getMonth() === month &&
-            selectedDate.getDate() === i
-        ) {
-            d.classList.add('selected');
-        }
+        try {
+            // Force refresh token to read latest custom claims
+            const tokenResult = await user.getIdTokenResult(true);
 
-        d.addEventListener('click', () => handleCalendarDayClick(year, month, i, d));
-        calendarDays.appendChild(d);
-    }
-
-    // NEXT MONTH
-    const totalCells = 42;
-    const usedCells = firstDay + daysInMonth;
-    const remaining = totalCells - usedCells;
-    for (let i = 1; i <= remaining; i++) {
-        const d = document.createElement('div');
-        d.className = 'calendar-day other-month';
-        d.textContent = i;
-        calendarDays.appendChild(d);
-    }
-}
-
-// ------------------------------
-// METRIC UPDATES
-// ------------------------------
-
-const now = new Date();
-const CUR = getMonthRange(now.getFullYear(), now.getMonth());
-const PREV = getMonthRange(now.getFullYear(), now.getMonth() - 1);
-
-function updateStatsForDate(date) {
-    updateRevenueForDate(date);
-    updateNewCustomersForDate(date);
-    updateMessagesForDate(date);
-}
-
-function updateRevenueForDate(date) {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(1) .stat-number');
-    if (!target) return;
-
-    const { start, end } = getDayRange(date);
-
-    db.collection("orders")
-        .where("createdAt", ">=", start)
-        .where("createdAt", "<=", end)
-        .get()
-        .then(snapshot => {
-            let total = 0;
-            snapshot.forEach(doc => {
-                total += Number(doc.data().total || 0);
-            });
-            target.textContent = "₹" + total.toFixed(2);
-        });
-}
-
-function updateNewCustomersForDate(date) {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(3) .stat-number');
-    if (!target) return;
-
-    const { start, end } = getDayRange(date);
-
-    db.collection("users")
-        .where("createdAt", ">=", start)
-        .where("createdAt", "<=", end)
-        .get()
-        .then(snapshot => {
-            target.textContent = snapshot.size;
-        });
-}
-
-function updateMessagesForDate(date) {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
-    if (!target) return;
-
-    const { start, end } = getDayRange(date);
-
-    db.collection("contactSubmissions")
-        .where("timestamp", ">=", start)
-        .where("timestamp", "<=", end)
-        .get()
-        .then(snapshot => {
-            target.textContent = snapshot.size;
-        });
-}
-
-function updatePendingOrders() {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
-    if (!target) return;
-
-    db.collection("orders")
-        .where("status", "==", "pending")
-        .onSnapshot(snap => {
-            target.textContent = snap.size;
-        });
-}
-
-// ------------------------------
-// PAGE LOADING (Orders, Customers, Promo, Messages)
-// ------------------------------
-
-function showDashboard() {
-    document.getElementById("dynamicPage").style.display = "none";
-    document.getElementById("dashboardBody").style.display = "block";
-}
-
-function loadHTML(page) {
-    return fetch(page)
-        .then(r => r.text())
-        .then(html => {
-            const dynamic = document.getElementById("dynamicPage");
-            const dashboard = document.getElementById("dashboardBody");
-
-            dashboard.style.display = "none";
-            dynamic.style.display = "block";
-            dynamic.innerHTML = html;
-
-            // re-run inline scripts
-            [...dynamic.querySelectorAll("script")].forEach(s => {
-                const tag = document.createElement("script");
-                if (s.src) {
-                    tag.src = s.src + "?v=" + Date.now();
-                } else {
-                    tag.textContent = s.textContent;
-                }
-                document.body.appendChild(tag);
-                s.remove();
-            });
-        });
-}
-
-function loadMessagesPage() { loadHTML("contact-submissions.html"); }
-function loadPromoPage() { loadHTML("promo-codes.html"); }
-function loadOrdersPage() { loadHTML("orders.html"); }
-function loadCustomersPage() { loadHTML("customers.html"); }
-
-// ------------------------------
-// MOBILE MENU
-// ------------------------------
-
-function setupMobileMenu() {
-    const btn = document.getElementById('mobileMenuBtn');
-    const overlay = document.getElementById('sidebarOverlay');
-
-    btn.addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('active');
-        overlay.classList.toggle('active');
-    });
-
-    overlay.addEventListener('click', () => {
-        document.getElementById('sidebar').classList.remove('active');
-        overlay.classList.remove('active');
-    });
-}
-
-// ------------------------------
-// EVENT LISTENERS
-// ------------------------------
-
-function setupEventListeners() {
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', function () {
-            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-
-            const text = this.querySelector('.menu-text').textContent.trim();
-
-            if (text === "Dashboard") showDashboard();
-            if (text === "Messages") loadMessagesPage();
-            if (text === "Promo Codes") loadPromoPage();
-            if (text === "Orders") loadOrdersPage();
-            if (text === "Customers") loadCustomersPage();
-
-            if (window.innerWidth <= 992) {
-                document.getElementById('sidebar').classList.remove('active');
-                document.getElementById('sidebarOverlay').classList.remove('active');
+            // Check for admin flag set via custom claims
+            if (!tokenResult.claims || tokenResult.claims.admin !== true) {
+                // Not admin → kick out
+                await firebase.auth().signOut();
+                alert("Access denied. Admin only.");
+                return;
             }
-        });
+        } catch (err) {
+            console.error("Error checking admin claim:", err);
+            await firebase.auth().signOut();
+            return;
+        }
+
+        // If we reach here → user is admin
+        if (loginModal) loginModal.style.display = "none";
+        if (dashboardEl) dashboardEl.style.display = "block";
+        if (sidebarEl) sidebarEl.style.display = "block";
+        if (topHeaderEl) topHeaderEl.style.display = "flex";
+
+        const adminName = document.getElementById("adminName");
+        if (adminName && user.email) adminName.textContent = user.email;
+
+        initDashboard();
     });
-
-    document.getElementById('prev-month').addEventListener('click', () => {
-        currentMonth--;
-        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-        renderCalendar(currentMonth, currentYear);
-    });
-
-    document.getElementById('next-month').addEventListener('click', () => {
-        currentMonth++;
-        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-        renderCalendar(currentMonth, currentYear);
-    });
-}
-
-// ------------------------------
-// INITIALIZE DASHBOARD
-// ------------------------------
-
-function initDashboard() {
-    setupEventListeners();
-    setupMobileMenu();
-    updateDateWidget();
-    initCalendar();
-    loadDashboardRecentOrders();
-    loadRecentActivities();
-
-    updatePendingOrders();
-    updateStatsForDate(new Date());
-}
-
-document.addEventListener('DOMContentLoaded', initDashboard);
-
 </script>
 </body>
 </html>
