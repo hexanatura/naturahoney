@@ -6,7 +6,7 @@ admin.initializeApp({
 });
 
 async function setAdmin() {
-  const uid = "5kGzG61rlMWqzPfY1DiG7x0XfU52";
+  const uid = "hTN0c8z381aFrQYC5ZkbPx7bG3E3";
 
   await admin.auth().setCustomUserClaims(uid, { admin: true });
   console.log("Admin claim set for:", uid);
