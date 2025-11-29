@@ -225,6 +225,12 @@
             border: 1px solid #dcfce7;
         }
 
+        .status-na {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+        }
+
         .actions {
             display: flex;
             gap: 8px;
@@ -610,484 +616,531 @@
 
     <script>
         // Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
-    projectId: "hexahoney-96aed",
-    storageBucket: "hexahoney-96aed.firebasestorage.app",
-    messagingSenderId: "700458850837",
-    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-    measurementId: "G-MQGKK9709H"
-};
-
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
-
-// Messages Manager
-class MessagesManager {
-    constructor() {
-        this.messages = [];
-        this.filteredMessages = [];
-        this.currentMessageId = null;
-        this.listener = null;
-        this.init();
-    }
-
-    init() {
-        this.bindEvents();
-        this.loadMessages();
-    }
-
-    bindEvents() {
-        // Refresh button
-        document.getElementById('refreshBtn').addEventListener('click', () => {
-            this.loadMessages();
-        });
-
-        // Test data button
-        document.getElementById('testDataBtn').addEventListener('click', () => {
-            this.createTestMessage();
-        });
-
-        // Filters
-        document.getElementById('statusFilter').addEventListener('change', () => {
-            this.applyFilters();
-        });
-
-        document.getElementById('dateFilter').addEventListener('change', () => {
-            this.applyFilters();
-        });
-
-        // Modal
-        document.getElementById('closeModal').addEventListener('click', () => {
-            this.closeModal();
-        });
-
-        document.getElementById('closeModalBtn').addEventListener('click', () => {
-            this.closeModal();
-        });
-
-        document.getElementById('replyBtn').addEventListener('click', () => {
-            this.replyToMessage();
-        });
-
-        // Close modal when clicking outside
-        document.getElementById('messageModal').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) {
-                this.closeModal();
-            }
-        });
-    }
-
-    loadMessages() {
-        this.showLoading();
-
-        // Clean up previous listener
-        if (this.listener) {
-            this.listener();
-        }
-
-        this.listener = db.collection('contactSubmissions')
-            .orderBy('timestamp', 'desc')
-            .limit(100)
-            .onSnapshot(
-                (snapshot) => {
-                    this.messages = snapshot.docs.map(doc => {
-                        const data = doc.data();
-                        return {
-                            id: doc.id,
-                            name: data.name || 'Unknown',
-                            email: data.email || '',
-                            phone: data.phone || '',
-                            subject: data.subject || 'No Subject',
-                            message: data.message || '',
-                            status: data.status || 'new',
-                            timestamp: data.timestamp?.toDate() || new Date()
-                        };
-                    });
-                    this.applyFilters();
-                },
-                (error) => {
-                    console.error('Error loading messages:', error);
-                    this.showError('Failed to load messages. Please check your connection.');
-                }
-            );
-    }
-
-    applyFilters() {
-        const statusFilter = document.getElementById('statusFilter').value;
-        const dateFilter = document.getElementById('dateFilter').value;
-
-        let filtered = [...this.messages];
-
-        // Status filter
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(msg => msg.status === statusFilter);
-        }
-
-        // Date filter
-        if (dateFilter !== 'all') {
-            const now = new Date();
-            let startDate = new Date();
-
-            switch (dateFilter) {
-                case 'today':
-                    startDate.setHours(0, 0, 0, 0);
-                    break;
-                case 'week':
-                    startDate.setDate(now.getDate() - 7);
-                    break;
-                case 'month':
-                    startDate.setMonth(now.getMonth() - 1);
-                    break;
-            }
-
-            filtered = filtered.filter(msg => msg.timestamp >= startDate);
-        }
-
-        this.filteredMessages = filtered;
-        this.renderMessages();
-    }
-
-    renderMessages() {
-        const tableBody = document.getElementById('messagesTableBody');
-        const mobileCards = document.getElementById('mobileCards');
-
-        if (this.filteredMessages.length === 0) {
-            this.showEmpty();
-            return;
-        }
-
-        // Render table
-        tableBody.innerHTML = this.filteredMessages.map(message => this.renderTableRow(message)).join('');
-
-        // Render mobile cards
-        mobileCards.innerHTML = this.filteredMessages.map(message => this.renderMobileCard(message)).join('');
-
-        // Add event listeners to action buttons
-        this.bindActionButtons();
-    }
-
-    renderTableRow(message) {
-        const date = message.timestamp.toLocaleDateString('en-IN');
-        const time = message.timestamp.toLocaleTimeString('en-IN', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-
-        return `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            ${message.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name">${this.escapeHtml(message.name)}</div>
-                            <div class="user-email">${this.escapeHtml(message.email)}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>${this.escapeHtml(message.subject)}</td>
-                <td>${date}<br><small>${time}</small></td>
-                <td>
-                    <span class="status-badge status-${message.status}">
-                        ${message.status}
-                    </span>
-                </td>
-                <td>
-                    <div class="actions">
-                        <button class="action-btn view-btn" data-id="${message.id}" title="View">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn reply-btn" data-id="${message.id}" title="Reply">
-                            <i class="fas fa-reply"></i>
-                        </button>
-                        <button class="action-btn delete-btn" data-id="${message.id}" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }
-
-    renderMobileCard(message) {
-        const date = message.timestamp.toLocaleDateString('en-IN');
-        const time = message.timestamp.toLocaleTimeString('en-IN', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-
-        return `
-            <div class="message-card">
-                <div class="card-header">
-                    <div class="card-user">
-                        <div class="user-avatar">
-                            ${message.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                            <div class="user-name">${this.escapeHtml(message.name)}</div>
-                            <div class="user-email">${this.escapeHtml(message.email)}</div>
-                        </div>
-                    </div>
-                    <span class="status-badge status-${message.status}">
-                        ${message.status}
-                    </span>
-                </div>
-                <div class="card-content">
-                    <div class="card-subject">${this.escapeHtml(message.subject)}</div>
-                    <div class="card-date">${date} at ${time}</div>
-                    <div class="card-message">
-                        ${this.escapeHtml(message.message.substring(0, 100))}${message.message.length > 100 ? '...' : ''}
-                    </div>
-                </div>
-                <div class="card-actions">
-                    <button class="action-btn view-btn" data-id="${message.id}" title="View">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="action-btn reply-btn" data-id="${message.id}" title="Reply">
-                        <i class="fas fa-reply"></i>
-                    </button>
-                    <button class="action-btn delete-btn" data-id="${message.id}" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    bindActionButtons() {
-        // View buttons
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const messageId = e.currentTarget.getAttribute('data-id');
-                this.viewMessage(messageId);
-            });
-        });
-
-        // Reply buttons
-        document.querySelectorAll('.reply-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const messageId = e.currentTarget.getAttribute('data-id');
-                this.replyToMessage(messageId);
-            });
-        });
-
-        // Delete buttons
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const messageId = e.currentTarget.getAttribute('data-id');
-                this.deleteMessage(messageId);
-            });
-        });
-    }
-
-    viewMessage(messageId) {
-        const message = this.messages.find(msg => msg.id === messageId);
-        if (!message) return;
-
-        this.currentMessageId = messageId;
-
-        // Update modal content
-        document.getElementById('detailName').textContent = message.name;
-        document.getElementById('detailEmail').textContent = message.email;
-        document.getElementById('detailPhone').textContent = message.phone || 'Not provided';
-        document.getElementById('detailSubject').textContent = message.subject;
-        document.getElementById('detailStatus').textContent = message.status;
-        document.getElementById('detailMessage').textContent = message.message;
-
-        // Show modal
-        document.getElementById('messageModal').classList.add('show');
-
-        // Update status to "read" if it's new
-        if (message.status === 'new') {
-            this.updateMessageStatus(messageId, 'read');
-        }
-    }
-
-    replyToMessage(messageId = null) {
-        const id = messageId || this.currentMessageId;
-        const message = this.messages.find(msg => msg.id === id);
-        if (!message) return;
-
-        // Update status to "replied"
-        this.updateMessageStatus(id, 'replied');
-
-        // Create Gmail compose URL
-        const subject = `Re: ${message.subject}`;
-        const body = `Hi ${message.name},\n\nThank you for your message. We have received your inquiry and will get back to you shortly.\n\nBest regards,\nNatura Honey Team\n\nOriginal message:\n${message.message}`;
-
-        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(message.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        
-        window.open(gmailUrl, '_blank');
-        this.closeModal();
-    }
-
-    deleteMessage(messageId) {
-        const message = this.messages.find(msg => msg.id === messageId);
-        if (!message) return;
-
-        if (confirm(`Are you sure you want to delete the message from ${message.name}?`)) {
-            db.collection('contactSubmissions').doc(messageId).delete()
-                .then(() => {
-                    console.log('Message deleted successfully');
-                })
-                .catch((error) => {
-                    console.error('Error deleting message:', error);
-                    alert('Error deleting message. Please try again.');
-                });
-        }
-    }
-
-    updateMessageStatus(messageId, newStatus) {
-        db.collection('contactSubmissions').doc(messageId).update({
-            status: newStatus,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch((error) => {
-            console.error('Error updating status:', error);
-        });
-    }
-
-    createTestMessage() {
-        const testMessage = {
-            name: 'Test User',
-            email: 'test@example.com',
-            phone: '+91 9876543210',
-            subject: 'Test Message from Admin',
-            message: 'This is a test message created from the admin panel to verify that the messages system is working correctly.',
-            status: 'new',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        const firebaseConfig = {
+            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+            authDomain: "hexahoney-96aed.firebaseapp.com",
+            projectId: "hexahoney-96aed",
+            storageBucket: "hexahoney-96aed.firebasestorage.app",
+            messagingSenderId: "700458850837",
+            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+            measurementId: "G-MQGKK9709H"
         };
 
-        db.collection('contactSubmissions').add(testMessage)
-            .then(() => {
-                console.log('Test message created successfully');
-            })
-            .catch((error) => {
-                console.error('Error creating test message:', error);
-                alert('Error creating test message. Please try again.');
-            });
-    }
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
 
-    closeModal() {
-        document.getElementById('messageModal').classList.remove('show');
-        this.currentMessageId = null;
-    }
+        // Messages Manager
+        class MessagesManager {
+            constructor() {
+                this.messages = [];
+                this.filteredMessages = [];
+                this.currentMessageId = null;
+                this.listener = null;
+                this.init();
+            }
 
-    showLoading() {
-        const tableBody = document.getElementById('messagesTableBody');
-        const mobileCards = document.getElementById('mobileCards');
+            init() {
+                this.bindEvents();
+                this.loadMessages();
+            }
 
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5">
+            bindEvents() {
+                // Refresh button
+                document.getElementById('refreshBtn').addEventListener('click', () => {
+                    this.loadMessages();
+                });
+
+                // Test data button
+                document.getElementById('testDataBtn').addEventListener('click', () => {
+                    this.createTestMessage();
+                });
+
+                // Filters
+                document.getElementById('statusFilter').addEventListener('change', () => {
+                    this.applyFilters();
+                });
+
+                document.getElementById('dateFilter').addEventListener('change', () => {
+                    this.applyFilters();
+                });
+
+                // Modal
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    this.closeModal();
+                });
+
+                document.getElementById('closeModalBtn').addEventListener('click', () => {
+                    this.closeModal();
+                });
+
+                document.getElementById('replyBtn').addEventListener('click', () => {
+                    this.replyToMessage();
+                });
+
+                // Close modal when clicking outside
+                document.getElementById('messageModal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) {
+                        this.closeModal();
+                    }
+                });
+            }
+
+            loadMessages() {
+                this.showLoading();
+
+                // Clean up previous listener
+                if (this.listener) {
+                    this.listener();
+                }
+
+                this.listener = db.collection('contactSubmissions')
+                    .orderBy('timestamp', 'desc')
+                    .limit(100)
+                    .onSnapshot(
+                        (snapshot) => {
+                            if (snapshot.empty) {
+                                this.messages = [];
+                                this.showEmpty();
+                                return;
+                            }
+
+                            this.messages = snapshot.docs.map(doc => {
+                                const data = doc.data();
+                                
+                                // Handle all possible missing fields with robust defaults
+                                return {
+                                    id: doc.id,
+                                    name: data.name || data.fullName || data.userName || 'Unknown User',
+                                    email: data.email || data.userEmail || 'No email',
+                                    phone: data.phone || data.mobile || data.contact || 'Not provided',
+                                    subject: data.subject || data.topic || 'No Subject',
+                                    message: data.message || data.content || data.inquiry || 'No message content',
+                                    status: data.status || 'new',
+                                    timestamp: this.safeGetTimestamp(data)
+                                };
+                            });
+
+                            this.applyFilters();
+                        },
+                        (error) => {
+                            console.error('Error loading messages:', error);
+                            this.showError('Failed to load messages. Please try again.');
+                        }
+                    );
+            }
+
+            safeGetTimestamp(data) {
+                try {
+                    // Try different possible timestamp fields
+                    if (data.timestamp && data.timestamp.toDate) {
+                        return data.timestamp.toDate();
+                    }
+                    if (data.createdAt && data.createdAt.toDate) {
+                        return data.createdAt.toDate();
+                    }
+                    if (data.date && data.date.toDate) {
+                        return data.date.toDate();
+                    }
+                    if (data.timestamp instanceof Date) {
+                        return data.timestamp;
+                    }
+                    if (data.createdAt instanceof Date) {
+                        return data.createdAt;
+                    }
+                    // Fallback to current date
+                    return new Date();
+                } catch (error) {
+                    return new Date();
+                }
+            }
+
+            applyFilters() {
+                const statusFilter = document.getElementById('statusFilter').value;
+                const dateFilter = document.getElementById('dateFilter').value;
+
+                let filtered = [...this.messages];
+
+                // Status filter
+                if (statusFilter !== 'all') {
+                    filtered = filtered.filter(msg => msg.status === statusFilter);
+                }
+
+                // Date filter
+                if (dateFilter !== 'all') {
+                    const now = new Date();
+                    let startDate = new Date();
+
+                    switch (dateFilter) {
+                        case 'today':
+                            startDate.setHours(0, 0, 0, 0);
+                            break;
+                        case 'week':
+                            startDate.setDate(now.getDate() - 7);
+                            break;
+                        case 'month':
+                            startDate.setMonth(now.getMonth() - 1);
+                            break;
+                    }
+
+                    filtered = filtered.filter(msg => {
+                        if (!msg.timestamp) return false;
+                        return msg.timestamp >= startDate;
+                    });
+                }
+
+                this.filteredMessages = filtered;
+                this.renderMessages();
+            }
+
+            renderMessages() {
+                const tableBody = document.getElementById('messagesTableBody');
+                const mobileCards = document.getElementById('mobileCards');
+
+                if (this.filteredMessages.length === 0) {
+                    this.showEmpty();
+                    return;
+                }
+
+                // Render table
+                tableBody.innerHTML = this.filteredMessages.map(message => this.renderTableRow(message)).join('');
+
+                // Render mobile cards
+                mobileCards.innerHTML = this.filteredMessages.map(message => this.renderMobileCard(message)).join('');
+
+                // Add event listeners to action buttons
+                this.bindActionButtons();
+            }
+
+            renderTableRow(message) {
+                const date = message.timestamp ? message.timestamp.toLocaleDateString('en-IN') : 'Unknown';
+                const time = message.timestamp ? message.timestamp.toLocaleTimeString('en-IN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }) : '';
+
+                // Use 'status-na' class for N/A status
+                const statusClass = message.status === 'N/A' ? 'status-na' : `status-${message.status}`;
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    ${(message.name || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <div class="user-details">
+                                    <div class="user-name">${this.escapeHtml(message.name)}</div>
+                                    <div class="user-email">${this.escapeHtml(message.email)}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${this.escapeHtml(message.subject)}</td>
+                        <td>${date}${time ? '<br><small>' + time + '</small>' : ''}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                ${message.status}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="action-btn view-btn" data-id="${message.id}" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="action-btn reply-btn" data-id="${message.id}" title="Reply">
+                                    <i class="fas fa-reply"></i>
+                                </button>
+                                <button class="action-btn delete-btn" data-id="${message.id}" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            renderMobileCard(message) {
+                const date = message.timestamp ? message.timestamp.toLocaleDateString('en-IN') : 'Unknown';
+                const time = message.timestamp ? message.timestamp.toLocaleTimeString('en-IN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }) : '';
+
+                const statusClass = message.status === 'N/A' ? 'status-na' : `status-${message.status}`;
+
+                return `
+                    <div class="message-card">
+                        <div class="card-header">
+                            <div class="card-user">
+                                <div class="user-avatar">
+                                    ${(message.name || 'U').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div class="user-name">${this.escapeHtml(message.name)}</div>
+                                    <div class="user-email">${this.escapeHtml(message.email)}</div>
+                                </div>
+                            </div>
+                            <span class="status-badge ${statusClass}">
+                                ${message.status}
+                            </span>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-subject">${this.escapeHtml(message.subject)}</div>
+                            <div class="card-date">${date}${time ? ' at ' + time : ''}</div>
+                            <div class="card-message">
+                                ${this.escapeHtml((message.message || '').substring(0, 100))}${message.message && message.message.length > 100 ? '...' : ''}
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn view-btn" data-id="${message.id}" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn reply-btn" data-id="${message.id}" title="Reply">
+                                <i class="fas fa-reply"></i>
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${message.id}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            bindActionButtons() {
+                // View buttons
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const messageId = e.currentTarget.getAttribute('data-id');
+                        this.viewMessage(messageId);
+                    });
+                });
+
+                // Reply buttons
+                document.querySelectorAll('.reply-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const messageId = e.currentTarget.getAttribute('data-id');
+                        this.replyToMessage(messageId);
+                    });
+                });
+
+                // Delete buttons
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const messageId = e.currentTarget.getAttribute('data-id');
+                        this.deleteMessage(messageId);
+                    });
+                });
+            }
+
+            viewMessage(messageId) {
+                const message = this.messages.find(msg => msg.id === messageId);
+                if (!message) return;
+
+                this.currentMessageId = messageId;
+
+                // Update modal content
+                document.getElementById('detailName').textContent = message.name;
+                document.getElementById('detailEmail').textContent = message.email;
+                document.getElementById('detailPhone').textContent = message.phone;
+                document.getElementById('detailSubject').textContent = message.subject;
+                document.getElementById('detailStatus').textContent = message.status;
+                document.getElementById('detailMessage').textContent = message.message;
+
+                // Show modal
+                document.getElementById('messageModal').classList.add('show');
+
+                // Update status to "read" if it's new
+                if (message.status === 'new') {
+                    this.updateMessageStatus(messageId, 'read');
+                }
+            }
+
+            replyToMessage(messageId = null) {
+                const id = messageId || this.currentMessageId;
+                const message = this.messages.find(msg => msg.id === id);
+                if (!message) return;
+
+                // Update status to "replied"
+                this.updateMessageStatus(id, 'replied');
+
+                // Create Gmail compose URL
+                const subject = `Re: ${message.subject}`;
+                const body = `Hi ${message.name},\n\nThank you for your message. We have received your inquiry and will get back to you shortly.\n\nBest regards,\nNatura Honey Team\n\nOriginal message:\n${message.message}`;
+
+                const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(message.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                
+                window.open(gmailUrl, '_blank');
+                this.closeModal();
+            }
+
+            deleteMessage(messageId) {
+                const message = this.messages.find(msg => msg.id === messageId);
+                if (!message) return;
+
+                if (confirm(`Are you sure you want to delete the message from ${message.name}?`)) {
+                    db.collection('contactSubmissions').doc(messageId).delete()
+                        .then(() => {
+                            console.log('Message deleted successfully');
+                        })
+                        .catch((error) => {
+                            console.error('Error deleting message:', error);
+                            alert('Error deleting message. Please try again.');
+                        });
+                }
+            }
+
+            updateMessageStatus(messageId, newStatus) {
+                db.collection('contactSubmissions').doc(messageId).update({
+                    status: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch((error) => {
+                    console.error('Error updating status:', error);
+                });
+            }
+
+            createTestMessage() {
+                const testMessage = {
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    phone: '+91 9876543210',
+                    subject: 'Test Message from Admin',
+                    message: 'This is a test message created from the admin panel to verify that the messages system is working correctly.',
+                    status: 'new',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                db.collection('contactSubmissions').add(testMessage)
+                    .then(() => {
+                        alert('Test message created successfully!');
+                    })
+                    .catch((error) => {
+                        console.error('Error creating test message:', error);
+                        alert('Error creating test message. Please try again.');
+                    });
+            }
+
+            closeModal() {
+                document.getElementById('messageModal').classList.remove('show');
+                this.currentMessageId = null;
+            }
+
+            showLoading() {
+                const tableBody = document.getElementById('messagesTableBody');
+                const mobileCards = document.getElementById('mobileCards');
+
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin loading-spinner"></i>
+                                <p>Loading messages...</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                mobileCards.innerHTML = `
                     <div class="loading-state">
                         <i class="fas fa-spinner fa-spin loading-spinner"></i>
                         <p>Loading messages...</p>
                     </div>
-                </td>
-            </tr>
-        `;
+                `;
+            }
 
-        mobileCards.innerHTML = `
-            <div class="loading-state">
-                <i class="fas fa-spinner fa-spin loading-spinner"></i>
-                <p>Loading messages...</p>
-            </div>
-        `;
-    }
+            showEmpty() {
+                const tableBody = document.getElementById('messagesTableBody');
+                const mobileCards = document.getElementById('mobileCards');
 
-    showEmpty() {
-        const tableBody = document.getElementById('messagesTableBody');
-        const mobileCards = document.getElementById('mobileCards');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox empty-icon"></i>
+                                <p>No messages found</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
 
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5">
+                mobileCards.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-inbox empty-icon"></i>
                         <p>No messages found</p>
                     </div>
-                </td>
-            </tr>
-        `;
+                `;
+            }
 
-        mobileCards.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-inbox empty-icon"></i>
-                <p>No messages found</p>
-            </div>
-        `;
-    }
+            showError(message) {
+                const tableBody = document.getElementById('messagesTableBody');
+                const mobileCards = document.getElementById('mobileCards');
 
-    showError(message) {
-        const tableBody = document.getElementById('messagesTableBody');
-        const mobileCards = document.getElementById('mobileCards');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="error-state">
+                                <i class="fas fa-exclamation-triangle error-icon"></i>
+                                <p>${message}</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
 
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5">
+                mobileCards.innerHTML = `
                     <div class="error-state">
                         <i class="fas fa-exclamation-triangle error-icon"></i>
                         <p>${message}</p>
                     </div>
-                </td>
-            </tr>
-        `;
+                `;
+            }
 
-        mobileCards.innerHTML = `
-            <div class="error-state">
-                <i class="fas fa-exclamation-triangle error-icon"></i>
-                <p>${message}</p>
-            </div>
-        `;
-    }
+            escapeHtml(text) {
+                if (text === null || text === undefined) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
 
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    cleanup() {
-        if (this.listener) {
-            this.listener();
+            cleanup() {
+                if (this.listener) {
+                    this.listener();
+                }
+            }
         }
-    }
-}
 
-// Authentication check before initializing
-firebase.auth().onAuthStateChanged(async (user) => {
-    if (!user) {
-        // Redirect to dashboard for login
-        window.location.href = 'dashboard.html';
-        return;
-    }
+        // Authentication Handler
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
 
-    try {
-        const tokenResult = await user.getIdTokenResult(true);
-        if (!tokenResult.claims || tokenResult.claims.admin !== true) {
-            alert("Access denied. Admin only.");
-            window.location.href = 'dashboard.html';
-            return;
-        }
-        
-        // User is authenticated as admin, initialize messages manager
-        window.messagesManager = new MessagesManager();
-    } catch (error) {
-        console.error('Auth check failed:', error);
-        window.location.href = 'dashboard.html';
-    }
-});
+            try {
+                // Force token refresh to get latest claims
+                await user.getIdToken(true);
+                const tokenResult = await user.getIdTokenResult();
+                
+                if (!tokenResult.claims.admin) {
+                    alert("Access denied. Admin only.");
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+                
+                // User is authenticated as admin, initialize messages manager
+                window.messagesManager = new MessagesManager();
+                
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                alert('Authentication error. Please try again.');
+                window.location.href = 'dashboard.html';
+            }
+        });
 
-// Cleanup when leaving the page
-window.addEventListener('beforeunload', () => {
-    if (window.messagesManager) {
-        window.messagesManager.cleanup();
-    }
-});
+        // Cleanup when leaving the page
+        window.addEventListener('beforeunload', () => {
+            if (window.messagesManager) {
+                window.messagesManager.cleanup();
+            }
+        });
     </script>
