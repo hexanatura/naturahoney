@@ -2293,10 +2293,10 @@ function updatePendingOrdersCount() {
                 menuItems.forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
 
-                switch (menuText) {
-                    case 'Dashboard':
-                        showDashboard();
-                        break;
+                case 'Dashboard':
+    location.reload();
+    break;
+
                     case 'Orders':
                         localStorage.setItem(LAST_OPEN.orders, Date.now());
                         updateBadge(document.getElementById("countOrders"), 0);
