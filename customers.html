@@ -454,6 +454,29 @@
 
 <script>
 (function () {
+    
+let customersListener = null;
+
+function cleanupCustomers() {
+  if (customersListener) {
+    customersListener();
+    customersListener = null;
+  }
+}
+
+// ADD DEBOUNCE FUNCTION
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
   let db;
   let data = [];
   let deleteId = null;
@@ -522,31 +545,37 @@
       }[c]));
     }
 
+    // REPLACE EXISTING load FUNCTION IN CUSTOMERS
     function load() {
       tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading...</td></tr>';
       cardsDiv.innerHTML = "";
 
-      // INSTANT-FIX: Use SNAPSHOT instead of slow .get()
-      db.collection("users").onSnapshot((snapshot) => {
-        data = [];
+      // Cleanup previous
+      cleanupCustomers();
 
-        snapshot.forEach((doc) => {
-          const v = doc.data();
-
-          data.push({
-            id: doc.id,
-            name: v.name || v.displayName || "Unknown",
-            email: v.email || "-",
-            phone: v.phone || v.mobile || "-",
-            createdAt: ts(v.createdAt || v.creationTime),
-            lastLogin: ts(v.lastLoginAt || v.lastSignInTime),
-            orders: v.ordersCount || 0,
-            active: v.active !== false
+      customersListener = db.collection("users")
+        .limit(100) // ADD LIMIT
+        .onSnapshot((snapshot) => {
+          data = [];
+          snapshot.forEach((doc) => {
+            const v = doc.data();
+            data.push({
+              id: doc.id,
+              name: v.name || v.displayName || "Unknown",
+              email: v.email || "-",
+              phone: v.phone || v.mobile || "-",
+              createdAt: ts(v.createdAt || v.creationTime),
+              lastLogin: ts(v.lastLoginAt || v.lastSignInTime),
+              orders: v.ordersCount || 0,
+              active: v.active !== false
+            });
           });
+          apply();
+        }, (error) => { // ADD ERROR HANDLING
+          console.error("Customers load error:", error);
+          tbody.innerHTML = '<tr><td colspan="7" class="muted">Error loading customers</td></tr>';
+          cardsDiv.innerHTML = '<div class="card">Error loading customers</div>';
         });
-
-        apply();
-      });
     }
 
     function apply() {
@@ -670,16 +699,30 @@
       db.collection("users").doc(deleteId).delete().then(() => {
         confirmBg.classList.remove("show");
         deleteId = null;
+      }).catch(error => {
+        console.error("Delete error:", error);
+        confirmBg.classList.remove("show");
       });
     };
 
-    search.oninput = apply;
+    // FIX: ADD DEBOUNCED SEARCH
+    search.oninput = debounce(apply, 300);
     filter.onchange = apply;
     sortSelect.onchange = apply;
 
+    // ADD EXPORT FUNCTIONALITY
+    if (exportBtn) {
+      exportBtn.onclick = function() {
+        // Add your export logic here
+        console.log("Export customers");
+      };
+    }
+
     load();
   }
+  
   waitForFirebaseAuth(init);
+  window.addEventListener('beforeunload', cleanupCustomers);
+
 })();
 </script>
-
