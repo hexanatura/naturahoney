@@ -1330,7 +1330,7 @@ body {
             </div>
 
             <div class="sidebar-section menu">
-                <div class="menu-item active">
+<div class="menu-item active" id="menuDashboard">
                     <div class="menu-icon"><i class="fas fa-home"></i></div>
                     <div class="menu-text">Dashboard</div>
                 </div>
@@ -2259,6 +2259,11 @@ function initMenuCounts() {
                 this.classList.add('active');
 
               switch (menuText) {
+                  
+                  case 'Dashboard':
+    showDashboard();
+    break;
+
  case 'Orders':
     localStorage.setItem(LAST_OPEN.orders, Date.now());
     document.getElementById("countOrders").style.display = "none";
