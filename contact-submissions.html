@@ -624,6 +624,30 @@
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
+        
+        // Add this authentication check at the top of your message page script
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) {
+        // Redirect to dashboard for login
+        window.location.href = 'dashboard.html';
+        return;
+    }
+
+    try {
+        const tokenResult = await user.getIdTokenResult(true);
+        if (!tokenResult.claims || tokenResult.claims.admin !== true) {
+            alert("Access denied. Admin only.");
+            window.location.href = 'dashboard.html';
+            return;
+        }
+        
+        // User is authenticated as admin, initialize messages manager
+        window.messagesManager = new MessagesManager();
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = 'dashboard.html';
+    }
+});
         const db = firebase.firestore();
 
         // Messages Manager
@@ -1065,10 +1089,9 @@
             window.messagesManager = new MessagesManager();
         });
 
-        // Cleanup when leaving the page
-        window.addEventListener('beforeunload', () => {
-            if (window.messagesManager) {
-                window.messagesManager.cleanup();
-            }
-        });
+  window.addEventListener('beforeunload', () => {
+    if (window.messagesManager) {
+        window.messagesManager.cleanup();
+    }
+});
     </script>
