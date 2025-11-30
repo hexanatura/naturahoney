@@ -1818,6 +1818,7 @@ body {
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
+
 <script>
     var firebaseConfig = {
         apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
@@ -1856,8 +1857,550 @@ body {
         cleanup() { this.cleanups.forEach(fn => fn()); this.cleanups.clear(); }
     }
 
+    // Global Search Class
+    class GlobalSearch {
+        constructor() {
+            this.results = [];
+            this.setupSearch();
+        }
+
+        setupSearch() {
+            const searchInput = document.querySelector('.search-bar input');
+            if (searchInput) {
+                let timeout;
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        this.performSearch(e.target.value.trim());
+                    }, 300);
+                });
+
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.performSearch(e.target.value.trim());
+                    }
+                });
+            }
+        }
+
+        async performSearch(query) {
+            if (!query || query.length < 2) {
+                this.hideResults();
+                return;
+            }
+
+            try {
+                const results = await this.searchAllCollections(query.toLowerCase());
+                this.displayResults(results, query);
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }
+
+        async searchAllCollections(query) {
+            const results = [];
+            
+            const ordersResults = await this.searchOrders(query);
+            results.push(...ordersResults);
+
+            const customersResults = await this.searchCustomers(query);
+            results.push(...customersResults);
+
+            const messagesResults = await this.searchMessages(query);
+            results.push(...messagesResults);
+
+            const reviewsResults = await this.searchReviews(query);
+            results.push(...reviewsResults);
+
+            const promoCodesResults = await this.searchPromoCodes(query);
+            results.push(...promoCodesResults);
+
+            return results.sort((a, b) => b.relevance - a.relevance);
+        }
+
+        async searchOrders(query) {
+            const results = [];
+            const snapshot = await db.collection("orders")
+                .orderBy("createdAt", "desc")
+                .limit(50)
+                .get();
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const searchableText = this.getOrderSearchText(data, doc.id);
+                const relevance = this.calculateRelevance(searchableText, query);
+                
+                if (relevance > 0) {
+                    results.push({
+                        type: 'order',
+                        id: doc.id,
+                        data: data,
+                        title: `Order #${doc.id.substring(0, 8)}`,
+                        subtitle: `₹${Number(data.total || 0).toFixed(2)} • ${data.status || 'pending'}`,
+                        relevance: relevance,
+                        timestamp: data.createdAt
+                    });
+                }
+            });
+
+            return results;
+        }
+
+        async searchCustomers(query) {
+            const results = [];
+            const snapshot = await db.collection("users")
+                .limit(50)
+                .get();
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const searchableText = this.getCustomerSearchText(data, doc.id);
+                const relevance = this.calculateRelevance(searchableText, query);
+                
+                if (relevance > 0) {
+                    results.push({
+                        type: 'customer',
+                        id: doc.id,
+                        data: data,
+                        title: data.name || 'Unnamed Customer',
+                        subtitle: data.email || 'No email',
+                        relevance: relevance,
+                        timestamp: data.createdAt
+                    });
+                }
+            });
+
+            return results;
+        }
+
+        async searchMessages(query) {
+            const results = [];
+            const snapshot = await db.collection("contactSubmissions")
+                .orderBy("timestamp", "desc")
+                .limit(50)
+                .get();
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const searchableText = this.getMessageSearchText(data, doc.id);
+                const relevance = this.calculateRelevance(searchableText, query);
+                
+                if (relevance > 0) {
+                    results.push({
+                        type: 'message',
+                        id: doc.id,
+                        data: data,
+                        title: data.name || 'Unknown Sender',
+                        subtitle: data.subject || data.message?.substring(0, 50) + '...' || 'No content',
+                        relevance: relevance,
+                        timestamp: data.timestamp
+                    });
+                }
+            });
+
+            return results;
+        }
+
+        async searchReviews(query) {
+            const results = [];
+            const snapshot = await db.collection("reviews")
+                .orderBy("createdAt", "desc")
+                .limit(50)
+                .get();
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const searchableText = this.getReviewSearchText(data, doc.id);
+                const relevance = this.calculateRelevance(searchableText, query);
+                
+                if (relevance > 0) {
+                    results.push({
+                        type: 'review',
+                        id: doc.id,
+                        data: data,
+                        title: data.userName || 'Anonymous',
+                        subtitle: `${data.rating} stars • ${data.reviewText?.substring(0, 50)}...` || 'No review text',
+                        relevance: relevance,
+                        timestamp: data.createdAt
+                    });
+                }
+            });
+
+            return results;
+        }
+
+        async searchPromoCodes(query) {
+            const results = [];
+            try {
+                const snapshot = await db.collection("promoCodes")
+                    .limit(50)
+                    .get();
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const searchableText = this.getPromoCodeSearchText(data, doc.id);
+                    const relevance = this.calculateRelevance(searchableText, query);
+                    
+                    if (relevance > 0) {
+                        results.push({
+                            type: 'promo',
+                            id: doc.id,
+                            data: data,
+                            title: data.code || 'Unnamed Promo',
+                            subtitle: `${data.discount || 0}% off • ${data.status || 'active'}`,
+                            relevance: relevance,
+                            timestamp: data.createdAt
+                        });
+                    }
+                });
+            } catch (error) {
+                console.log('Promo codes collection might not exist:', error);
+            }
+
+            return results;
+        }
+
+        getOrderSearchText(data, id) {
+            return `
+                ${id}
+                ${data.status || ''}
+                ${data.total || ''}
+                ${data.customerName || ''}
+                ${data.customerEmail || ''}
+                ${data.shippingAddress?.address || ''}
+                ${data.shippingAddress?.city || ''}
+                ${data.items?.map(item => item.name || '').join(' ') || ''}
+            `.toLowerCase();
+        }
+
+        getCustomerSearchText(data, id) {
+            return `
+                ${id}
+                ${data.name || ''}
+                ${data.email || ''}
+                ${data.phone || ''}
+                ${data.address || ''}
+                ${data.city || ''}
+                ${data.state || ''}
+            `.toLowerCase();
+        }
+
+        getMessageSearchText(data, id) {
+            return `
+                ${id}
+                ${data.name || ''}
+                ${data.email || ''}
+                ${data.subject || ''}
+                ${data.message || ''}
+                ${data.status || ''}
+            `.toLowerCase();
+        }
+
+        getReviewSearchText(data, id) {
+            return `
+                ${id}
+                ${data.userName || ''}
+                ${data.userLocation || ''}
+                ${data.reviewText || ''}
+                ${data.rating || ''}
+                ${data.status || ''}
+            `.toLowerCase();
+        }
+
+        getPromoCodeSearchText(data, id) {
+            return `
+                ${id}
+                ${data.code || ''}
+                ${data.description || ''}
+                ${data.status || ''}
+                ${data.discount || ''}
+            `.toLowerCase();
+        }
+
+        calculateRelevance(text, query) {
+            if (!text.includes(query)) return 0;
+            
+            let relevance = 0;
+            const queryWords = query.split(' ');
+            
+            queryWords.forEach(word => {
+                if (text.includes(word)) {
+                    relevance += 10;
+                    if (text.startsWith(word)) relevance += 5;
+                    if (text === word) relevance += 20;
+                }
+            });
+
+            return relevance;
+        }
+
+        displayResults(results, query) {
+            this.hideResults();
+
+            if (results.length === 0) {
+                this.showNoResults(query);
+                return;
+            }
+
+            const searchBar = document.querySelector('.search-bar');
+            if (!searchBar) return;
+
+            const resultsContainer = document.createElement('div');
+            resultsContainer.className = 'search-results';
+            resultsContainer.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                box-shadow: var(--shadow-lg);
+                z-index: 1000;
+                max-height: 400px;
+                overflow-y: auto;
+                margin-top: 8px;
+            `;
+
+            const header = document.createElement('div');
+            header.style.cssText = `
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border);
+                font-weight: 600;
+                color: var(--primary);
+                font-size: 0.9rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            `;
+            header.innerHTML = `
+                <span>Search Results (${results.length})</span>
+                <span style="font-size: 0.8rem; color: var(--muted); font-weight: normal;">"${query}"</span>
+            `;
+            resultsContainer.appendChild(header);
+
+            const groupedResults = this.groupResultsByType(results);
+
+            Object.entries(groupedResults).forEach(([type, items]) => {
+                const typeSection = document.createElement('div');
+                
+                const typeHeader = document.createElement('div');
+                typeHeader.style.cssText = `
+                    padding: 8px 16px;
+                    background: var(--light);
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    color: var(--primary);
+                    text-transform: capitalize;
+                    border-bottom: 1px solid var(--border);
+                `;
+                typeHeader.textContent = `${type}s (${items.length})`;
+                typeSection.appendChild(typeHeader);
+
+                items.forEach(result => {
+                    const resultItem = document.createElement('div');
+                    resultItem.style.cssText = `
+                        padding: 12px 16px;
+                        border-bottom: 1px solid var(--border);
+                        cursor: pointer;
+                        transition: background 0.2s ease;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                    `;
+                    resultItem.innerHTML = `
+                        <div style="font-weight: 600; font-size: 0.9rem; color: var(--primary);">${result.title}</div>
+                        <div style="font-size: 0.8rem; color: var(--muted);">${result.subtitle}</div>
+                    `;
+
+                    resultItem.addEventListener('click', () => {
+                        this.navigateToResult(result);
+                        this.hideResults();
+                    });
+
+                    resultItem.addEventListener('mouseenter', () => {
+                        resultItem.style.background = 'var(--light)';
+                    });
+
+                    resultItem.addEventListener('mouseleave', () => {
+                        resultItem.style.background = 'white';
+                    });
+
+                    typeSection.appendChild(resultItem);
+                });
+
+                resultsContainer.appendChild(typeSection);
+            });
+
+            searchBar.style.position = 'relative';
+            searchBar.appendChild(resultsContainer);
+
+            setTimeout(() => {
+                document.addEventListener('click', this.handleClickOutside.bind(this));
+            }, 100);
+        }
+
+        groupResultsByType(results) {
+            return results.reduce((groups, result) => {
+                if (!groups[result.type]) {
+                    groups[result.type] = [];
+                }
+                groups[result.type].push(result);
+                return groups;
+            }, {});
+        }
+
+        showNoResults(query) {
+            const searchBar = document.querySelector('.search-bar');
+            if (!searchBar) return;
+
+            const resultsContainer = document.createElement('div');
+            resultsContainer.className = 'search-results';
+            resultsContainer.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                box-shadow: var(--shadow-lg);
+                z-index: 1000;
+                padding: 20px;
+                text-align: center;
+                margin-top: 8px;
+            `;
+
+            resultsContainer.innerHTML = `
+                <div style="color: var(--muted); margin-bottom: 8px;">
+                    <i class="fas fa-search" style="font-size: 1.5rem;"></i>
+                </div>
+                <div style="font-weight: 600; color: var(--primary); margin-bottom: 4px;">No results found</div>
+                <div style="font-size: 0.8rem; color: var(--muted);">No matches for "${query}"</div>
+            `;
+
+            searchBar.style.position = 'relative';
+            searchBar.appendChild(resultsContainer);
+
+            setTimeout(() => {
+                document.addEventListener('click', this.handleClickOutside.bind(this));
+            }, 100);
+        }
+
+        handleClickOutside(event) {
+            const searchBar = document.querySelector('.search-bar');
+            if (searchBar && !searchBar.contains(event.target)) {
+                this.hideResults();
+            }
+        }
+
+        hideResults() {
+            const existingResults = document.querySelector('.search-results');
+            if (existingResults) {
+                existingResults.remove();
+            }
+            document.removeEventListener('click', this.handleClickOutside.bind(this));
+        }
+
+        navigateToResult(result) {
+            const searchInput = document.querySelector('.search-bar input');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+
+            switch (result.type) {
+                case 'order':
+                    this.navigateToOrders(result.id);
+                    break;
+                case 'customer':
+                    this.navigateToCustomers(result.id);
+                    break;
+                case 'message':
+                    this.navigateToMessages(result.id);
+                    break;
+                case 'review':
+                    this.navigateToReviews(result.id);
+                    break;
+                case 'promo':
+                    this.navigateToPromoCodes(result.id);
+                    break;
+            }
+        }
+
+        navigateToOrders(orderId = null) {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            document.getElementById('menuOrders').classList.add('active');
+            
+            loadOrdersPage().then(() => {
+                if (orderId && window.ordersManager) {
+                    setTimeout(() => {
+                        window.ordersManager.highlightOrder(orderId);
+                    }, 500);
+                }
+            });
+        }
+
+        navigateToCustomers(customerId = null) {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            document.getElementById('menuCustomers').classList.add('active');
+            
+            loadCustomersPage().then(() => {
+                if (customerId && window.customersManager) {
+                    setTimeout(() => {
+                        window.customersManager.highlightCustomer(customerId);
+                    }, 500);
+                }
+            });
+        }
+
+        navigateToMessages(messageId = null) {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            document.getElementById('menuMessages').classList.add('active');
+            
+            loadMessagesPage().then(() => {
+                if (messageId && window.messagesManager) {
+                    setTimeout(() => {
+                        window.messagesManager.highlightMessage(messageId);
+                    }, 500);
+                }
+            });
+        }
+
+        navigateToReviews(reviewId = null) {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            document.getElementById('menuReviews').classList.add('active');
+            
+            loadReviewsPage().then(() => {
+                if (reviewId && window.reviewsManager) {
+                    setTimeout(() => {
+                        window.reviewsManager.highlightReview(reviewId);
+                    }, 500);
+                }
+            });
+        }
+
+        navigateToPromoCodes(promoId = null) {
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            document.getElementById('menuPromo').classList.add('active');
+            
+            loadPromoPage().then(() => {
+                if (promoId && window.promoManager) {
+                    setTimeout(() => {
+                        window.promoManager.highlightPromo(promoId);
+                    }, 500);
+                }
+            });
+        }
+    }
+
     const queryManager = new QueryManager();
     const cleanupManager = new CleanupManager();
+    let globalSearch = null;
 
     const LAST_OPEN = {
         orders: "lastOpenOrders",
@@ -1883,7 +2426,6 @@ body {
 
         box.innerHTML = `<div class="review-item">Loading...</div>`;
 
-        // Only show pending reviews in the dashboard
         db.collection("reviews")
             .where("status", "==", "pending")
             .orderBy("createdAt", "desc")
@@ -1926,7 +2468,6 @@ body {
 
                 box.innerHTML = html;
                 
-                // Add click listeners to review items
                 box.querySelectorAll('.review-item').forEach(item => {
                     item.addEventListener('click', function() {
                         const id = this.getAttribute('data-id');
@@ -1942,7 +2483,6 @@ body {
     function selectReview(id) {
         selectedReviewId = id;
         
-        // Update UI to show selected review
         document.querySelectorAll('.review-item').forEach(item => {
             if (item.getAttribute('data-id') === id) {
                 item.classList.add('selected');
@@ -1979,7 +2519,6 @@ body {
         }).then(() => {
             showToast("Review approved successfully");
             selectedReviewId = null;
-            // The review will automatically disappear from the list due to the query filter
         }).catch(error => {
             console.error("Error approving review:", error);
             showToast("Failed to approve review", "danger");
@@ -2006,7 +2545,6 @@ body {
     }
 
     function openCreateReviewModal() {
-        // Set default date to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById("cr-date").value = today;
         
@@ -2015,7 +2553,6 @@ body {
 
     function closeCreateReviewModal() {
         document.getElementById("rv-create-bg").classList.remove("show");
-        // Reset form
         document.getElementById("cr-name").value = "";
         document.getElementById("cr-location").value = "";
         document.getElementById("cr-product").value = "1";
@@ -2039,7 +2576,6 @@ body {
             return;
         }
 
-        // Convert date string to Firestore timestamp
         const date = new Date(dateStr);
         const timestamp = firebase.firestore.Timestamp.fromDate(date);
 
@@ -2282,7 +2818,6 @@ body {
         console.log("Fetching messages for date:", date);
         console.log("Date range:", start, "to", end);
 
-        // First, let's check what messages exist for this date regardless of status
         db.collection("contactSubmissions")
             .where("timestamp", ">=", start)
             .where("timestamp", "<=", end)
@@ -2299,7 +2834,6 @@ body {
                         name: data.name
                     });
                     
-                    // Count messages with status 'new' or undefined (default to new)
                     if (!data.status || data.status === 'new') {
                         newMessagesCount++;
                     }
@@ -2762,6 +3296,9 @@ body {
     function initDashboard() {
         if (dashboardInitialized) return;
         dashboardInitialized = true;
+
+        // Initialize global search
+        globalSearch = new GlobalSearch();
 
         setupEventListeners();
         setupMobileMenu();
