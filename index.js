@@ -288,9 +288,7 @@ function initializeBannerImages() {
     }, 4000);
 }
 
-// Load approved reviews from Firebase
 function loadApprovedReviews() {
-    // First, try to load from the 'reviews' collection
     db.collection('reviews')
         .where('status', '==', 'approved')
         .orderBy('createdAt', 'desc')
@@ -298,73 +296,30 @@ function loadApprovedReviews() {
         .then((querySnapshot) => {
             approvedReviews = [];
             reviewsContainer.innerHTML = '';
-            
+            carouselDots.innerHTML = '';
+
             if (querySnapshot.empty) {
-                // If no reviews found, show a message
-                reviewsContainer.innerHTML = '<p style="text-align: center; color: #777; padding: 40px;">No reviews yet. Be the first to review our products!</p>';
-                carouselDots.innerHTML = '';
+                reviewsContainer.innerHTML =
+                    '<p style="text-align: center; color: #777; padding: 40px;">No approved reviews yet.</p>';
                 return;
             }
-            
+
             querySnapshot.forEach((doc) => {
                 const review = doc.data();
                 review.id = doc.id;
                 approvedReviews.push(review);
                 displayReview(review);
             });
-            
+
             initializeCarousel();
         })
         .catch((error) => {
             console.error("Error loading reviews:", error);
-            // If there's an error, show sample reviews as fallback
-            showSampleReviews();
+            reviewsContainer.innerHTML =
+                '<p style="text-align: center; color: #777; padding: 40px;">Unable to load reviews.</p>';
         });
 }
 
-// Show sample reviews as fallback
-function showSampleReviews() {
-    reviewsContainer.innerHTML = '';
-    approvedReviews = [];
-    
-    const sampleReviews = [
-        {
-            userName: "Sarah Johnson",
-            userLocation: "New York, USA",
-            rating: 5,
-            reviewText: "This is the purest honey I've ever tasted! I use it in my tea every morning and it's completely transformed my daily routine.",
-            createdAt: { toDate: () => new Date('2023-01-15') }
-        },
-        {
-            userName: "Michael Chen",
-            userLocation: "Toronto, Canada",
-            rating: 4.5,
-            reviewText: "I've been using Natura Honey for my skin care routine and the results are amazing! My skin feels so much softer.",
-            createdAt: { toDate: () => new Date('2023-02-03') }
-        },
-        {
-            userName: "Priya Sharma",
-            userLocation: "Mumbai, India",
-            rating: 5,
-            reviewText: "The Crystal Pack honey is exceptional! It has the perfect texture and sweetness. I've recommended it to all my friends.",
-            createdAt: { toDate: () => new Date('2023-03-22') }
-        },
-        {
-            userName: "Emma Wilson",
-            userLocation: "London, UK",
-            rating: 5,
-            reviewText: "My whole family loves Natura Honey. We use it as a natural sweetener in everything from tea to baking.",
-            createdAt: { toDate: () => new Date('2023-04-05') }
-        }
-    ];
-    
-    sampleReviews.forEach((review, index) => {
-        approvedReviews.push(review);
-        displayReview(review);
-    });
-    
-    initializeCarousel();
-}
 
 // Display a review in the carousel
 function displayReview(review) {
@@ -393,18 +348,21 @@ function displayReview(review) {
 }
 
 // Generate star rating HTML
-function generateStarRating(rating) {
-    let stars = '';
+function generateStarRating(value) {
+    const rating = Number(value) || 0;
+    let html = "";
+
     for (let i = 1; i <= 5; i++) {
-        if (i <= rating) {
-            stars += '<i class="fas fa-star"></i>';
-        } else if (i - 0.5 === rating) {
-            stars += '<i class="fas fa-star-half-alt"></i>';
+        if (rating >= i) {
+            html += `<i class="fas fa-star"></i>`;
+        } else if (rating >= i - 0.5) {
+            html += `<i class="fas fa-star-half-stroke"></i>`;
         } else {
-            stars += '<i class="far fa-star"></i>';
+            html += `<i class="far fa-star"></i>`;
         }
     }
-    return stars;
+
+    return html;
 }
 
 // Reviews Carousel Functionality
@@ -651,23 +609,21 @@ window.addToLikes = function(productId) {
     }
 };
 
-// Initialize everything for index page
 function initIndexPage() {
     initializeProductCards();
     initializeCategoryFilter();
     initializeBannerImages();
-    loadApprovedReviews();
-    
-    // Update review product dropdown when user data is loaded
+    loadApprovedReviews(); // <-- YOU MISSED THIS
+
     const originalLoadUserData = window.loadUserData;
     window.loadUserData = function(userId) {
         if (originalLoadUserData) {
             originalLoadUserData(userId);
         }
-        // Update review dropdown after a short delay to ensure orders are loaded
         setTimeout(updateReviewProductDropdown, 500);
     };
 }
+
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
