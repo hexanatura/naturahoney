@@ -228,6 +228,7 @@
     </div>
 
     <div class="modal-body">
+      
       <div>
         <div class="muted">Customer Name</div>
         <input id="cr-name" class="filter-select" placeholder="Enter customer name">
@@ -252,18 +253,17 @@
 
       <div>
         <div class="muted">Rating</div>
-      <select id="cr-rating" class="filter-select">
-  <option value="5">5.0 Stars</option>
-  <option value="4.5">4.5 Stars</option>
-  <option value="4">4.0 Stars</option>
-  <option value="3.5">3.5 Stars</option>
-  <option value="3">3.0 Stars</option>
-  <option value="2.5">2.5 Stars</option>
-  <option value="2">2.0 Stars</option>
-  <option value="1.5">1.5 Stars</option>
-  <option value="1">1.0 Stars</option>
-</select>
-
+        <select id="cr-rating" class="filter-select">
+          <option value="5">5.0 Stars</option>
+          <option value="4.5">4.5 Stars</option>
+          <option value="4">4.0 Stars</option>
+          <option value="3.5">3.5 Stars</option>
+          <option value="3">3.0 Stars</option>
+          <option value="2.5">2.5 Stars</option>
+          <option value="2">2.0 Stars</option>
+          <option value="1.5">1.5 Stars</option>
+          <option value="1">1.0 Stars</option>
+        </select>
       </div>
 
       <div>
@@ -279,6 +279,12 @@
           <option value="rejected">Rejected</option>
         </select>
       </div>
+
+      <div>
+        <div class="muted">Date</div>
+        <input type="date" id="cr-date" class="filter-select">
+      </div>
+
     </div>
 
     <div class="modal-footer">
@@ -294,8 +300,6 @@
   </div>
 </div>
 
-</div>
-</div>
 
 <div id="rv-toast" class="rv-toast">
   <i class="fas fa-check-circle" style="color:var(--success)"></i>
@@ -354,8 +358,19 @@ function toast(msg,type="success"){
   setTimeout(()=>toastBox.classList.remove("show"),2500);
 }
 
+
+
 function esc(str){return String(str||"").replace(/[&<>"']/g,a=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[a]));}
-function fdn(d){if(!d) return "—"; const x=d.toDate?d.toDate():new Date(d); return x.toLocaleDateString("en-IN");}
+function fdn(d) {
+  if (!d) return "—";
+  const x = d.toDate ? d.toDate() : new Date(d);
+
+  const dd = String(x.getDate()).padStart(2, "0");
+  const mm = String(x.getMonth() + 1).padStart(2, "0");
+  const yyyy = x.getFullYear();
+
+  return `${dd}/${mm}/${yyyy}`;
+}
 function sc(s){return "status-"+s;}
 function getProductName(id){const p=products.find(x=>x.id===id); return p ? `${p.name} - ${p.weight}` : `Product #${id}`;}
 function generateStarRating(value) {
@@ -578,13 +593,13 @@ function openCreate(){document.getElementById("rv-create-bg").classList.add("sho
 function closeCreate(){document.getElementById("rv-create-bg").classList.remove("show");}
 
 function saveCreateReview(){
-  const id="manual-"+Math.floor(Math.random()*999999);
-  const name=document.getElementById("cr-name").value.trim();
-  const loc=document.getElementById("cr-location").value.trim();
-  const product=parseInt(document.getElementById("cr-product").value);
-const rating = parseFloat(document.getElementById("cr-rating").value);
-const text=document.getElementById("cr-text").value.trim();
-  const status=document.getElementById("cr-status").value;
+  const name = document.getElementById("cr-name").value.trim();
+  const loc = document.getElementById("cr-location").value.trim();
+  const product = parseInt(document.getElementById("cr-product").value);
+  const rating = parseFloat(document.getElementById("cr-rating").value);
+  const text = document.getElementById("cr-text").value.trim();
+  const status = document.getElementById("cr-status").value;
+  const dateInput = document.getElementById("cr-date").value;
 
   if(!name || !loc || !text){
     toast("Fill all fields","danger");
@@ -592,21 +607,16 @@ const text=document.getElementById("cr-text").value.trim();
   }
 
   db.collection("reviews").add({
-    userName:name,
-    userLocation:loc,
-    productId:product,
-    rating:rating,
-    reviewText:text,
-    status:status,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  })
-  .then(()=>{
+    userName: name,
+    userLocation: loc,
+    productId: product,
+    rating: rating,
+    reviewText: text,
+    status: status,
+    createdAt: dateInput ? new Date(dateInput) : firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
     closeCreate();
     toast("Review created");
-  })
-  .catch(err=>{
-    console.error(err);
-    toast("Failed","danger");
   });
 }
 
