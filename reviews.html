@@ -28,7 +28,19 @@
 .status-pending{background:rgba(245,158,11,0.08);color:#f59e0b;border:1px solid rgba(245,158,11,0.12);}
 .status-approved{background:rgba(16,185,129,0.08);color:#10b981;border:1px solid rgba(16,185,129,0.12);}
 .status-rejected{background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.12);}
-.rating-stars{display:flex;gap:2px;color:#facc15;}
+.rating i,
+.rating-stars i {
+    color: #facc15;
+    margin-right: 2px;
+}
+
+.customer-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 .action-btn{border-radius:8px;border:0;padding:8px;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:.95rem;}
 .action-btn .fa-check{color:var(--success);}
 .action-btn .fa-times{color:var(--danger);}
@@ -240,13 +252,18 @@
 
       <div>
         <div class="muted">Rating</div>
-        <select id="cr-rating" class="filter-select">
-          <option value="5">5 Stars</option>
-          <option value="4">4 Stars</option>
-          <option value="3">3 Stars</option>
-          <option value="2">2 Stars</option>
-          <option value="1">1 Star</option>
-        </select>
+      <select id="cr-rating" class="filter-select">
+  <option value="5">5.0 Stars</option>
+  <option value="4.5">4.5 Stars</option>
+  <option value="4">4.0 Stars</option>
+  <option value="3.5">3.5 Stars</option>
+  <option value="3">3.0 Stars</option>
+  <option value="2.5">2.5 Stars</option>
+  <option value="2">2.0 Stars</option>
+  <option value="1.5">1.5 Stars</option>
+  <option value="1">1.0 Stars</option>
+</select>
+
       </div>
 
       <div>
@@ -341,7 +358,22 @@ function esc(str){return String(str||"").replace(/[&<>"']/g,a=>({"&":"&amp;","<"
 function fdn(d){if(!d) return "—"; const x=d.toDate?d.toDate():new Date(d); return x.toLocaleDateString("en-IN");}
 function sc(s){return "status-"+s;}
 function getProductName(id){const p=products.find(x=>x.id===id); return p ? `${p.name} - ${p.weight}` : `Product #${id}`;}
-function generateStars(r){let o=""; for(let i=1;i<=5;i++) o+=i<=r?`<i class="fas fa-star"></i>`:`<i class="far fa-star"></i>`; return o;}
+function generateStarRating(value) {
+    const rating = Number(value) || 0;
+    let html = "";
+
+    for (let i = 1; i <= 5; i++) {
+        if (rating >= i) {
+            html += `<i class="fas fa-star"></i>`;
+        } else if (rating >= i - 0.5) {
+            html += `<i class="fas fa-star-half-stroke"></i>`;
+        } else {
+            html += `<i class="far fa-star"></i>`;
+        }
+    }
+
+    return html;
+}
 
 function openView(id){
   const r=reviews.find(x=>x.id===id);
@@ -373,7 +405,7 @@ function openView(id){
       <div style="display:flex;gap:12px">
         <div style="flex:1">
           <div class="muted">Rating</div>
-          <div class="rating-stars" style="font-size:1.2rem">${generateStars(r.rating)}</div>
+          <div class="rating-stars" style="font-size:1.2rem">${generateStarRating(r.rating)}</div>
         </div>
 
         <div style="flex:1">
@@ -445,7 +477,7 @@ return `
 
   <td class="muted">${esc(p)}</td>
 
-  <td><div class="rating-stars">${generateStars(r.rating)}</div></td>
+  <td><div class="rating-stars">${generateStarRating(r.rating)}</div></td>
 
   <td><div class="review-text" title="${esc(text)}">${esc(text)}</div></td>
 
@@ -490,7 +522,7 @@ function applyFilters(){
   const q=si.value.toLowerCase();
 
   if(st!=="all") x=x.filter(r=>r.status===st);
-  if(rt!=="all") x=x.filter(r=>r.rating>=parseInt(rt));
+if (rt !== "all") x = x.filter(r => r.rating >= parseFloat(rt));
   if(q) x=x.filter(r=>r._customer.includes(q)||r._product.includes(q)||r._review.includes(q)||r.id.toLowerCase().includes(q));
 
   filtered=x;
@@ -550,8 +582,8 @@ function saveCreateReview(){
   const name=document.getElementById("cr-name").value.trim();
   const loc=document.getElementById("cr-location").value.trim();
   const product=parseInt(document.getElementById("cr-product").value);
-  const rating=parseInt(document.getElementById("cr-rating").value);
-  const text=document.getElementById("cr-text").value.trim();
+const rating = parseFloat(document.getElementById("cr-rating").value);
+const text=document.getElementById("cr-text").value.trim();
   const status=document.getElementById("cr-status").value;
 
   if(!name || !loc || !text){
@@ -559,7 +591,7 @@ function saveCreateReview(){
     return;
   }
 
-  db.collection("reviews").doc(id).set({
+  db.collection("reviews").add({
     userName:name,
     userLocation:loc,
     productId:product,
@@ -580,7 +612,7 @@ function saveCreateReview(){
 
 function addTestReview(){
   const id="test-"+Math.floor(Math.random()*999999);
-  db.collection("reviews").doc(id).set({
+  db.collection("reviews").add({
     userName:"Test User",
     userLocation:"Test City",
     productId:2,
@@ -613,6 +645,7 @@ document.getElementById("rv-create-close").onclick = closeCreate;
 document.getElementById("rv-create-cancel").onclick = closeCreate;
 document.getElementById("rv-create-save").onclick = saveCreateReview;
 
+/* INITIAL LOAD */
 loadReviews();
 
 })();
