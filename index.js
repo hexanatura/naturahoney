@@ -288,6 +288,18 @@ function initializeBannerImages() {
     }, 4000);
 }
 
+function formatReviewDate(d) {
+    if (!d) return "—";
+    const x = d.toDate ? d.toDate() : new Date(d);
+
+    const dd = String(x.getDate()).padStart(2, "0");
+    const mm = String(x.getMonth() + 1).padStart(2, "0");
+    const yyyy = x.getFullYear();
+
+    return `${dd}/${mm}/${yyyy}`;
+}
+
+
 function loadApprovedReviews() {
     db.collection('reviews')
         .where('status', '==', 'approved')
@@ -327,8 +339,7 @@ function displayReview(review) {
     reviewCard.className = 'review-card';
     
     // Format date
-    const reviewDate = review.createdAt ? review.createdAt.toDate().toLocaleDateString() : 'Recent';
-    
+const reviewDate = review.createdAt ? formatReviewDate(review.createdAt) : '—';
     reviewCard.innerHTML = `
         <div class="customer-info">
             <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(review.userName)}&background=5f2b27&color=fff" alt="Customer photo" class="customer-avatar">
