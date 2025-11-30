@@ -122,6 +122,276 @@ const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
 
+// =============================================
+// ORDER TRACKING FUNCTIONS
+// =============================================
+
+// Function to open order tracking with specific order
+function showOrderTracking(orderId) {
+    const orderTrackingSection = document.getElementById('orderTrackingSection');
+    const profilePage = document.getElementById('profilePage');
+    const mainContent = document.getElementById('mainContent');
+    
+    // Hide other sections
+    if (profilePage && profilePage.classList.contains('active')) {
+        profilePage.classList.remove('active');
+    }
+    if (mainContent) {
+        mainContent.style.display = 'none';
+    }
+    
+    // Show order tracking
+    if (orderTrackingSection) {
+        orderTrackingSection.classList.add('active');
+        
+        // Load the order data
+        if (orderId) {
+            loadOrderTrackingData(orderId);
+        }
+    }
+}
+
+// Close order tracking
+function closeOrderTracking() {
+    const orderTrackingSection = document.getElementById('orderTrackingSection');
+    const mainContent = document.getElementById('mainContent');
+    
+    if (orderTrackingSection) {
+        orderTrackingSection.classList.remove('active');
+    }
+    if (mainContent) {
+        mainContent.style.display = 'block';
+    }
+}
+
+// Load order tracking data from Firebase
+function loadOrderTrackingData(orderId) {
+    if (!orderId) return;
+    
+    // Show loading state
+    document.getElementById('tracking-order-id').textContent = 'Loading...';
+    document.getElementById('tracking-order-date').textContent = 'Loading...';
+    document.getElementById('tracking-estimated-delivery').textContent = 'Loading...';
+    
+    const db = firebase.firestore();
+    
+    // First try to find order in main orders collection
+    db.collection("orders").doc(orderId).get()
+        .then((doc) => {
+            if (doc.exists) {
+                displayOrderTrackingData(doc.data(), orderId);
+            } else {
+                // If not found in main orders, search in user orders
+                searchOrderInUserCollections(orderId);
+            }
+        })
+        .catch((error) => {
+            console.error("Error loading order:", error);
+            showTrackingError("Failed to load order details");
+        });
+}
+
+// Search for order in user collections
+function searchOrderInUserCollections(orderId) {
+    const db = firebase.firestore();
+    
+    if (!currentUser) {
+        showTrackingError("Please log in to view order details");
+        return;
+    }
+    
+    db.collection("users").doc(currentUser.uid).collection("orders").doc(orderId).get()
+        .then((orderDoc) => {
+            if (orderDoc.exists) {
+                displayOrderTrackingData(orderDoc.data(), orderId);
+            } else {
+                showTrackingError("Order not found");
+            }
+        })
+        .catch((error) => {
+            console.error("Error searching user orders:", error);
+            showTrackingError("Failed to search for order");
+        });
+}
+
+// Display order tracking data
+function displayOrderTrackingData(orderData, orderId) {
+    // Update order info
+    document.getElementById('tracking-order-id').textContent = `#${orderId.substring(0, 8).toUpperCase()}`;
+    
+    // Format and display dates
+    if (orderData.createdAt) {
+        const orderDate = orderData.createdAt.toDate ? orderData.createdAt.toDate() : new Date(orderData.createdAt);
+        document.getElementById('tracking-order-date').textContent = formatDate(orderDate);
+        
+        // Calculate estimated delivery (7 days from order date)
+        const estimatedDate = new Date(orderDate);
+        estimatedDate.setDate(estimatedDate.getDate() + 7);
+        document.getElementById('tracking-estimated-delivery').textContent = formatDate(estimatedDate);
+    } else {
+        document.getElementById('tracking-order-date').textContent = 'N/A';
+        document.getElementById('tracking-estimated-delivery').textContent = 'N/A';
+    }
+    
+    // Update status timeline
+    updateStatusTimeline(orderData);
+    
+    // Update order items and summary
+    updateOrderDetails(orderData);
+    
+    // Update progress bar
+    updateProgressBar(orderData.status);
+}
+
+// Update status timeline based on order data
+function updateStatusTimeline(orderData) {
+    // Reset all steps
+    const steps = ['placed', 'confirmed', 'processing', 'shipped', 'delivered'];
+    steps.forEach(step => {
+        const stepElement = document.getElementById(`step-${step}`);
+        const dateElement = document.getElementById(`date-${step}`);
+        
+        if (stepElement) {
+            stepElement.classList.remove('completed', 'active');
+        }
+        if (dateElement) {
+            dateElement.textContent = '-';
+        }
+    });
+    
+    // Set status dates from order data
+    if (orderData.statusDates) {
+        Object.keys(orderData.statusDates).forEach(status => {
+            const dateElement = document.getElementById(`date-${status}`);
+            if (dateElement && orderData.statusDates[status]) {
+                const statusDate = orderData.statusDates[status].toDate ? 
+                    orderData.statusDates[status].toDate() : new Date(orderData.statusDates[status]);
+                dateElement.textContent = formatDateTime(statusDate);
+            }
+        });
+    }
+    
+    // Set current status
+    const currentStatus = orderData.status || 'pending';
+    const statusOrder = {
+        'pending': ['placed'],
+        'confirmed': ['placed', 'confirmed'],
+        'processing': ['placed', 'confirmed', 'processing'],
+        'shipped': ['placed', 'confirmed', 'processing', 'shipped'],
+        'delivered': ['placed', 'confirmed', 'processing', 'shipped', 'delivered']
+    };
+    
+    const completedSteps = statusOrder[currentStatus] || [];
+    
+    completedSteps.forEach(step => {
+        const stepElement = document.getElementById(`step-${step}`);
+        if (stepElement) {
+            stepElement.classList.add('completed');
+        }
+    });
+    
+    // Set active step (if not delivered)
+    if (currentStatus !== 'delivered' && completedSteps.length > 0) {
+        const activeStep = completedSteps[completedSteps.length - 1];
+        const stepElement = document.getElementById(`step-${activeStep}`);
+        if (stepElement) {
+            stepElement.classList.add('active');
+        }
+    }
+}
+
+// Update progress bar based on status
+function updateProgressBar(status) {
+    const progressBar = document.getElementById('progressBar');
+    if (!progressBar) return;
+    
+    const progressMap = {
+        'pending': 0,
+        'confirmed': 25,
+        'processing': 50,
+        'shipped': 75,
+        'delivered': 100
+    };
+    
+    const progressPercentage = progressMap[status] || 0;
+    
+    if (window.innerWidth > 640) {
+        progressBar.style.width = `${progressPercentage}%`;
+    } else {
+        progressBar.style.height = `${progressPercentage}%`;
+    }
+}
+
+// Update order details section
+function updateOrderDetails(orderData) {
+    const itemsContainer = document.getElementById('tracking-order-items');
+    const subtotalElement = document.getElementById('tracking-subtotal');
+    const shippingElement = document.getElementById('tracking-shipping');
+    const totalElement = document.getElementById('tracking-total');
+    
+    if (!itemsContainer) return;
+    
+    // Clear existing items
+    itemsContainer.innerHTML = '';
+    
+    // Add order items
+    if (orderData.items && orderData.items.length > 0) {
+        orderData.items.forEach(item => {
+            const product = products.find(p => p.id === item.productId);
+            const itemElement = document.createElement('div');
+            itemElement.className = 'order-item';
+            itemElement.innerHTML = `
+                <div class="order-item-image">
+                    <i class="fas fa-jar"></i>
+                </div>
+                <div class="order-item-details">
+                    <div class="order-item-name">${product ? product.name : 'Product'}</div>
+                    <div class="order-item-meta">${product ? product.weight : ''} • Qty: ${item.quantity || 1}</div>
+                </div>
+                <div class="order-item-price">₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</div>
+            `;
+            itemsContainer.appendChild(itemElement);
+        });
+    } else {
+        itemsContainer.innerHTML = '<div class="muted">No items found</div>';
+    }
+    
+    // Update summary
+    const subtotal = orderData.subtotal || orderData.total || 0;
+    const shipping = orderData.shipping || 0;
+    const total = orderData.total || subtotal + shipping;
+    
+    if (subtotalElement) subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+    if (shippingElement) shippingElement.textContent = `₹${shipping.toFixed(2)}`;
+    if (totalElement) totalElement.textContent = `₹${total.toFixed(2)}`;
+}
+
+// Utility functions for order tracking
+function formatDate(date) {
+    return date.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
+function formatDateTime(date) {
+    return date.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function showTrackingError(message) {
+    alert('Tracking Error: ' + message);
+}
+
+// =============================================
+// EXISTING FUNCTIONS (KEEPING ALL YOUR ORIGINAL CODE)
+// =============================================
+
 // Initialize Firebase Auth State Listener
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -690,7 +960,7 @@ function setDefaultAddress(addressId) {
         });
 }
 
-// Display order in profile
+// Display order in profile - UPDATED WITH TRACK ORDER BUTTON
 function displayOrder(order) {
     const ordersContainer = document.getElementById('orders-container');
     if (!ordersContainer) return;
@@ -745,7 +1015,7 @@ function displayOrder(order) {
         
         if (trackBtn) {
             trackBtn.addEventListener('click', function() {
-                alert(`Tracking order #${order.id.substring(0, 8)}`);
+                showOrderTracking(order.id);
             });
         }
         
@@ -797,6 +1067,12 @@ function closeAllSidebars() {
     const reviewModal = document.getElementById('reviewModal');
     if (reviewModal) {
         reviewModal.style.display = 'none';
+    }
+    
+    // Close order tracking if open
+    const orderTrackingSection = document.getElementById('orderTrackingSection');
+    if (orderTrackingSection) {
+        orderTrackingSection.classList.remove('active');
     }
     
     navLinks.classList.remove('active');
@@ -1501,6 +1777,31 @@ function initCommon() {
                 profilePage.classList.remove('active');
                 mainContent.style.display = 'block';
             }
+        });
+    }
+    
+    // Initialize order tracking close button
+    const orderTrackingCloseBtn = document.getElementById('orderTrackingCloseBtn');
+    if (orderTrackingCloseBtn) {
+        orderTrackingCloseBtn.addEventListener('click', closeOrderTracking);
+    }
+    
+    // Initialize order tracking refresh button
+    const refreshTrackingBtn = document.getElementById('refreshTrackingBtn');
+    if (refreshTrackingBtn) {
+        refreshTrackingBtn.addEventListener('click', function() {
+            const currentOrderId = document.getElementById('tracking-order-id').textContent.replace('#', '');
+            if (currentOrderId && currentOrderId !== 'Loading...') {
+                loadOrderTrackingData(currentOrderId);
+            }
+        });
+    }
+    
+    // Initialize order tracking support button
+    const supportTrackingBtn = document.getElementById('supportTrackingBtn');
+    if (supportTrackingBtn) {
+        supportTrackingBtn.addEventListener('click', function() {
+            window.location.href = 'contact.html';
         });
     }
     
