@@ -1509,6 +1509,12 @@ body {
     <span class="menu-count" id="countMessages"></span>
 </div>
 
+<div class="menu-item" id="menuPromo">
+    <div class="menu-icon"><i class="fas fa-tag"></i></div>
+    <div class="menu-text">Promo Codes</div>
+    <span class="menu-count" id="countPromo"></span>
+</div>
+
 <div class="menu-item" id="menuReviews">
     <div class="menu-icon"><i class="fas fa-star"></i></div>
     <div class="menu-text">Reviews</div>
@@ -1859,6 +1865,20 @@ body {
 
     // Global Search Class
     class GlobalSearch {
+        
+        navigateToPromoCodes(promoId = null) {
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => item.classList.remove('active'));
+    document.getElementById('menuPromo').classList.add('active');
+    
+    loadPromoPage().then(() => {
+        if (promoId && window.promoManager) {
+            setTimeout(() => {
+                window.promoManager.highlightPromo(promoId);
+            }, 500);
+        }
+    });
+}
         constructor() {
             this.results = [];
             this.setupSearch();
@@ -2402,19 +2422,21 @@ body {
     const cleanupManager = new CleanupManager();
     let globalSearch = null;
 
-    const LAST_OPEN = {
-        orders: "lastOpenOrders",
-        customers: "lastOpenCustomers",
-        messages: "lastOpenMessages",
-        reviews: "lastOpenReviews"
-    };
+const LAST_OPEN = {
+    orders: "lastOpenOrders",
+    customers: "lastOpenCustomers", 
+    messages: "lastOpenMessages",
+    reviews: "lastOpenReviews",
+    promo: "lastOpenPromo"
+};
 
     const menuListeners = {
-        orders: null,
-        customers: null,
-        messages: null,
-        reviews: null
-    };
+    orders: null,
+    customers: null, 
+    messages: null,
+    reviews: null,
+    promo: null
+};
 
     // Review management variables
     let selectedReviewId = null;
@@ -3132,6 +3154,8 @@ body {
             `;
         }
     }
+    
+    
 
     function loadMessagesPage() {
         loadHTML("contact-submissions.html").then(() => {
@@ -3151,6 +3175,7 @@ body {
     function loadOrdersPage()   { loadHTML("orders.html"); }
     function loadCustomersPage(){ loadHTML("customers.html"); }
     function loadReviewsPage() { loadHTML("reviews.html"); }
+    function loadPromoPage() { loadHTML("promo-codes.html"); }
 
     function toggleMobileMenu() {
         const sidebar = document.getElementById('sidebar');
@@ -3193,6 +3218,7 @@ body {
         checkNewItems("users", LAST_OPEN.customers, document.getElementById("countCustomers"), "createdAt");
         checkNewItems("contactSubmissions", LAST_OPEN.messages, document.getElementById("countMessages"), "timestamp");
         checkNewItems("reviews", LAST_OPEN.reviews, document.getElementById("countReviews"), "createdAt");
+          checkNewItems("promoCodes", LAST_OPEN.promo, document.getElementById("countPromo"), "createdAt");
     }
 
     function checkNewItems(collection, lastKey, badgeEl, field) {
@@ -3224,42 +3250,47 @@ body {
     }
 
     function setupEventListeners() {
-        const menuItems = document.querySelectorAll('.menu-item');
-        menuItems.forEach(item => {
-            item.addEventListener('click', function () {
-                const menuText = this.querySelector('.menu-text').textContent.trim();
-                menuItems.forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function () {
+            const menuText = this.querySelector('.menu-text').textContent.trim();
+            menuItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
 
-                switch (menuText) {
-                    case 'Dashboard':
-                        location.reload();
-                        break;
-                    case 'Orders':
-                        localStorage.setItem(LAST_OPEN.orders, Date.now());
-                        updateBadge(document.getElementById("countOrders"), 0);
-                        loadOrdersPage();
-                        break;
-                    case 'Customers':
-                        localStorage.setItem(LAST_OPEN.customers, Date.now());
-                        updateBadge(document.getElementById("countCustomers"), 0);
-                        loadCustomersPage();
-                        break;
-                    case 'Messages':
-                        localStorage.setItem(LAST_OPEN.messages, Date.now());
-                        updateBadge(document.getElementById("countMessages"), 0);
-                        loadMessagesPage();
-                        break;
-                    case 'Reviews':
-                        localStorage.setItem(LAST_OPEN.reviews, Date.now());
-                        updateBadge(document.getElementById("countReviews"), 0);
-                        loadReviewsPage();
-                        break;
-                }
+            switch (menuText) {
+                case 'Dashboard':
+                    location.reload();
+                    break;
+                case 'Orders':
+                    localStorage.setItem(LAST_OPEN.orders, Date.now());
+                    updateBadge(document.getElementById("countOrders"), 0);
+                    loadOrdersPage();
+                    break;
+                case 'Customers':
+                    localStorage.setItem(LAST_OPEN.customers, Date.now());
+                    updateBadge(document.getElementById("countCustomers"), 0);
+                    loadCustomersPage();
+                    break;
+                case 'Messages':
+                    localStorage.setItem(LAST_OPEN.messages, Date.now());
+                    updateBadge(document.getElementById("countMessages"), 0);
+                    loadMessagesPage();
+                    break;
+                case 'Reviews':
+                    localStorage.setItem(LAST_OPEN.reviews, Date.now());
+                    updateBadge(document.getElementById("countReviews"), 0);
+                    loadReviewsPage();
+                    break;
+                case 'Promo Codes': // Add this case
+                    localStorage.setItem(LAST_OPEN.promo, Date.now());
+                    updateBadge(document.getElementById("countPromo"), 0);
+                    loadPromoPage();
+                    break;
+            }
 
-                if (window.innerWidth <= 992) closeMobileMenu();
-            });
+            if (window.innerWidth <= 992) closeMobileMenu();
         });
+    });
 
         const adminProfile = document.getElementById("adminProfile");
         const profileMenu = document.getElementById("profileMenu");
@@ -3384,6 +3415,7 @@ body {
         if (!localStorage.getItem(LAST_OPEN.customers)) localStorage.setItem(LAST_OPEN.customers, Date.now());
         if (!localStorage.getItem(LAST_OPEN.messages)) localStorage.setItem(LAST_OPEN.messages, Date.now());
         if (!localStorage.getItem(LAST_OPEN.reviews)) localStorage.setItem(LAST_OPEN.reviews, Date.now());
+            if (!localStorage.getItem(LAST_OPEN.promo)) localStorage.setItem(LAST_OPEN.promo, Date.now());
 
         if (!user) {
             if (loginModal) loginModal.style.display = "flex";
