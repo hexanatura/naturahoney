@@ -5245,90 +5245,37 @@
         <!-- Orders will be dynamically loaded here -->
     </div>
 </div>
-
-     <!-- Order Tracking Section -->
-<div class="order-tracking-section" id="orderTrackingSection">
-    <div class="order-tracking-close-container">
-        <button class="order-tracking-close-btn" id="orderTrackingCloseBtn">
-            <i class="fas fa-times"></i>
-        </button>
     </div>
-    <div class="order-tracking-container">
-        <div class="order-tracking-header">
-            <h1>Order Status</h1>
-            <p>Track your order progress</p>
-        </div>
-        
-        <div class="order-info">
-            <div class="info-item">
-                <div class="info-label">Order ID</div>
-                <div class="info-value" id="tracking-order-id">Loading...</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Order Date</div>
-                <div class="info-value" id="tracking-order-date">Loading...</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Estimated Delivery</div>
-                <div class="info-value" id="tracking-estimated-delivery">Loading...</div>
-            </div>
-        </div>
-        
-        <div class="status-container">
-            <div class="status-bar">
-                <div class="progress-bar" id="progressBar"></div>
-                
-                <div class="status-step" id="step-placed">
-                    <div class="step-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <div class="step-info">
-                        <div class="step-label">Order Placed</div>
-                        <div class="step-date" id="date-placed">-</div>
-                    </div>
-                </div>
-                
-                <div class="status-step" id="step-confirmed">
-                    <div class="step-icon">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <div class="step-info">
-                        <div class="step-label">Confirmed</div>
-                        <div class="step-date" id="date-confirmed">-</div>
-                    </div>
-                </div>
-                
-                <div class="status-step" id="step-processing">
-                    <div class="step-icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div class="step-info">
-                        <div class="step-label">Processing</div>
-                        <div class="step-date" id="date-processing">-</div>
-                    </div>
-                </div>
-                
-                <div class="status-step" id="step-shipped">
-                    <div class="step-icon">
-                        <i class="fas fa-shipping-fast"></i>
-                    </div>
-                    <div class="step-info">
-                        <div class="step-label">Shipped</div>
-                        <div class="step-date" id="date-shipped">-</div>
-                    </div>
-                </div>
-                
-                <div class="status-step" id="step-delivered">
-                    <div class="step-icon">
-                        <i class="fas fa-home"></i>
-                    </div>
-                    <div class="step-info">
-                        <div class="step-label">Delivered</div>
-                        <div class="step-date" id="date-delivered">-</div>
-                    </div>
-                </div>
-            </div>
-            
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal" id="edit-profile-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Profile</h3>
+        <button class="close-modal" id="close-edit-profile-modal">&times;</button>
+      </div>
+      <div class="form-group">
+        <label for="edit-name">Full Name</label>
+        <input type="text" id="edit-name">
+      </div>
+      <div class="form-group">
+        <label for="edit-email">Email Address</label>
+        <input type="email" id="edit-email" disabled>
+        <p style="font-size: 12px; color: #777; margin-top: 5px;">Email address cannot be changed</p>
+      </div>
+      <div class="form-actions">
+        <button class="btn" id="save-profile-btn">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+        <button class="btn btn-outline" id="cancel-edit-profile">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div> 
+      </div>
+    </div> 
+
             <!-- Order Details Section -->
             <div class="order-details-section">
                 <h3>Order Details</h3>
@@ -5366,36 +5313,6 @@
         </div>
     </div>
 </div>
-    </div>
-  </div>
-
-  <!-- Edit Profile Modal -->
-  <div class="modal" id="edit-profile-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">Edit Profile</h3>
-        <button class="close-modal" id="close-edit-profile-modal">&times;</button>
-      </div>
-      <div class="form-group">
-        <label for="edit-name">Full Name</label>
-        <input type="text" id="edit-name">
-      </div>
-      <div class="form-group">
-        <label for="edit-email">Email Address</label>
-        <input type="email" id="edit-email" disabled>
-        <p style="font-size: 12px; color: #777; margin-top: 5px;">Email address cannot be changed</p>
-      </div>
-      <div class="form-actions">
-        <button class="btn" id="save-profile-btn">
-          <i class="fas fa-save"></i> Save Changes
-        </button>
-        <button class="btn btn-outline" id="cancel-edit-profile">
-          <i class="fas fa-times"></i> Cancel
-        </button>
-      </div>
-    </div> 
-      </div>
-    </div> 
 
   <!-- Footer -->
   <footer>
