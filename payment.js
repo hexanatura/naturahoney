@@ -1,3 +1,4 @@
+// your code goes here
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
     authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -894,38 +895,42 @@ function setDefaultAddress(addressId) {
 function displayOrder(order) {
     const ordersContainer = document.getElementById('orders-container');
     if (!ordersContainer) return;
-    
-    const orderCard = document.createElement('div');
-    orderCard.className = 'order-card';
-    
-    let orderItemsHTML = '';
+
+    let itemsHTML = '';
+
     order.items.forEach(item => {
         const product = products.find(p => p.id === item.productId);
-        if (product) {
-            orderItemsHTML += `
-                <div class="order-items">
-                    <div class="order-item-img">
-                        <i class="fas fa-jar"></i>
-                    </div>
-                    <div class="order-item-info">
-                        <div class="order-item-name">${product.name} - ${product.weight}</div>
-                        <div class="order-item-qty">Quantity: ${item.quantity}</div>
-                    </div>
+        if (!product) return;
+
+        itemsHTML += `
+            <div class="order-item">
+                <img src="${product.image}" class="order-product-img">
+
+                <div class="order-item-details">
+                    <div class="order-item-name">${product.name}</div>
+                    <div class="order-item-weight">${product.weight}</div>
+                    <div class="order-item-price">₹${product.price}</div>
+                    <div class="order-item-qty">Qty: ${item.quantity}</div>
                 </div>
-            `;
-        }
-    });
-    
-    orderCard.innerHTML = `
-        <div class="order-header">
-            <div>
-                <span class="order-id">Order #${order.id.substring(0, 8)}</span>
-                <span class="order-date">Placed on ${new Date(order.createdAt).toLocaleDateString()}</span>
             </div>
-            <span class="order-status status-${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
+        `;
+    });
+
+    const card = document.createElement('div');
+    card.className = 'order-card';
+
+    card.innerHTML = `
+        <div class="order-header">
+            <span class="order-id">Order #${order.id.substring(0, 8)}</span>
+            <span class="order-date">${new Date(order.createdAt).toLocaleDateString()}</span>
+
+            <span class="order-status animate-status">${order.status}</span>
         </div>
-        ${orderItemsHTML}
+
+        <div class="order-items-wrapper">${itemsHTML}</div>
+
         <div class="order-total">Total: ₹${order.total}</div>
+
         <div class="order-actions">
             <button class="btn btn-outline track-order-btn" data-id="${order.id}">
                 <i class="fas fa-truck"></i> Track Order
@@ -935,26 +940,19 @@ function displayOrder(order) {
             </button>
         </div>
     `;
-    
-    ordersContainer.appendChild(orderCard);
-    
-    // Add event listeners
+
+    ordersContainer.appendChild(card);
+
+    // EVENTS
     setTimeout(() => {
-        const trackBtn = orderCard.querySelector('.track-order-btn');
-        const reorderBtn = orderCard.querySelector('.reorder-btn');
-        
-        if (trackBtn) {
-            trackBtn.addEventListener('click', function() {
-                alert(`Tracking order #${order.id.substring(0, 8)}`);
-            });
-        }
-        
-        if (reorderBtn) {
-            reorderBtn.addEventListener('click', function() {
-                reorderItems(order.items);
-            });
-        }
-    }, 100);
+        card.querySelector('.track-order-btn').onclick = () => {
+            alert(`Tracking #${order.id}`);
+        };
+
+        card.querySelector('.reorder-btn').onclick = () => {
+            reorderItems(order.items);
+        };
+    }, 50);
 }
 
 // Reorder items
