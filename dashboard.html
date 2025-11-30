@@ -938,6 +938,11 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
+.review-item.selected {
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
 .review-header {
     display: flex;
     justify-content: space-between;
@@ -1132,6 +1137,158 @@ body {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Review Modal Styles */
+.review-modal-bg {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6,8,15,0.6);
+    z-index: 1200;
+    padding: 20px;
+}
+
+.review-modal-bg.show {
+    display: flex;
+}
+
+.review-modal {
+    width: 100%;
+    max-width: 620px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+}
+
+.review-modal .modal-header,
+.review-modal .modal-body,
+.review-modal .modal-footer {
+    padding: 14px 16px;
+    background: #fff;
+}
+
+.review-modal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.review-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: #fff;
+    border-top: 1px solid var(--border);
+    padding: 18px 20px;
+}
+
+.review-item.selected {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.6);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.btn-success {
+    background: radial-gradient(circle at top left, #22c55e, #16a34a);
+    color: white;
+    border-radius: 10px;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    color: var(--dark);
+}
+
+.btn-ghost:hover {
+    background: rgba(15, 23, 42, 0.04);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+#rv-create-bg .modal-body {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px 20px;
+    padding: 20px 18px;
+}
+
+#rv-create-bg .modal-body > div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#rv-create-bg .filter-select,
+#rv-create-bg textarea,
+#rv-create-bg input[type="date"] {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: .93rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+#cr-text {
+    resize: vertical;
+    min-height: 120px;
+    grid-column: 1/-1;
+}
+
+@media (max-width: 600px) {
+    #rv-create-bg .modal-body {
+        grid-template-columns: 1fr;
+    }
+    #cr-text {
+        grid-column: 1/1;
+    }
+}
+
+.rv-toast {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    border-left: 4px solid var(--success);
+    z-index: 1400;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    transform: translateY(10px);
+    opacity: 0;
+    transition: all .2s ease;
+}
+
+.rv-toast.show {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 @media (max-width: 1200px) {
@@ -1533,13 +1690,13 @@ body {
                 <div class="reviews-activities-section">
                     <div class="reviews-section">
                         <div class="reviews-title">
-                            <span>Customer Reviews</span>
+                            <span>Pending Reviews</span>
                             <div class="review-actions">
                                 <button type="button" class="review-action-btn primary" id="publishReviewBtn">
-                                    <i class="fas fa-upload"></i> Publish
+                                    <i class="fas fa-check"></i> Approve
                                 </button>
                                 <button type="button" class="review-action-btn danger" id="removeReviewBtn">
-                                    <i class="fas fa-trash-alt"></i> Remove
+                                    <i class="fas fa-trash-alt"></i> Delete
                                 </button>
                                 <button type="button" class="review-action-btn" id="createReviewBtn">
                                     <i class="fas fa-plus"></i> Create
@@ -1547,51 +1704,7 @@ body {
                             </div>
                         </div>
 
-                        <div class="reviews-list">
-                            <div class="review-item">
-                                <div class="review-header">
-                                    <div class="reviewer-info">
-                                        <div class="reviewer-avatar"><i class="fas fa-user"></i></div>
-                                        <div class="reviewer-details">
-                                            <div class="reviewer-name">Rahul Sharma</div>
-                                            <div class="review-date">2 days ago</div>
-                                        </div>
-                                    </div>
-                                    <div class="review-rating">
-                                        <i class="fas fa-star star"></i>
-                                        <i class="fas fa-star star"></i>
-                                        <i class="fas fa-star star"></i>
-                                        <i class="fas fa-star star"></i>
-                                        <i class="fas fa-star star"></i>
-                                    </div>
-                                </div>
-                                <div class="review-content">
-                                    Excellent service and fast delivery. The product quality exceeded my expectations. Will order again!
-                                </div>
-                            </div>
-
-                            <div class="review-item">
-                                <div class="review-header">
-                                    <div class="reviewer-info">
-                                        <div class="reviewer-avatar"><i class="fas fa-user"></i></div>
-                                        <div class="reviewer-details">
-                                            <div class="reviewer-name">Priya Patel</div>
-                                            <div class="review-date">5 days ago</div>
-                                        </div>
-                                    </div>
-                                    <div class="review-rating">
-                                        <i class="fas fa-star star"></i>
-                                        <i class="fas fa-star star"></i>
-                                        <i class="fas fa-star star"></i>
-                                        <i class="fas fa-star star"></i>
-                                        <i class="far fa-star"></i>
-                                    </div>
-                                </div>
-                                <div class="review-content">
-                                    Good product overall, but the packaging could be improved.
-                                </div>
-                            </div>
-                        </div>
+                        <div class="reviews-list" id="dashboardRecentReviews"></div>
                     </div>
                 </div>
             </div>
@@ -1613,6 +1726,92 @@ body {
 
             <button id="loginSubmit">Login</button>
         </div>
+    </div>
+
+    <!-- CREATE REVIEW MODAL -->
+    <div class="review-modal-bg" id="rv-create-bg">
+        <div class="review-modal">
+            <div class="modal-header">
+                <div style="font-weight:700">Create Review</div>
+                <button id="rv-create-close" class="btn-ghost" style="padding:6px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div>
+                    <div class="muted">Customer Name</div>
+                    <input id="cr-name" class="filter-select" placeholder="Enter customer name">
+                </div>
+
+                <div>
+                    <div class="muted">Location</div>
+                    <input id="cr-location" class="filter-select" placeholder="Enter location">
+                </div>
+
+                <div>
+                    <div class="muted">Product</div>
+                    <select id="cr-product" class="filter-select">
+                        <option value="1">Natura Agmark Honey - 1Kg</option>
+                        <option value="2">Natura Agmark Honey - 500g</option>
+                        <option value="3">Natura Agmark Honey - 100g</option>
+                        <option value="4">Natura Agmark Honey - 50g</option>
+                        <option value="5">Natura Agmark Honey - 1Kg</option>
+                        <option value="6">Natura Agmark Honey - Premium Pet 500g</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="muted">Rating</div>
+                    <select id="cr-rating" class="filter-select">
+                        <option value="5">5.0 Stars</option>
+                        <option value="4.5">4.5 Stars</option>
+                        <option value="4">4.0 Stars</option>
+                        <option value="3.5">3.5 Stars</option>
+                        <option value="3">3.0 Stars</option>
+                        <option value="2.5">2.5 Stars</option>
+                        <option value="2">2.0 Stars</option>
+                        <option value="1.5">1.5 Stars</option>
+                        <option value="1">1.0 Stars</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="muted">Review Date</div>
+                    <input type="date" id="cr-date" class="filter-select">
+                </div>
+
+                <div>
+                    <div class="muted">Review Text</div>
+                    <textarea id="cr-text" class="filter-select" placeholder="Enter review text"></textarea>
+                </div>
+
+                <div>
+                    <div class="muted">Status</div>
+                    <select id="cr-status" class="filter-select">
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="rv-create-save" class="btn-success">
+                    <i class="fas fa-check" style="margin-right:8px"></i> Save
+                </button>
+
+                <button id="rv-create-cancel" class="btn-ghost">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="rv-toast" class="rv-toast">
+        <i class="fas fa-check-circle" style="color:var(--success)"></i>
+        <div id="rv-toast-text">Saved</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -1673,6 +1872,211 @@ body {
         messages: null,
         reviews: null
     };
+
+    // Review management variables
+    let selectedReviewId = null;
+    let dashboardReviews = [];
+    
+    function loadDashboardRecentReviews() {
+        const box = document.getElementById("dashboardRecentReviews");
+        if (!box) return;
+
+        box.innerHTML = `<div class="review-item">Loading...</div>`;
+
+        // Only show pending reviews in the dashboard
+        db.collection("reviews")
+            .where("status", "==", "pending")
+            .orderBy("createdAt", "desc")
+            .limit(5)
+            .onSnapshot(q => {
+                if (q.empty) {
+                    box.innerHTML = `<div class="review-item">No pending reviews.</div>`;
+                    dashboardReviews = [];
+                    return;
+                }
+
+                dashboardReviews = q.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                let html = "";
+                dashboardReviews.forEach(r => {
+                    const date = r.createdAt?.toDate().toLocaleDateString("en-IN") || "";
+                    const isSelected = r.id === selectedReviewId;
+
+                    html += `
+                        <div class="review-item fade-in ${isSelected ? 'selected' : ''}" data-id="${r.id}">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <div class="reviewer-avatar"><i class="fas fa-user"></i></div>
+                                    <div class="reviewer-details">
+                                        <div class="reviewer-name">${r.userName}</div>
+                                        <div class="review-date">${date}</div>
+                                    </div>
+                                </div>
+                                <div class="review-rating">
+                                    ${generateStars(r.rating)}
+                                </div>
+                            </div>
+                            <div class="review-content">${r.reviewText}</div>
+                        </div>
+                    `;
+                });
+
+                box.innerHTML = html;
+                
+                // Add click listeners to review items
+                box.querySelectorAll('.review-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        selectReview(id);
+                    });
+                });
+            }, (error) => {
+                console.error("Error loading reviews:", error);
+                box.innerHTML = `<div class="review-item">Failed to load reviews.</div>`;
+            });
+    }
+
+    function selectReview(id) {
+        selectedReviewId = id;
+        
+        // Update UI to show selected review
+        document.querySelectorAll('.review-item').forEach(item => {
+            if (item.getAttribute('data-id') === id) {
+                item.classList.add('selected');
+            } else {
+                item.classList.remove('selected');
+            }
+        });
+    }
+
+    function generateStars(rate) {
+        rate = Number(rate);
+        let output = "";
+        for (let i = 1; i <= 5; i++) {
+            if (rate >= i) {
+                output += `<i class="fas fa-star star"></i>`;
+            } else if (rate >= i - 0.5) {
+                output += `<i class="fas fa-star-half-stroke star"></i>`;
+            } else {
+                output += `<i class="far fa-star star"></i>`;
+            }
+        }
+        return output;
+    }
+
+    function approveSelectedReview() {
+        if (!selectedReviewId) {
+            showToast("Please select a review first", "danger");
+            return;
+        }
+        
+        db.collection("reviews").doc(selectedReviewId).update({
+            status: "approved",
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            showToast("Review approved successfully");
+            selectedReviewId = null;
+            // The review will automatically disappear from the list due to the query filter
+        }).catch(error => {
+            console.error("Error approving review:", error);
+            showToast("Failed to approve review", "danger");
+        });
+    }
+
+    function deleteSelectedReview() {
+        if (!selectedReviewId) {
+            showToast("Please select a review first", "danger");
+            return;
+        }
+        
+        if (confirm("Are you sure you want to delete this review?")) {
+            db.collection("reviews").doc(selectedReviewId).delete()
+                .then(() => {
+                    showToast("Review deleted successfully");
+                    selectedReviewId = null;
+                })
+                .catch(error => {
+                    console.error("Error deleting review:", error);
+                    showToast("Failed to delete review", "danger");
+                });
+        }
+    }
+
+    function openCreateReviewModal() {
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("cr-date").value = today;
+        
+        document.getElementById("rv-create-bg").classList.add("show");
+    }
+
+    function closeCreateReviewModal() {
+        document.getElementById("rv-create-bg").classList.remove("show");
+        // Reset form
+        document.getElementById("cr-name").value = "";
+        document.getElementById("cr-location").value = "";
+        document.getElementById("cr-product").value = "1";
+        document.getElementById("cr-rating").value = "5";
+        document.getElementById("cr-date").value = "";
+        document.getElementById("cr-text").value = "";
+        document.getElementById("cr-status").value = "pending";
+    }
+
+    function saveCreateReview() {
+        const name = document.getElementById("cr-name").value.trim();
+        const loc = document.getElementById("cr-location").value.trim();
+        const product = parseInt(document.getElementById("cr-product").value);
+        const rating = parseFloat(document.getElementById("cr-rating").value);
+        const dateStr = document.getElementById("cr-date").value;
+        const text = document.getElementById("cr-text").value.trim();
+        const status = document.getElementById("cr-status").value;
+
+        if (!name || !loc || !text || !dateStr) {
+            showToast("Please fill all required fields", "danger");
+            return;
+        }
+
+        // Convert date string to Firestore timestamp
+        const date = new Date(dateStr);
+        const timestamp = firebase.firestore.Timestamp.fromDate(date);
+
+        db.collection("reviews").add({
+            userName: name,
+            userLocation: loc,
+            productId: product,
+            rating: rating,
+            reviewText: text,
+            status: status,
+            createdAt: timestamp,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+            closeCreateReviewModal();
+            showToast("Review created successfully");
+        })
+        .catch(err => {
+            console.error(err);
+            showToast("Failed to create review", "danger");
+        });
+    }
+
+    function showToast(msg, type = "success") {
+        const toastBox = document.getElementById("rv-toast");
+        const toastText = document.getElementById("rv-toast-text");
+        
+        if (!toastBox || !toastText) return;
+        
+        toastText.textContent = msg;
+        toastBox.style.borderLeftColor = type === "success" ? "var(--success)" : "var(--danger)";
+        toastBox.classList.add("show");
+        
+        setTimeout(() => {
+            toastBox.classList.remove("show");
+        }, 3000);
+    }
 
     function getDayRange(date) {
         const d = new Date(date);
@@ -1869,48 +2273,48 @@ body {
             });
     }
 
-function updateMessagesForDate(date) {
-    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
-    if (!target) return;
+    function updateMessagesForDate(date) {
+        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(4) .stat-number');
+        if (!target) return;
 
-    const { start, end } = getDayRange(date);
-    
-    console.log("Fetching messages for date:", date);
-    console.log("Date range:", start, "to", end);
+        const { start, end } = getDayRange(date);
+        
+        console.log("Fetching messages for date:", date);
+        console.log("Date range:", start, "to", end);
 
-    // First, let's check what messages exist for this date regardless of status
-    db.collection("contactSubmissions")
-        .where("timestamp", ">=", start)
-        .where("timestamp", "<=", end)
-        .get()
-        .then(snapshot => {
-            console.log(`Total messages found for today: ${snapshot.size}`);
-            
-            let newMessagesCount = 0;
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                console.log(`Message ${doc.id}:`, {
-                    status: data.status,
-                    timestamp: data.timestamp,
-                    name: data.name
+        // First, let's check what messages exist for this date regardless of status
+        db.collection("contactSubmissions")
+            .where("timestamp", ">=", start)
+            .where("timestamp", "<=", end)
+            .get()
+            .then(snapshot => {
+                console.log(`Total messages found for today: ${snapshot.size}`);
+                
+                let newMessagesCount = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    console.log(`Message ${doc.id}:`, {
+                        status: data.status,
+                        timestamp: data.timestamp,
+                        name: data.name
+                    });
+                    
+                    // Count messages with status 'new' or undefined (default to new)
+                    if (!data.status || data.status === 'new') {
+                        newMessagesCount++;
+                    }
                 });
                 
-                // Count messages with status 'new' or undefined (default to new)
-                if (!data.status || data.status === 'new') {
-                    newMessagesCount++;
-                }
+                console.log(`New messages count: ${newMessagesCount}`);
+                target.textContent = newMessagesCount;
+            })
+            .catch((error) => {
+                console.error("Error fetching messages:", error);
+                target.textContent = "0";
             });
-            
-            console.log(`New messages count: ${newMessagesCount}`);
-            target.textContent = newMessagesCount;
-        })
-        .catch((error) => {
-            console.error("Error fetching messages:", error);
-            target.textContent = "0";
-        });
-}
+    }
 
-function updatePendingOrdersCount() {
+    function updatePendingOrdersCount() {
         const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
         if (!target) return;
 
@@ -2293,11 +2697,10 @@ function updatePendingOrdersCount() {
                 menuItems.forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
 
-    switch (menuText) {
-case 'Dashboard':
-    location.reload();
-    break;
-
+                switch (menuText) {
+                    case 'Dashboard':
+                        location.reload();
+                        break;
                     case 'Orders':
                         localStorage.setItem(LAST_OPEN.orders, Date.now());
                         updateBadge(document.getElementById("countOrders"), 0);
@@ -2337,13 +2740,23 @@ case 'Dashboard':
             });
         }
 
+        // Review action buttons
         const publishBtn = document.getElementById("publishReviewBtn");
         const removeBtn = document.getElementById("removeReviewBtn");
         const createBtn = document.getElementById("createReviewBtn");
 
-        if (publishBtn) publishBtn.addEventListener('click', () => console.log("Publish reviews clicked"));
-        if (removeBtn) removeBtn.addEventListener('click', () => console.log("Remove reviews clicked"));
-        if (createBtn) createBtn.addEventListener('click', () => console.log("Create review clicked"));
+        if (publishBtn) publishBtn.addEventListener('click', approveSelectedReview);
+        if (removeBtn) removeBtn.addEventListener('click', deleteSelectedReview);
+        if (createBtn) createBtn.addEventListener('click', openCreateReviewModal);
+
+        // Create review modal buttons
+        const createCloseBtn = document.getElementById("rv-create-close");
+        const createCancelBtn = document.getElementById("rv-create-cancel");
+        const createSaveBtn = document.getElementById("rv-create-save");
+
+        if (createCloseBtn) createCloseBtn.addEventListener('click', closeCreateReviewModal);
+        if (createCancelBtn) createCancelBtn.addEventListener('click', closeCreateReviewModal);
+        if (createSaveBtn) createSaveBtn.addEventListener('click', saveCreateReview);
     }
 
     function initDashboard() {
@@ -2357,6 +2770,7 @@ case 'Dashboard':
 
         setTimeout(() => {
             loadDashboardRecentOrders();
+            loadDashboardRecentReviews();
             updatePendingOrdersCount();
         }, 200);
 
