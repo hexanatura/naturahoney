@@ -498,13 +498,14 @@ function load() {
 
   ordersListener = db.collection("orders")
     .orderBy("createdAt", "desc")
-    .limit(50) // ADD LIMIT FOR PERFORMANCE
+    .limit(50)
     .onSnapshot((q) => {
       orders = q.docs.map((d) => {
         const o = d.data();
         return {
           ...o,
           id: d.id,
+          userId: o.userId || null, // Store userId if available
           _name: ((o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "")).toLowerCase(),
           _email: (o.email || "").toLowerCase(),
           _created: o.createdAt?.toDate ? o.createdAt.toDate().getTime() : 0,
@@ -521,72 +522,82 @@ function load() {
     if (ordersListener) ordersListener();
   });
 }
-
   function empty() {
     t.innerHTML = `<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>`;
     c.innerHTML = `<div class="order-card muted">No orders</div>`;
   }
 
-  function list(x) {
-    if (!x.length) {
-      empty();
-      return;
-    }
+function list(x) {
+  if (!x.length) {
+    empty();
+    return;
+  }
 
-    t.innerHTML = x
-      .map((o) => {
-        const it = (o.items || []).length,
-          tot = o.total || 0;
-        const cu = o.shippingAddress
-          ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
-          : o.email || "Customer";
+  t.innerHTML = x
+    .map((o) => {
+      const it = (o.items || []).length,
+        tot = o.total || 0;
+      const cu = o.shippingAddress
+        ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
+        : o.email || "Customer";
 
-        return `
-          <tr data-id="${esc(o.id)}">
-            <td>#${esc(sid(o.id))}</td>
-            <td>
-              <div style="display:flex;gap:10px;align-items:center">
-                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
-                  ${esc(cu.slice(0, 2).toUpperCase())}
-                </div>
-                <div>
-                  <div style="font-weight:600">${esc(cu)}</div>
-                  <div class="muted">${esc(o.email || "—")}</div>
-                </div>
+      return `
+        <tr data-id="${esc(o.id)}">
+          <td>
+            #${esc(sid(o.id))}
+            ${o.userId ? `<br><small class="muted">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
+          </td>
+          <td>
+            <div style="display:flex;gap:10px;align-items:center">
+              <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
+                ${esc(cu.slice(0, 2).toUpperCase())}
               </div>
-            </td>
-            <td class="muted">${fdn(o.createdAt)}</td>
-            <td class="muted">${it} item${it !== 1 ? "s" : ""}</td>
-            <td>₹${Number(tot).toFixed(2)}</td>
-            <td>
-              <span class="status-pill ${sc(o.status)}">${esc(o.status || "pending")}</span>
-            </td>
-            <td style="text-align:right">
-              <button class="action-btn view-btn" data-id="${o.id}">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="action-btn edit-btn" data-id="${o.id}">
-                <i class="fas fa-edit"></i>
-              </button>
-            </td>
-          </tr>
-        `;
-      })
-      .join("");
+              <div>
+                <div style="font-weight:600">${esc(cu)}</div>
+                <div class="muted">${esc(o.email || "—")}</div>
+                ${o.userId ? `<div class="muted" style="font-size:11px">User ID: ${esc(o.userId.substring(0, 8))}</div>` : ''}
+              </div>
+            </div>
+          </td>
+          <td class="muted">${fdn(o.createdAt)}</td>
+          <td class="muted">${it} item${it !== 1 ? "s" : ""}</td>
+          <td>₹${Number(tot).toFixed(2)}</td>
+          <td>
+            <span class="status-pill ${sc(o.status)}">${esc(o.status || "pending")}</span>
+            ${o.confirmedAt ? `<br><small class="muted">Confirmed: ${fdn(o.confirmedAt)}</small>` : ''}
+          </td>
+          <td style="text-align:right">
+            <button class="action-btn view-btn" data-id="${o.id}" title="View">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button class="action-btn edit-btn" data-id="${o.id}" title="Edit Status">
+              <i class="fas fa-edit"></i>
+            </button>
+            ${o.userId ? `<button class="action-btn user-btn" data-user="${o.userId}" title="View User"><i class="fas fa-user"></i></button>` : ''}
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
 
-    bind();
-  }
+  bind();
+}
+function bind() {
+  document.querySelectorAll(".view-btn").forEach((b) => {
+    b.onclick = (e) => open(e.currentTarget.dataset.id);
+  });
 
-  function bind() {
-    document.querySelectorAll(".view-btn").forEach((b) => {
-      b.onclick = (e) => open(e.currentTarget.dataset.id);
-    });
+  document.querySelectorAll(".edit-btn").forEach((b) => {
+    b.onclick = (e) => open(e.currentTarget.dataset.id);
+  });
 
-    document.querySelectorAll(".edit-btn").forEach((b) => {
-      b.onclick = (e) => open(e.currentTarget.dataset.id);
-    });
-  }
-
+  document.querySelectorAll(".user-btn").forEach((b) => {
+    b.onclick = (e) => {
+      const userId = e.currentTarget.dataset.user;
+      alert(`User ID: ${userId}\nWould open user profile here.`);
+    };
+  });
+}
   function open(id) {
     const o = orders.find((x) => x.id === id);
     if (!o) return;
@@ -698,11 +709,35 @@ function load() {
     m.classList.remove("show");
     editing = null;
   }
+  
+  function searchAndUpdateInUsers(orderId, updateData) {
+  return db.collection("users").get().then(users => {
+    const promises = [];
+    let foundInUsers = false;
+    
+    users.forEach(u => {
+      const userOrderRef = db.collection("users").doc(u.id).collection("orders").doc(orderId);
+      promises.push(
+        userOrderRef.get().then(snap => {
+          if (snap.exists) {
+            foundInUsers = true;
+            return userOrderRef.update(updateData);
+          }
+          return Promise.resolve();
+        })
+      );
+    });
+    
+    return Promise.all(promises).then(() => {
+      return { updatedInUser: foundInUsers };
+    });
+  });
+}
 
   // --------------------------------------------------------
   //  ** FIXED SAVE FUNCTION — AUTO UPDATE ROOT + USER ORDER **
   // --------------------------------------------------------
-  function save() {
+function save() {
   if (!editing) return;
 
   const st = document.getElementById("ov-modal-status").value;
@@ -712,52 +747,69 @@ function load() {
   ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
   const rootRef = db.collection("orders").doc(editing);
+  const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+  const updateData = {
+    status: st,
+    updatedAt: timestamp
+  };
 
+  // Add specific timestamp fields based on status
+  if (st === 'confirmed') {
+    updateData.confirmedAt = timestamp;
+  } else if (st === 'shipped') {
+    updateData.shippedAt = timestamp;
+  } else if (st === 'out-for-delivery' || st === 'out for delivery') {
+    updateData.outForDeliveryAt = timestamp;
+  } else if (st === 'delivered') {
+    updateData.deliveredAt = timestamp;
+  }
+
+  // Step 1: Update in /orders collection (admin view)
   rootRef.get().then(doc => {
     if (doc.exists) {
-      // Order exists in /orders → update here
-      return rootRef.update({
-        status: st,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      const orderData = doc.data();
+      
+      // Update admin's /orders collection
+      return rootRef.update(updateData).then(() => {
+        // Now find and update in user's /users/{uid}/orders collection
+        if (orderData.userId) {
+          // If we have userId stored in order, update directly
+          const userOrderRef = db.collection("users").doc(orderData.userId)
+            .collection("orders").doc(editing);
+          
+          return userOrderRef.update(updateData).then(() => {
+            return { updatedInUser: true, userId: orderData.userId };
+          }).catch(err => {
+            console.log("Couldn't update with userId, trying email...", err);
+            return searchAndUpdateInUsers(editing, updateData);
+          });
+        } else {
+          // No userId, search by email or orderId
+          return searchAndUpdateInUsers(editing, updateData);
+        }
       });
+    } else {
+      // Order not in /orders, search in all users
+      return searchAndUpdateInUsers(editing, updateData);
     }
-
-    // Not in /orders → search inside all users
-    return db.collection("users").get().then(users => {
-      let found = false;
-      const promises = [];
-
-      users.forEach(u => {
-        const subRef = db.collection("users").doc(u.id).collection("orders").doc(editing);
-        promises.push(
-          subRef.get().then(snap => {
-            if (snap.exists) {
-              found = true;
-              return subRef.update({
-                status: st,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-              });
-            }
-          })
-        );
-      });
-
-      return Promise.all(promises).then(() => {
-        if (!found) throw new Error("Order not found in any path");
-      });
-    });
   })
-  .then(() => {
+  .then((result) => {
     ms.disabled = false;
     ms.innerHTML = ot;
-    toast("Order updated");
+    
+    if (result && result.updatedInUser) {
+      toast(`Order updated (User: ${result.userId ? '✓' : 'found via email'})`);
+    } else {
+      toast("Order updated in admin view");
+    }
+    
     m.classList.remove("show");
   })
   .catch((err) => {
     ms.disabled = false;
     ms.innerHTML = ot;
-    console.error(err);
-    toast("Save failed", "error");
+    console.error("Save error:", err);
+    toast("Save failed: " + err.message, "error");
   });
 }
 
