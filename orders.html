@@ -11,6 +11,64 @@
   box-sizing: border-box;
 }
 
+/* Status badge */
+.status-out-for-delivery {
+    background: rgba(168,85,247,0.08);
+    color: #a855f7;
+    border: 1px solid rgba(168,85,247,0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    white-space: nowrap;   /* keeps text on one straight line */
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Action buttons wrapper */
+.action-buttons-container {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+}
+
+/* Action button */
+.action-btn {
+    border-radius: 8px;
+    border: none;
+    padding: 8px;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    min-width: 40px;
+    height: 40px;
+}
+
+.action-btn .fa-eye { color: var(--dark); }
+.action-btn .fa-edit { color: var(--success); }
+
+/* Table actions alignment */
+.orders-table td:last-child {
+    text-align: right;
+    padding-right: 0; /* optional: keeps alignment tight */
+}
+
+/* Mobile card actions */
+.card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: flex-end;   /* aligns same as table */
+    width: 100%;
+}
+
 .orders-view {
   padding: 22px;
   background: #fff;
@@ -510,9 +568,23 @@ function debounce(func, wait) {
     return x.toLocaleDateString("en-IN");
   }
 
-  function sc(s) {
-    return "status-" + s;
-  }
+function sc(s) {
+  // Normalize the status string
+  const status = (s || "").toLowerCase().replace(/\s+/g, '-');
+  
+  // Map status to CSS class
+  const statusMap = {
+    'pending': 'status-pending',
+    'confirmed': 'status-confirmed',
+    'shipped': 'status-shipped',
+    'out-for-delivery': 'status-out-for-delivery',
+    'outfordelivery': 'status-out-for-delivery',
+    'delivered': 'status-delivered',
+    'cancelled': 'status-cancelled'
+  };
+  
+  return statusMap[status] || 'status-pending';
+}
 
 // REPLACE EXISTING load FUNCTION IN ORDERS
 function load() {
@@ -552,7 +624,6 @@ function load() {
     t.innerHTML = `<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>`;
     c.innerHTML = `<div class="order-card muted">No orders</div>`;
   }
-
 function list(x) {
   if (!x.length) {
     empty();
@@ -567,11 +638,39 @@ function list(x) {
         ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
         : o.email || "Customer";
 
+      // Create items preview with first product image
+      let itemsPreview = 'No items';
+      if (it > 0) {
+        const firstItem = o.items[0];
+        const productImage = firstItem.image || 
+                            firstItem.productImage || 
+                            getDefaultProductImage(firstItem.name);
+        
+        itemsPreview = `
+          <div class="flex-center" style="gap:8px;">
+            <img src="${esc(productImage)}" 
+                 alt="${esc(firstItem.name)}" 
+                 class="product-image-small"
+                 data-image="${esc(productImage)}"
+                 data-name="${esc(firstItem.name)}"
+                 style="width:24px;height:24px;border-radius:4px;object-fit:cover;border:1px solid var(--border);cursor:pointer"
+                 onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+            <div>
+              <div style="font-weight:600;font-size:0.85rem">${esc(firstItem.name)}</div>
+              ${it > 1 ? `<div class="muted" style="font-size:0.75rem">+ ${it - 1} more</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // Determine status class
+      const statusClass = sc(o.status);
+      
       return `
         <tr data-id="${esc(o.id)}">
           <td>
-            #${esc(sid(o.id))}
-            ${o.userId ? `<br><small class="muted">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
+            <div style="font-weight:700">#${esc(sid(o.id))}</div>
+            ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
           </td>
           <td>
             <div style="display:flex;gap:10px;align-items:center">
@@ -579,27 +678,31 @@ function list(x) {
                 ${esc(cu.slice(0, 2).toUpperCase())}
               </div>
               <div>
-                <div style="font-weight:600">${esc(cu)}</div>
+                <div style="font-weight:700">${esc(cu)}</div>
                 <div class="muted">${esc(o.email || "—")}</div>
-                ${o.userId ? `<div class="muted" style="font-size:11px">User ID: ${esc(o.userId.substring(0, 8))}</div>` : ''}
               </div>
             </div>
           </td>
-          <td class="muted">${fdn(o.createdAt)}</td>
-          <td class="muted">${it} item${it !== 1 ? "s" : ""}</td>
-          <td>₹${Number(tot).toFixed(2)}</td>
           <td>
-            <span class="status-pill ${sc(o.status)}">${esc(o.status || "pending")}</span>
-            ${o.confirmedAt ? `<br><small class="muted">Confirmed: ${fdn(o.confirmedAt)}</small>` : ''}
+            <div style="font-weight:600">${fdn(o.createdAt)}</div>
+            ${o.createdAt ? `<small class="muted" style="font-size:0.75rem">
+              ${new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}
+            </small>` : ''}
           </td>
-          <td style="text-align:right">
-            <button class="action-btn view-btn" data-id="${o.id}" title="View">
-              <i class="fas fa-eye"></i>
-            </button>
-            <button class="action-btn edit-btn" data-id="${o.id}" title="Edit Status">
-              <i class="fas fa-edit"></i>
-            </button>
-            ${o.userId ? `<button class="action-btn user-btn" data-user="${o.userId}" title="View User"><i class="fas fa-user"></i></button>` : ''}
+          <td>${itemsPreview}</td>
+          <td style="font-weight:700">₹${Number(tot).toFixed(2)}</td>
+          <td>
+            <span class="status-pill ${statusClass}">${esc(o.status || "pending")}</span>
+          </td>
+          <td>
+            <div class="action-buttons-container">
+              <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="action-btn edit-btn" data-id="${o.id}" title="Edit Status">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
           </td>
         </tr>
       `;
