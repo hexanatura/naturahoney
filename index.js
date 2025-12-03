@@ -1,4 +1,3 @@
-// DOM Elements specific to index.html
 const mainContent = document.getElementById('mainContent');
 const profilePage = document.getElementById('profilePage');
 const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -485,7 +484,8 @@ window.addEventListener('resize', () => {
     initializeCarousel();
 });
 
-// Review modal functionality
+
+    // Review modal functionality
 addReviewBtn.addEventListener('click', () => {
     if (!currentUser) {
         alert('Please login to add a review');
@@ -496,101 +496,127 @@ addReviewBtn.addEventListener('click', () => {
         return;
     }
     
-    if (userOrders.length === 0) {
-        alert('You need to make a purchase before you can review our products');
-        return;
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = today.getFullYear();
+    const formattedDate = `${day}/${month}/${year}`;
+    
+    // Set the date field
+    const dateField = document.getElementById('reviewDate');
+    if (dateField) {
+        dateField.value = formattedDate;
     }
     
-    reviewModal.style.display = 'flex';
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    // Auto-fill user's name if available
+    const nameField = document.getElementById('reviewName');
+    if (nameField && currentUser && currentUser.displayName) {
+        nameField.value = currentUser.displayName;
+    } else if (nameField) {
+        nameField.value = ''; // Clear if no name
+    }
+    
+    // Clear other fields
+    const locationField = document.getElementById('reviewLocation');
+    const textField = document.getElementById('reviewText');
+    
+    if (locationField) locationField.value = '';
+    if (textField) textField.value = '';
+    
+    // Uncheck all rating stars
+    const ratingInputs = document.querySelectorAll('input[name="rating"]');
+    ratingInputs.forEach(input => input.checked = false);
+    
+    if (reviewModal) {
+        reviewModal.style.display = 'flex';
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 });
 
-cancelReview.addEventListener('click', () => {
-    reviewModal.style.display = 'none';
-    overlay.classList.remove('active');
-    document.body.style.overflow = 'auto';
-});
-
-submitReview.addEventListener('click', () => {
-    const productId = parseInt(reviewProduct.value);
-    const rating = document.querySelector('input[name="rating"]:checked');
-    const reviewText = document.getElementById('userReview').value;
-    
-    if (!productId) {
-        alert('Please select a product');
-        return;
-    }
-    
-    if (!rating) {
-        alert('Please provide a rating');
-        return;
-    }
-    
-    if (!reviewText.trim()) {
-        alert('Please write a review');
-        return;
-    }
-    
-    const review = {
-        productId: productId,
-        userId: currentUser.uid,
-        userName: currentUser.displayName || 'Customer',
-        rating: parseInt(rating.value),
-        reviewText: reviewText.trim(),
-        status: 'pending', // All reviews start as pending
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    db.collection('reviews').add(review)
-        .then(() => {
-            alert('Thank you for your review! It will be published after moderation.');
+if (cancelReview) {
+    cancelReview.addEventListener('click', () => {
+        if (reviewModal) {
             reviewModal.style.display = 'none';
             overlay.classList.remove('active');
             document.body.style.overflow = 'auto';
-            
-            // Reset form
-            reviewProduct.value = '';
-            document.querySelectorAll('input[name="rating"]').forEach(input => {
-                input.checked = false;
-            });
-            document.getElementById('userReview').value = '';
-        })
-        .catch((error) => {
-            console.error("Error submitting review:", error);
-            alert('Error submitting review. Please try again.');
-        });
-});
-
-reviewModal.addEventListener('click', (e) => {
-    if (e.target === reviewModal) {
-        reviewModal.style.display = 'none';
-        overlay.classList.remove('active');
-        document.body.style.overflow = 'auto';
-    }
-});
-
-// Update review product dropdown
-function updateReviewProductDropdown() {
-    if (!reviewProduct) return;
-    
-    reviewProduct.innerHTML = '<option value="">Select a product you\'ve purchased</option>';
-    
-    // Get unique product IDs from orders
-    const orderedProductIds = [...new Set(userOrders.flatMap(order => 
-        order.items.map(item => item.productId)
-    ))];
-    
-    orderedProductIds.forEach(productId => {
-        const product = products.find(p => p.id === productId);
-        if (product) {
-            const option = document.createElement('option');
-            option.value = productId;
-            option.textContent = `${product.name} - ${product.weight}`;
-            reviewProduct.appendChild(option);
         }
     });
 }
+
+if (submitReview) {
+    submitReview.addEventListener('click', () => {
+        const userName = document.getElementById('reviewName')?.value.trim() || '';
+        const userLocation = document.getElementById('reviewLocation')?.value.trim() || '';
+        const rating = document.querySelector('input[name="rating"]:checked');
+        const reviewText = document.getElementById('reviewText')?.value.trim() || '';
+        
+        // Validation
+        if (!userName) {
+            alert('Please enter your name');
+            return;
+        }
+        
+        if (!userLocation) {
+            alert('Please enter your location (city)');
+            return;
+        }
+        
+        if (!rating) {
+            alert('Please provide a rating by selecting stars');
+            return;
+        }
+        
+        if (!reviewText) {
+            alert('Please write your review');
+            return;
+        }
+        
+        if (reviewText.length < 10) {
+            alert('Please write a more detailed review (minimum 10 characters)');
+            return;
+        }
+        
+        const review = {
+            userName: userName,
+            userLocation: userLocation,
+            rating: parseInt(rating.value),
+            reviewText: reviewText,
+            status: 'pending', // All user reviews start as pending
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            userId: currentUser.uid
+        };
+        
+
+        db.collection('reviews').add(review)
+            .then(() => {
+                alert('Thank you for your review!');
+                if (reviewModal) {
+                    reviewModal.style.display = 'none';
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+                
+                // Reload reviews to show pending message
+                loadApprovedReviews();
+            })
+            .catch((error) => {
+                console.error("Error submitting review:", error);
+                alert('Error submitting review. Please try again.');
+            });
+    });
+}
+
+if (reviewModal) {
+    reviewModal.addEventListener('click', (e) => {
+        if (e.target === reviewModal) {
+            reviewModal.style.display = 'none';
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
+}
+
 
 // Override the removeFromLikes function to update UI
 const originalRemoveFromLikes = window.removeFromLikes;
@@ -624,17 +650,10 @@ function initIndexPage() {
     initializeProductCards();
     initializeCategoryFilter();
     initializeBannerImages();
-    loadApprovedReviews(); // <-- YOU MISSED THIS
+    loadApprovedReviews();
 
-    const originalLoadUserData = window.loadUserData;
-    window.loadUserData = function(userId) {
-        if (originalLoadUserData) {
-            originalLoadUserData(userId);
-        }
-        setTimeout(updateReviewProductDropdown, 500);
-    };
+    // No need to modify loadUserData anymore
 }
-
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
