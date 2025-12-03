@@ -254,7 +254,11 @@
 .status-pending { background: rgba(245,158,11,0.08); color:#f59e0b; border:1px solid rgba(245,158,11,0.12); }
 .status-confirmed { background: rgba(59,130,246,0.08); color:#3b82f6; border:1px solid rgba(59,130,246,0.12); }
 .status-shipped { background: rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.12); }
-.status-out-for-delivery { background: rgba(139,92,246,0.08); color:#8b5cf6; border:1px solid rgba(139,92,246,0.12); }
+.status-out-for-delivery { 
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    color: #0c4a6e;
+    border-color: #38bdf8;
+}
 .status-delivered { background: rgba(101,163,13,0.08); color:#65a30d; border:1px solid rgba(101,163,13,0.12); }
 .status-cancelled { background: rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.12); }
 
@@ -841,21 +845,31 @@
     return x.toLocaleDateString("en-IN");
   }
 
-  function sc(s) {
-    const statusMap = {
-      'pending': 'pending',
-      'confirmed': 'confirmed',
-      'shipped': 'shipped',
-      'out for delivery': 'out-for-delivery',
-      'out-for-delivery': 'out-for-delivery',
-      'delivered': 'delivered',
-      'cancelled': 'cancelled'
-    };
-    
-    const normalizedStatus = statusMap[s?.toLowerCase()] || 'pending';
-    return "status-" + normalizedStatus;
-  }
+function sc(s) {
+  const statusMap = {
+    'pending': 'pending',
+    'confirmed': 'confirmed',
+    'shipped': 'shipped',
+    'out-for-delivery': 'out-for-delivery',
+    'delivered': 'delivered',
+    'cancelled': 'cancelled'
+  };
+  
+  const normalizedStatus = statusMap[s?.toLowerCase()] || 'pending';
+  return "status-" + normalizedStatus;
+}
 
+function formatStatusForDisplay(status) {
+  if (!status) return "Pending";
+  
+  // Handle special cases
+  if (status.toLowerCase() === 'out for delivery' || status.toLowerCase() === 'out-for-delivery') {
+    return "Out For Delivery";
+  }
+  
+  // Capitalize first letter and make rest lowercase
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
   // Image zoom functions
   function openImageZoom(imageSrc, altText) {
     zoomedImage.src = imageSrc;
@@ -966,7 +980,7 @@
           `;
         }
 
-        const statusDisplay = o.status === 'out for delivery' ? 'out for delivery' : (o.status || "pending");
+const statusDisplay = formatStatusForDisplay(o.status || "pending");
 
         return `
           <tr data-id="${esc(o.id)}">
@@ -1024,7 +1038,7 @@
           .map(i => `${i.name || 'Item'} x${i.quantity || 1}`)
           .join(', ');
           
-        const statusDisplay = o.status === 'out for delivery' ? 'out for delivery' : (o.status || "pending");
+const statusDisplay = formatStatusForDisplay(o.status || "pending");
         const truncatedItemsText = itemsText.length > 50 ? itemsText.substring(0, 50) + '...' : itemsText;
 
         return `
@@ -1085,6 +1099,7 @@
 
     bind();
   }
+  
 
   function bind() {
     // Bind table view buttons
