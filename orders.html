@@ -866,104 +866,200 @@
     });
   }
 
-  function open(id) {
+function open(id) {
     const o = orders.find((x) => x.id === id);
     if (!o) return;
 
     editing = id;
 
-    const ad = o.shippingAddress
-      ? [
-          o.shippingAddress.address,
-          o.shippingAddress.city,
-          o.shippingAddress.state,
-          o.shippingAddress.zipCode,
-          o.shippingAddress.country,
-        ]
-          .filter(Boolean)
-          .join(", ")
-      : "No address";
+    // Format address if available
+    const address = o.shippingAddress ? `
+        ${o.shippingAddress.address || ''}<br>
+        ${o.shippingAddress.city || ''}, ${o.shippingAddress.state || ''}<br>
+        ${o.shippingAddress.zipCode || ''}<br>
+        ${o.shippingAddress.country || ''}
+    ` : "No address provided";
 
-    const it =
-      (o.items || [])
-        .map(
-          (i) => {
-            const productImage = i.image || i.productImage || getDefaultProductImage(i.name);
+    // Format phone
+    const phone = o.shippingAddress?.phone || "Not provided";
+
+    // Format items with images
+    const itemsHTML = (o.items || [])
+        .map((item, index) => {
+            const productImage = item.image || item.productImage || getDefaultProductImage(item.name);
             return `
             <div class="product-item-modal">
-              <img src="${esc(productImage)}" 
-                   alt="${esc(i.name)}" 
-                   class="product-image-modal-item"
-                   onclick="showProductImage('${esc(productImage)}', '${esc(i.name)}')"
-                   onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
-              <div class="product-info-modal">
-                <div class="product-name-modal">${esc(i.name)}</div>
-                <div class="product-details-modal">${esc(i.weight || "")}</div>
-              </div>
-              <div class="product-quantity-modal">x${i.quantity}</div>
-              <div class="product-price-modal">₹${(i.price * i.quantity).toFixed(2)}</div>
+                <div style="display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--border);">
+                    <img src="${esc(productImage)}" 
+                         alt="${esc(item.name)}" 
+                         class="product-image-modal-item"
+                         onclick="showProductImage('${esc(productImage)}', '${esc(item.name)}')"
+                         onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+                    <div style="flex:1">
+                        <div style="font-weight:500;color:var(--dark);margin-bottom:4px">${esc(item.name)}</div>
+                        <div style="font-size:0.85rem;color:var(--muted)">
+                            ${item.weight ? esc(item.weight) + ' • ' : ''}
+                            Quantity: ${item.quantity}
+                        </div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-weight:600;color:var(--dark)">₹${(item.price * item.quantity).toFixed(2)}</div>
+                        <div style="font-size:0.85rem;color:var(--muted)">₹${Number(item.price).toFixed(2)} each</div>
+                    </div>
+                </div>
             </div>
-          `;
-          }
-        )
-        .join("") || "<div class='muted'>No items</div>";
+            `;
+        })
+        .join("") || '<div style="padding:20px;text-align:center;color:var(--muted)">No items in this order</div>';
+
+    // Calculate subtotal
+    const subtotal = (o.items || []).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = o.tax || 0;
+    const shipping = o.shipping || 0;
+    const total = o.total || subtotal + tax + shipping;
 
     mb.innerHTML = `
-      <div style="display:grid;gap:16px">
-        <div>
-          <div class="modal-section-title">Order Information</div>
-          <div class="modal-data">
-            <strong>Order ID:</strong> #${esc(sid(id))}<br>
-            <strong>Date:</strong> ${fdn(o.createdAt)}<br>
-            <strong>Total:</strong> ₹${Number(o.total || 0).toFixed(2)}
-          </div>
-        </div>
+        <div style="display:grid;gap:20px;">
+            <!-- Order Header -->
+            <div style="background:var(--light);padding:16px;border-radius:8px;border:1px solid var(--border);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+                    <div>
+                        <div style="font-size:0.9rem;color:var(--muted);margin-bottom:4px">ORDER ID</div>
+                        <div style="font-weight:600;font-size:1.1rem;color:var(--dark)">#${esc(sid(id))}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div style="font-size:0.9rem;color:var(--muted);margin-bottom:4px">DATE</div>
+                        <div style="font-weight:500;color:var(--dark)">${fdn(o.createdAt)}</div>
+                    </div>
+                </div>
+            </div>
 
-        <div>
-          <div class="modal-section-title">Customer Details</div>
-          <div class="modal-data">
-            <strong>Name:</strong> ${esc(
-              o.shippingAddress
-                ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
-                : o.email
-            )}<br>
-            <strong>Email:</strong> ${esc(o.email || "—")}<br>
-            <strong>Phone:</strong> ${esc(o.shippingAddress?.phone || "—")}
-          </div>
-        </div>
+            <!-- Two Column Layout -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <!-- Left Column: Customer Info -->
+                <div>
+                    <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">CUSTOMER INFORMATION</div>
+                    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;">
+                        <div style="margin-bottom:12px">
+                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Name</div>
+                            <div style="font-weight:500;color:var(--dark)">
+                                ${esc(o.shippingAddress?.firstName || '')} ${esc(o.shippingAddress?.lastName || '')}
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px">
+                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Email</div>
+                            <div style="color:var(--dark)">${esc(o.email || "—")}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Phone</div>
+                            <div style="color:var(--dark)">${phone}</div>
+                        </div>
+                    </div>
+                </div>
 
-        <div>
-          <div class="modal-section-title">Shipping Address</div>
-          <div class="modal-data">${esc(ad)}</div>
-        </div>
+                <!-- Right Column: Shipping Info -->
+                <div>
+                    <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">SHIPPING ADDRESS</div>
+                    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;height:100%">
+                        <div style="color:var(--dark);line-height:1.5">${address}</div>
+                    </div>
+                </div>
+            </div>
 
-        <div>
-          <div class="modal-section-title">Order Status</div>
-          <div class="modal-data">
-            <select id="ov-modal-status" style="padding:10px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:0.95rem;background:#fff;">
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="shipped">Shipped</option>
-              <option value="out-for-delivery">Out for Delivery</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-        </div>
+            <!-- Status Section -->
+            <div>
+                <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">ORDER STATUS</div>
+                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;">
+                    <select id="ov-modal-status" style="padding:12px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:0.95rem;background:#fff;color:var(--dark);">
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="out-for-delivery">Out for Delivery</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;padding:8px;background:var(--light);border-radius:6px;">
+                        <i class="fas fa-info-circle" style="color:var(--muted)"></i>
+                        <div style="font-size:0.85rem;color:var(--muted)">
+                            Updating status will notify the customer
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <div>
-          <div class="modal-section-title">Order Items (${(o.items || []).length})</div>
-          <div style="max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:8px;background:#fff;">
-            ${it}
-          </div>
+            <!-- Order Items -->
+            <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div style="font-weight:600;color:var(--dark);font-size:0.95rem">ORDER ITEMS</div>
+                    <div style="font-size:0.85rem;color:var(--muted);background:var(--light);padding:4px 8px;border-radius:4px;">
+                        ${(o.items || []).length} item${(o.items || []).length !== 1 ? 's' : ''}
+                    </div>
+                </div>
+                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;max-height:300px;overflow-y:auto;">
+                    ${itemsHTML}
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div>
+                <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">ORDER SUMMARY</div>
+                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                        <div style="color:var(--muted)">Subtotal</div>
+                        <div style="font-weight:500">₹${subtotal.toFixed(2)}</div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                        <div style="color:var(--muted)">Tax</div>
+                        <div style="font-weight:500">₹${tax.toFixed(2)}</div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                        <div style="color:var(--muted)">Shipping</div>
+                        <div style="font-weight:500">₹${shipping.toFixed(2)}</div>
+                    </div>
+                    <div style="height:1px;background:var(--border);margin:12px 0;"></div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <div style="font-weight:600;color:var(--dark)">Total</div>
+                        <div style="font-weight:700;color:var(--dark);font-size:1.1rem">₹${total.toFixed(2)}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment & Notes Section -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div>
+                    <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">PAYMENT INFORMATION</div>
+                    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;">
+                        <div style="margin-bottom:8px">
+                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Method</div>
+                            <div style="font-weight:500;color:var(--dark)">
+                                ${o.paymentMethod ? esc(o.paymentMethod) : 'Not specified'}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Status</div>
+                            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:${o.paymentStatus === 'paid' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'};color:${o.paymentStatus === 'paid' ? '#10b981' : '#f59e0b'};border-radius:4px;font-size:0.85rem;font-weight:500">
+                                ${o.paymentStatus === 'paid' ? '✓ Paid' : 'Pending'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">CUSTOMER NOTES</div>
+                    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;height:100%">
+                        <div style="color:var(--muted);font-style:italic">
+                            ${o.notes ? esc(o.notes) : 'No notes provided'}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     `;
 
+    // Set current status
     document.getElementById("ov-modal-status").value = o.status || "pending";
     m.classList.add("show");
-  }
-
+}
   function close() {
     m.classList.remove("show");
     editing = null;
