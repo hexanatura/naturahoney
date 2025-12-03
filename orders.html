@@ -1,7 +1,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
 <style>
 * {
@@ -10,63 +10,22 @@
   box-sizing: border-box;
 }
 
-/* Status badge */
-.status-out-for-delivery {
-    background: rgba(168,85,247,0.08);
-    color: #a855f7;
-    border: 1px solid rgba(168,85,247,0.12);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px 10px;
-    white-space: nowrap;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 500;
+.copy-btn {
+  cursor: pointer;
+  margin-left: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.copy-btn:hover {
+  color: var(--dark);
+}
+.orders-modal .modal-body {
+  font-size: 0.85rem;
+}
+.orders-modal .modal-title-bold {
+  font-size: 0.9rem !important;
 }
 
-/* Action buttons wrapper */
-.action-buttons-container {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    align-items: center;
-    width: 100%;
-}
-
-/* Action button */
-.action-btn {
-    border-radius: 8px;
-    border: none;
-    padding: 8px;
-    background: transparent;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.95rem;
-    min-width: 40px;
-    height: 40px;
-}
-
-.action-btn .fa-eye { color: var(--dark); }
-.action-btn .fa-edit { color: var(--success); }
-
-/* Table actions alignment */
-.orders-table td:last-child {
-    text-align: right;
-    padding-right: 0;
-}
-
-/* Mobile card actions */
-.card-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    justify-content: flex-end;
-    width: 100%;
-}
 
 .orders-view {
   padding: 22px;
@@ -74,6 +33,13 @@
   min-height: 100vh;
 }
 
+  .actions-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  align-items: center;
+}
+  
 .orders-modal .modal-header {
   display: flex;
   justify-content: space-between;
@@ -89,16 +55,15 @@
   flex-wrap: wrap;
 }
 
-/* Reduced boldness for titles */
 .orders-title {
   font-family: 'Outfit', sans-serif;
   font-size: 1.2rem;
-  font-weight: 600; /* Reduced from 700 */
+  font-weight: 700;
   color: var(--dark);
 }
 
 .modal-title-bold {
-  font-weight: 600 !important; /* Reduced from 700 */
+  font-weight: 700 !important;
   color: var(--dark);
   margin-bottom: 4px;
 }
@@ -111,56 +76,98 @@
   border: 1px solid var(--border);
   background: #f5f5f5;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-image-small:hover {
   transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* Product image modal */
-.product-image-modal {
+.product-image-large {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.image-zoom-modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0,0,0,0.9);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
-.product-image-modal.show {
-  opacity: 1;
-  visibility: visible;
+/* Reduce modal font sizes */
+.orders-modal .modal-body {
+  font-size: 0.85rem;
 }
 
-.product-image-modal img {
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+.orders-modal .modal-body .modal-title-bold {
+  font-size: 0.9rem;
 }
 
-.product-image-modal-close {
+.orders-modal .modal-body div {
+  font-size: 0.85rem;
+}
+
+
+.image-zoom-modal.show {
+  display: flex;
+}
+
+.image-zoom-content {
+  position: relative;
+  max-width: 95%;
+  max-height: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-zoom-close {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: -40px;
+  right: 0;
+  background: rgba(255,255,255,0.1);
+  border: none;
   color: white;
-  font-size: 2rem;
-  cursor: pointer;
-  background: rgba(0,0,0,0.5);
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.2s ease;
+}
+
+.image-zoom-close:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.image-zoom-caption {
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  font-size: 0.95rem;
+  padding: 8px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 6px;
 }
 
 .flex-center {
@@ -178,7 +185,6 @@
   font-size: 0.9rem;
   color: var(--muted);
   margin-top: 4px;
-  font-weight: 400; /* Normal weight for subtitle */
 }
 
 .orders-controls {
@@ -208,7 +214,6 @@
   background: #fff;
   font-size: 0.95rem;
   min-width: 160px;
-  font-weight: 400; /* Normal weight for inputs */
 }
 
 .search-box {
@@ -225,7 +230,6 @@
   background: transparent;
   width: 100%;
   font-size: 0.95rem;
-  font-weight: 400;
 }
 
 .btn-primary {
@@ -235,7 +239,7 @@
   padding: 9px 14px;
   border: none;
   cursor: pointer;
-  font-weight: 600; /* Reduced from 700 */
+  font-weight: 700;
 }
 
 .btn-ghost {
@@ -244,7 +248,7 @@
   padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
-  font-weight: 500; /* Reduced from 600 */
+  font-weight: 600;
 }
 
 .table-card {
@@ -272,7 +276,7 @@
 .orders-table thead th {
   text-align: left;
   padding: 12px 16px;
-  font-weight: 600; /* Reduced from 700 */
+  font-weight: 700;
   color: var(--dark);
   border-bottom: 1px solid var(--border);
   background: #fff;
@@ -284,27 +288,47 @@
   vertical-align: middle;
   color: var(--dark);
   background: #fff;
-  font-weight: 400; /* Normal weight for table data */
-}
-
-/* Keep only important text bold */
-.orders-table td div[style*="font-weight:700"] {
-  font-weight: 600; /* Reduced from 700 */
 }
 
 .status-pill {
   display: inline-block;
   padding: 6px 10px;
   border-radius: 999px;
-  font-weight: 600; /* Reduced from 700 */
+  font-weight: 700;
   font-size: 0.75rem;
 }
 
 .status-pending { background: rgba(245,158,11,0.08); color:#f59e0b; border:1px solid rgba(245,158,11,0.12); }
 .status-confirmed { background: rgba(59,130,246,0.08); color:#3b82f6; border:1px solid rgba(59,130,246,0.12); }
 .status-shipped { background: rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.12); }
+.status-out-for-delivery { background: rgba(139,92,246,0.08); color:#8b5cf6; border:1px solid rgba(139,92,246,0.12); }
 .status-delivered { background: rgba(101,163,13,0.08); color:#65a30d; border:1px solid rgba(101,163,13,0.12); }
 .status-cancelled { background: rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.12); }
+
+.action-btn {
+  border-radius: 8px;
+  border: 0;
+  padding: 8px;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.action-btn .fa-eye { color: var(--dark); }
+.action-btn .fa-edit { color: var(--success); }
+
+/* Fixed: Action buttons container */
+.actions-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+}
 
 .mobile-cards {
   display: none;
@@ -328,14 +352,13 @@
 }
 
 .customer-name {
-  font-weight: 500; /* Reduced from 600 */
+  font-weight: 600;
   color: var(--dark);
 }
 
 .card-meta {
   color: var(--muted);
   font-size: 0.85rem;
-  font-weight: 400;
 }
 
 .orders-modal-bg {
@@ -361,8 +384,6 @@
   background: #fff;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
-  max-height: 90vh;
-  overflow-y: auto;
 }
 
 .orders-modal .modal-header,
@@ -372,33 +393,10 @@
   background: #fff;
 }
 
-/* Modal section headers - keep these bold */
-.modal-section-title {
-  font-weight: 600;
-  color: var(--dark);
-  margin-top: 16px;
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Modal data - normal weight */
-.modal-data {
-  font-weight: 400;
-  color: var(--dark);
-  margin-bottom: 12px;
-}
-
-.modal-data strong {
-  font-weight: 600;
-}
-
 .empty-state {
   text-align: center;
   padding: 36px 12px;
   color: var(--muted);
-  font-weight: 400;
 }
 
 .oh-toast {
@@ -424,51 +422,9 @@
   transform: translateY(0);
 }
 
-/* Product items in modal */
-.product-item-modal {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-  background: #fff;
-}
-
-.product-item-modal:last-child {
-  border-bottom: none;
-}
-
-.product-image-modal-item {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
-  object-fit: cover;
-  border: 1px solid var(--border);
-  background: #f5f5f5;
-  cursor: pointer;
-}
-
-.product-info-modal {
-  flex: 1;
-}
-
-.product-name-modal {
-  font-weight: 500;
-  color: var(--dark);
-  margin-bottom: 4px;
-}
-
-.product-details-modal {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.product-quantity-modal,
-.product-price-modal {
-  font-weight: 500;
-  color: var(--dark);
-  min-width: 60px;
-  text-align: right;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (max-width:1023px) {
@@ -499,108 +455,116 @@
   .orders-modal {
     width: calc(100% - 20px);
   }
-  .product-item-modal {
-    flex-wrap: wrap;
+  .product-image-large {
+    max-width: 100%;
+    max-height: 80vh;
   }
 }
 </style>
 
 </head>
 <body>
-  <div class="page-container">
-    <div class="orders-view fade-in">
-      <div class="orders-top">
-        <div>
-          <div class="orders-title">Order Management</div>
-          <div class="orders-sub muted">Manage and track customer orders</div>
-        </div>
+<div class="page-container">
+  <div class="orders-view fade-in">
 
-        <div class="orders-controls">
-          <div class="orders-card filters-row">
-            <select id="ov-status" class="filter-select" title="Filter by status">
-              <option value="all">All Orders</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-
-            <select id="ov-date" class="filter-select" title="Filter by date">
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select>
-
-            <div class="search-box">
-              <i class="fas fa-search muted"></i>
-              <input id="ov-search" placeholder="Search order ID, customer, email">
-            </div>
-          </div>
-
-          <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-          <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
-        </div>
+    <div class="orders-top">
+      <div>
+        <div class="orders-title">Order Management</div>
+        <div class="orders-sub muted">Manage and track customer orders</div>
       </div>
 
-      <div class="table-card">
-        <div class="table-wrapper">
-          <table class="orders-table" aria-label="Orders table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="ov-tbody">
-              <tr><td colspan="7" class="muted">Loading orders…</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="orders-controls">
+        <div class="orders-card filters-row">
+          <select id="ov-status" class="filter-select" title="Filter by status">
+            <option value="all">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option>
+            <option value="out-for-delivery">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
 
-        <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
-      </div>
+          <select id="ov-date" class="filter-select" title="Filter by date">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
 
-      <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
-        <div class="orders-modal" role="document" aria-modal="true">
-          <div class="modal-header">
-            <div style="font-weight:600" id="ov-modal-title">Order Details</div>
-            <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
-          </div>
-
-          <div class="modal-body" id="ov-modal-body"></div>
-
-          <div class="modal-footer">
-            <button id="ov-modal-cancel" class="btn-ghost">Close</button>
-            <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
+          <div class="search-box">
+            <i class="fas fa-search muted"></i>
+            <input id="ov-search" placeholder="Search order ID, customer, email">
           </div>
         </div>
-      </div>
-      
-      <!-- Product Image View Modal -->
-      <div class="product-image-modal" id="productImageModal">
-        <div class="product-image-modal-close" id="productImageModalClose">&times;</div>
-        <img id="productImageModalImg" src="" alt="Product Image">
-      </div>
 
+        <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+        <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
+      </div>
     </div>
-  </div>
 
-  <div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
-    <i class="fas fa-check-circle" style="color:var(--success)"></i>
-    <div id="oh-toast-text">Saved</div>
-  </div>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table class="orders-table" aria-label="Orders table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ov-tbody">
+            <tr><td colspan="7" class="muted">Loading orders…</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="activityLogger.js?v=1"></script>
+      <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
+    </div>
+
+    <!-- Product Image Zoom Modal -->
+    <div class="image-zoom-modal" id="imageZoomModal">
+      <div class="image-zoom-content">
+        <button class="image-zoom-close" id="imageZoomClose" aria-label="Close zoom">
+          <i class="fas fa-times"></i>
+        </button>
+        <img id="zoomedImage" class="product-image-large" alt="Product image" />
+        <div id="imageCaption" class="image-zoom-caption"></div>
+      </div>
+    </div>
+
+    <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
+      <div class="orders-modal" role="document" aria-modal="true">
+        <div class="modal-header">
+          <div style="font-weight:700" id="ov-modal-title">Order Details</div>
+          <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="modal-body" id="ov-modal-body"></div>
+
+        <div class="modal-footer">
+          <button id="ov-modal-cancel" class="btn-ghost">Close</button>
+          <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
+  <i class="fas fa-check-circle" style="color:var(--success)"></i>
+  <div id="oh-toast-text">Saved</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="activityLogger.js?v=1"></script>
 
 <script>
 (function () {
@@ -643,6 +607,7 @@
   }
 
   const db = firebase.firestore();
+
   const t = document.getElementById("ov-tbody"),
     c = document.getElementById("ov-cards"),
     m = document.getElementById("ov-modal-bg"),
@@ -657,30 +622,15 @@
     xb = document.getElementById("ov-export"),
     tw = document.getElementById("oh-toast"),
     tt = document.getElementById("oh-toast-text"),
-    productImageModal = document.getElementById("productImageModal"),
-    productImageModalImg = document.getElementById("productImageModalImg"),
-    productImageModalClose = document.getElementById("productImageModalClose");
+    // Image zoom modal elements
+    imgZoomModal = document.getElementById("imageZoomModal"),
+    imgZoomClose = document.getElementById("imageZoomClose"),
+    zoomedImage = document.getElementById("zoomedImage"),
+    imageCaption = document.getElementById("imageCaption");
 
   let orders = [],
     filtered = [],
     editing = null;
-
-  function showProductImage(src, alt) {
-    productImageModalImg.src = src;
-    productImageModalImg.alt = alt;
-    productImageModal.classList.add("show");
-    document.body.style.overflow = "hidden";
-  }
-
-  function hideProductImage() {
-    productImageModal.classList.remove("show");
-    document.body.style.overflow = "auto";
-  }
-
-  productImageModalClose.onclick = hideProductImage;
-  productImageModal.onclick = function(e) {
-    if (e.target === productImageModal) hideProductImage();
-  };
 
   function toast(m, y = "success") {
     tt.textContent = m;
@@ -708,23 +658,49 @@
     return x.toLocaleDateString("en-IN");
   }
 
+  // Fixed: Added status class for "out for delivery"
   function sc(s) {
-    const status = (s || "").toLowerCase().replace(/\s+/g, '-');
+    // Convert any variation to standard class name
     const statusMap = {
-      'pending': 'status-pending',
-      'confirmed': 'status-confirmed',
-      'shipped': 'status-shipped',
-      'out-for-delivery': 'status-out-for-delivery',
-      'outfordelivery': 'status-out-for-delivery',
-      'delivered': 'status-delivered',
-      'cancelled': 'status-cancelled'
+      'pending': 'pending',
+      'confirmed': 'confirmed',
+      'shipped': 'shipped',
+      'out for delivery': 'out-for-delivery',
+      'out-for-delivery': 'out-for-delivery',
+      'delivered': 'delivered',
+      'cancelled': 'cancelled'
     };
-    return statusMap[status] || 'status-pending';
+    
+    const normalizedStatus = statusMap[s?.toLowerCase()] || 'pending';
+    return "status-" + normalizedStatus;
   }
 
-  function getDefaultProductImage(productName) {
-    return 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022';
+  // Image zoom functions
+  function openImageZoom(imageSrc, altText) {
+    zoomedImage.src = imageSrc;
+    imageCaption.textContent = altText || "Product Image";
+    imgZoomModal.classList.add("show");
+    document.body.style.overflow = 'hidden';
   }
+
+  function closeImageZoom() {
+    imgZoomModal.classList.remove("show");
+    document.body.style.overflow = 'auto';
+  }
+
+imgZoomModal.addEventListener('click', function (e) {
+  // Close if clicked background OR close button (including icon inside)
+  if (e.target === imgZoomModal || e.target.closest('#imageZoomClose')) {
+    closeImageZoom();
+  }
+});
+
+  // Close with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && imgZoomModal.classList.contains('show')) {
+      closeImageZoom();
+    }
+  });
 
   function load() {
     t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
@@ -778,6 +754,7 @@
           ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
           : o.email || "Customer";
 
+        // Create items preview with first product image
         let itemsPreview = 'No items';
         if (it > 0) {
           const firstItem = o.items[0];
@@ -790,49 +767,52 @@
               <img src="${esc(productImage)}" 
                    alt="${esc(firstItem.name)}" 
                    class="product-image-small"
-                   onclick="showProductImage('${esc(productImage)}', '${esc(firstItem.name)}')"
-                   style="width:24px;height:24px;border-radius:4px;object-fit:cover;border:1px solid var(--border);"
+                   data-image="${esc(productImage)}"
+                   data-name="${esc(firstItem.name)}"
+                   style="width:24px;height:24px;border-radius:4px;object-fit:cover;border:1px solid var(--border);cursor:pointer"
                    onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
               <div>
-                <div style="font-weight:500;font-size:0.85rem">${esc(firstItem.name)}</div>
+                <div style="font-weight:600;font-size:0.85rem">${esc(firstItem.name)}</div>
                 ${it > 1 ? `<div class="muted" style="font-size:0.75rem">+ ${it - 1} more</div>` : ''}
               </div>
             </div>
           `;
         }
 
-        const statusClass = sc(o.status);
-        
+        // Fixed: Added proper status display
+        const statusDisplay = o.status === 'out for delivery' ? 'out for delivery' : (o.status || "pending");
+
         return `
           <tr data-id="${esc(o.id)}">
             <td>
-              <div style="font-weight:600">#${esc(sid(o.id))}</div>
+              <div style="font-weight:700">#${esc(sid(o.id))}</div>
               ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
             </td>
             <td>
               <div style="display:flex;gap:10px;align-items:center">
-                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:500">
+                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
                   ${esc(cu.slice(0, 2).toUpperCase())}
                 </div>
                 <div>
-                  <div style="font-weight:500">${esc(cu)}</div>
+                  <div style="font-weight:700">${esc(cu)}</div>
                   <div class="muted">${esc(o.email || "—")}</div>
                 </div>
               </div>
             </td>
             <td>
-              <div style="font-weight:500">${fdn(o.createdAt)}</div>
+              <div style="font-weight:600">${fdn(o.createdAt)}</div>
               ${o.createdAt ? `<small class="muted" style="font-size:0.75rem">
                 ${new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}
               </small>` : ''}
             </td>
             <td>${itemsPreview}</td>
-            <td style="font-weight:600">₹${Number(tot).toFixed(2)}</td>
+            <td style="font-weight:700">₹${Number(tot).toFixed(2)}</td>
             <td>
-              <span class="status-pill ${statusClass}">${esc(o.status || "pending")}</span>
+              <span class="status-pill ${sc(o.status)}">${esc(statusDisplay)}</span>
             </td>
-            <td>
-              <div class="action-buttons-container">
+            <!-- FIXED: Action buttons in same line -->
+            <td style="text-align:right">
+              <div class="actions-container">
                 <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
                   <i class="fas fa-eye"></i>
                 </button>
@@ -845,6 +825,18 @@
         `;
       })
       .join("");
+
+    // Add click event listeners to all product images
+    setTimeout(() => {
+      document.querySelectorAll('.product-image-small[data-image]').forEach(img => {
+        img.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const imageSrc = this.getAttribute('data-image');
+          const imageName = this.getAttribute('data-name') || 'Product Image';
+          openImageZoom(imageSrc, imageName);
+        });
+      });
+    }, 100);
 
     bind();
   }
@@ -867,199 +859,206 @@
   }
 
 function open(id) {
-    const o = orders.find((x) => x.id === id);
-    if (!o) return;
+  const o = orders.find((x) => x.id === id);
+  if (!o) return;
 
-    editing = id;
+  editing = id;
 
-    // Format address if available
-    const address = o.shippingAddress ? `
-        ${o.shippingAddress.address || ''}<br>
-        ${o.shippingAddress.city || ''}, ${o.shippingAddress.state || ''}<br>
-        ${o.shippingAddress.zipCode || ''}<br>
-        ${o.shippingAddress.country || ''}
-    ` : "No address provided";
+  const ad = o.shippingAddress
+    ? [
+        o.shippingAddress.address,
+        o.shippingAddress.city,
+        o.shippingAddress.state,
+        o.shippingAddress.zipCode,
+        o.shippingAddress.country,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "No address";
 
-    // Format phone
-    const phone = o.shippingAddress?.phone || "Not provided";
+  const itemsHtml = (o.items || [])
+    .map((i) => {
+      const productImage =
+        i.image ||
+        i.productImage ||
+        getDefaultProductImage(i.name) ||
+        "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg";
 
-    // Format items with images
-    const itemsHTML = (o.items || [])
-        .map((item, index) => {
-            const productImage = item.image || item.productImage || getDefaultProductImage(item.name);
-            return `
-            <div class="product-item-modal">
-                <div style="display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--border);">
-                    <img src="${esc(productImage)}" 
-                         alt="${esc(item.name)}" 
-                         class="product-image-modal-item"
-                         onclick="showProductImage('${esc(productImage)}', '${esc(item.name)}')"
-                         onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
-                    <div style="flex:1">
-                        <div style="font-weight:500;color:var(--dark);margin-bottom:4px">${esc(item.name)}</div>
-                        <div style="font-size:0.85rem;color:var(--muted)">
-                            ${item.weight ? esc(item.weight) + ' • ' : ''}
-                            Quantity: ${item.quantity}
-                        </div>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:600;color:var(--dark)">₹${(item.price * item.quantity).toFixed(2)}</div>
-                        <div style="font-size:0.85rem;color:var(--muted)">₹${Number(item.price).toFixed(2)} each</div>
-                    </div>
-                </div>
+      return `
+        <div style="display:flex;gap:12px;align-items:center;padding:12px;border-bottom:1px solid var(--border);background:#fff;cursor:pointer;"
+             data-image="${esc(productImage)}"
+             data-name="${esc(i.name)}"
+             onclick="openImageZoom('${esc(productImage)}','${esc(i.name)}')">
+
+          <div style="flex-shrink:0">
+            <img src="${esc(productImage)}" 
+                 alt="${esc(i.name)}" 
+                 class="product-image-small"
+                 onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg'">
+          </div>
+
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:4px">${esc(i.name)}</div>
+            <div style="display:flex;gap:12px;font-size:0.8rem;color:var(--muted);margin-bottom:4px">
+              <span>${esc(i.weight || "")}</span>
+              <span>•</span>
+              <span>Price: ₹${i.price ? Number(i.price).toFixed(2) : "0.00"}</span>
             </div>
-            `;
-        })
-        .join("") || '<div style="padding:20px;text-align:center;color:var(--muted)">No items in this order</div>';
+          </div>
 
-    // Calculate subtotal
-    const subtotal = (o.items || []).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = o.tax || 0;
-    const shipping = o.shipping || 0;
-    const total = o.total || subtotal + tax + shipping;
-
-    mb.innerHTML = `
-        <div style="display:grid;gap:20px;">
-            <!-- Order Header -->
-            <div style="background:var(--light);padding:16px;border-radius:8px;border:1px solid var(--border);">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-                    <div>
-                        <div style="font-size:0.9rem;color:var(--muted);margin-bottom:4px">ORDER ID</div>
-                        <div style="font-weight:600;font-size:1.1rem;color:var(--dark)">#${esc(sid(id))}</div>
-                    </div>
-                    <div style="text-align:right">
-                        <div style="font-size:0.9rem;color:var(--muted);margin-bottom:4px">DATE</div>
-                        <div style="font-weight:500;color:var(--dark)">${fdn(o.createdAt)}</div>
-                    </div>
-                </div>
+          <div style="flex-shrink:0;text-align:right">
+            <div style="font-weight:700;margin-bottom:4px">x${i.quantity || 1}</div>
+            <div style="font-weight:700;color:var(--dark)">
+              ₹${(i.price * (i.quantity || 1)).toFixed(2)}
             </div>
-
-            <!-- Two Column Layout -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                <!-- Left Column: Customer Info -->
-                <div>
-                    <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">CUSTOMER INFORMATION</div>
-                    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;">
-                        <div style="margin-bottom:12px">
-                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Name</div>
-                            <div style="font-weight:500;color:var(--dark)">
-                                ${esc(o.shippingAddress?.firstName || '')} ${esc(o.shippingAddress?.lastName || '')}
-                            </div>
-                        </div>
-                        <div style="margin-bottom:12px">
-                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Email</div>
-                            <div style="color:var(--dark)">${esc(o.email || "—")}</div>
-                        </div>
-                        <div>
-                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Phone</div>
-                            <div style="color:var(--dark)">${phone}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column: Shipping Info -->
-                <div>
-                    <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">SHIPPING ADDRESS</div>
-                    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;height:100%">
-                        <div style="color:var(--dark);line-height:1.5">${address}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Status Section -->
-            <div>
-                <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">ORDER STATUS</div>
-                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;">
-                    <select id="ov-modal-status" style="padding:12px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:0.95rem;background:#fff;color:var(--dark);">
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="out-for-delivery">Out for Delivery</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;padding:8px;background:var(--light);border-radius:6px;">
-                        <i class="fas fa-info-circle" style="color:var(--muted)"></i>
-                        <div style="font-size:0.85rem;color:var(--muted)">
-                            Updating status will notify the customer
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Order Items -->
-            <div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <div style="font-weight:600;color:var(--dark);font-size:0.95rem">ORDER ITEMS</div>
-                    <div style="font-size:0.85rem;color:var(--muted);background:var(--light);padding:4px 8px;border-radius:4px;">
-                        ${(o.items || []).length} item${(o.items || []).length !== 1 ? 's' : ''}
-                    </div>
-                </div>
-                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;max-height:300px;overflow-y:auto;">
-                    ${itemsHTML}
-                </div>
-            </div>
-
-            <!-- Order Summary -->
-            <div>
-                <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">ORDER SUMMARY</div>
-                <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                        <div style="color:var(--muted)">Subtotal</div>
-                        <div style="font-weight:500">₹${subtotal.toFixed(2)}</div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                        <div style="color:var(--muted)">Tax</div>
-                        <div style="font-weight:500">₹${tax.toFixed(2)}</div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                        <div style="color:var(--muted)">Shipping</div>
-                        <div style="font-weight:500">₹${shipping.toFixed(2)}</div>
-                    </div>
-                    <div style="height:1px;background:var(--border);margin:12px 0;"></div>
-                    <div style="display:flex;justify-content:space-between;">
-                        <div style="font-weight:600;color:var(--dark)">Total</div>
-                        <div style="font-weight:700;color:var(--dark);font-size:1.1rem">₹${total.toFixed(2)}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment & Notes Section -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                <div>
-                    <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">PAYMENT INFORMATION</div>
-                    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;">
-                        <div style="margin-bottom:8px">
-                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Method</div>
-                            <div style="font-weight:500;color:var(--dark)">
-                                ${o.paymentMethod ? esc(o.paymentMethod) : 'Not specified'}
-                            </div>
-                        </div>
-                        <div>
-                            <div style="font-size:0.85rem;color:var(--muted);margin-bottom:4px">Status</div>
-                            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:${o.paymentStatus === 'paid' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'};color:${o.paymentStatus === 'paid' ? '#10b981' : '#f59e0b'};border-radius:4px;font-size:0.85rem;font-weight:500">
-                                ${o.paymentStatus === 'paid' ? '✓ Paid' : 'Pending'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="font-weight:600;color:var(--dark);margin-bottom:12px;font-size:0.95rem">CUSTOMER NOTES</div>
-                    <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;height:100%">
-                        <div style="color:var(--muted);font-style:italic">
-                            ${o.notes ? esc(o.notes) : 'No notes provided'}
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-    `;
+      `;
+    })
+    .join("") || `<div class="muted" style="padding:12px;text-align:center">No items</div>`;
 
-    // Set current status
-    document.getElementById("ov-modal-status").value = o.status || "pending";
-    m.classList.add("show");
+  mb.innerHTML = `
+    <div style="display:grid;gap:16px;max-height:70vh;overflow-y:auto;padding-right:4px;">
+
+      <!-- Order ID -->
+      <div>
+        <div class="modal-title-bold">Order ID</div>
+        <div style="font-family:monospace;background:#f5f5f5;padding:8px 12px;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;">
+          #${esc(sid(id))}
+          <i class="fas fa-copy copy-btn" data-copy="${esc(id)}"></i>
+        </div>
+      </div>
+
+      <!-- Customer Information -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        
+        <div>
+          <div class="modal-title-bold">Customer Name</div>
+          <div style="padding:8px 0;display:flex;align-items:center;">
+            ${esc(o.shippingAddress ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName : o.email || "—")}
+            <i class="fas fa-copy copy-btn" data-copy="${esc(o.shippingAddress ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName : o.email || "")}"></i>
+          </div>
+        </div>
+
+        <div>
+          <div class="modal-title-bold">Customer Email</div>
+          <div style="padding:8px 0;display:flex;align-items:center;">
+            ${esc(o.email || "—")}
+            <i class="fas fa-copy copy-btn" data-copy="${esc(o.email || "")}"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Contact Information -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        
+        <div>
+          <div class="modal-title-bold">Phone Number</div>
+          <div style="padding:8px 0;display:flex;align-items:center;">
+            ${esc(o.shippingAddress?.phone || "—")}
+            <i class="fas fa-copy copy-btn" data-copy="${esc(o.shippingAddress?.phone || "")}"></i>
+          </div>
+        </div>
+
+        <div>
+          <div class="modal-title-bold">Order Date</div>
+          <div style="padding:8px 0;display:flex;align-items:center;">
+            ${fdn(o.createdAt)}
+            <i class="fas fa-copy copy-btn" data-copy="${fdn(o.createdAt)}"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Order Details -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+        <div>
+          <div class="modal-title-bold">Total Amount</div>
+          <div style="font-weight:700;font-size:1.1rem;padding:8px 0;display:flex;align-items:center;color:var(--dark);">
+            ₹${Number(o.total || 0).toFixed(2)}
+            <i class="fas fa-copy copy-btn" data-copy="${Number(o.total || 0).toFixed(2)}"></i>
+          </div>
+        </div>
+
+        <div>
+          <div class="modal-title-bold">Payment Method</div>
+          <div style="padding:8px 0;display:flex;align-items:center;">
+            ${esc(o.paymentMethod || "Cash on Delivery")}
+            <i class="fas fa-copy copy-btn" data-copy="${esc(o.paymentMethod || "Cash on Delivery")}"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Shipping Address -->
+      <div>
+        <div class="modal-title-bold">Shipping Address</div>
+        <div style="background:#f9f9f9;padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:4px;display:flex;align-items:flex-start;gap:6px;">
+          <span style="flex:1">${esc(ad)}</span>
+          <i class="fas fa-copy copy-btn" data-copy="${esc(ad)}"></i>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div>
+        <div class="modal-title-bold">Order Items (${(o.items || []).length})</div>
+        <div style="margin-top:4px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+          ${itemsHtml}
+        </div>
+      </div>
+
+      ${o.notes ? `
+      <div>
+        <div class="modal-title-bold">Additional Notes</div>
+        <div style="background:#f9f9f9;padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:4px;display:flex;align-items:start;">
+          <span style="flex:1">${esc(o.notes)}</span>
+          <i class="fas fa-copy copy-btn" data-copy="${esc(o.notes)}"></i>
+        </div>
+      </div>` : ""}
+
+    </div>
+  `;
+
+  document.getElementById("ov-modal-status").value = o.status || "pending";
+
+  m.classList.add("show");
 }
+
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest(".copy-btn");
+  if (!btn) return;
+
+  const value = btn.getAttribute("data-copy") || "";
+  navigator.clipboard.writeText(value);
+
+  tt.textContent = "Copied";
+  tw.classList.add("show");
+  setTimeout(() => tw.classList.remove("show"), 1800);
+});
+
+  // Make openImageZoom function globally accessible for inline onclick handlers
+  window.openImageZoom = openImageZoom;
+
+  function getDefaultProductImage(productName) {
+    const productImages = {
+      'natura agmark honey': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022',
+      'honey': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022',
+      'crystal pack': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705022',
+      'premium pet': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217705022'
+    };
+    
+    const name = productName.toLowerCase();
+    for (const [key, image] of Object.entries(productImages)) {
+      if (name.includes(key)) {
+        return image;
+      }
+    }
+    
+    return 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022';
+  }
+
   function close() {
     m.classList.remove("show");
     editing = null;
@@ -1242,9 +1241,6 @@ function open(id) {
   document.addEventListener("click", (e) => {
     if (e.target === m) close();
   });
-
-  // Make showProductImage globally available
-  window.showProductImage = showProductImage;
 
   mc.onclick = close;
   mca.onclick = close;
