@@ -469,7 +469,15 @@
   padding: 16px;
   font-size: 0.92rem;
   max-height: 70vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.orders-modal .modal-body > div {
   overflow-y: auto;
+  padding-right: 4px;
+  flex: 1;
 }
 
 .orders-modal .modal-footer {
@@ -1057,8 +1065,8 @@ imgZoomModal.addEventListener('click', function (e) {
       })
       .join("") || '<div class="muted" style="padding:12px;text-align:center">No items</div>';
 
-    mb.innerHTML = `
-      <div style="display:grid;gap:16px;max-height:70vh;overflow-y:auto;padding-right:4px;">
+   mb.innerHTML = `
+      <div style="display:grid;gap:16px;">
         <!-- Order ID -->
         <div>
           <div class="modal-title-bold">Order ID</div>
