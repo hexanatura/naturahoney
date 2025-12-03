@@ -1,10 +1,9 @@
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-
-  <style>
+<style>
 * {
   margin: 0;
   padding: 0;
@@ -13,42 +12,42 @@
 
 /* Status badge */
 .status-out-for-delivery {
-  background: rgba(168,85,247,0.08);
-  color: #a855f7;
-  border: 1px solid rgba(168,85,247,0.12);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  white-space: nowrap;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
+    background: rgba(168,85,247,0.08);
+    color: #a855f7;
+    border: 1px solid rgba(168,85,247,0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    white-space: nowrap;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
 }
 
 /* Action buttons wrapper */
 .action-buttons-container {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  align-items: center;
-  width: 100%;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
 }
 
 /* Action button */
 .action-btn {
-  border-radius: 8px;
-  border: none;
-  padding: 8px;
-  background: transparent;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 0.95rem;
-  min-width: 40px;
-  height: 40px;
+    border-radius: 8px;
+    border: none;
+    padding: 8px;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    min-width: 40px;
+    height: 40px;
 }
 
 .action-btn .fa-eye { color: var(--dark); }
@@ -56,17 +55,17 @@
 
 /* Table actions alignment */
 .orders-table td:last-child {
-  text-align: right;
-  padding-right: 0;
+    text-align: right;
+    padding-right: 0;
 }
 
 /* Mobile card actions */
 .card-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  justify-content: flex-end;
-  width: 100%;
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: flex-end;
+    width: 100%;
 }
 
 .orders-view {
@@ -90,27 +89,78 @@
   flex-wrap: wrap;
 }
 
+/* Reduced boldness for titles */
 .orders-title {
   font-family: 'Outfit', sans-serif;
   font-size: 1.2rem;
-  font-weight: 700;
+  font-weight: 600; /* Reduced from 700 */
   color: var(--dark);
 }
 
 .modal-title-bold {
-  font-weight: 700 !important;
+  font-weight: 600 !important; /* Reduced from 700 */
   color: var(--dark);
   margin-bottom: 4px;
 }
 
 .product-image-small {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   object-fit: cover;
   border: 1px solid var(--border);
   background: #f5f5f5;
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.product-image-small:hover {
+  transform: scale(1.05);
+}
+
+/* Product image modal */
+.product-image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.product-image-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.product-image-modal img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.product-image-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  background: rgba(0,0,0,0.5);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .flex-center {
@@ -128,6 +178,7 @@
   font-size: 0.9rem;
   color: var(--muted);
   margin-top: 4px;
+  font-weight: 400; /* Normal weight for subtitle */
 }
 
 .orders-controls {
@@ -157,6 +208,7 @@
   background: #fff;
   font-size: 0.95rem;
   min-width: 160px;
+  font-weight: 400; /* Normal weight for inputs */
 }
 
 .search-box {
@@ -173,6 +225,7 @@
   background: transparent;
   width: 100%;
   font-size: 0.95rem;
+  font-weight: 400;
 }
 
 .btn-primary {
@@ -182,7 +235,7 @@
   padding: 9px 14px;
   border: none;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600; /* Reduced from 700 */
 }
 
 .btn-ghost {
@@ -191,7 +244,7 @@
   padding: 8px 12px;
   border-radius: 10px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 500; /* Reduced from 600 */
 }
 
 .table-card {
@@ -219,7 +272,7 @@
 .orders-table thead th {
   text-align: left;
   padding: 12px 16px;
-  font-weight: 700;
+  font-weight: 600; /* Reduced from 700 */
   color: var(--dark);
   border-bottom: 1px solid var(--border);
   background: #fff;
@@ -231,13 +284,19 @@
   vertical-align: middle;
   color: var(--dark);
   background: #fff;
+  font-weight: 400; /* Normal weight for table data */
+}
+
+/* Keep only important text bold */
+.orders-table td div[style*="font-weight:700"] {
+  font-weight: 600; /* Reduced from 700 */
 }
 
 .status-pill {
   display: inline-block;
   padding: 6px 10px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 600; /* Reduced from 700 */
   font-size: 0.75rem;
 }
 
@@ -246,22 +305,6 @@
 .status-shipped { background: rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.12); }
 .status-delivered { background: rgba(101,163,13,0.08); color:#65a30d; border:1px solid rgba(101,163,13,0.12); }
 .status-cancelled { background: rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.12); }
-
-.action-btn {
-  border-radius: 8px;
-  border: 0;
-  padding: 8px;
-  background: transparent;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 0.95rem;
-}
-
-.action-btn .fa-eye { color: var(--dark); }
-.action-btn .fa-edit { color: var(--success); }
 
 .mobile-cards {
   display: none;
@@ -285,13 +328,14 @@
 }
 
 .customer-name {
-  font-weight: 600;
+  font-weight: 500; /* Reduced from 600 */
   color: var(--dark);
 }
 
 .card-meta {
   color: var(--muted);
   font-size: 0.85rem;
+  font-weight: 400;
 }
 
 .orders-modal-bg {
@@ -317,6 +361,8 @@
   background: #fff;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .orders-modal .modal-header,
@@ -326,10 +372,33 @@
   background: #fff;
 }
 
+/* Modal section headers - keep these bold */
+.modal-section-title {
+  font-weight: 600;
+  color: var(--dark);
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Modal data - normal weight */
+.modal-data {
+  font-weight: 400;
+  color: var(--dark);
+  margin-bottom: 12px;
+}
+
+.modal-data strong {
+  font-weight: 600;
+}
+
 .empty-state {
   text-align: center;
   padding: 36px 12px;
   color: var(--muted);
+  font-weight: 400;
 }
 
 .oh-toast {
@@ -355,31 +424,51 @@
   transform: translateY(0);
 }
 
-/* Thumbnail wrapper + eye icon for product image */
-.product-thumb-wrapper {
-  position: relative;
-  width: 28px;
-  height: 28px;
+/* Product items in modal */
+.product-item-modal {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
 }
 
-.thumb-eye-btn {
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  background: rgba(0,0,0,0.65);
-  border: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.product-item-modal:last-child {
+  border-bottom: none;
+}
+
+.product-image-modal-item {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  background: #f5f5f5;
   cursor: pointer;
 }
 
-.thumb-eye-btn i {
-  color: #fff;
-  font-size: 0.6rem;
+.product-info-modal {
+  flex: 1;
+}
+
+.product-name-modal {
+  font-weight: 500;
+  color: var(--dark);
+  margin-bottom: 4px;
+}
+
+.product-details-modal {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.product-quantity-modal,
+.product-price-modal {
+  font-weight: 500;
+  color: var(--dark);
+  min-width: 60px;
+  text-align: right;
 }
 
 @media (max-width:1023px) {
@@ -410,14 +499,16 @@
   .orders-modal {
     width: calc(100% - 20px);
   }
+  .product-item-modal {
+    flex-wrap: wrap;
+  }
 }
-  </style>
-</head>
+</style>
 
+</head>
 <body>
   <div class="page-container">
     <div class="orders-view fade-in">
-
       <div class="orders-top">
         <div>
           <div class="orders-title">Order Management</div>
@@ -479,7 +570,7 @@
       <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
         <div class="orders-modal" role="document" aria-modal="true">
           <div class="modal-header">
-            <div style="font-weight:700" id="ov-modal-title">Order Details</div>
+            <div style="font-weight:600" id="ov-modal-title">Order Details</div>
             <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
           </div>
 
@@ -491,33 +582,19 @@
           </div>
         </div>
       </div>
+      
+      <!-- Product Image View Modal -->
+      <div class="product-image-modal" id="productImageModal">
+        <div class="product-image-modal-close" id="productImageModalClose">&times;</div>
+        <img id="productImageModalImg" src="" alt="Product Image">
+      </div>
 
     </div>
   </div>
 
-  <!-- Toast -->
   <div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
     <i class="fas fa-check-circle" style="color:var(--success)"></i>
     <div id="oh-toast-text">Saved</div>
-  </div>
-
-  <!-- PRODUCT IMAGE FULL VIEW MODAL -->
-  <div id="image-modal-bg" class="orders-modal-bg" style="z-index:2000" aria-hidden="true">
-    <div id="image-modal" style="
-      background:#000;
-      padding:10px;
-      border-radius:8px;
-      max-width:90%;
-      max-height:90%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    ">
-      <img id="image-modal-img"
-           src=""
-           alt=""
-           style="max-width:100%;max-height:100%;border-radius:8px;">
-    </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -525,7 +602,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="activityLogger.js?v=1"></script>
 
-  <script>
+<script>
 (function () {
   const config = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
@@ -540,8 +617,7 @@
   if (window.firebase) {
     if (!firebase.apps.length) firebase.initializeApp(config);
   }
-
-  // ADD TO ORDERS SCRIPT (after Firebase init)
+  
   let ordersCleanup = new Set();
   let ordersListener = null;
 
@@ -554,7 +630,6 @@
     }
   }
 
-  // Debounce function
   function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -568,7 +643,6 @@
   }
 
   const db = firebase.firestore();
-
   const t = document.getElementById("ov-tbody"),
     c = document.getElementById("ov-cards"),
     m = document.getElementById("ov-modal-bg"),
@@ -583,12 +657,30 @@
     xb = document.getElementById("ov-export"),
     tw = document.getElementById("oh-toast"),
     tt = document.getElementById("oh-toast-text"),
-    imbg = document.getElementById("image-modal-bg"),
-    imi = document.getElementById("image-modal-img");
+    productImageModal = document.getElementById("productImageModal"),
+    productImageModalImg = document.getElementById("productImageModalImg"),
+    productImageModalClose = document.getElementById("productImageModalClose");
 
   let orders = [],
     filtered = [],
     editing = null;
+
+  function showProductImage(src, alt) {
+    productImageModalImg.src = src;
+    productImageModalImg.alt = alt;
+    productImageModal.classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+
+  function hideProductImage() {
+    productImageModal.classList.remove("show");
+    document.body.style.overflow = "auto";
+  }
+
+  productImageModalClose.onclick = hideProductImage;
+  productImageModal.onclick = function(e) {
+    if (e.target === productImageModal) hideProductImage();
+  };
 
   function toast(m, y = "success") {
     tt.textContent = m;
@@ -630,12 +722,14 @@
     return statusMap[status] || 'status-pending';
   }
 
-  // REPLACE EXISTING load FUNCTION IN ORDERS
+  function getDefaultProductImage(productName) {
+    return 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022';
+  }
+
   function load() {
     t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
     c.innerHTML = "";
 
-    // Cleanup previous listener
     cleanupOrders();
 
     ordersListener = db.collection("orders")
@@ -684,33 +778,23 @@
           ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
           : o.email || "Customer";
 
-        // Create items preview with first product image + eye icon
         let itemsPreview = 'No items';
         if (it > 0) {
           const firstItem = o.items[0];
-          const productImage =
-            firstItem.image ||
-            firstItem.productImage ||
-            getDefaultProductImage(firstItem.name);
-
+          const productImage = firstItem.image || 
+                              firstItem.productImage || 
+                              getDefaultProductImage(firstItem.name);
+          
           itemsPreview = `
             <div class="flex-center" style="gap:8px;">
-              <div class="product-thumb-wrapper">
-                <img src="${esc(productImage)}"
-                     alt="${esc(firstItem.name)}"
-                     class="product-image-small product-viewable"
-                     data-image="${esc(productImage)}"
-                     data-name="${esc(firstItem.name)}"
-                     onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
-                <button class="thumb-eye-btn"
-                        type="button"
-                        data-image="${esc(productImage)}"
-                        data-name="${esc(firstItem.name)}">
-                  <i class="fas fa-eye"></i>
-                </button>
-              </div>
+              <img src="${esc(productImage)}" 
+                   alt="${esc(firstItem.name)}" 
+                   class="product-image-small"
+                   onclick="showProductImage('${esc(productImage)}', '${esc(firstItem.name)}')"
+                   style="width:24px;height:24px;border-radius:4px;object-fit:cover;border:1px solid var(--border);"
+                   onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
               <div>
-                <div style="font-weight:600;font-size:0.85rem">${esc(firstItem.name)}</div>
+                <div style="font-weight:500;font-size:0.85rem">${esc(firstItem.name)}</div>
                 ${it > 1 ? `<div class="muted" style="font-size:0.75rem">+ ${it - 1} more</div>` : ''}
               </div>
             </div>
@@ -718,32 +802,32 @@
         }
 
         const statusClass = sc(o.status);
-
+        
         return `
           <tr data-id="${esc(o.id)}">
             <td>
-              <div style="font-weight:700">#${esc(sid(o.id))}</div>
+              <div style="font-weight:600">#${esc(sid(o.id))}</div>
               ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
             </td>
             <td>
               <div style="display:flex;gap:10px;align-items:center">
-                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
+                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:500">
                   ${esc(cu.slice(0, 2).toUpperCase())}
                 </div>
                 <div>
-                  <div style="font-weight:700">${esc(cu)}</div>
+                  <div style="font-weight:500">${esc(cu)}</div>
                   <div class="muted">${esc(o.email || "—")}</div>
                 </div>
               </div>
             </td>
             <td>
-              <div style="font-weight:600">${fdn(o.createdAt)}</div>
+              <div style="font-weight:500">${fdn(o.createdAt)}</div>
               ${o.createdAt ? `<small class="muted" style="font-size:0.75rem">
                 ${new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}
               </small>` : ''}
             </td>
             <td>${itemsPreview}</td>
-            <td style="font-weight:700">₹${Number(tot).toFixed(2)}</td>
+            <td style="font-weight:600">₹${Number(tot).toFixed(2)}</td>
             <td>
               <span class="status-pill ${statusClass}">${esc(o.status || "pending")}</span>
             </td>
@@ -780,22 +864,6 @@
         alert(`User ID: ${userId}\nWould open user profile here.`);
       };
     });
-
-    // Bind product image + eye icon to open full-size viewer
-    document.querySelectorAll(".product-viewable, .thumb-eye-btn").forEach(el => {
-      el.onclick = (e) => {
-        const target = e.currentTarget;
-        const img = target.dataset.image;
-        const name = target.dataset.name;
-
-        if (!img) return;
-
-        imi.src = img;
-        imi.alt = name || "";
-        imbg.classList.add("show");
-        imbg.setAttribute("aria-hidden", "false");
-      };
-    });
   }
 
   function open(id) {
@@ -819,89 +887,80 @@
     const it =
       (o.items || [])
         .map(
-          (i) => `
-        <div style="display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid var(--border)">
-          <div style="width:40px;height:40px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center">
-            <i class="fas fa-jar"></i>
-          </div>
-          <div style="flex:1">
-            <div style="font-weight:600">${esc(i.name)}</div>
-            <div class="muted">${esc(i.weight || "")}</div>
-          </div>
-          <div style="font-weight:700">x${i.quantity}</div>
-          <div style="font-weight:700">₹${(i.price * i.quantity).toFixed(2)}</div>
-        </div>
-      `
+          (i) => {
+            const productImage = i.image || i.productImage || getDefaultProductImage(i.name);
+            return `
+            <div class="product-item-modal">
+              <img src="${esc(productImage)}" 
+                   alt="${esc(i.name)}" 
+                   class="product-image-modal-item"
+                   onclick="showProductImage('${esc(productImage)}', '${esc(i.name)}')"
+                   onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+              <div class="product-info-modal">
+                <div class="product-name-modal">${esc(i.name)}</div>
+                <div class="product-details-modal">${esc(i.weight || "")}</div>
+              </div>
+              <div class="product-quantity-modal">x${i.quantity}</div>
+              <div class="product-price-modal">₹${(i.price * i.quantity).toFixed(2)}</div>
+            </div>
+          `;
+          }
         )
         .join("") || "<div class='muted'>No items</div>";
 
     mb.innerHTML = `
-      <div style="display:grid;gap:10px">
+      <div style="display:grid;gap:16px">
         <div>
-          <div class="muted">Order ID</div>
-          <div style="font-weight:700">#${esc(sid(id))}</div>
-        </div>
-
-        <div>
-          <div class="muted">Customer</div>
-          <div>${esc(
-            o.shippingAddress
-              ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
-              : o.email
-          )}</div>
-        </div>
-
-        <div style="display:flex;gap:12px">
-          <div style="flex:1">
-            <div class="muted">Email</div>
-            <div>${esc(o.email || "—")}</div>
-          </div>
-          <div style="flex:1">
-            <div class="muted">Phone</div>
-            <div>${esc(o.shippingAddress?.phone || "—")}</div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:12px">
-          <div style="flex:1">
-            <div class="muted">Date</div>
-            <div>${fdn(o.createdAt)}</div>
-          </div>
-          <div style="flex:1">
-            <div class="muted">Total</div>
-            <div style="font-weight:700">₹${Number(o.total || 0).toFixed(
-              2
-            )}</div>
+          <div class="modal-section-title">Order Information</div>
+          <div class="modal-data">
+            <strong>Order ID:</strong> #${esc(sid(id))}<br>
+            <strong>Date:</strong> ${fdn(o.createdAt)}<br>
+            <strong>Total:</strong> ₹${Number(o.total || 0).toFixed(2)}
           </div>
         </div>
 
         <div>
-          <div class="muted">Status</div>
-          <select id="ov-modal-status" style="padding:8px;border:1px solid var(--border);border-radius:8px;width:100%">
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <div class="modal-section-title">Customer Details</div>
+          <div class="modal-data">
+            <strong>Name:</strong> ${esc(
+              o.shippingAddress
+                ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
+                : o.email
+            )}<br>
+            <strong>Email:</strong> ${esc(o.email || "—")}<br>
+            <strong>Phone:</strong> ${esc(o.shippingAddress?.phone || "—")}
+          </div>
         </div>
 
         <div>
-          <div class="muted">Shipping Address</div>
-          <div>${esc(ad)}</div>
+          <div class="modal-section-title">Shipping Address</div>
+          <div class="modal-data">${esc(ad)}</div>
         </div>
 
-        <div class="muted">Items</div>
+        <div>
+          <div class="modal-section-title">Order Status</div>
+          <div class="modal-data">
+            <select id="ov-modal-status" style="padding:10px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:0.95rem;background:#fff;">
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="shipped">Shipped</option>
+              <option value="out-for-delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
 
-        <div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px">
-          ${it}
+        <div>
+          <div class="modal-section-title">Order Items (${(o.items || []).length})</div>
+          <div style="max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:8px;background:#fff;">
+            ${it}
+          </div>
         </div>
       </div>
     `;
 
-    document.getElementById("ov-modal-status").value =
-      o.status || "pending";
-
+    document.getElementById("ov-modal-status").value = o.status || "pending";
     m.classList.add("show");
   }
 
@@ -909,12 +968,12 @@
     m.classList.remove("show");
     editing = null;
   }
-
+  
   function searchAndUpdateInUsers(orderId, updateData) {
     return db.collection("users").get().then(users => {
       const promises = [];
       let foundInUsers = false;
-
+      
       users.forEach(u => {
         const userOrderRef = db.collection("users").doc(u.id).collection("orders").doc(orderId);
         promises.push(
@@ -927,14 +986,13 @@
           })
         );
       });
-
+      
       return Promise.all(promises).then(() => {
         return { updatedInUser: foundInUsers };
       });
     });
   }
 
-  // SAVE FUNCTION
   function save() {
     if (!editing) return;
 
@@ -964,12 +1022,12 @@
     rootRef.get().then(doc => {
       if (doc.exists) {
         const orderData = doc.data();
-
+        
         return rootRef.update(updateData).then(() => {
           if (orderData.userId) {
             const userOrderRef = db.collection("users").doc(orderData.userId)
               .collection("orders").doc(editing);
-
+            
             return userOrderRef.update(updateData).then(() => {
               return { updatedInUser: true, userId: orderData.userId };
             }).catch(err => {
@@ -987,13 +1045,13 @@
     .then((result) => {
       ms.disabled = false;
       ms.innerHTML = ot;
-
+      
       if (result && result.updatedInUser) {
         toast(`Order updated (User: ${result.userId ? '✓' : 'found via email'})`);
       } else {
         toast("Order updated in admin view");
       }
-
+      
       m.classList.remove("show");
     })
     .catch((err) => {
@@ -1010,12 +1068,10 @@
     const d = fd.value;
     const q = si.value.toLowerCase();
 
-    // STATUS filter
     if (st !== "all") {
       x = x.filter(o => (o.status || "").toLowerCase() === st);
     }
 
-    // DATE filter
     if (d !== "all") {
       const now = Date.now();
       let start = null;
@@ -1034,9 +1090,8 @@
       }
     }
 
-    // SEARCH filter
     if (q) {
-      x = x.filter(o =>
+      x = x.filter(o => 
         o.id.toLowerCase().includes(q) ||
         o._name.toLowerCase().includes(q) ||
         o._email.includes(q)
@@ -1044,7 +1099,7 @@
     }
 
     filtered = x;
-    requestAnimationFrame(() => list(x));
+    requestAnimationFrame(() => list(x)); 
   }
 
   function csv(x) {
@@ -1088,19 +1143,12 @@
     toast("Export started");
   }
 
-  // Close image modal on background click
-  imbg.onclick = (e) => {
-    if (e.target === imbg) {
-      imbg.classList.remove("show");
-      imbg.setAttribute("aria-hidden", "true");
-      imi.src = "";
-    }
-  };
-
-  // Close modals clicking outside order modal
   document.addEventListener("click", (e) => {
     if (e.target === m) close();
   });
+
+  // Make showProductImage globally available
+  window.showProductImage = showProductImage;
 
   mc.onclick = close;
   mca.onclick = close;
@@ -1116,4 +1164,4 @@
 
   load();
 })();
-  </script>
+</script>
