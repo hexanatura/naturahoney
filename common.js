@@ -781,9 +781,38 @@ function displayOrder(order) {
     
     const orderId = order.id || order.orderId;
     
-    const status = order.status || 'pending';
-    const statusClass = `status-${status.toLowerCase()}`;
+    // Enhanced status handling
+    let status = order.status || 'pending';
+    let statusLower = status.toLowerCase();
     
+    // Map status to CSS class and display text
+    let statusClass = 'status-pending';
+    let statusDisplayText = status.charAt(0).toUpperCase() + status.slice(1);
+    
+    if (statusLower.includes('pending')) {
+        statusClass = 'status-pending';
+        statusDisplayText = 'Pending';
+    } else if (statusLower.includes('confirmed') || statusLower.includes('processing')) {
+        statusClass = 'status-confirmed';
+        statusDisplayText = 'Confirmed';
+    } else if (statusLower.includes('shipped')) {
+        statusClass = 'status-shipped';
+        statusDisplayText = 'Shipped';
+    } else if (statusLower.includes('out for delivery') || statusLower.includes('out-for-delivery')) {
+        statusClass = 'status-out-for-delivery';
+        statusDisplayText = 'Out for Delivery';
+    } else if (statusLower.includes('delivered')) {
+        statusClass = 'status-delivered';
+        statusDisplayText = 'Delivered';
+    } else if (statusLower.includes('cancelled')) {
+        statusClass = 'status-cancelled';
+        statusDisplayText = 'Cancelled';
+    }
+    
+    // For debugging - log what we're getting
+    console.log('Order status:', status, '-> CSS Class:', statusClass, '-> Display Text:', statusDisplayText);
+    
+    // Format date
     const orderDate = order.createdAt ? 
         (order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt)) : 
         new Date();
@@ -822,7 +851,7 @@ function displayOrder(order) {
                 <span class="order-id">${displayOrderId}</span>
                 <span class="order-date">${orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
             </div>
-            <span class="order-status ${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+            <span class="order-status ${statusClass}">${statusDisplayText}</span>
         </div>
         ${orderItemsHTML}
         <div class="order-footer">
@@ -857,7 +886,6 @@ function displayOrder(order) {
         }
     }, 100);
 }
-
 function reorderItems(items) {
     items.forEach(item => {
         addToCart(item.productId, item.quantity);
