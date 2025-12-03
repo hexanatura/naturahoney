@@ -607,98 +607,91 @@
   }
 }
 </style>
-
-</head>
-<body>
-<div class="page-container">
-  <div class="orders-view fade-in">
-
-    <div class="orders-top">
-      <div>
-        <div class="orders-title">Order Management</div>
-        <div class="orders-sub muted">Manage and track customer orders</div>
-      </div>
-
-      <div class="orders-controls">
-        <div class="orders-card filters-row">
-          <select id="ov-status" class="filter-select" title="Filter by status">
-            <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="out-for-delivery">Out for Delivery</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-
-          <select id="ov-date" class="filter-select" title="Filter by date">
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-          </select>
-
-          <div class="search-box">
-            <i class="fas fa-search muted"></i>
-            <input id="ov-search" placeholder="Search order ID, customer, email">
-          </div>
-        </div>
-
-        <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-        <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
-      </div>
+<div class="orders-view fade-in">
+  <div class="orders-top">
+    <div>
+      <div class="orders-title">Order Management</div>
+      <div class="orders-sub muted">Manage and track customer orders</div>
     </div>
 
-    <div class="table-card">
-      <div class="table-wrapper">
-        <table class="orders-table" aria-label="Orders table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Date</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th style="text-align:right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="ov-tbody">
-            <tr><td colspan="7" class="muted">Loading orders…</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="orders-controls">
+      <div class="orders-card filters-row">
+        <select id="ov-status" class="filter-select" title="Filter by status">
+          <option value="all">All Orders</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="shipped">Shipped</option>
+          <option value="out-for-delivery">Out for Delivery</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
 
-      <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
-    </div>
+        <select id="ov-date" class="filter-select" title="Filter by date">
+          <option value="all">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
 
-    <!-- Product Image Zoom Modal -->
-    <div class="image-zoom-modal" id="imageZoomModal">
-      <div class="image-zoom-content">
-        <button class="image-zoom-close" id="imageZoomClose" aria-label="Close zoom">
-          <i class="fas fa-times"></i>
-        </button>
-        <img id="zoomedImage" class="product-image-large" alt="Product image" />
-        <div id="imageCaption" class="image-zoom-caption"></div>
-      </div>
-    </div>
-
-    <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
-      <div class="orders-modal" role="document" aria-modal="true">
-        <div class="modal-header">
-          <div style="font-weight:700" id="ov-modal-title">Order Details</div>
-          <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="modal-body" id="ov-modal-body"></div>
-
-        <div class="modal-footer">
-          <button id="ov-modal-cancel" class="btn-ghost">Close</button>
-          <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
+        <div class="search-box">
+          <i class="fas fa-search muted"></i>
+          <input id="ov-search" placeholder="Search order ID, customer, email">
         </div>
       </div>
+
+      <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+      <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-wrapper">
+      <table class="orders-table" aria-label="Orders table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Date</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ov-tbody">
+          <tr><td colspan="7" class="muted">Loading orders…</td></tr>
+        </tbody>
+      </table>
     </div>
 
+    <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
+  </div>
+
+  <!-- Product Image Zoom Modal -->
+  <div class="image-zoom-modal" id="imageZoomModal">
+    <div class="image-zoom-content">
+      <button class="image-zoom-close" id="imageZoomClose" aria-label="Close zoom">
+        <i class="fas fa-times"></i>
+      </button>
+      <img id="zoomedImage" class="product-image-large" alt="Product image" />
+      <div id="imageCaption" class="image-zoom-caption"></div>
+    </div>
+  </div>
+
+  <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
+    <div class="orders-modal" role="document" aria-modal="true">
+      <div class="modal-header">
+        <div style="font-weight:700" id="ov-modal-title">Order Details</div>
+        <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="modal-body" id="ov-modal-body"></div>
+
+      <div class="modal-footer">
+        <button id="ov-modal-cancel" class="btn-ghost">Close</button>
+        <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -706,11 +699,6 @@
   <i class="fas fa-check-circle" style="color:var(--success)"></i>
   <div id="oh-toast-text">Saved</div>
 </div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="activityLogger.js?v=1"></script>
 
 <script>
 (function () {
