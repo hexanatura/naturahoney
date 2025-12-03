@@ -1,10 +1,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
-  <style>
-
+<style>
 * {
   margin: 0;
   padding: 0;
@@ -52,6 +51,85 @@
   object-fit: cover;
   border: 1px solid var(--border);
   background: #f5f5f5;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-image-small:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.product-image-large {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.image-zoom-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.image-zoom-modal.show {
+  display: flex;
+}
+
+.image-zoom-content {
+  position: relative;
+  max-width: 95%;
+  max-height: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-zoom-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.2s ease;
+}
+
+.image-zoom-close:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.image-zoom-caption {
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  font-size: 0.95rem;
+  padding: 8px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 6px;
 }
 
 .flex-center {
@@ -296,6 +374,11 @@
   transform: translateY(0);
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @media (max-width:1023px) {
   .table-wrapper { display: none; }
   .mobile-cards { display: flex; flex-direction: column; }
@@ -324,104 +407,117 @@
   .orders-modal {
     width: calc(100% - 20px);
   }
+  .product-image-large {
+    max-width: 100%;
+    max-height: 80vh;
+  }
 }
-
-  </style>
+</style>
 
 </head>
 <body>
-  <div class="page-container">
-    <div class="orders-view fade-in">
+<div class="page-container">
+  <div class="orders-view fade-in">
 
-      <div class="orders-top">
-        <div>
-          <div class="orders-title">Order Management</div>
-          <div class="orders-sub muted">Manage and track customer orders</div>
-        </div>
-
-        <div class="orders-controls">
-          <div class="orders-card filters-row">
-            <select id="ov-status" class="filter-select" title="Filter by status">
-              <option value="all">All Orders</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-
-            <select id="ov-date" class="filter-select" title="Filter by date">
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select>
-
-            <div class="search-box">
-              <i class="fas fa-search muted"></i>
-              <input id="ov-search" placeholder="Search order ID, customer, email">
-            </div>
-          </div>
-
-          <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-          <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
-        </div>
+    <div class="orders-top">
+      <div>
+        <div class="orders-title">Order Management</div>
+        <div class="orders-sub muted">Manage and track customer orders</div>
       </div>
 
-      <div class="table-card">
-        <div class="table-wrapper">
-          <table class="orders-table" aria-label="Orders table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th style="text-align:right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="ov-tbody">
-              <tr><td colspan="7" class="muted">Loading orders…</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="orders-controls">
+        <div class="orders-card filters-row">
+          <select id="ov-status" class="filter-select" title="Filter by status">
+            <option value="all">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
 
-        <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
-      </div>
+          <select id="ov-date" class="filter-select" title="Filter by date">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
 
-      <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
-        <div class="orders-modal" role="document" aria-modal="true">
-          <div class="modal-header">
-            <div style="font-weight:700" id="ov-modal-title">Order Details</div>
-            <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
-          </div>
-
-          <div class="modal-body" id="ov-modal-body"></div>
-
-          <div class="modal-footer">
-            <button id="ov-modal-cancel" class="btn-ghost">Close</button>
-            <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
+          <div class="search-box">
+            <i class="fas fa-search muted"></i>
+            <input id="ov-search" placeholder="Search order ID, customer, email">
           </div>
         </div>
-      </div>
 
+        <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+        <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
+      </div>
     </div>
+
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table class="orders-table" aria-label="Orders table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ov-tbody">
+            <tr><td colspan="7" class="muted">Loading orders…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
+    </div>
+
+    <!-- Product Image Zoom Modal -->
+    <div class="image-zoom-modal" id="imageZoomModal">
+      <div class="image-zoom-content">
+        <button class="image-zoom-close" id="imageZoomClose" aria-label="Close zoom">
+          <i class="fas fa-times"></i>
+        </button>
+        <img id="zoomedImage" class="product-image-large" alt="Product image" />
+        <div id="imageCaption" class="image-zoom-caption"></div>
+      </div>
+    </div>
+
+    <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
+      <div class="orders-modal" role="document" aria-modal="true">
+        <div class="modal-header">
+          <div style="font-weight:700" id="ov-modal-title">Order Details</div>
+          <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="modal-body" id="ov-modal-body"></div>
+
+        <div class="modal-footer">
+          <button id="ov-modal-cancel" class="btn-ghost">Close</button>
+          <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
+        </div>
+      </div>
+    </div>
+
   </div>
+</div>
 
-  <div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
-    <i class="fas fa-check-circle" style="color:var(--success)"></i>
-    <div id="oh-toast-text">Saved</div>
-  </div>
+<div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
+  <i class="fas fa-check-circle" style="color:var(--success)"></i>
+  <div id="oh-toast-text">Saved</div>
+</div>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="activityLogger.js?v=1"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="activityLogger.js?v=1"></script>
 
-
- <script>
+<script>
 (function () {
   const config = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
@@ -437,31 +533,29 @@
     if (!firebase.apps.length) firebase.initializeApp(config);
   }
   
-  // ADD TO ORDERS SCRIPT (after Firebase init)
-let ordersCleanup = new Set();
-let ordersListener = null;
+  let ordersCleanup = new Set();
+  let ordersListener = null;
 
-function cleanupOrders() {
-  ordersCleanup.forEach(fn => fn());
-  ordersCleanup.clear();
-  if (ordersListener) {
-    ordersListener();
-    ordersListener = null;
+  function cleanupOrders() {
+    ordersCleanup.forEach(fn => fn());
+    ordersCleanup.clear();
+    if (ordersListener) {
+      ordersListener();
+      ordersListener = null;
+    }
   }
-}
 
-// Debounce function
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
       clearTimeout(timeout);
-      func(...args);
+      timeout = setTimeout(later, wait);
     };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+  }
 
   const db = firebase.firestore();
 
@@ -478,7 +572,12 @@ function debounce(func, wait) {
     rb = document.getElementById("ov-refresh"),
     xb = document.getElementById("ov-export"),
     tw = document.getElementById("oh-toast"),
-    tt = document.getElementById("oh-toast-text");
+    tt = document.getElementById("oh-toast-text"),
+    // Image zoom modal elements
+    imgZoomModal = document.getElementById("imageZoomModal"),
+    imgZoomClose = document.getElementById("imageZoomClose"),
+    zoomedImage = document.getElementById("zoomedImage"),
+    imageCaption = document.getElementById("imageCaption");
 
   let orders = [],
     filtered = [],
@@ -514,315 +613,365 @@ function debounce(func, wait) {
     return "status-" + s;
   }
 
-// REPLACE EXISTING load FUNCTION IN ORDERS
-function load() {
-  t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
-  c.innerHTML = "";
+  // Image zoom functions
+  function openImageZoom(imageSrc, altText) {
+    zoomedImage.src = imageSrc;
+    imageCaption.textContent = altText || "Product Image";
+    imgZoomModal.classList.add("show");
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+  }
 
-  // Cleanup previous listener
-  cleanupOrders();
+  function closeImageZoom() {
+    imgZoomModal.classList.remove("show");
+    document.body.style.overflow = 'auto'; // Restore scrolling
+  }
 
-  ordersListener = db.collection("orders")
-    .orderBy("createdAt", "desc")
-    .limit(50)
-    .onSnapshot((q) => {
-      orders = q.docs.map((d) => {
-        const o = d.data();
-        return {
-          ...o,
-          id: d.id,
-          userId: o.userId || null, // Store userId if available
-          _name: ((o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "")).toLowerCase(),
-          _email: (o.email || "").toLowerCase(),
-          _created: o.createdAt?.toDate ? o.createdAt.toDate().getTime() : 0,
-          items: o.items || [],
-        };
-      });
-      requestAnimationFrame(apply);
-    }, (err) => {
-      empty();
-      toast("Error loading orders", "error");
-    });
-
-  ordersCleanup.add(() => {
-    if (ordersListener) ordersListener();
+  // Close image zoom when clicking outside the image or on close button
+  imgZoomModal.addEventListener('click', function(e) {
+    if (e.target === imgZoomModal || e.target === imgZoomClose) {
+      closeImageZoom();
+    }
   });
-}
+
+  // Close with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && imgZoomModal.classList.contains('show')) {
+      closeImageZoom();
+    }
+  });
+
+  function load() {
+    t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
+    c.innerHTML = "";
+
+    cleanupOrders();
+
+    ordersListener = db.collection("orders")
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .onSnapshot((q) => {
+        orders = q.docs.map((d) => {
+          const o = d.data();
+          return {
+            ...o,
+            id: d.id,
+            userId: o.userId || null,
+            _name: ((o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "")).toLowerCase(),
+            _email: (o.email || "").toLowerCase(),
+            _created: o.createdAt?.toDate ? o.createdAt.toDate().getTime() : 0,
+            items: o.items || [],
+          };
+        });
+        requestAnimationFrame(apply);
+      }, (err) => {
+        empty();
+        toast("Error loading orders", "error");
+      });
+
+    ordersCleanup.add(() => {
+      if (ordersListener) ordersListener();
+    });
+  }
+
   function empty() {
     t.innerHTML = `<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>`;
     c.innerHTML = `<div class="order-card muted">No orders</div>`;
   }
 
-// In the list() function, update the items column to show product images
-function list(x) {
-  if (!x.length) {
-    empty();
-    return;
+  function list(x) {
+    if (!x.length) {
+      empty();
+      return;
+    }
+
+    t.innerHTML = x
+      .map((o) => {
+        const it = (o.items || []).length,
+          tot = o.total || 0;
+        const cu = o.shippingAddress
+          ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
+          : o.email || "Customer";
+
+        // Create items preview with first product image
+        let itemsPreview = 'No items';
+        if (it > 0) {
+          const firstItem = o.items[0];
+          const productImage = firstItem.image || 
+                              firstItem.productImage || 
+                              getDefaultProductImage(firstItem.name);
+          
+          itemsPreview = `
+            <div class="flex-center" style="gap:8px;">
+              <img src="${esc(productImage)}" 
+                   alt="${esc(firstItem.name)}" 
+                   class="product-image-small"
+                   data-image="${esc(productImage)}"
+                   data-name="${esc(firstItem.name)}"
+                   style="width:24px;height:24px;border-radius:4px;object-fit:cover;border:1px solid var(--border);cursor:pointer"
+                   onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+              <div>
+                <div style="font-weight:600;font-size:0.85rem">${esc(firstItem.name)}</div>
+                ${it > 1 ? `<div class="muted" style="font-size:0.75rem">+ ${it - 1} more</div>` : ''}
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <tr data-id="${esc(o.id)}">
+            <td>
+              <div style="font-weight:700">#${esc(sid(o.id))}</div>
+              ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
+            </td>
+            <td>
+              <div style="display:flex;gap:10px;align-items:center">
+                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
+                  ${esc(cu.slice(0, 2).toUpperCase())}
+                </div>
+                <div>
+                  <div style="font-weight:700">${esc(cu)}</div>
+                  <div class="muted">${esc(o.email || "—")}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="font-weight:600">${fdn(o.createdAt)}</div>
+              ${o.createdAt ? `<small class="muted" style="font-size:0.75rem">
+                ${new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}
+              </small>` : ''}
+            </td>
+            <td>${itemsPreview}</td>
+            <td style="font-weight:700">₹${Number(tot).toFixed(2)}</td>
+            <td>
+              <span class="status-pill ${sc(o.status)}">${esc(o.status || "pending")}</span>
+            </td>
+            <td style="text-align:right">
+              <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="action-btn edit-btn" data-id="${o.id}" title="Edit Status">
+                <i class="fas fa-edit"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    // Add click event listeners to all product images
+    setTimeout(() => {
+      document.querySelectorAll('.product-image-small[data-image]').forEach(img => {
+        img.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const imageSrc = this.getAttribute('data-image');
+          const imageName = this.getAttribute('data-name') || 'Product Image';
+          openImageZoom(imageSrc, imageName);
+        });
+      });
+    }, 100);
+
+    bind();
   }
 
-  t.innerHTML = x
-    .map((o) => {
-      const it = (o.items || []).length,
-        tot = o.total || 0;
-      const cu = o.shippingAddress
-        ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
-        : o.email || "Customer";
+  function bind() {
+    document.querySelectorAll(".view-btn").forEach((b) => {
+      b.onclick = (e) => open(e.currentTarget.dataset.id);
+    });
 
-      // Create items preview with first product image
-      let itemsPreview = 'No items';
-      if (it > 0) {
-        const firstItem = o.items[0];
-        const productImage = firstItem.image || 
-                            firstItem.productImage || 
-                            getDefaultProductImage(firstItem.name);
+    document.querySelectorAll(".edit-btn").forEach((b) => {
+      b.onclick = (e) => open(e.currentTarget.dataset.id);
+    });
+
+    document.querySelectorAll(".user-btn").forEach((b) => {
+      b.onclick = (e) => {
+        const userId = e.currentTarget.dataset.user;
+        alert(`User ID: ${userId}\nWould open user profile here.`);
+      };
+    });
+  }
+
+  function open(id) {
+    const o = orders.find((x) => x.id === id);
+    if (!o) return;
+
+    editing = id;
+
+    const ad = o.shippingAddress
+      ? [
+          o.shippingAddress.address,
+          o.shippingAddress.city,
+          o.shippingAddress.state,
+          o.shippingAddress.zipCode,
+          o.shippingAddress.country,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : "No address";
+
+    // Create items HTML with product images
+    const itemsHtml = (o.items || [])
+      .map((i, index) => {
+        const productImage = i.image || 
+                            i.productImage || 
+                            getDefaultProductImage(i.name) || 
+                            'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022';
         
-        itemsPreview = `
-          <div class="flex-center" style="gap:8px;">
-            <img src="${esc(productImage)}" 
-                 alt="${esc(firstItem.name)}" 
-                 style="width:24px;height:24px;border-radius:4px;object-fit:cover;border:1px solid var(--border);"
-                 onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
-            <div>
-              <div style="font-weight:600;font-size:0.85rem">${esc(firstItem.name)}</div>
-              ${it > 1 ? `<div class="muted" style="font-size:0.75rem">+ ${it - 1} more</div>` : ''}
+        return `
+          <div style="display:flex;gap:12px;align-items:center;padding:12px;border-bottom:1px solid var(--border);background:#fff;cursor:pointer;" 
+               data-image="${esc(productImage)}" 
+               data-name="${esc(i.name)}"
+               onclick="(function() {
+                 const img = this.getAttribute('data-image');
+                 const name = this.getAttribute('data-name');
+                 openImageZoom(img, name);
+               }).call(this)">
+            <div style="flex-shrink:0">
+              <img src="${esc(productImage)}" 
+                   alt="${esc(i.name)}" 
+                   class="product-image-small"
+                   style="cursor:pointer"
+                   onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px">${esc(i.name)}</div>
+              <div style="display:flex;gap:12px;font-size:0.85rem;color:var(--muted);margin-bottom:4px">
+                <span>${esc(i.weight || "")}</span>
+                <span>•</span>
+                <span>Price: ₹${i.price ? Number(i.price).toFixed(2) : '0.00'}</span>
+              </div>
+            </div>
+            <div style="flex-shrink:0;text-align:right">
+              <div style="font-weight:700;margin-bottom:4px">x${i.quantity || 1}</div>
+              <div style="font-weight:700;color:var(--dark)">
+                ₹${(i.price * (i.quantity || 1)).toFixed(2)}
+              </div>
             </div>
           </div>
         `;
-      }
+      })
+      .join("") || '<div class="muted" style="padding:12px;text-align:center">No items</div>';
 
-      return `
-        <tr data-id="${esc(o.id)}">
-          <td>
-            <div style="font-weight:700">#${esc(sid(o.id))}</div>
-            ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
-          </td>
-          <td>
-            <div style="display:flex;gap:10px;align-items:center">
-              <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
-                ${esc(cu.slice(0, 2).toUpperCase())}
-              </div>
-              <div>
-                <div style="font-weight:700">${esc(cu)}</div>
-                <div class="muted">${esc(o.email || "—")}</div>
-              </div>
-            </div>
-          </td>
-          <td>
-            <div style="font-weight:600">${fdn(o.createdAt)}</div>
-            ${o.createdAt ? `<small class="muted" style="font-size:0.75rem">
-              ${new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}
-            </small>` : ''}
-          </td>
-          <td>${itemsPreview}</td>
-          <td style="font-weight:700">₹${Number(tot).toFixed(2)}</td>
-          <td>
-            <span class="status-pill ${sc(o.status)}">${esc(o.status || "pending")}</span>
-          </td>
-          <td style="text-align:right">
-            <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
-              <i class="fas fa-eye"></i>
-            </button>
-            <button class="action-btn edit-btn" data-id="${o.id}" title="Edit Status">
-              <i class="fas fa-edit"></i>
-            </button>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
-
-  bind();
-}
-function bind() {
-  document.querySelectorAll(".view-btn").forEach((b) => {
-    b.onclick = (e) => open(e.currentTarget.dataset.id);
-  });
-
-  document.querySelectorAll(".edit-btn").forEach((b) => {
-    b.onclick = (e) => open(e.currentTarget.dataset.id);
-  });
-
-  document.querySelectorAll(".user-btn").forEach((b) => {
-    b.onclick = (e) => {
-      const userId = e.currentTarget.dataset.user;
-      alert(`User ID: ${userId}\nWould open user profile here.`);
-    };
-  });
-}
-function open(id) {
-  const o = orders.find((x) => x.id === id);
-  if (!o) return;
-
-  editing = id;
-
-  const ad = o.shippingAddress
-    ? [
-        o.shippingAddress.address,
-        o.shippingAddress.city,
-        o.shippingAddress.state,
-        o.shippingAddress.zipCode,
-        o.shippingAddress.country,
-      ]
-        .filter(Boolean)
-        .join(", ")
-    : "No address";
-
-  // Create items HTML with product images
-  const itemsHtml = (o.items || [])
-    .map((i) => {
-      // Try to get product image from different sources
-      const productImage = i.image || 
-                          i.productImage || 
-                          getDefaultProductImage(i.name) || 
-                          'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022';
-      
-      return `
-        <div style="display:flex;gap:12px;align-items:center;padding:12px;border-bottom:1px solid var(--border);background:#fff;">
-          <div style="flex-shrink:0">
-            <img src="${esc(productImage)}" 
-                 alt="${esc(i.name)}" 
-                 class="product-image-small"
-                 onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+    mb.innerHTML = `
+      <div style="display:grid;gap:16px;max-height:70vh;overflow-y:auto;padding-right:4px;">
+        <!-- Order ID -->
+        <div>
+          <div class="modal-title-bold">Order ID</div>
+          <div style="font-family:monospace;background:#f5f5f5;padding:8px 12px;border-radius:8px;border:1px solid var(--border);">
+            #${esc(sid(id))}
           </div>
-          <div style="flex:1">
-            <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px">${esc(i.name)}</div>
-            <div style="display:flex;gap:12px;font-size:0.85rem;color:var(--muted);margin-bottom:4px">
-              <span>${esc(i.weight || "")}</span>
-              <span>•</span>
-              <span>Price: ₹${i.price ? Number(i.price).toFixed(2) : '0.00'}</span>
+        </div>
+
+        <!-- Customer Information -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="modal-title-bold">Customer Name</div>
+            <div style="padding:8px 0">${esc(
+              o.shippingAddress
+                ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
+                : o.email || "—"
+            )}</div>
+          </div>
+          <div>
+            <div class="modal-title-bold">Customer Email</div>
+            <div style="padding:8px 0">${esc(o.email || "—")}</div>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="modal-title-bold">Phone Number</div>
+            <div style="padding:8px 0">${esc(o.shippingAddress?.phone || "—")}</div>
+          </div>
+          <div>
+            <div class="modal-title-bold">Order Date</div>
+            <div style="padding:8px 0">${fdn(o.createdAt)}</div>
+          </div>
+        </div>
+
+        <!-- Order Details -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="modal-title-bold">Total Amount</div>
+            <div style="font-weight:700;font-size:1.2rem;padding:8px 0;color:var(--dark)">
+              ₹${Number(o.total || 0).toFixed(2)}
             </div>
           </div>
-          <div style="flex-shrink:0;text-align:right">
-            <div style="font-weight:700;margin-bottom:4px">x${i.quantity || 1}</div>
-            <div style="font-weight:700;color:var(--dark)">
-              ₹${(i.price * (i.quantity || 1)).toFixed(2)}
-            </div>
+          <div>
+            <div class="modal-title-bold">Payment Method</div>
+            <div style="padding:8px 0">${esc(o.paymentMethod || "Cash on Delivery")}</div>
           </div>
         </div>
-      `;
-    })
-    .join("") || '<div class="muted" style="padding:12px;text-align:center">No items</div>';
 
-  mb.innerHTML = `
-    <div style="display:grid;gap:16px;max-height:70vh;overflow-y:auto;padding-right:4px;">
-      <!-- Order ID -->
-      <div>
-        <div class="modal-title-bold">Order ID</div>
-        <div style="font-family:monospace;background:#f5f5f5;padding:8px 12px;border-radius:8px;border:1px solid var(--border);">
-          #${esc(sid(id))}
-        </div>
-      </div>
-
-      <!-- Customer Information -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- Order Status -->
         <div>
-          <div class="modal-title-bold">Customer Name</div>
-          <div style="padding:8px 0">${esc(
-            o.shippingAddress
-              ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
-              : o.email || "—"
-          )}</div>
+          <div class="modal-title-bold">Order Status</div>
+          <select id="ov-modal-status" 
+                  style="padding:10px;border:1px solid var(--border);border-radius:8px;width:100%;margin-top:4px;background:#fff;">
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option>
+            <option value="out-for-delivery">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
         </div>
-        <div>
-          <div class="modal-title-bold">Customer Email</div>
-          <div style="padding:8px 0">${esc(o.email || "—")}</div>
-        </div>
-      </div>
 
-      <!-- Contact Information -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <!-- Shipping Address -->
         <div>
-          <div class="modal-title-bold">Phone Number</div>
-          <div style="padding:8px 0">${esc(o.shippingAddress?.phone || "—")}</div>
-        </div>
-        <div>
-          <div class="modal-title-bold">Order Date</div>
-          <div style="padding:8px 0">${fdn(o.createdAt)}</div>
-        </div>
-      </div>
-
-      <!-- Order Details -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div>
-          <div class="modal-title-bold">Total Amount</div>
-          <div style="font-weight:700;font-size:1.2rem;padding:8px 0;color:var(--dark)">
-            ₹${Number(o.total || 0).toFixed(2)}
-          </div>
-        </div>
-        <div>
-          <div class="modal-title-bold">Payment Method</div>
-          <div style="padding:8px 0">${esc(o.paymentMethod || "Cash on Delivery")}</div>
-        </div>
-      </div>
-
-      <!-- Order Status -->
-      <div>
-        <div class="modal-title-bold">Order Status</div>
-        <select id="ov-modal-status" 
-                style="padding:10px;border:1px solid var(--border);border-radius:8px;width:100%;margin-top:4px;background:#fff;">
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="shipped">Shipped</option>
-          <option value="out-for-delivery">Out for Delivery</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-      </div>
-
-      <!-- Shipping Address -->
-      <div>
-        <div class="modal-title-bold">Shipping Address</div>
-        <div style="background:#f9f9f9;padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:4px;">
-          ${esc(ad)}
-        </div>
-      </div>
-
-      <!-- Order Items -->
-      <div>
-        <div class="modal-title-bold">Order Items (${(o.items || []).length})</div>
-        <div style="margin-top:4px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
-          ${itemsHtml}
-        </div>
-      </div>
-
-      <!-- Additional Notes -->
-      ${o.notes ? `
-        <div>
-          <div class="modal-title-bold">Additional Notes</div>
+          <div class="modal-title-bold">Shipping Address</div>
           <div style="background:#f9f9f9;padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:4px;">
-            ${esc(o.notes)}
+            ${esc(ad)}
           </div>
         </div>
-      ` : ''}
-    </div>
-  `;
 
-  // Set current status
-  document.getElementById("ov-modal-status").value = o.status || "pending";
+        <!-- Order Items -->
+        <div>
+          <div class="modal-title-bold">Order Items (${(o.items || []).length})</div>
+          <div style="margin-top:4px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+            ${itemsHtml}
+          </div>
+        </div>
 
-  // Show modal
-  m.classList.add("show");
-}
+        <!-- Additional Notes -->
+        ${o.notes ? `
+          <div>
+            <div class="modal-title-bold">Additional Notes</div>
+            <div style="background:#f9f9f9;padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:4px;">
+              ${esc(o.notes)}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
 
-// Helper function to get default product image based on product name
-function getDefaultProductImage(productName) {
-  const productImages = {
-    'natura agmark honey': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022',
-    'honey': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022',
-    'crystal pack': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705022',
-    'premium pet': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217705022'
-  };
-  
-  const name = productName.toLowerCase();
-  for (const [key, image] of Object.entries(productImages)) {
-    if (name.includes(key)) {
-      return image;
-    }
+    // Set current status
+    document.getElementById("ov-modal-status").value = o.status || "pending";
+
+    // Show modal
+    m.classList.add("show");
   }
-  
-  return 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022';
-}
 
+  // Make openImageZoom function globally accessible for inline onclick handlers
+  window.openImageZoom = openImageZoom;
+
+  function getDefaultProductImage(productName) {
+    const productImages = {
+      'natura agmark honey': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022',
+      'honey': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022',
+      'crystal pack': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705022',
+      'premium pet': 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217705022'
+    };
+    
+    const name = productName.toLowerCase();
+    for (const [key, image] of Object.entries(productImages)) {
+      if (name.includes(key)) {
+        return image;
+      }
+    }
+    
+    return 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022';
+  }
 
   function close() {
     m.classList.remove("show");
@@ -830,151 +979,137 @@ function getDefaultProductImage(productName) {
   }
   
   function searchAndUpdateInUsers(orderId, updateData) {
-  return db.collection("users").get().then(users => {
-    const promises = [];
-    let foundInUsers = false;
-    
-    users.forEach(u => {
-      const userOrderRef = db.collection("users").doc(u.id).collection("orders").doc(orderId);
-      promises.push(
-        userOrderRef.get().then(snap => {
-          if (snap.exists) {
-            foundInUsers = true;
-            return userOrderRef.update(updateData);
-          }
-          return Promise.resolve();
-        })
-      );
-    });
-    
-    return Promise.all(promises).then(() => {
-      return { updatedInUser: foundInUsers };
-    });
-  });
-}
-
-  // --------------------------------------------------------
-  //  ** FIXED SAVE FUNCTION — AUTO UPDATE ROOT + USER ORDER **
-  // --------------------------------------------------------
-function save() {
-  if (!editing) return;
-
-  const st = document.getElementById("ov-modal-status").value;
-  ms.disabled = true;
-
-  const ot = ms.innerHTML;
-  ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-  const rootRef = db.collection("orders").doc(editing);
-  const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-  const updateData = {
-    status: st,
-    updatedAt: timestamp
-  };
-
-  // Add specific timestamp fields based on status
-  if (st === 'confirmed') {
-    updateData.confirmedAt = timestamp;
-  } else if (st === 'shipped') {
-    updateData.shippedAt = timestamp;
-  } else if (st === 'out-for-delivery' || st === 'out for delivery') {
-    updateData.outForDeliveryAt = timestamp;
-  } else if (st === 'delivered') {
-    updateData.deliveredAt = timestamp;
-  }
-
-  // Step 1: Update in /orders collection (admin view)
-  rootRef.get().then(doc => {
-    if (doc.exists) {
-      const orderData = doc.data();
+    return db.collection("users").get().then(users => {
+      const promises = [];
+      let foundInUsers = false;
       
-      // Update admin's /orders collection
-      return rootRef.update(updateData).then(() => {
-        // Now find and update in user's /users/{uid}/orders collection
-        if (orderData.userId) {
-          // If we have userId stored in order, update directly
-          const userOrderRef = db.collection("users").doc(orderData.userId)
-            .collection("orders").doc(editing);
-          
-          return userOrderRef.update(updateData).then(() => {
-            return { updatedInUser: true, userId: orderData.userId };
-          }).catch(err => {
-            console.log("Couldn't update with userId, trying email...", err);
-            return searchAndUpdateInUsers(editing, updateData);
-          });
-        } else {
-          // No userId, search by email or orderId
-          return searchAndUpdateInUsers(editing, updateData);
-        }
+      users.forEach(u => {
+        const userOrderRef = db.collection("users").doc(u.id).collection("orders").doc(orderId);
+        promises.push(
+          userOrderRef.get().then(snap => {
+            if (snap.exists) {
+              foundInUsers = true;
+              return userOrderRef.update(updateData);
+            }
+            return Promise.resolve();
+          })
+        );
       });
-    } else {
-      // Order not in /orders, search in all users
-      return searchAndUpdateInUsers(editing, updateData);
-    }
-  })
-  .then((result) => {
-    ms.disabled = false;
-    ms.innerHTML = ot;
-    
-    if (result && result.updatedInUser) {
-      toast(`Order updated (User: ${result.userId ? '✓' : 'found via email'})`);
-    } else {
-      toast("Order updated in admin view");
-    }
-    
-    m.classList.remove("show");
-  })
-  .catch((err) => {
-    ms.disabled = false;
-    ms.innerHTML = ot;
-    console.error("Save error:", err);
-    toast("Save failed: " + err.message, "error");
-  });
-}
-
-
-function apply() {
-  let x = [...orders];
-  const st = fs.value;
-  const d = fd.value;
-  const q = si.value.toLowerCase();
-
-  // STATUS filter
-  if (st !== "all") {
-    x = x.filter(o => (o.status || "").toLowerCase() === st);
+      
+      return Promise.all(promises).then(() => {
+        return { updatedInUser: foundInUsers };
+      });
+    });
   }
 
-  // DATE filter
-  if (d !== "all") {
-    const now = Date.now();
-    let start = null;
+  function save() {
+    if (!editing) return;
 
-if (d === "today") {
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  start = today.getTime();
-}
+    const st = document.getElementById("ov-modal-status").value;
+    ms.disabled = true;
 
-if (d === "week") start = now - 7 * 864e5;
-if (d === "month") start = now - 30 * 864e5;
+    const ot = ms.innerHTML;
+    ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-    if (start !== null) {
-      x = x.filter(o => o._created >= start);
+    const rootRef = db.collection("orders").doc(editing);
+    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+    const updateData = {
+      status: st,
+      updatedAt: timestamp
+    };
+
+    if (st === 'confirmed') {
+      updateData.confirmedAt = timestamp;
+    } else if (st === 'shipped') {
+      updateData.shippedAt = timestamp;
+    } else if (st === 'out-for-delivery' || st === 'out for delivery') {
+      updateData.outForDeliveryAt = timestamp;
+    } else if (st === 'delivered') {
+      updateData.deliveredAt = timestamp;
     }
+
+    rootRef.get().then(doc => {
+      if (doc.exists) {
+        const orderData = doc.data();
+        
+        return rootRef.update(updateData).then(() => {
+          if (orderData.userId) {
+            const userOrderRef = db.collection("users").doc(orderData.userId)
+              .collection("orders").doc(editing);
+            
+            return userOrderRef.update(updateData).then(() => {
+              return { updatedInUser: true, userId: orderData.userId };
+            }).catch(err => {
+              console.log("Couldn't update with userId, trying email...", err);
+              return searchAndUpdateInUsers(editing, updateData);
+            });
+          } else {
+            return searchAndUpdateInUsers(editing, updateData);
+          }
+        });
+      } else {
+        return searchAndUpdateInUsers(editing, updateData);
+      }
+    })
+    .then((result) => {
+      ms.disabled = false;
+      ms.innerHTML = ot;
+      
+      if (result && result.updatedInUser) {
+        toast(`Order updated (User: ${result.userId ? '✓' : 'found via email'})`);
+      } else {
+        toast("Order updated in admin view");
+      }
+      
+      m.classList.remove("show");
+    })
+    .catch((err) => {
+      ms.disabled = false;
+      ms.innerHTML = ot;
+      console.error("Save error:", err);
+      toast("Save failed: " + err.message, "error");
+    });
   }
 
-  // SEARCH filter → now uses FAST precomputed fields
-  if (q) {
-    x = x.filter(o => 
-      o.id.toLowerCase().includes(q) ||
-      o._name.toLowerCase().includes(q) ||
-      o._email.includes(q)
-    );
-  }
+  function apply() {
+    let x = [...orders];
+    const st = fs.value;
+    const d = fd.value;
+    const q = si.value.toLowerCase();
 
-  filtered = x;
-  requestAnimationFrame(() => list(x)); 
-}
+    if (st !== "all") {
+      x = x.filter(o => (o.status || "").toLowerCase() === st);
+    }
+
+    if (d !== "all") {
+      const now = Date.now();
+      let start = null;
+
+      if (d === "today") {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        start = today.getTime();
+      }
+
+      if (d === "week") start = now - 7 * 864e5;
+      if (d === "month") start = now - 30 * 864e5;
+
+      if (start !== null) {
+        x = x.filter(o => o._created >= start);
+      }
+    }
+
+    if (q) {
+      x = x.filter(o => 
+        o.id.toLowerCase().includes(q) ||
+        o._name.toLowerCase().includes(q) ||
+        o._email.includes(q)
+      );
+    }
+
+    filtered = x;
+    requestAnimationFrame(() => list(x)); 
+  }
 
   function csv(x) {
     if (!x.length) {
@@ -1026,7 +1161,7 @@ if (d === "month") start = now - 30 * 864e5;
   ms.onclick = save;
   fs.onchange = apply;
   fd.onchange = apply;
-si.oninput = debounce(apply, 300);
+  si.oninput = debounce(apply, 300);
   rb.onclick = () => {
     load();
     toast("Refreshing...", "info");
