@@ -883,17 +883,19 @@ function open(id) {
     // Format phone
     const phone = o.shippingAddress?.phone || "Not provided";
 
-    // Format items with images
+    // Format items with images - added data attributes for image viewing
     const itemsHTML = (o.items || [])
         .map((item, index) => {
             const productImage = item.image || item.productImage || getDefaultProductImage(item.name);
             return `
-            <div class="product-item-modal">
+            <div class="product-item-modal" data-index="${index}">
                 <div style="display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid var(--border);">
                     <img src="${esc(productImage)}" 
                          alt="${esc(item.name)}" 
                          class="product-image-modal-item"
-                         onclick="showProductImage('${esc(productImage)}', '${esc(item.name)}')"
+                         data-image="${esc(productImage)}"
+                         data-name="${esc(item.name)}"
+                         style="width:50px;height:50px;border-radius:6px;object-fit:cover;border:1px solid var(--border);cursor:pointer;"
                          onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
                     <div style="flex:1">
                         <div style="font-weight:500;color:var(--dark);margin-bottom:4px">${esc(item.name)}</div>
@@ -1058,9 +1060,139 @@ function open(id) {
 
     // Set current status
     document.getElementById("ov-modal-status").value = o.status || "pending";
+    
+    // Add click event listeners to product images in the modal
+    setTimeout(() => {
+        const productImages = document.querySelectorAll('.product-image-modal-item');
+        productImages.forEach(img => {
+            img.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const imageSrc = this.getAttribute('data-image') || this.src;
+                const imageAlt = this.getAttribute('data-name') || this.alt;
+                showProductImage(imageSrc, imageAlt);
+            });
+        });
+    }, 100);
+
     m.classList.add("show");
 }
-  function close() {
+
+// Add this function to your existing code
+function showProductImage(src, alt) {
+    // Create or get the image viewer modal
+    let imageViewer = document.getElementById('image-viewer-modal');
+    
+    if (!imageViewer) {
+        imageViewer = document.createElement('div');
+        imageViewer.id = 'image-viewer-modal';
+        imageViewer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        `;
+        
+        const imageContainer = document.createElement('div');
+        imageContainer.style.cssText = `
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        `;
+        
+        const img = document.createElement('img');
+        img.id = 'full-size-image';
+        img.style.cssText = `
+            max-width: 100%;
+            max-height: calc(90vh - 60px);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            object-fit: contain;
+        `;
+        
+        const closeBtn = document.createElement('div');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: -40px;
+            right: -10px;
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        `;
+        closeBtn.onclick = hideProductImage;
+        
+        const caption = document.createElement('div');
+        caption.id = 'image-caption';
+        caption.style.cssText = `
+            color: white;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1rem;
+            max-width: 80%;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+        `;
+        
+        imageContainer.appendChild(img);
+        imageContainer.appendChild(closeBtn);
+        imageContainer.appendChild(caption);
+        imageViewer.appendChild(imageContainer);
+        
+        imageViewer.onclick = function(e) {
+            if (e.target === imageViewer) hideProductImage();
+        };
+        
+        document.body.appendChild(imageViewer);
+    }
+    
+    // Set image and caption
+    document.getElementById('full-size-image').src = src;
+    document.getElementById('full-size-image').alt = alt;
+    document.getElementById('image-caption').textContent = alt;
+    
+    // Show the modal
+    imageViewer.style.opacity = '1';
+    imageViewer.style.visibility = 'visible';
+    document.body.style.overflow = 'hidden';
+}
+
+function hideProductImage() {
+    const imageViewer = document.getElementById('image-viewer-modal');
+    if (imageViewer) {
+        imageViewer.style.opacity = '0';
+        imageViewer.style.visibility = 'hidden';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Add ESC key support for closing image viewer
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        hideProductImage();
+    }
+});
+
+function close() {
     m.classList.remove("show");
     editing = null;
   }
