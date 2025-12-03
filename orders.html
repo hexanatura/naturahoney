@@ -1,10 +1,10 @@
-<link rel="preconnect" href="https://fonts.googleapis.com" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 
   <style>
-
 * {
   margin: 0;
   padding: 0;
@@ -13,42 +13,42 @@
 
 /* Status badge */
 .status-out-for-delivery {
-    background: rgba(168,85,247,0.08);
-    color: #a855f7;
-    border: 1px solid rgba(168,85,247,0.12);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px 10px;
-    white-space: nowrap;   /* keeps text on one straight line */
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 500;
+  background: rgba(168,85,247,0.08);
+  color: #a855f7;
+  border: 1px solid rgba(168,85,247,0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  white-space: nowrap;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 /* Action buttons wrapper */
 .action-buttons-container {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    align-items: center;
-    width: 100%;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  width: 100%;
 }
 
 /* Action button */
 .action-btn {
-    border-radius: 8px;
-    border: none;
-    padding: 8px;
-    background: transparent;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.95rem;
-    min-width: 40px;
-    height: 40px;
+  border-radius: 8px;
+  border: none;
+  padding: 8px;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  min-width: 40px;
+  height: 40px;
 }
 
 .action-btn .fa-eye { color: var(--dark); }
@@ -56,17 +56,17 @@
 
 /* Table actions alignment */
 .orders-table td:last-child {
-    text-align: right;
-    padding-right: 0; /* optional: keeps alignment tight */
+  text-align: right;
+  padding-right: 0;
 }
 
 /* Mobile card actions */
 .card-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    justify-content: flex-end;   /* aligns same as table */
-    width: 100%;
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .orders-view {
@@ -104,12 +104,13 @@
 }
 
 .product-image-small {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   object-fit: cover;
   border: 1px solid var(--border);
   background: #f5f5f5;
+  cursor: pointer;
 }
 
 .flex-center {
@@ -354,6 +355,33 @@
   transform: translateY(0);
 }
 
+/* Thumbnail wrapper + eye icon for product image */
+.product-thumb-wrapper {
+  position: relative;
+  width: 28px;
+  height: 28px;
+}
+
+.thumb-eye-btn {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  background: rgba(0,0,0,0.65);
+  border: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.thumb-eye-btn i {
+  color: #fff;
+  font-size: 0.6rem;
+}
+
 @media (max-width:1023px) {
   .table-wrapper { display: none; }
   .mobile-cards { display: flex; flex-direction: column; }
@@ -383,10 +411,9 @@
     width: calc(100% - 20px);
   }
 }
-
   </style>
-
 </head>
+
 <body>
   <div class="page-container">
     <div class="orders-view fade-in">
@@ -468,9 +495,29 @@
     </div>
   </div>
 
+  <!-- Toast -->
   <div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
     <i class="fas fa-check-circle" style="color:var(--success)"></i>
     <div id="oh-toast-text">Saved</div>
+  </div>
+
+  <!-- PRODUCT IMAGE FULL VIEW MODAL -->
+  <div id="image-modal-bg" class="orders-modal-bg" style="z-index:2000" aria-hidden="true">
+    <div id="image-modal" style="
+      background:#000;
+      padding:10px;
+      border-radius:8px;
+      max-width:90%;
+      max-height:90%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    ">
+      <img id="image-modal-img"
+           src=""
+           alt=""
+           style="max-width:100%;max-height:100%;border-radius:8px;">
+    </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -478,8 +525,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="activityLogger.js?v=1"></script>
 
-
- <script>
+  <script>
 (function () {
   const config = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
@@ -494,32 +540,32 @@
   if (window.firebase) {
     if (!firebase.apps.length) firebase.initializeApp(config);
   }
-  
+
   // ADD TO ORDERS SCRIPT (after Firebase init)
-let ordersCleanup = new Set();
-let ordersListener = null;
+  let ordersCleanup = new Set();
+  let ordersListener = null;
 
-function cleanupOrders() {
-  ordersCleanup.forEach(fn => fn());
-  ordersCleanup.clear();
-  if (ordersListener) {
-    ordersListener();
-    ordersListener = null;
+  function cleanupOrders() {
+    ordersCleanup.forEach(fn => fn());
+    ordersCleanup.clear();
+    if (ordersListener) {
+      ordersListener();
+      ordersListener = null;
+    }
   }
-}
 
-// Debounce function
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
+  // Debounce function
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
       clearTimeout(timeout);
-      func(...args);
+      timeout = setTimeout(later, wait);
     };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+  }
 
   const db = firebase.firestore();
 
@@ -536,7 +582,9 @@ function debounce(func, wait) {
     rb = document.getElementById("ov-refresh"),
     xb = document.getElementById("ov-export"),
     tw = document.getElementById("oh-toast"),
-    tt = document.getElementById("oh-toast-text");
+    tt = document.getElementById("oh-toast-text"),
+    imbg = document.getElementById("image-modal-bg"),
+    imi = document.getElementById("image-modal-img");
 
   let orders = [],
     filtered = [],
@@ -568,165 +616,188 @@ function debounce(func, wait) {
     return x.toLocaleDateString("en-IN");
   }
 
-function sc(s) {
-  // Normalize the status string
-  const status = (s || "").toLowerCase().replace(/\s+/g, '-');
-  
-  // Map status to CSS class
-  const statusMap = {
-    'pending': 'status-pending',
-    'confirmed': 'status-confirmed',
-    'shipped': 'status-shipped',
-    'out-for-delivery': 'status-out-for-delivery',
-    'outfordelivery': 'status-out-for-delivery',
-    'delivered': 'status-delivered',
-    'cancelled': 'status-cancelled'
-  };
-  
-  return statusMap[status] || 'status-pending';
-}
+  function sc(s) {
+    const status = (s || "").toLowerCase().replace(/\s+/g, '-');
+    const statusMap = {
+      'pending': 'status-pending',
+      'confirmed': 'status-confirmed',
+      'shipped': 'status-shipped',
+      'out-for-delivery': 'status-out-for-delivery',
+      'outfordelivery': 'status-out-for-delivery',
+      'delivered': 'status-delivered',
+      'cancelled': 'status-cancelled'
+    };
+    return statusMap[status] || 'status-pending';
+  }
 
-// REPLACE EXISTING load FUNCTION IN ORDERS
-function load() {
-  t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
-  c.innerHTML = "";
+  // REPLACE EXISTING load FUNCTION IN ORDERS
+  function load() {
+    t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
+    c.innerHTML = "";
 
-  // Cleanup previous listener
-  cleanupOrders();
+    // Cleanup previous listener
+    cleanupOrders();
 
-  ordersListener = db.collection("orders")
-    .orderBy("createdAt", "desc")
-    .limit(50)
-    .onSnapshot((q) => {
-      orders = q.docs.map((d) => {
-        const o = d.data();
-        return {
-          ...o,
-          id: d.id,
-          userId: o.userId || null, // Store userId if available
-          _name: ((o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "")).toLowerCase(),
-          _email: (o.email || "").toLowerCase(),
-          _created: o.createdAt?.toDate ? o.createdAt.toDate().getTime() : 0,
-          items: o.items || [],
-        };
+    ordersListener = db.collection("orders")
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .onSnapshot((q) => {
+        orders = q.docs.map((d) => {
+          const o = d.data();
+          return {
+            ...o,
+            id: d.id,
+            userId: o.userId || null,
+            _name: ((o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "")).toLowerCase(),
+            _email: (o.email || "").toLowerCase(),
+            _created: o.createdAt?.toDate ? o.createdAt.toDate().getTime() : 0,
+            items: o.items || [],
+          };
+        });
+        requestAnimationFrame(apply);
+      }, (err) => {
+        empty();
+        toast("Error loading orders", "error");
       });
-      requestAnimationFrame(apply);
-    }, (err) => {
-      empty();
-      toast("Error loading orders", "error");
-    });
 
-  ordersCleanup.add(() => {
-    if (ordersListener) ordersListener();
-  });
-}
+    ordersCleanup.add(() => {
+      if (ordersListener) ordersListener();
+    });
+  }
+
   function empty() {
     t.innerHTML = `<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>`;
     c.innerHTML = `<div class="order-card muted">No orders</div>`;
   }
-function list(x) {
-  if (!x.length) {
-    empty();
-    return;
-  }
 
-  t.innerHTML = x
-    .map((o) => {
-      const it = (o.items || []).length,
-        tot = o.total || 0;
-      const cu = o.shippingAddress
-        ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
-        : o.email || "Customer";
+  function list(x) {
+    if (!x.length) {
+      empty();
+      return;
+    }
 
-      // Create items preview with first product image
-      let itemsPreview = 'No items';
-      if (it > 0) {
-        const firstItem = o.items[0];
-        const productImage = firstItem.image || 
-                            firstItem.productImage || 
-                            getDefaultProductImage(firstItem.name);
-        
-        itemsPreview = `
-          <div class="flex-center" style="gap:8px;">
-            <img src="${esc(productImage)}" 
-                 alt="${esc(firstItem.name)}" 
-                 class="product-image-small"
-                 data-image="${esc(productImage)}"
-                 data-name="${esc(firstItem.name)}"
-                 style="width:24px;height:24px;border-radius:4px;object-fit:cover;border:1px solid var(--border);cursor:pointer"
-                 onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
-            <div>
-              <div style="font-weight:600;font-size:0.85rem">${esc(firstItem.name)}</div>
-              ${it > 1 ? `<div class="muted" style="font-size:0.75rem">+ ${it - 1} more</div>` : ''}
-            </div>
-          </div>
-        `;
-      }
+    t.innerHTML = x
+      .map((o) => {
+        const it = (o.items || []).length,
+          tot = o.total || 0;
+        const cu = o.shippingAddress
+          ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
+          : o.email || "Customer";
 
-      // Determine status class
-      const statusClass = sc(o.status);
-      
-      return `
-        <tr data-id="${esc(o.id)}">
-          <td>
-            <div style="font-weight:700">#${esc(sid(o.id))}</div>
-            ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
-          </td>
-          <td>
-            <div style="display:flex;gap:10px;align-items:center">
-              <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
-                ${esc(cu.slice(0, 2).toUpperCase())}
+        // Create items preview with first product image + eye icon
+        let itemsPreview = 'No items';
+        if (it > 0) {
+          const firstItem = o.items[0];
+          const productImage =
+            firstItem.image ||
+            firstItem.productImage ||
+            getDefaultProductImage(firstItem.name);
+
+          itemsPreview = `
+            <div class="flex-center" style="gap:8px;">
+              <div class="product-thumb-wrapper">
+                <img src="${esc(productImage)}"
+                     alt="${esc(firstItem.name)}"
+                     class="product-image-small product-viewable"
+                     data-image="${esc(productImage)}"
+                     data-name="${esc(firstItem.name)}"
+                     onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+                <button class="thumb-eye-btn"
+                        type="button"
+                        data-image="${esc(productImage)}"
+                        data-name="${esc(firstItem.name)}">
+                  <i class="fas fa-eye"></i>
+                </button>
               </div>
               <div>
-                <div style="font-weight:700">${esc(cu)}</div>
-                <div class="muted">${esc(o.email || "—")}</div>
+                <div style="font-weight:600;font-size:0.85rem">${esc(firstItem.name)}</div>
+                ${it > 1 ? `<div class="muted" style="font-size:0.75rem">+ ${it - 1} more</div>` : ''}
               </div>
             </div>
-          </td>
-          <td>
-            <div style="font-weight:600">${fdn(o.createdAt)}</div>
-            ${o.createdAt ? `<small class="muted" style="font-size:0.75rem">
-              ${new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}
-            </small>` : ''}
-          </td>
-          <td>${itemsPreview}</td>
-          <td style="font-weight:700">₹${Number(tot).toFixed(2)}</td>
-          <td>
-            <span class="status-pill ${statusClass}">${esc(o.status || "pending")}</span>
-          </td>
-          <td>
-            <div class="action-buttons-container">
-              <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="action-btn edit-btn" data-id="${o.id}" title="Edit Status">
-                <i class="fas fa-edit"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+          `;
+        }
 
-  bind();
-}
-function bind() {
-  document.querySelectorAll(".view-btn").forEach((b) => {
-    b.onclick = (e) => open(e.currentTarget.dataset.id);
-  });
+        const statusClass = sc(o.status);
 
-  document.querySelectorAll(".edit-btn").forEach((b) => {
-    b.onclick = (e) => open(e.currentTarget.dataset.id);
-  });
+        return `
+          <tr data-id="${esc(o.id)}">
+            <td>
+              <div style="font-weight:700">#${esc(sid(o.id))}</div>
+              ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
+            </td>
+            <td>
+              <div style="display:flex;gap:10px;align-items:center">
+                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
+                  ${esc(cu.slice(0, 2).toUpperCase())}
+                </div>
+                <div>
+                  <div style="font-weight:700">${esc(cu)}</div>
+                  <div class="muted">${esc(o.email || "—")}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="font-weight:600">${fdn(o.createdAt)}</div>
+              ${o.createdAt ? `<small class="muted" style="font-size:0.75rem">
+                ${new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}
+              </small>` : ''}
+            </td>
+            <td>${itemsPreview}</td>
+            <td style="font-weight:700">₹${Number(tot).toFixed(2)}</td>
+            <td>
+              <span class="status-pill ${statusClass}">${esc(o.status || "pending")}</span>
+            </td>
+            <td>
+              <div class="action-buttons-container">
+                <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn edit-btn" data-id="${o.id}" title="Edit Status">
+                  <i class="fas fa-edit"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
 
-  document.querySelectorAll(".user-btn").forEach((b) => {
-    b.onclick = (e) => {
-      const userId = e.currentTarget.dataset.user;
-      alert(`User ID: ${userId}\nWould open user profile here.`);
-    };
-  });
-}
+    bind();
+  }
+
+  function bind() {
+    document.querySelectorAll(".view-btn").forEach((b) => {
+      b.onclick = (e) => open(e.currentTarget.dataset.id);
+    });
+
+    document.querySelectorAll(".edit-btn").forEach((b) => {
+      b.onclick = (e) => open(e.currentTarget.dataset.id);
+    });
+
+    document.querySelectorAll(".user-btn").forEach((b) => {
+      b.onclick = (e) => {
+        const userId = e.currentTarget.dataset.user;
+        alert(`User ID: ${userId}\nWould open user profile here.`);
+      };
+    });
+
+    // Bind product image + eye icon to open full-size viewer
+    document.querySelectorAll(".product-viewable, .thumb-eye-btn").forEach(el => {
+      el.onclick = (e) => {
+        const target = e.currentTarget;
+        const img = target.dataset.image;
+        const name = target.dataset.name;
+
+        if (!img) return;
+
+        imi.src = img;
+        imi.alt = name || "";
+        imbg.classList.add("show");
+        imbg.setAttribute("aria-hidden", "false");
+      };
+    });
+  }
+
   function open(id) {
     const o = orders.find((x) => x.id === id);
     if (!o) return;
@@ -838,153 +909,143 @@ function bind() {
     m.classList.remove("show");
     editing = null;
   }
-  
+
   function searchAndUpdateInUsers(orderId, updateData) {
-  return db.collection("users").get().then(users => {
-    const promises = [];
-    let foundInUsers = false;
-    
-    users.forEach(u => {
-      const userOrderRef = db.collection("users").doc(u.id).collection("orders").doc(orderId);
-      promises.push(
-        userOrderRef.get().then(snap => {
-          if (snap.exists) {
-            foundInUsers = true;
-            return userOrderRef.update(updateData);
-          }
-          return Promise.resolve();
-        })
-      );
-    });
-    
-    return Promise.all(promises).then(() => {
-      return { updatedInUser: foundInUsers };
-    });
-  });
-}
+    return db.collection("users").get().then(users => {
+      const promises = [];
+      let foundInUsers = false;
 
-  // --------------------------------------------------------
-  //  ** FIXED SAVE FUNCTION — AUTO UPDATE ROOT + USER ORDER **
-  // --------------------------------------------------------
-function save() {
-  if (!editing) return;
-
-  const st = document.getElementById("ov-modal-status").value;
-  ms.disabled = true;
-
-  const ot = ms.innerHTML;
-  ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-  const rootRef = db.collection("orders").doc(editing);
-  const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-  const updateData = {
-    status: st,
-    updatedAt: timestamp
-  };
-
-  // Add specific timestamp fields based on status
-  if (st === 'confirmed') {
-    updateData.confirmedAt = timestamp;
-  } else if (st === 'shipped') {
-    updateData.shippedAt = timestamp;
-  } else if (st === 'out-for-delivery' || st === 'out for delivery') {
-    updateData.outForDeliveryAt = timestamp;
-  } else if (st === 'delivered') {
-    updateData.deliveredAt = timestamp;
-  }
-
-  // Step 1: Update in /orders collection (admin view)
-  rootRef.get().then(doc => {
-    if (doc.exists) {
-      const orderData = doc.data();
-      
-      // Update admin's /orders collection
-      return rootRef.update(updateData).then(() => {
-        // Now find and update in user's /users/{uid}/orders collection
-        if (orderData.userId) {
-          // If we have userId stored in order, update directly
-          const userOrderRef = db.collection("users").doc(orderData.userId)
-            .collection("orders").doc(editing);
-          
-          return userOrderRef.update(updateData).then(() => {
-            return { updatedInUser: true, userId: orderData.userId };
-          }).catch(err => {
-            console.log("Couldn't update with userId, trying email...", err);
-            return searchAndUpdateInUsers(editing, updateData);
-          });
-        } else {
-          // No userId, search by email or orderId
-          return searchAndUpdateInUsers(editing, updateData);
-        }
+      users.forEach(u => {
+        const userOrderRef = db.collection("users").doc(u.id).collection("orders").doc(orderId);
+        promises.push(
+          userOrderRef.get().then(snap => {
+            if (snap.exists) {
+              foundInUsers = true;
+              return userOrderRef.update(updateData);
+            }
+            return Promise.resolve();
+          })
+        );
       });
-    } else {
-      // Order not in /orders, search in all users
-      return searchAndUpdateInUsers(editing, updateData);
-    }
-  })
-  .then((result) => {
-    ms.disabled = false;
-    ms.innerHTML = ot;
-    
-    if (result && result.updatedInUser) {
-      toast(`Order updated (User: ${result.userId ? '✓' : 'found via email'})`);
-    } else {
-      toast("Order updated in admin view");
-    }
-    
-    m.classList.remove("show");
-  })
-  .catch((err) => {
-    ms.disabled = false;
-    ms.innerHTML = ot;
-    console.error("Save error:", err);
-    toast("Save failed: " + err.message, "error");
-  });
-}
 
-
-function apply() {
-  let x = [...orders];
-  const st = fs.value;
-  const d = fd.value;
-  const q = si.value.toLowerCase();
-
-  // STATUS filter
-  if (st !== "all") {
-    x = x.filter(o => (o.status || "").toLowerCase() === st);
+      return Promise.all(promises).then(() => {
+        return { updatedInUser: foundInUsers };
+      });
+    });
   }
 
-  // DATE filter
-  if (d !== "all") {
-    const now = Date.now();
-    let start = null;
+  // SAVE FUNCTION
+  function save() {
+    if (!editing) return;
 
-if (d === "today") {
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  start = today.getTime();
-}
+    const st = document.getElementById("ov-modal-status").value;
+    ms.disabled = true;
 
-if (d === "week") start = now - 7 * 864e5;
-if (d === "month") start = now - 30 * 864e5;
+    const ot = ms.innerHTML;
+    ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-    if (start !== null) {
-      x = x.filter(o => o._created >= start);
+    const rootRef = db.collection("orders").doc(editing);
+    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+    const updateData = {
+      status: st,
+      updatedAt: timestamp
+    };
+
+    if (st === 'confirmed') {
+      updateData.confirmedAt = timestamp;
+    } else if (st === 'shipped') {
+      updateData.shippedAt = timestamp;
+    } else if (st === 'out-for-delivery' || st === 'out for delivery') {
+      updateData.outForDeliveryAt = timestamp;
+    } else if (st === 'delivered') {
+      updateData.deliveredAt = timestamp;
     }
+
+    rootRef.get().then(doc => {
+      if (doc.exists) {
+        const orderData = doc.data();
+
+        return rootRef.update(updateData).then(() => {
+          if (orderData.userId) {
+            const userOrderRef = db.collection("users").doc(orderData.userId)
+              .collection("orders").doc(editing);
+
+            return userOrderRef.update(updateData).then(() => {
+              return { updatedInUser: true, userId: orderData.userId };
+            }).catch(err => {
+              console.log("Couldn't update with userId, trying email...", err);
+              return searchAndUpdateInUsers(editing, updateData);
+            });
+          } else {
+            return searchAndUpdateInUsers(editing, updateData);
+          }
+        });
+      } else {
+        return searchAndUpdateInUsers(editing, updateData);
+      }
+    })
+    .then((result) => {
+      ms.disabled = false;
+      ms.innerHTML = ot;
+
+      if (result && result.updatedInUser) {
+        toast(`Order updated (User: ${result.userId ? '✓' : 'found via email'})`);
+      } else {
+        toast("Order updated in admin view");
+      }
+
+      m.classList.remove("show");
+    })
+    .catch((err) => {
+      ms.disabled = false;
+      ms.innerHTML = ot;
+      console.error("Save error:", err);
+      toast("Save failed: " + err.message, "error");
+    });
   }
 
-  // SEARCH filter → now uses FAST precomputed fields
-  if (q) {
-    x = x.filter(o => 
-      o.id.toLowerCase().includes(q) ||
-      o._name.toLowerCase().includes(q) ||
-      o._email.includes(q)
-    );
-  }
+  function apply() {
+    let x = [...orders];
+    const st = fs.value;
+    const d = fd.value;
+    const q = si.value.toLowerCase();
 
-  filtered = x;
-  requestAnimationFrame(() => list(x)); 
-}
+    // STATUS filter
+    if (st !== "all") {
+      x = x.filter(o => (o.status || "").toLowerCase() === st);
+    }
+
+    // DATE filter
+    if (d !== "all") {
+      const now = Date.now();
+      let start = null;
+
+      if (d === "today") {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        start = today.getTime();
+      }
+
+      if (d === "week") start = now - 7 * 864e5;
+      if (d === "month") start = now - 30 * 864e5;
+
+      if (start !== null) {
+        x = x.filter(o => o._created >= start);
+      }
+    }
+
+    // SEARCH filter
+    if (q) {
+      x = x.filter(o =>
+        o.id.toLowerCase().includes(q) ||
+        o._name.toLowerCase().includes(q) ||
+        o._email.includes(q)
+      );
+    }
+
+    filtered = x;
+    requestAnimationFrame(() => list(x));
+  }
 
   function csv(x) {
     if (!x.length) {
@@ -1027,6 +1088,16 @@ if (d === "month") start = now - 30 * 864e5;
     toast("Export started");
   }
 
+  // Close image modal on background click
+  imbg.onclick = (e) => {
+    if (e.target === imbg) {
+      imbg.classList.remove("show");
+      imbg.setAttribute("aria-hidden", "true");
+      imi.src = "";
+    }
+  };
+
+  // Close modals clicking outside order modal
   document.addEventListener("click", (e) => {
     if (e.target === m) close();
   });
@@ -1036,7 +1107,7 @@ if (d === "month") start = now - 30 * 864e5;
   ms.onclick = save;
   fs.onchange = apply;
   fd.onchange = apply;
-si.oninput = debounce(apply, 300);
+  si.oninput = debounce(apply, 300);
   rb.onclick = () => {
     load();
     toast("Refreshing...", "info");
@@ -1045,4 +1116,4 @@ si.oninput = debounce(apply, 300);
 
   load();
 })();
-</script>
+  </script>
