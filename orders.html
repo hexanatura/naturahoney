@@ -10,13 +10,23 @@
   box-sizing: border-box;
 }
 
+:root {
+  --dark: #1a1a1a;
+  --muted: #666;
+  --border: #e5e7eb;
+  --shadow: 0 2px 10px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --success: #10b981;
+  --secondary: #fff;
+}
+
 .orders-view {
   padding: 22px;
   background: #fff;
   min-height: 100vh;
 }
 
-  .actions-container {
+.actions-container {
   display: flex;
   justify-content: flex-end;
   gap: 4px;
@@ -91,7 +101,7 @@
   animation: fadeIn 0.3s ease;
 }
 
-/* Reduce modal font sizes */
+/* Modal body styling */
 .orders-modal .modal-body {
   font-size: 0.85rem;
 }
@@ -103,7 +113,6 @@
 .orders-modal .modal-body div {
   font-size: 0.85rem;
 }
-
 
 .image-zoom-modal.show {
   display: flex;
@@ -223,6 +232,11 @@
   border: none;
   cursor: pointer;
   font-weight: 700;
+  transition: background 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: #333;
 }
 
 .btn-ghost {
@@ -232,6 +246,11 @@
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background: #f5f5f5;
 }
 
 .table-card {
@@ -299,12 +318,188 @@
   justify-content: center;
   font-size: 0.95rem;
   vertical-align: middle;
+  transition: background 0.2s ease;
+}
+
+.action-btn:hover {
+  background: #f5f5f5;
 }
 
 .action-btn .fa-eye { color: var(--dark); }
 .action-btn .fa-edit { color: var(--success); }
 
-/* Fixed: Action buttons container */
+/* Copy button styles */
+.copy-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.copy-btn:hover {
+  background: #f5f5f5;
+  color: var(--dark);
+}
+
+.copy-btn.copied {
+  color: var(--success);
+  background: rgba(16,185,129,0.1);
+}
+
+.copyable-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.copyable-field:last-child {
+  border-bottom: none;
+}
+
+.field-content {
+  flex: 1;
+  word-break: break-word;
+  padding-right: 8px;
+}
+
+/* Responsive modal content */
+.modal-content-grid {
+  display: grid;
+  gap: 16px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.modal-grid-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.modal-section {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.modal-section-title {
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Order items styling */
+.order-items-container {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.order-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.order-item:hover {
+  background: #f9f9f9;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.order-item-image {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.order-item-details {
+  flex: 1;
+}
+
+.order-item-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.order-item-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.order-item-price {
+  flex-shrink: 0;
+  text-align: right;
+  min-width: 120px;
+}
+
+.order-item-total {
+  font-weight: 700;
+  color: var(--dark);
+  font-size: 1rem;
+}
+
+/* Address section */
+.address-box {
+  background: #f9f9f9;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 4px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Status select */
+.status-select {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 100%;
+  margin-top: 4px;
+  background: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: var(--dark);
+}
+
 .actions-container {
   display: flex;
   justify-content: flex-end;
@@ -410,7 +605,8 @@
   to { opacity: 1; }
 }
 
-@media (max-width:1023px) {
+/* Responsive styles */
+@media (max-width: 1023px) {
   .table-wrapper { display: none; }
   .mobile-cards { display: flex; flex-direction: column; }
   .orders-controls { width: 100%; flex-direction: column; }
@@ -419,28 +615,88 @@
     width: 100%;
     max-width: 100%;
   }
+  .orders-modal {
+    max-width: 90%;
+  }
 }
 
-@media (max-width:768px) {
+@media (max-width: 768px) {
   .orders-title { font-size: 1.1rem; }
   .orders-sub { font-size: 0.85rem; }
   .orders-card { padding: 12px; }
-  .orders-modal { width: 100%; max-width: 90%; }
+  .modal-grid-row {
+    grid-template-columns: 1fr;
+  }
+  .order-item-price {
+    min-width: 100px;
+  }
+  .copyable-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .field-content {
+    padding-right: 0;
+    width: 100%;
+  }
 }
 
-@media (max-width:480px) {
-  .orders-view { padding: 14px; }
+@media (max-width: 640px) {
+  .orders-view { padding: 16px; }
+  .orders-card { padding: 12px; }
+  .orders-modal {
+    width: calc(100% - 20px);
+    max-width: 100%;
+  }
+  .modal-section {
+    padding: 12px;
+  }
+  .order-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  .order-item-price {
+    text-align: center;
+    min-width: auto;
+  }
+  .order-item-meta {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders-view { padding: 12px; }
   .orders-card { padding: 10px; }
   .orders-table td,
   .orders-table th {
     padding: 8px 10px;
   }
-  .orders-modal {
-    width: calc(100% - 20px);
+  .orders-modal .modal-header,
+  .orders-modal .modal-body,
+  .orders-modal .modal-footer {
+    padding: 12px;
   }
   .product-image-large {
     max-width: 100%;
     max-height: 80vh;
+  }
+  .btn-primary, .btn-ghost {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile specific */
+@media (max-width: 360px) {
+  .orders-view { padding: 8px; }
+  .orders-title { font-size: 1rem; }
+  .filter-select, .search-box {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+  .modal-title-bold {
+    font-size: 0.85rem;
   }
 }
 </style>
@@ -605,7 +861,6 @@
     xb = document.getElementById("ov-export"),
     tw = document.getElementById("oh-toast"),
     tt = document.getElementById("oh-toast-text"),
-    // Image zoom modal elements
     imgZoomModal = document.getElementById("imageZoomModal"),
     imgZoomClose = document.getElementById("imageZoomClose"),
     zoomedImage = document.getElementById("zoomedImage"),
@@ -641,9 +896,7 @@
     return x.toLocaleDateString("en-IN");
   }
 
-  // Fixed: Added status class for "out for delivery"
   function sc(s) {
-    // Convert any variation to standard class name
     const statusMap = {
       'pending': 'pending',
       'confirmed': 'confirmed',
@@ -656,6 +909,39 @@
     
     const normalizedStatus = statusMap[s?.toLowerCase()] || 'pending';
     return "status-" + normalizedStatus;
+  }
+
+  // Copy to clipboard function
+  function copyToClipboard(text, button) {
+    navigator.clipboard.writeText(text).then(() => {
+      const originalHTML = button.innerHTML;
+      button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+      button.classList.add('copied');
+      
+      setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('copied');
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      toast('Failed to copy text', 'error');
+    });
+  }
+
+  // Create copyable field HTML
+  function createCopyableField(label, value, id) {
+    const safeValue = esc(value || "—");
+    return `
+      <div class="copyable-field">
+        <div class="field-content">
+          <div class="modal-title-bold">${esc(label)}</div>
+          <div>${safeValue}</div>
+        </div>
+        <button class="copy-btn" onclick="copyToClipboard('${esc(value || "")}', this)">
+          <i class="far fa-copy"></i> Copy
+        </button>
+      </div>
+    `;
   }
 
   // Image zoom functions
@@ -671,14 +957,12 @@
     document.body.style.overflow = 'auto';
   }
 
-imgZoomModal.addEventListener('click', function (e) {
-  // Close if clicked background OR close button (including icon inside)
-  if (e.target === imgZoomModal || e.target.closest('#imageZoomClose')) {
-    closeImageZoom();
-  }
-});
+  imgZoomModal.addEventListener('click', function (e) {
+    if (e.target === imgZoomModal || e.target.closest('#imageZoomClose')) {
+      closeImageZoom();
+    }
+  });
 
-  // Close with Escape key
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && imgZoomModal.classList.contains('show')) {
       closeImageZoom();
@@ -737,7 +1021,6 @@ imgZoomModal.addEventListener('click', function (e) {
           ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
           : o.email || "Customer";
 
-        // Create items preview with first product image
         let itemsPreview = 'No items';
         if (it > 0) {
           const firstItem = o.items[0];
@@ -762,7 +1045,6 @@ imgZoomModal.addEventListener('click', function (e) {
           `;
         }
 
-        // Fixed: Added proper status display
         const statusDisplay = o.status === 'out for delivery' ? 'out for delivery' : (o.status || "pending");
 
         return `
@@ -793,7 +1075,6 @@ imgZoomModal.addEventListener('click', function (e) {
             <td>
               <span class="status-pill ${sc(o.status)}">${esc(statusDisplay)}</span>
             </td>
-            <!-- FIXED: Action buttons in same line -->
             <td style="text-align:right">
               <div class="actions-container">
                 <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
@@ -809,7 +1090,6 @@ imgZoomModal.addEventListener('click', function (e) {
       })
       .join("");
 
-    // Add click event listeners to all product images
     setTimeout(() => {
       document.querySelectorAll('.product-image-small[data-image]').forEach(img => {
         img.addEventListener('click', function(e) {
@@ -859,7 +1139,7 @@ imgZoomModal.addEventListener('click', function (e) {
           .join(", ")
       : "No address";
 
-    // Create items HTML with product images
+    // Create items HTML
     const itemsHtml = (o.items || [])
       .map((i, index) => {
         const productImage = i.image || 
@@ -868,129 +1148,111 @@ imgZoomModal.addEventListener('click', function (e) {
                             'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022';
         
         return `
-          <div style="display:flex;gap:12px;align-items:center;padding:12px;border-bottom:1px solid var(--border);background:#fff;cursor:pointer;" 
+          <div class="order-item" 
                data-image="${esc(productImage)}" 
                data-name="${esc(i.name)}"
-               onclick="(function() {
-                 const img = this.getAttribute('data-image');
-                 const name = this.getAttribute('data-name');
-                 openImageZoom(img, name);
-               }).call(this)">
-            <div style="flex-shrink:0">
-              <img src="${esc(productImage)}" 
-                   alt="${esc(i.name)}" 
-                   class="product-image-small"
-                   style="cursor:pointer"
-                   onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
-            </div>
-            <div style="flex:1">
-              <div style="font-weight:700;font-size:0.95rem;margin-bottom:4px">${esc(i.name)}</div>
-              <div style="display:flex;gap:12px;font-size:0.85rem;color:var(--muted);margin-bottom:4px">
+               onclick="openImageZoom('${esc(productImage)}', '${esc(i.name)}')">
+            <img src="${esc(productImage)}" 
+                 alt="${esc(i.name)}" 
+                 class="order-item-image"
+                 onerror="this.onerror=null; this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+            <div class="order-item-details">
+              <div class="order-item-name">${esc(i.name)}</div>
+              <div class="order-item-meta">
                 <span>${esc(i.weight || "")}</span>
                 <span>•</span>
                 <span>Price: ₹${i.price ? Number(i.price).toFixed(2) : '0.00'}</span>
               </div>
             </div>
-            <div style="flex-shrink:0;text-align:right">
-              <div style="font-weight:700;margin-bottom:4px">x${i.quantity || 1}</div>
-              <div style="font-weight:700;color:var(--dark)">
+            <div class="order-item-price">
+              <div style="margin-bottom:4px">x${i.quantity || 1}</div>
+              <div class="order-item-total">
                 ₹${(i.price * (i.quantity || 1)).toFixed(2)}
               </div>
             </div>
           </div>
         `;
       })
-      .join("") || '<div class="muted" style="padding:12px;text-align:center">No items</div>';
+      .join("") || '<div class="order-item"><div class="muted" style="text-align:center;width:100%;padding:20px 0">No items</div></div>';
 
     mb.innerHTML = `
-      <div style="display:grid;gap:16px;max-height:70vh;overflow-y:auto;padding-right:4px;">
-        <!-- Order ID -->
-        <div>
-          <div class="modal-title-bold">Order ID</div>
-          <div style="font-family:monospace;background:#f5f5f5;padding:8px 12px;border-radius:8px;border:1px solid var(--border);">
-            #${esc(sid(id))}
+      <div class="modal-content-grid">
+        <!-- Order Information -->
+        <div class="modal-section">
+          <div class="modal-section-title">
+            Order Information
+            <button class="copy-btn" onclick="copyToClipboard('#${sid(id)}', this)">
+              <i class="far fa-copy"></i> Copy All
+            </button>
+          </div>
+          
+          ${createCopyableField("Order ID", `#${sid(id)}`, "order-id")}
+          ${createCopyableField("Order Date", fdn(o.createdAt), "order-date")}
+          ${createCopyableField("Total Amount", `₹${Number(o.total || 0).toFixed(2)}`, "order-total")}
+          ${createCopyableField("Payment Method", o.paymentMethod || "Cash on Delivery", "payment-method")}
+          
+          <div style="margin-top:16px">
+            <div class="modal-title-bold">Order Status</div>
+            <select id="ov-modal-status" class="status-select">
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="shipped">Shipped</option>
+              <option value="out-for-delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
         </div>
 
         <!-- Customer Information -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div>
-            <div class="modal-title-bold">Customer Name</div>
-            <div style="padding:8px 0">${esc(
-              o.shippingAddress
-                ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
-                : o.email || "—"
-            )}</div>
-          </div>
-          <div>
-            <div class="modal-title-bold">Customer Email</div>
-            <div style="padding:8px 0">${esc(o.email || "—")}</div>
-          </div>
-        </div>
-
-        <!-- Contact Information -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div>
-            <div class="modal-title-bold">Phone Number</div>
-            <div style="padding:8px 0">${esc(o.shippingAddress?.phone || "—")}</div>
-          </div>
-          <div>
-            <div class="modal-title-bold">Order Date</div>
-            <div style="padding:8px 0">${fdn(o.createdAt)}</div>
-          </div>
-        </div>
-
-        <!-- Order Details -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div>
-            <div class="modal-title-bold">Total Amount</div>
-            <div style="font-weight:700;font-size:1.2rem;padding:8px 0;color:var(--dark)">
-              ₹${Number(o.total || 0).toFixed(2)}
+        <div class="modal-section">
+          <div class="modal-section-title">Customer Information</div>
+          <div class="modal-grid-row">
+            <div>
+              ${createCopyableField("Customer Name", 
+                o.shippingAddress ? 
+                `${o.shippingAddress.firstName} ${o.shippingAddress.lastName}` : 
+                o.email || "—", "customer-name")}
+              ${createCopyableField("Email", o.email || "—", "customer-email")}
+            </div>
+            <div>
+              ${createCopyableField("Phone Number", o.shippingAddress?.phone || "—", "customer-phone")}
+              ${o.userId ? createCopyableField("User ID", o.userId, "user-id") : ''}
             </div>
           </div>
-          <div>
-            <div class="modal-title-bold">Payment Method</div>
-            <div style="padding:8px 0">${esc(o.paymentMethod || "Cash on Delivery")}</div>
-          </div>
-        </div>
-
-        <!-- Order Status -->
-        <div>
-          <div class="modal-title-bold">Order Status</div>
-          <select id="ov-modal-status" 
-                  style="padding:10px;border:1px solid var(--border);border-radius:8px;width:100%;margin-top:4px;background:#fff;">
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="out-for-delivery">Out for Delivery</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
         </div>
 
         <!-- Shipping Address -->
-        <div>
-          <div class="modal-title-bold">Shipping Address</div>
-          <div style="background:#f9f9f9;padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:4px;">
-            ${esc(ad)}
+        <div class="modal-section">
+          <div class="modal-section-title">
+            Shipping Address
+            <button class="copy-btn" onclick="copyToClipboard('${esc(ad)}', this)">
+              <i class="far fa-copy"></i> Copy
+            </button>
           </div>
+          <div class="address-box">${esc(ad)}</div>
         </div>
 
         <!-- Order Items -->
-        <div>
-          <div class="modal-title-bold">Order Items (${(o.items || []).length})</div>
-          <div style="margin-top:4px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+        <div class="modal-section">
+          <div class="modal-section-title">
+            Order Items (${(o.items || []).length})
+          </div>
+          <div class="order-items-container">
             ${itemsHtml}
           </div>
         </div>
 
         <!-- Additional Notes -->
         ${o.notes ? `
-          <div>
-            <div class="modal-title-bold">Additional Notes</div>
-            <div style="background:#f9f9f9;padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:4px;">
-              ${esc(o.notes)}
+          <div class="modal-section">
+            <div class="modal-section-title">
+              Additional Notes
+              <button class="copy-btn" onclick="copyToClipboard('${esc(o.notes)}', this)">
+                <i class="far fa-copy"></i> Copy
+              </button>
             </div>
+            <div class="address-box">${esc(o.notes)}</div>
           </div>
         ` : ''}
       </div>
@@ -1003,8 +1265,9 @@ imgZoomModal.addEventListener('click', function (e) {
     m.classList.add("show");
   }
 
-  // Make openImageZoom function globally accessible for inline onclick handlers
+  // Make functions globally accessible
   window.openImageZoom = openImageZoom;
+  window.copyToClipboard = copyToClipboard;
 
   function getDefaultProductImage(productName) {
     const productImages = {
