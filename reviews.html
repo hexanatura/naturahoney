@@ -1,9 +1,4 @@
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-    
     <style>
     
     * {
@@ -627,24 +622,9 @@
         <i class="fas fa-check-circle"></i>
         <span id="rv-toast-text">Saved successfully!</span>
     </div>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    
+
     <script>
     (function(){
-        // Firebase config
-        const config = {
-            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-            authDomain: "hexahoney-96aed.firebaseapp.com",
-            projectId: "hexahoney-96aed",
-            storageBucket: "hexahoney-96aed.firebasestorage.app",
-            messagingSenderId: "700458850837",
-            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-        };
-        
-        if(!firebase.apps.length) firebase.initializeApp(config);
-        const db = firebase.firestore();
         
         // DOM Elements
         const tbody = document.getElementById('rv-tbody');
