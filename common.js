@@ -1,4 +1,3 @@
-// Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
     authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -9,19 +8,16 @@ const firebaseConfig = {
     measurementId: "G-MQGKK9709H"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Global State variables
 let currentUser = null;
 let likedProducts = [];
 let cartProducts = [];
 let userOrders = [];
 let currentModalView = 'login';
 
-// Product data (common across pages)
 const products = [
     { 
         id: 1, 
@@ -73,7 +69,6 @@ const products = [
     }
 ];
 
-// DOM Elements (common across pages)
 const notificationBar = document.getElementById('notificationBar');
 const navBar = document.getElementById('navBar');
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -87,14 +82,11 @@ const userIcon = document.getElementById('userIcon');
 const userDropdown = document.getElementById('userDropdown');
 const profileLink = document.getElementById('profileLink');
 const logoutLink = document.getElementById('logoutLink');
-
-// Sidebars and Modals
 const likesSidebar = document.getElementById('likesSidebar');
 const closeLikes = document.getElementById('closeLikes');
 const likesItems = document.getElementById('likesItems');
 const emptyLikes = document.getElementById('emptyLikes');
 const browseProducts = document.getElementById('browseProducts');
-
 const cartSidebar = document.getElementById('cartSidebar');
 const closeCart = document.getElementById('closeCart');
 const cartItems = document.getElementById('cartItems');
@@ -102,14 +94,12 @@ const emptyCart = document.getElementById('emptyCart');
 const cartSummary = document.getElementById('cartSummary');
 const checkoutBtn = document.getElementById('checkoutBtn');
 const continueShopping = document.getElementById('continueShopping');
-
 const overlay = document.getElementById('overlay');
 const loginModal = document.getElementById('loginModal');
 const closeLogin = document.getElementById('closeLogin');
 const backBtn = document.getElementById('backBtn');
 const modalTitle = document.getElementById('modalTitle');
 const modalSubtitle = document.getElementById('modalSubtitle');
-
 const loginForm = document.getElementById('loginForm');
 const signupForm = document.getElementById('signupForm');
 const forgotForm = document.getElementById('forgotForm');
@@ -122,17 +112,16 @@ const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
 
-// =============================================
-// ORDER TRACKING FUNCTIONS
-// =============================================
-
-// Function to open order tracking with specific order
 function showOrderTracking(orderId) {
     const orderTrackingSection = document.getElementById('orderTrackingSection');
+    
+    if (!orderTrackingSection) {
+        window.location.href = `index.html?track=${orderId}`;
+        return;
+    }
     const profilePage = document.getElementById('profilePage');
     const mainContent = document.getElementById('mainContent');
     
-    // Hide other sections
     if (profilePage && profilePage.classList.contains('active')) {
         profilePage.classList.remove('active');
     }
@@ -140,242 +129,529 @@ function showOrderTracking(orderId) {
         mainContent.style.display = 'none';
     }
     
-    // Show order tracking
     if (orderTrackingSection) {
         orderTrackingSection.classList.add('active');
         
-        // Load the order data
+        window.scrollTo(0, 0);
+        
+        const orderIdElement = document.getElementById('tracking-order-id');
+        const orderDateElement = document.getElementById('tracking-order-date');
+        
+        if (orderIdElement) orderIdElement.textContent = 'Loading...';
+        if (orderDateElement) orderDateElement.textContent = 'Loading...';
+        
         if (orderId) {
             loadOrderTrackingData(orderId);
+        } else {
+            showTrackingError("No order ID provided");
         }
+    } else {
+        console.error("Order tracking section not found!");
     }
 }
 
-// Close order tracking
 function closeOrderTracking() {
     const orderTrackingSection = document.getElementById('orderTrackingSection');
     const mainContent = document.getElementById('mainContent');
+    const profilePage = document.getElementById('profilePage');
     
     if (orderTrackingSection) {
         orderTrackingSection.classList.remove('active');
     }
-    if (mainContent) {
+    
+    if (profilePage) {
+        profilePage.classList.add('active');
+        if (mainContent) {
+            mainContent.style.display = 'none';
+        }
+    } else if (mainContent) {
         mainContent.style.display = 'block';
     }
+    
+    window.scrollTo(0, 0);
 }
 
-// Load order tracking data from Firebase
 function loadOrderTrackingData(orderId) {
-    if (!orderId) return;
-    
-    // Show loading state
-    document.getElementById('tracking-order-id').textContent = 'Loading...';
-    document.getElementById('tracking-order-date').textContent = 'Loading...';
-    document.getElementById('tracking-estimated-delivery').textContent = 'Loading...';
-    
-    const db = firebase.firestore();
-    
-    // First try to find order in main orders collection
-    db.collection("orders").doc(orderId).get()
-        .then((doc) => {
-            if (doc.exists) {
-                displayOrderTrackingData(doc.data(), orderId);
-            } else {
-                // If not found in main orders, search in user orders
-                searchOrderInUserCollections(orderId);
-            }
-        })
-        .catch((error) => {
-            console.error("Error loading order:", error);
-            showTrackingError("Failed to load order details");
-        });
-}
-
-// Search for order in user collections
-function searchOrderInUserCollections(orderId) {
-    const db = firebase.firestore();
+    if (!orderId) {
+        showTrackingError("No order ID provided");
+        return;
+    }
     
     if (!currentUser) {
         showTrackingError("Please log in to view order details");
         return;
     }
     
+    const itemsContainer = document.getElementById('tracking-order-items');
+    if (itemsContainer) {
+        itemsContainer.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading order details...</p></div>';
+    }
+    
+    const totalElement = document.getElementById('tracking-total');
+    if (totalElement) {
+        totalElement.textContent = '₹0.00';
+    }
+    
+    const db = firebase.firestore();
+    
     db.collection("users").doc(currentUser.uid).collection("orders").doc(orderId).get()
-        .then((orderDoc) => {
-            if (orderDoc.exists) {
-                displayOrderTrackingData(orderDoc.data(), orderId);
+        .then((doc) => {
+            if (doc.exists) {
+                const orderData = doc.data();
+                orderData.id = doc.id;
+                displayOrderTrackingData(orderData);
             } else {
-                showTrackingError("Order not found");
+                searchOrderByNumber(orderId);
             }
         })
         .catch((error) => {
-            console.error("Error searching user orders:", error);
-            showTrackingError("Failed to search for order");
+            console.error("Error loading order:", error);
+            searchOrderByNumber(orderId);
         });
 }
 
-// Display order tracking data
-function displayOrderTrackingData(orderData, orderId) {
-    // Update order info
-    document.getElementById('tracking-order-id').textContent = `#${orderId.substring(0, 8).toUpperCase()}`;
+function updateStepDates(orderData) {
+    const stepDates = {
+        'ordered': orderData.createdAt || orderData.orderDate,
+        'confirmed': orderData.confirmedAt || (orderData.status === 'confirmed' ? orderData.updatedAt : null),
+        'shipped': orderData.shippedAt || (orderData.status === 'shipped' ? orderData.updatedAt : null),
+        'out-for-delivery': orderData.outForDeliveryAt || (orderData.status === 'out-for-delivery' ? orderData.updatedAt : null),
+        'delivered': orderData.deliveredAt || (orderData.status === 'delivered' ? orderData.updatedAt : null)
+    };
     
-    // Format and display dates
-    if (orderData.createdAt) {
-        const orderDate = orderData.createdAt.toDate ? orderData.createdAt.toDate() : new Date(orderData.createdAt);
-        document.getElementById('tracking-order-date').textContent = formatDate(orderDate);
-        
-        // Calculate estimated delivery (7 days from order date)
-        const estimatedDate = new Date(orderDate);
-        estimatedDate.setDate(estimatedDate.getDate() + 7);
-        document.getElementById('tracking-estimated-delivery').textContent = formatDate(estimatedDate);
-    } else {
-        document.getElementById('tracking-order-date').textContent = 'N/A';
-        document.getElementById('tracking-estimated-delivery').textContent = 'N/A';
-    }
-    
-    // Update status timeline
-    updateStatusTimeline(orderData);
-    
-    // Update order items and summary
-    updateOrderDetails(orderData);
-    
-    // Update progress bar
-    updateProgressBar(orderData.status);
+    Object.keys(stepDates).forEach(step => {
+        const dateElement = document.getElementById(`step-${step}-date`);
+        if (dateElement) {
+            const date = stepDates[step];
+            if (date) {
+                try {
+                    let dateObj;
+                    if (date.toDate) {
+                        dateObj = date.toDate();
+                    } else if (date instanceof Date) {
+                        dateObj = date;
+                    } else {
+                        dateObj = new Date(date);
+                    }
+                    dateElement.textContent = formatDate(dateObj);
+                } catch (e) {
+                    console.error("Error formatting date for step", step, e);
+                    dateElement.textContent = 'Date not available';
+                }
+            } else {
+                dateElement.textContent = 'Pending';
+            }
+        }
+    });
 }
 
-// Update status timeline based on order data
-function updateStatusTimeline(orderData) {
-    // Reset all steps
-    const steps = ['placed', 'confirmed', 'processing', 'shipped', 'delivered'];
-    steps.forEach(step => {
-        const stepElement = document.getElementById(`step-${step}`);
-        const dateElement = document.getElementById(`date-${step}`);
+function formatDate(date) {
+    if (!date) return 'N/A';
+    
+    try {
+        if (!(date instanceof Date)) {
+            date = new Date(date);
+        }
         
+        if (isNaN(date.getTime())) {
+            return 'Invalid date';
+        }
+        
+        return date.toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+    } catch (e) {
+        console.error("Error formatting date:", e);
+        return 'N/A';
+    }
+}
+
+function updateProgressBar(status) {
+    const progressBar = document.getElementById('order-progress-bar');
+    if (!progressBar) return;
+    
+    // Remove all existing progress classes
+    progressBar.classList.remove('step-0', 'step-25', 'step-50', 'step-75', 'step-100');
+    
+    // Map status to CSS class
+    const progressClassMap = {
+        'pending': 'step-0',
+        'ordered': 'step-0',
+        'confirmed': 'step-25',
+        'processing': 'step-25',
+        'shipped': 'step-50',
+        'out-for-delivery': 'step-75',
+        'out for delivery': 'step-75',
+        'delivered': 'step-100'
+    };
+    
+    const progressClass = progressClassMap[status] || 'step-0';
+    progressBar.classList.add(progressClass);
+}window.addEventListener('resize', function() {
+    const status = document.querySelector('.status-step.active .step-label')?.textContent?.toLowerCase();
+    if (status) {
+        updateProgressBar(status);
+    }
+});
+
+function handleResize() {
+    const activeStep = document.querySelector('.status-step.active');
+    if (activeStep) {
+        const stepId = activeStep.id;
+        let status = '';
+        
+        if (stepId.includes('ordered')) status = 'ordered';
+        else if (stepId.includes('confirmed')) status = 'confirmed';
+        else if (stepId.includes('shipped')) status = 'shipped';
+        else if (stepId.includes('out-for-delivery')) status = 'out-for-delivery';
+        else if (stepId.includes('delivered')) status = 'delivered';
+        
+        if (status) {
+            updateProgressBar(status);
+        }
+    }
+}
+
+window.addEventListener('resize', handleResize);
+
+function updateStatusTimeline(orderData) {
+    const status = orderData.status || 'pending';
+    
+    const statuses = ['ordered', 'confirmed', 'shipped', 'out-for-delivery', 'delivered'];
+    
+    statuses.forEach((step) => {
+        const stepElement = document.getElementById(`step-${step}`);
         if (stepElement) {
             stepElement.classList.remove('completed', 'active');
         }
-        if (dateElement) {
-            dateElement.textContent = '-';
-        }
     });
     
-    // Set status dates from order data
-    if (orderData.statusDates) {
-        Object.keys(orderData.statusDates).forEach(status => {
-            const dateElement = document.getElementById(`date-${status}`);
-            if (dateElement && orderData.statusDates[status]) {
-                const statusDate = orderData.statusDates[status].toDate ? 
-                    orderData.statusDates[status].toDate() : new Date(orderData.statusDates[status]);
-                dateElement.textContent = formatDateTime(statusDate);
-            }
-        });
+    let activeStepIndex = -1;
+    
+    switch(status.toLowerCase()) {
+        case 'ordered':
+        case 'pending':
+            activeStepIndex = 0;
+            break;
+        case 'confirmed':
+        case 'processing':
+            activeStepIndex = 1;
+            break;
+        case 'shipped':
+            activeStepIndex = 2;
+            break;
+        case 'out-for-delivery':
+            activeStepIndex = 3;
+            break;
+        case 'delivered':
+            activeStepIndex = 4;
+            break;
+        default:
+            activeStepIndex = 0;
     }
     
-    // Set current status
-    const currentStatus = orderData.status || 'pending';
-    const statusOrder = {
-        'pending': ['placed'],
-        'confirmed': ['placed', 'confirmed'],
-        'processing': ['placed', 'confirmed', 'processing'],
-        'shipped': ['placed', 'confirmed', 'processing', 'shipped'],
-        'delivered': ['placed', 'confirmed', 'processing', 'shipped', 'delivered']
-    };
-    
-    const completedSteps = statusOrder[currentStatus] || [];
-    
-    completedSteps.forEach(step => {
-        const stepElement = document.getElementById(`step-${step}`);
+    for (let i = 0; i <= activeStepIndex; i++) {
+        const stepElement = document.getElementById(`step-${statuses[i]}`);
         if (stepElement) {
             stepElement.classList.add('completed');
         }
-    });
+    }
     
-    // Set active step (if not delivered)
-    if (currentStatus !== 'delivered' && completedSteps.length > 0) {
-        const activeStep = completedSteps[completedSteps.length - 1];
-        const stepElement = document.getElementById(`step-${activeStep}`);
-        if (stepElement) {
-            stepElement.classList.add('active');
+    if (activeStepIndex >= 0) {
+        const activeStepElement = document.getElementById(`step-${statuses[activeStepIndex]}`);
+        if (activeStepElement) {
+            activeStepElement.classList.add('active');
         }
     }
+    
+    updateProgressBar(status);
 }
 
-// Update progress bar based on status
-function updateProgressBar(status) {
-    const progressBar = document.getElementById('progressBar');
-    if (!progressBar) return;
+function searchOrderByNumber(orderNumber) {
+    const db = firebase.firestore();
     
-    const progressMap = {
-        'pending': 0,
-        'confirmed': 25,
-        'processing': 50,
-        'shipped': 75,
-        'delivered': 100
-    };
+    const cleanOrderNumber = orderNumber.replace('#', '').toUpperCase();
     
-    const progressPercentage = progressMap[status] || 0;
+    db.collection("users").doc(currentUser.uid).collection("orders")
+        .where("orderNumber", "==", cleanOrderNumber)
+        .get()
+        .then((querySnapshot) => {
+            if (!querySnapshot.empty) {
+                const doc = querySnapshot.docs[0];
+                const orderData = doc.data();
+                orderData.id = doc.id;
+                displayOrderTrackingData(orderData);
+            } else {
+                searchAllOrders(orderNumber);
+            }
+        })
+        .catch((error) => {
+            console.error("Error searching by order number:", error);
+            searchAllOrders(orderNumber);
+        });
+}
+
+function searchAllOrders(searchTerm) {
+    const db = firebase.firestore();
     
-    if (window.innerWidth > 640) {
-        progressBar.style.width = `${progressPercentage}%`;
-    } else {
-        progressBar.style.height = `${progressPercentage}%`;
+    db.collection("users").doc(currentUser.uid).collection("orders").get()
+        .then((querySnapshot) => {
+            let foundOrder = null;
+            let foundOrderId = null;
+            
+            querySnapshot.forEach((doc) => {
+                const orderData = doc.data();
+                
+                if (doc.id === searchTerm || 
+                    doc.id.includes(searchTerm) ||
+                    (orderData.orderNumber && orderData.orderNumber.includes(searchTerm)) ||
+                    (orderData.id && orderData.id === searchTerm)) {
+                    
+                    foundOrder = orderData;
+                    foundOrderId = doc.id;
+                }
+            });
+            
+            if (foundOrder) {
+                foundOrder.id = foundOrderId;
+                displayOrderTrackingData(foundOrder);
+            } else {
+                showTrackingError("Order not found. Please check your order ID.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error searching all orders:", error);
+            showTrackingError("Error loading order: " + error.message);
+        });
+}
+
+function displayOrderTrackingData(orderData) {
+    if (!orderData) {
+        showTrackingError("No order data available");
+        return;
     }
+    
+    const orderIdElement = document.getElementById('tracking-order-id');
+    const orderDateElement = document.getElementById('tracking-order-date');
+    const orderTotalElement = document.getElementById('tracking-order-total');
+    
+    if (orderData.orderNumber) {
+        orderIdElement.textContent = `#${orderData.orderNumber}`;
+    } else if (orderData.id) {
+        orderIdElement.textContent = `#${orderData.id.substring(0, 8).toUpperCase()}`;
+    } else {
+        orderIdElement.textContent = `#ORD${Math.floor(100000 + Math.random() * 900000)}`;
+    }
+    
+    let orderDate;
+    if (orderData.createdAt) {
+        if (orderData.createdAt.toDate) {
+            orderDate = orderData.createdAt.toDate();
+        } else if (orderData.createdAt instanceof Date) {
+            orderDate = orderData.createdAt;
+        } else {
+            orderDate = new Date(orderData.createdAt);
+        }
+    } else if (orderData.orderDate) {
+        if (orderData.orderDate.toDate) {
+            orderDate = orderData.orderDate.toDate();
+        } else if (orderData.orderDate instanceof Date) {
+            orderDate = orderData.orderDate;
+        } else {
+            orderDate = new Date(orderData.orderDate);
+        }
+    } else if (orderData.timestamp) {
+        if (orderData.timestamp.toDate) {
+            orderDate = orderData.timestamp.toDate();
+        } else if (orderData.timestamp instanceof Date) {
+            orderDate = orderData.timestamp;
+        } else {
+            orderDate = new Date(orderData.timestamp);
+        }
+    } else {
+        orderDate = new Date();
+    }
+    
+    orderDateElement.textContent = formatDate(orderDate);
+    
+    if (orderTotalElement) {
+        if (orderData.total !== undefined && orderData.total !== null) {
+            orderTotalElement.textContent = `₹${parseFloat(orderData.total).toFixed(2)}`;
+        } else {
+            orderTotalElement.textContent = '₹0.00';
+        }
+    }
+    
+    updateStatusTimeline(orderData);
+    updateStepDates(orderData);
+    const status = orderData.status || 'pending';
+    updateProgressBar(status);
+    updateOrderDetails(orderData);
 }
 
-// Update order details section
+function showStepNotification(step, date) {
+    const toast = document.createElement('div');
+    toast.className = 'step-toast';
+    toast.innerHTML = `
+        <strong>${step}</strong><br>
+        <small>${date}</small>
+    `;
+    
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #5f2b27;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: fadeInUp 0.3s ease;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'fadeOutDown 0.3s ease';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
 function updateOrderDetails(orderData) {
-    const itemsContainer = document.getElementById('tracking-order-items');
+    const itemsContainer = document.getElementById('tracking-items-list');
     const subtotalElement = document.getElementById('tracking-subtotal');
     const shippingElement = document.getElementById('tracking-shipping');
     const totalElement = document.getElementById('tracking-total');
+    const estimatedDeliveryElement = document.getElementById('tracking-estimated-delivery');
     
-    if (!itemsContainer) return;
-    
-    // Clear existing items
-    itemsContainer.innerHTML = '';
-    
-    // Add order items
-    if (orderData.items && orderData.items.length > 0) {
-        orderData.items.forEach(item => {
-            const product = products.find(p => p.id === item.productId);
-            const itemElement = document.createElement('div');
-            itemElement.className = 'order-item';
-            itemElement.innerHTML = `
-                <div class="order-item-image">
-                    <i class="fas fa-jar"></i>
-                </div>
-                <div class="order-item-details">
-                    <div class="order-item-name">${product ? product.name : 'Product'}</div>
-                    <div class="order-item-meta">${product ? product.weight : ''} • Qty: ${item.quantity || 1}</div>
-                </div>
-                <div class="order-item-price">₹${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</div>
-            `;
-            itemsContainer.appendChild(itemElement);
-        });
-    } else {
-        itemsContainer.innerHTML = '<div class="muted">No items found</div>';
+    if (!itemsContainer) {
+        console.error("Items container not found!");
+        return;
     }
     
-    // Update summary
-    const subtotal = orderData.subtotal || orderData.total || 0;
-    const shipping = orderData.shipping || 0;
-    const total = orderData.total || subtotal + shipping;
+    itemsContainer.innerHTML = '';
     
-    if (subtotalElement) subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
-    if (shippingElement) shippingElement.textContent = `₹${shipping.toFixed(2)}`;
-    if (totalElement) totalElement.textContent = `₹${total.toFixed(2)}`;
+    let subtotal = 0;
+    
+    if (orderData.items && Array.isArray(orderData.items) && orderData.items.length > 0) {
+        orderData.items.forEach(item => {
+            const product = products.find(p => p.id === item.productId) || 
+                          products.find(p => p.id === item.id) || 
+                          { 
+                              name: item.name || 'Honey Product', 
+                              price: item.price || 0, 
+                              weight: item.weight || '',
+                              image: 'https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'
+                          };
+            
+            const itemTotal = (item.price || product.price || 0) * (item.quantity || 1);
+            subtotal += itemTotal;
+            
+            const itemHTML = `
+                <div class="tracking-item-card">
+                    <div class="tracking-item-img">
+                        <img src="${product.image}" alt="${product.name}" 
+                             onerror="this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+                    </div>
+                    <div class="tracking-item-details">
+                        <div class="tracking-item-name">${product.name}</div>
+                        <div class="tracking-item-meta">
+                            <span>${product.weight || ''}</span>
+                            <span>•</span>
+                            <span>Qty: ${item.quantity || 1}</span>
+                        </div>
+                        <div class="tracking-item-price">₹${itemTotal.toFixed(2)}</div>
+                    </div>
+                </div>
+            `;
+            itemsContainer.innerHTML += itemHTML;
+        });
+    }
+    
+    if (subtotalElement) {
+        subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+    }
+    
+    const shipping = orderData.shipping || orderData.shippingCost || 0;
+    if (shippingElement) {
+        shippingElement.textContent = `₹${parseFloat(shipping).toFixed(2)}`;
+    }
+    
+    const total = (orderData.total !== undefined && orderData.total !== null) 
+        ? parseFloat(orderData.total) 
+        : (parseFloat(subtotal) + parseFloat(shipping));
+    
+    if (totalElement) {
+        totalElement.textContent = `₹${total.toFixed(2)}`;
+    }
+    
+    const headerTotalElement = document.getElementById('tracking-order-total');
+    if (headerTotalElement) {
+        headerTotalElement.textContent = `₹${total.toFixed(2)}`;
+    }
+    
+    if (estimatedDeliveryElement) {
+        let orderDate;
+        if (orderData.createdAt) {
+            orderDate = orderData.createdAt.toDate ? orderData.createdAt.toDate() : new Date(orderData.createdAt);
+        } else if (orderData.orderDate) {
+            orderDate = orderData.orderDate.toDate ? orderData.orderDate.toDate() : new Date(orderData.orderDate);
+        } else {
+            orderDate = new Date();
+        }
+        
+        const estimatedDate = new Date(orderDate);
+        estimatedDate.setDate(estimatedDate.getDate() + 7);
+        
+        estimatedDeliveryElement.textContent = estimatedDate.toLocaleDateString('en-IN', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    }
 }
 
-// Utility functions for order tracking
-function formatDate(date) {
-    return date.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-    });
+function showTrackingError(message) {
+    console.error("Tracking Error:", message);
+    
+    const trackingOrderId = document.getElementById('tracking-order-id');
+    const trackingOrderDate = document.getElementById('tracking-order-date');
+    
+    if (trackingOrderId) trackingOrderId.textContent = 'Error';
+    if (trackingOrderDate) trackingOrderDate.textContent = 'N/A';
+    
+    const itemsContainer = document.getElementById('tracking-order-items');
+    if (itemsContainer) {
+        itemsContainer.innerHTML = `
+            <div class="error-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <div>${message}</div>
+            </div>
+        `;
+    }
+    
+    const totalElement = document.getElementById('tracking-total');
+    if (totalElement) {
+        totalElement.textContent = '₹0.00';
+    }
+    
+    if (typeof alert !== 'undefined') {
+        setTimeout(() => {
+            alert('Tracking Error: ' + message);
+        }, 500);
+    }
 }
 
 function formatDateTime(date) {
+    if (!date) return 'N/A';
     return date.toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
@@ -384,25 +660,34 @@ function formatDateTime(date) {
     });
 }
 
-function showTrackingError(message) {
-    alert('Tracking Error: ' + message);
+function initOrderTracking() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderIdFromUrl = urlParams.get('orderId') || urlParams.get('track');
+    
+    const orderTrackingSection = document.getElementById('orderTrackingSection');
+    
+    if (orderIdFromUrl && orderTrackingSection) {
+        const mainContent = document.getElementById('mainContent');
+        const profilePage = document.getElementById('profilePage');
+        
+        if (mainContent) mainContent.style.display = 'none';
+        if (profilePage) profilePage.classList.remove('active');
+        
+        orderTrackingSection.classList.add('active');
+        
+        const cleanOrderId = orderIdFromUrl.replace('#', '');
+        loadOrderTrackingData(cleanOrderId);
+    }
 }
 
-// =============================================
-// EXISTING FUNCTIONS (KEEPING ALL YOUR ORIGINAL CODE)
-// =============================================
-
-// Initialize Firebase Auth State Listener
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         updateUIForUser(user);
-        // Load profile data including addresses
         loadUserProfileData(user.uid);
     } else {
         currentUser = null;
         updateUIForGuest();
-        // Reset profile-related elements if they exist
         const profilePage = document.getElementById('profilePage');
         const mainContent = document.getElementById('mainContent');
         if (profilePage && mainContent) {
@@ -412,12 +697,10 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// Update UI for logged in user - ENHANCED
 function updateUIForUser(user) {
     userIcon.classList.add('logged-in');
     profileLink.style.display = 'block';
     
-    // Update profile info if elements exist
     const userNameElement = document.getElementById('user-name');
     const userEmailElement = document.getElementById('user-email');
     const editNameElement = document.getElementById('edit-name');
@@ -429,19 +712,16 @@ function updateUIForUser(user) {
     if (editNameElement) editNameElement.value = user.displayName || '';
     if (editEmailElement) editEmailElement.value = user.email;
     
-    // Update member since date
     if (memberSinceElement) {
         const memberSince = user.metadata.creationTime;
         memberSinceElement.textContent = new Date(memberSince).toLocaleDateString();
     }
 }
 
-// Update UI for guest
 function updateUIForGuest() {
     userIcon.classList.remove('logged-in');
     profileLink.style.display = 'block';
     
-    // Reset profile info if elements exist
     const userNameElement = document.getElementById('user-name');
     const userEmailElement = document.getElementById('user-email');
     
@@ -449,29 +729,25 @@ function updateUIForGuest() {
     if (userEmailElement) userEmailElement.textContent = 'user@example.com';
 }
 
-// Load only profile data (orders, addresses) from Firestore - NOT cart/likes
 function loadUserProfileData(userId) {
-    console.log('Loading profile data for user:', userId);
-    
-    // Load addresses if on profile page
     loadUserAddresses(userId);
 
-    // Load orders if on profile page
     const ordersContainer = document.getElementById('orders-container');
     if (ordersContainer) {
-        console.log('Loading orders...');
         db.collection('users').doc(userId).collection('orders').get()
             .then((querySnapshot) => {
-                console.log('Orders loaded:', querySnapshot.size);
                 ordersContainer.innerHTML = '';
                 userOrders = [];
                 
                 if (querySnapshot.empty) {
-ordersContainer.innerHTML = `
-    <div class="empty-state">
-        <i class="fas fa-shopping-bag"></i> No orders yet
-    </div>
-`;
+                    ordersContainer.innerHTML = `
+                        <div class="no-orders">
+                            <i class="fas fa-shopping-bag"></i>
+                            <h3>No Orders Yet</h3>
+                            <p>You haven't placed any orders yet. Start shopping to see your order history here.</p>
+                            <button class="btn" onclick="window.location.href='shop.html'">Browse Products</button>
+                        </div>
+                    `;
                     return;
                 }
                 
@@ -485,117 +761,142 @@ ordersContainer.innerHTML = `
             .catch((error) => {
                 console.error("Error loading orders:", error);
                 ordersContainer.innerHTML = `
-                    <div class="error-state">
+                    <div class="no-orders">
                         <i class="fas fa-exclamation-circle"></i>
-                        <h3>Error loading orders</h3>
-                        <p>Please try refreshing the page</p>
-                        <button class="btn btn-sm" onclick="loadUserProfileData('${userId}')">Retry</button>
+                        <h3>Error Loading Orders</h3>
+                        <p>${error.message}</p>
+                        <button class="btn" onclick="loadUserProfileData('${userId}')">Try Again</button>
                     </div>
                 `;
             });
     }
 }
 
-// Save checkout address to user's profile
-function saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefault) {
-    if (!currentUser || !db) return;
+function displayOrder(order) {
+    const ordersContainer = document.getElementById('orders-container');
+    if (!ordersContainer) return;
     
-    const fullName = `${firstName} ${lastName}`.trim();
+    const orderCard = document.createElement('div');
+    orderCard.className = 'order-card';
     
-    const newAddress = {
-        label: 'Home', // Default label, you can customize this
-        name: fullName,
-        address: address,
-        phone: phone.replace('+91 ', ''), // Remove country code for storage
-        pincode: zipCode,
-        city: city,
-        state: state,
-        country: 'India',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        isDefault: isDefault
-    };
+    const orderId = order.id || order.orderId;
     
-    console.log('Saving checkout address to profile:', newAddress);
+    const status = order.status || 'pending';
+    const statusClass = `status-${status.toLowerCase()}`;
     
-    // If setting as default, first remove default from all other addresses
-    if (isDefault) {
-        db.collection('users').doc(currentUser.uid).collection('addresses').get()
-            .then((querySnapshot) => {
-                const batch = db.batch();
-                
-                querySnapshot.forEach((doc) => {
-                    const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
-                    batch.update(addressRef, { isDefault: false });
-                });
-                
-                return batch.commit();
-            })
-            .then(() => {
-                // Now add the new address as default
-                return db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress);
-            })
-            .then((docRef) => {
-                console.log('Default address saved with ID:', docRef.id);
-                showNotification('Address saved as default in your profile!', 'success');
-            })
-            .catch((error) => {
-                console.error("Error saving default address:", error);
-                showNotification('Error saving address to profile: ' + error.message, 'error');
-            });
-    } else {
-        // Just add the address without setting as default
-        db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-            .then((docRef) => {
-                console.log('Address saved with ID:', docRef.id);
-                showNotification('Address saved to your profile!', 'success');
-            })
-            .catch((error) => {
-                console.error("Error saving address:", error);
-                showNotification('Error saving address to profile: ' + error.message, 'error');
-            });
+    const orderDate = order.createdAt ? 
+        (order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt)) : 
+        new Date();
+    
+    let orderItemsHTML = '';
+    if (order.items && Array.isArray(order.items)) {
+        orderItemsHTML += '<div class="order-items-container">';
+        order.items.forEach(item => {
+            const product = products.find(p => p.id === item.productId);
+            if (product) {
+                orderItemsHTML += `
+                    <div class="order-item">
+                        <div class="order-item-img-large">
+                            <img src="${product.image}" alt="${product.name}" loading="lazy">
+                        </div>
+                        <div class="order-item-info">
+                            <div class="order-item-name">${product.name}</div>
+                            <div class="order-item-meta">
+                                <span class="order-item-weight">${product.weight}</span>
+                                <span class="order-item-qty">Quantity: ${item.quantity || 1}</span>
+                            </div>
+                            <div class="order-item-price">₹${(product.price * (item.quantity || 1)).toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        orderItemsHTML += '</div>';
     }
+    
+    const displayOrderId = order.orderNumber || `#${orderId.substring(0, 8).toUpperCase()}`;
+    
+    orderCard.innerHTML = `
+        <div class="order-header">
+            <div class="order-header-left">
+                <span class="order-id">${displayOrderId}</span>
+                <span class="order-date">${orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            </div>
+            <span class="order-status ${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+        </div>
+        ${orderItemsHTML}
+        <div class="order-footer">
+            <div class="order-total">Total: ₹${order.total ? order.total.toFixed(2) : '0.00'}</div>
+            <div class="order-actions">
+                <button class="btn btn-outline track-order-btn" data-id="${orderId}">
+                    <i class="fas fa-truck"></i> Track Order
+                </button>
+                <button class="btn reorder-btn" data-id="${orderId}">
+                    <i class="fas fa-redo"></i> Reorder
+                </button>
+            </div>
+        </div>
+    `;
+    
+    ordersContainer.appendChild(orderCard);
+    
+    setTimeout(() => {
+        const trackBtn = orderCard.querySelector('.track-order-btn');
+        const reorderBtn = orderCard.querySelector('.reorder-btn');
+        
+        if (trackBtn) {
+            trackBtn.addEventListener('click', function() {
+                showOrderTracking(orderId);
+            });
+        }
+        
+        if (reorderBtn) {
+            reorderBtn.addEventListener('click', function() {
+                reorderItems(order.items || []);
+            });
+        }
+    }, 100);
 }
 
-// Load addresses from user's Firestore profile with better error handling
+function reorderItems(items) {
+    items.forEach(item => {
+        addToCart(item.productId, item.quantity);
+    });
+    alert('Items added to cart!');
+}
+
 function loadUserAddresses(userId) {
     const addressesContainer = document.getElementById('addresses-container');
     if (!addressesContainer) {
-        console.log('Addresses container not found');
         return;
     }
     
-    console.log('Loading addresses for user:', userId);
     addressesContainer.innerHTML = '<div class="loading">Loading addresses...</div>';
     
-    // Add a small delay to ensure DOM is ready
     setTimeout(() => {
         db.collection('users').doc(userId).collection('addresses')
             .orderBy('createdAt', 'desc')
             .get()
             .then((querySnapshot) => {
-                console.log('Addresses query result:', querySnapshot.size, 'addresses found');
                 addressesContainer.innerHTML = '';
                 
                 if (querySnapshot.empty) {
-        addressesContainer.innerHTML = `
-    <div class="empty-state">
-        <i class="fas fa-map-marker-alt"></i> No addresses saved
-    </div>
-`;
+                    addressesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-map-marker-alt"></i> No addresses saved
+                        </div>
+                    `;
                     return;
                 }
                 
                 querySnapshot.forEach((doc) => {
                     const address = doc.data();
-                    console.log('Displaying address:', doc.id, address);
                     displayAddress(doc.id, address);
                 });
             })
             .catch((error) => {
                 console.error("Error loading addresses:", error);
-                console.error("Error details:", error.code, error.message);
                 
-                // Check if it's a permissions error
                 if (error.code === 'permission-denied') {
                     addressesContainer.innerHTML = `
                         <div class="error-state">
@@ -619,16 +920,12 @@ function loadUserAddresses(userId) {
     }, 100);
 }
 
-// Display address in profile with better UI
-// Display address in profile with NEW fields
 function displayAddress(addressId, address) {
     const addressesContainer = document.getElementById('addresses-container');
     if (!addressesContainer) {
-        console.error('Addresses container not found for displaying address');
         return;
     }
     
-    // Remove loading or empty states if present
     const loadingState = addressesContainer.querySelector('.loading, .empty-state, .error-state');
     if (loadingState) {
         loadingState.remove();
@@ -731,345 +1028,81 @@ function displayAddress(addressId, address) {
     `;
     addressesContainer.appendChild(addressCard);
     
-    // Add event listeners
     attachAddressEventListeners(addressId);
 }
 
-// Attach event listeners to address actions
-function attachAddressEventListeners(addressId) {
-    setTimeout(() => {
-        // Edit button
-        const editBtn = document.querySelector(`.edit-address-btn[data-id="${addressId}"]`);
-        if (editBtn) {
-            editBtn.addEventListener('click', function() {
-                document.getElementById(`edit-address-form-${addressId}`).style.display = 'block';
-            });
-        }
-        
-        // Delete button
-        const deleteBtn = document.querySelector(`.delete-address-btn[data-id="${addressId}"]`);
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to delete this address?')) {
-                    deleteAddressFromFirestore(addressId);
-                }
-            });
-        }
-        
-        // Save edited address button
-        const saveBtn = document.querySelector(`.save-edit-address-btn[data-id="${addressId}"]`);
-        if (saveBtn) {
-            saveBtn.addEventListener('click', function() {
-                saveEditedAddressToFirestore(addressId);
-            });
-        }
-        
-        // Cancel edit button
-        const cancelBtn = document.querySelector(`.cancel-edit-address-btn[data-id="${addressId}"]`);
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', function() {
-                document.getElementById(`edit-address-form-${addressId}`).style.display = 'none';
-            });
-        }
-        
-        // Set default address button
-        const setDefaultBtn = document.querySelector(`.set-default-address-btn[data-id="${addressId}"]`);
-        if (setDefaultBtn) {
-            setDefaultBtn.addEventListener('click', function() {
-                setDefaultAddress(addressId);
-            });
-        }
-    }, 100);
-}
-
-// Save new address to user's profile in Firestore - UPDATED for new fields
-function saveNewAddressToProfile() {
-    const label = document.getElementById('new-label').value.trim();
-    const name = document.getElementById('new-name').value.trim();
-    const address = document.getElementById('new-address').value.trim();
-    const phone = document.getElementById('new-phone').value.trim();
-    const pincode = document.getElementById('new-pincode').value.trim();
-    const city = document.getElementById('new-city').value.trim();
-    const state = document.getElementById('new-state').value;
-    const country = document.getElementById('new-country').value;
+function saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefault) {
+    if (!currentUser || !db) return;
     
-    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    // Validate phone number (basic validation)
-    if (phone.length < 10 || !/^\d+$/.test(phone)) {
-        alert('Please enter a valid 10-digit phone number');
-        return;
-    }
-    
-    // Validate pincode (basic validation)
-    if (pincode.length < 6 || !/^\d+$/.test(pincode)) {
-        alert('Please enter a valid 6-digit pincode');
-        return;
-    }
-    
-    if (!currentUser) {
-        alert('Please log in to save addresses');
-        showLoginView();
-        loginModal.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        return;
-    }
+    const fullName = `${firstName} ${lastName}`.trim();
     
     const newAddress = {
-        label: label,
-        name: name,
+        label: 'Home',
+        name: fullName,
         address: address,
-        phone: phone,
-        pincode: pincode,
+        phone: phone.replace('+91 ', ''),
+        pincode: zipCode,
         city: city,
         state: state,
-        country: country,
+        country: 'India',
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        isDefault: false
+        isDefault: isDefault
     };
     
-    console.log('Saving new address:', newAddress);
-    
-    // Save to Firestore under user's addresses collection
-    db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-        .then((docRef) => {
-            console.log('Address saved with ID:', docRef.id);
-            
-            // Add the new address to the UI
-            displayAddress(docRef.id, newAddress);
-            
-            // Reset the form
-            const addAddressForm = document.getElementById('add-address-form');
-            if (addAddressForm) {
-                addAddressForm.style.display = 'none';
-            }
-            document.getElementById('new-label').value = '';
-            document.getElementById('new-name').value = '';
-            document.getElementById('new-address').value = '';
-            document.getElementById('new-phone').value = '';
-            document.getElementById('new-pincode').value = '';
-            document.getElementById('new-city').value = '';
-            document.getElementById('new-state').value = '';
-            document.getElementById('new-country').value = 'India';
-            
-            // Show success message
-            showNotification('Address saved successfully!', 'success');
-        })
-        .catch((error) => {
-            console.error("Error adding address:", error);
-            showNotification('Error saving address: ' + error.message, 'error');
-        });
-}
-
-// Save edited address to Firestore - UPDATED for new fields
-function saveEditedAddressToFirestore(addressId) {
-    const label = document.getElementById(`edit-label-${addressId}`).value.trim();
-    const name = document.getElementById(`edit-name-${addressId}`).value.trim();
-    const address = document.getElementById(`edit-address-${addressId}`).value.trim();
-    const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
-    const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
-    const city = document.getElementById(`edit-city-${addressId}`).value.trim();
-    const state = document.getElementById(`edit-state-${addressId}`).value;
-    const country = document.getElementById(`edit-country-${addressId}`).value;
-    
-    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    const updatedAddress = {
-        label: label,
-        name: name,
-        address: address,
-        phone: phone,
-        pincode: pincode,
-        city: city,
-        state: state,
-        country: country,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
-        .then(() => {
-            // Refresh addresses display
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserAddresses(currentUser.uid);
-            }
-            showNotification('Address updated successfully!', 'success');
-        })
-        .catch((error) => {
-            console.error("Error updating address:", error);
-            showNotification('Error updating address: ' + error.message, 'error');
-        });
-}
-
-// Delete address from Firestore
-function deleteAddressFromFirestore(addressId) {
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
-        .then(() => {
-            // Refresh addresses display
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserAddresses(currentUser.uid);
-            }
-            showNotification('Address deleted successfully!', 'success');
-        })
-        .catch((error) => {
-            console.error("Error deleting address:", error);
-            showNotification('Error deleting address: ' + error.message, 'error');
-        });
-}
-
-// Set default address
-function setDefaultAddress(addressId) {
-    // First, remove default from all addresses
-    db.collection('users').doc(currentUser.uid).collection('addresses').get()
-        .then((querySnapshot) => {
-            const batch = db.batch();
-            
-            querySnapshot.forEach((doc) => {
-                const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
-                if (doc.id === addressId) {
-                    batch.update(addressRef, { isDefault: true });
-                } else {
+    if (isDefault) {
+        db.collection('users').doc(currentUser.uid).collection('addresses').get()
+            .then((querySnapshot) => {
+                const batch = db.batch();
+                
+                querySnapshot.forEach((doc) => {
+                    const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
                     batch.update(addressRef, { isDefault: false });
-                }
+                });
+                
+                return batch.commit();
+            })
+            .then(() => {
+                return db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress);
+            })
+            .then((docRef) => {
+                showNotification('Address saved as default in your profile!', 'success');
+            })
+            .catch((error) => {
+                console.error("Error saving default address:", error);
+                showNotification('Error saving address to profile: ' + error.message, 'error');
             });
-            
-            return batch.commit();
-        })
-        .then(() => {
-            // Refresh addresses display
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserAddresses(currentUser.uid);
-            }
-            showNotification('Default address set successfully!', 'success');
-        })
-        .catch((error) => {
-            console.error("Error setting default address:", error);
-            showNotification('Error setting default address: ' + error.message, 'error');
-        });
-}
-
-// Display order in profile - UPDATED WITH TRACK ORDER BUTTON
-function displayOrder(order) {
-    const ordersContainer = document.getElementById('orders-container');
-    if (!ordersContainer) return;
-    
-    const orderCard = document.createElement('div');
-    orderCard.className = 'order-card';
-    
-    let orderItemsHTML = '';
-    order.items.forEach(item => {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-            orderItemsHTML += `
-                <div class="order-items">
-                    <div class="order-item-img">
-                        <i class="fas fa-jar"></i>
-                    </div>
-                    <div class="order-item-info">
-                        <div class="order-item-name">${product.name} - ${product.weight}</div>
-                        <div class="order-item-qty">Quantity: ${item.quantity}</div>
-                    </div>
-                </div>
-            `;
-        }
-    });
-    
-    orderCard.innerHTML = `
-        <div class="order-header">
-            <div>
-                <span class="order-id">Order #${order.id.substring(0, 8)}</span>
-                <span class="order-date">Placed on ${new Date(order.createdAt).toLocaleDateString()}</span>
-            </div>
-            <span class="order-status status-${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span>
-        </div>
-        ${orderItemsHTML}
-        <div class="order-total">Total: ₹${order.total}</div>
-        <div class="order-actions">
-            <button class="btn btn-outline track-order-btn" data-id="${order.id}">
-                <i class="fas fa-truck"></i> Track Order
-            </button>
-            <button class="btn reorder-btn" data-id="${order.id}">
-                <i class="fas fa-redo"></i> Reorder
-            </button>
-        </div>
-    `;
-    
-    ordersContainer.appendChild(orderCard);
-    
-    // Add event listeners
-    setTimeout(() => {
-        const trackBtn = orderCard.querySelector('.track-order-btn');
-        const reorderBtn = orderCard.querySelector('.reorder-btn');
-        
-        if (trackBtn) {
-            trackBtn.addEventListener('click', function() {
-                showOrderTracking(order.id);
-            });
-        }
-        
-        if (reorderBtn) {
-            reorderBtn.addEventListener('click', function() {
-                reorderItems(order.items);
-            });
-        }
-    }, 100);
-}
-
-// Reorder items
-function reorderItems(items) {
-    items.forEach(item => {
-        addToCart(item.productId, item.quantity);
-    });
-    alert('Items added to cart!');
-}
-
-// Helper function to show notifications
-function showNotification(message, type = 'info') {
-    // Simple alert for now - you can enhance this with toast notifications
-    if (type === 'error') {
-        alert('Error: ' + message);
     } else {
-        alert(message);
+        db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
+            .then((docRef) => {
+                showNotification('Address saved to your profile!', 'success');
+            })
+            .catch((error) => {
+                console.error("Error saving address:", error);
+                showNotification('Error saving address to profile: ' + error.message, 'error');
+            });
     }
 }
 
-// Close all sidebars and modals
 function closeAllSidebars() {
     likesSidebar.classList.remove('active');
     cartSidebar.classList.remove('active');
     loginModal.classList.remove('active');
     
-    // Close filter sidebar if it exists
     const filterSidebar = document.getElementById('filterSidebar');
     if (filterSidebar) {
         filterSidebar.classList.remove('active');
     }
     
-    // Close quick view modal if it exists
     const quickViewModal = document.getElementById('quickViewModal');
     if (quickViewModal) {
         quickViewModal.style.display = 'none';
     }
     
-    // Close review modal if it exists
     const reviewModal = document.getElementById('reviewModal');
     if (reviewModal) {
         reviewModal.style.display = 'none';
     }
     
-    // Close order tracking if open
     const orderTrackingSection = document.getElementById('orderTrackingSection');
     if (orderTrackingSection) {
         orderTrackingSection.classList.remove('active');
@@ -1078,7 +1111,6 @@ function closeAllSidebars() {
     navLinks.classList.remove('active');
     userDropdown.classList.remove('active');
     
-    // Reset hamburger icon
     const icon = mobileMenuBtn.querySelector('i');
     icon.classList.remove('fa-times');
     icon.classList.add('fa-bars');
@@ -1087,13 +1119,11 @@ function closeAllSidebars() {
     document.body.style.overflow = 'auto';
 }
 
-// Mobile menu functionality
 mobileMenuBtn.addEventListener('click', () => {
     navLinks.classList.toggle('active');
     overlay.classList.toggle('active');
     document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : 'auto';
     
-    // Toggle hamburger icon to close icon
     const icon = mobileMenuBtn.querySelector('i');
     if (navLinks.classList.contains('active')) {
         icon.classList.remove('fa-bars');
@@ -1104,28 +1134,24 @@ mobileMenuBtn.addEventListener('click', () => {
     }
 });
 
-// Close mobile menu when clicking on a link
 document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => {
         navLinks.classList.remove('active');
         overlay.classList.remove('active');
         document.body.style.overflow = 'auto';
         
-        // Reset hamburger icon
         const icon = mobileMenuBtn.querySelector('i');
         icon.classList.remove('fa-times');
         icon.classList.add('fa-bars');
     });
 });
 
-// Overlay click to close modals
 overlay.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// User dropdown functionality
 userIcon.addEventListener('click', (e) => {
     e.stopPropagation();
     if (currentUser) {
@@ -1139,24 +1165,20 @@ userIcon.addEventListener('click', (e) => {
     }
 });
 
-// Close dropdown when clicking outside
 document.addEventListener('click', () => {
     userDropdown.classList.remove('active');
 });
 
-// Profile link functionality - ENHANCED
 profileLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     userDropdown.classList.remove('active');
     if (currentUser) {
-        // Show profile page if it exists
         const profilePage = document.getElementById('profilePage');
         const mainContent = document.getElementById('mainContent');
         if (profilePage && mainContent) {
             mainContent.style.display = 'none';
             profilePage.classList.add('active');
-            // Load user data for profile page
             loadUserProfileData(currentUser.uid);
         } else {
             alert('Profile page would open here');
@@ -1170,7 +1192,6 @@ profileLink.addEventListener('click', (e) => {
     }
 });
 
-// Logout functionality
 logoutLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1181,7 +1202,6 @@ logoutLink.addEventListener('click', (e) => {
     });
 });
 
-// Like icon functionality
 likeIcon.addEventListener('click', () => {
     closeAllSidebars();
     likesSidebar.classList.add('active');
@@ -1189,14 +1209,12 @@ likeIcon.addEventListener('click', () => {
     document.body.style.overflow = 'hidden';
 });
 
-// Close likes sidebar
 closeLikes.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// Update likes UI
 function updateLikeUI() {
     if (likedProducts.length > 0) {
         likeCount.textContent = likedProducts.length;
@@ -1236,7 +1254,6 @@ function updateLikeUI() {
             }
         });
         
-        // Add event listeners for like items
         document.querySelectorAll('.remove-like').forEach(button => {
             button.addEventListener('click', (e) => {
                 const productId = parseInt(e.currentTarget.getAttribute('data-id'));
@@ -1253,12 +1270,10 @@ function updateLikeUI() {
     }
 }
 
-// Add to likes with auto-open sidebar
 function addToLikes(productId) {
     if (!likedProducts.includes(productId)) {
         likedProducts.push(productId);
         
-        // Save ONLY to localStorage (no Firestore saving)
         localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
         
         updateLikeUI();
@@ -1268,7 +1283,6 @@ function addToLikes(productId) {
         heartIcon.classList.add('fas');
         heartIcon.style.color = '#ff4d4d';
         
-        // Auto-open likes sidebar when adding to favorites (close others first)
         closeAllSidebars();
         likesSidebar.classList.add('active');
         overlay.classList.add('active');
@@ -1276,11 +1290,9 @@ function addToLikes(productId) {
     }
 }
 
-// Remove from likes
 function removeFromLikes(productId) {
     likedProducts = likedProducts.filter(id => id !== productId);
     
-    // Update ONLY localStorage (no Firestore update)
     localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
     
     updateLikeUI();
@@ -1293,7 +1305,6 @@ function removeFromLikes(productId) {
     }
 }
 
-// Cart functionality
 cartIcon.addEventListener('click', () => {
     closeAllSidebars();
     cartSidebar.classList.add('active');
@@ -1301,14 +1312,12 @@ cartIcon.addEventListener('click', () => {
     document.body.style.overflow = 'hidden';
 });
 
-// Close cart sidebar
 closeCart.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// Update cart UI
 function updateCartUI() {
     const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
     
@@ -1359,14 +1368,12 @@ function updateCartUI() {
             }
         });
         
-        // Update cart totals
         const cartSubtotal = document.querySelector('.cart-subtotal span:last-child');
         const cartTotal = document.querySelector('.cart-total span:last-child');
         
         if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal}`;
         if (cartTotal) cartTotal.textContent = `₹${subtotal}`;
         
-        // Add event listeners for cart items
         document.querySelectorAll('.quantity-btn.minus').forEach(button => {
             button.addEventListener('click', (e) => {
                 const productId = parseInt(e.currentTarget.getAttribute('data-id'));
@@ -1398,7 +1405,6 @@ function updateCartUI() {
     }
 }
 
-// Enhanced Add to cart function with effects and auto-open sidebar
 function addToCart(productId, quantity = 1) {
     const existingItem = cartProducts.find(item => item.id === productId);
     
@@ -1408,20 +1414,17 @@ function addToCart(productId, quantity = 1) {
         cartProducts.push({ id: productId, quantity });
     }
     
-    // Save ONLY to localStorage (no Firestore saving)
     localStorage.setItem('guestCart', JSON.stringify(cartProducts));
     
     updateCartUI();
     addCartVisualFeedback();
     
-    // Auto-open cart sidebar when adding to cart (close others first)
     closeAllSidebars();
     cartSidebar.classList.add('active');
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
-// Visual feedback for adding to cart
 function addCartVisualFeedback() {
     cartIcon.classList.add('cart-icon-bounce');
     cartCount.classList.add('badge-pulse');
@@ -1432,7 +1435,6 @@ function addCartVisualFeedback() {
     }, 600);
 }
 
-// Update cart quantity
 function updateCartQuantity(productId, change) {
     const item = cartProducts.find(item => item.id === productId);
     
@@ -1442,7 +1444,6 @@ function updateCartQuantity(productId, change) {
         if (item.quantity <= 0) {
             removeFromCart(productId);
         } else {
-            // Update ONLY localStorage (no Firestore update)
             localStorage.setItem('guestCart', JSON.stringify(cartProducts));
             
             updateCartUI();
@@ -1450,7 +1451,6 @@ function updateCartQuantity(productId, change) {
     }
 }
 
-// Set cart quantity
 function setCartQuantity(productId, quantity) {
     const item = cartProducts.find(item => item.id === productId);
     
@@ -1460,7 +1460,6 @@ function setCartQuantity(productId, quantity) {
         } else {
             item.quantity = quantity;
             
-            // Update ONLY localStorage (no Firestore update)
             localStorage.setItem('guestCart', JSON.stringify(cartProducts));
             
             updateCartUI();
@@ -1468,17 +1467,14 @@ function setCartQuantity(productId, quantity) {
     }
 }
 
-// Remove from cart
 function removeFromCart(productId) {
     cartProducts = cartProducts.filter(item => item.id !== productId);
     
-    // Update ONLY localStorage (no Firestore update)
     localStorage.setItem('guestCart', JSON.stringify(cartProducts));
     
     updateCartUI();
 }
 
-// WhatsApp functionality
 whatsappIcon.addEventListener('click', () => {
     const phoneNumber = "919876543210";
     const message = "Hello, I'm interested in your honey products!";
@@ -1486,19 +1482,16 @@ whatsappIcon.addEventListener('click', () => {
     window.open(url, '_blank');
 });
 
-// Close login modal
 closeLogin.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// Back button functionality
 backBtn.addEventListener('click', () => {
     showLoginView();
 });
 
-// Show login view
 function showLoginView() {
     currentModalView = 'login';
     loginForm.classList.add('active');
@@ -1510,7 +1503,6 @@ function showLoginView() {
     loginFooter.style.display = 'block';
 }
 
-// Show signup view
 function showSignupView() {
     currentModalView = 'signup';
     loginForm.classList.remove('active');
@@ -1522,7 +1514,6 @@ function showSignupView() {
     loginFooter.style.display = 'none';
 }
 
-// Show forgot password view
 function showForgotView() {
     currentModalView = 'forgot';
     loginForm.classList.remove('active');
@@ -1534,7 +1525,6 @@ function showForgotView() {
     loginFooter.style.display = 'none';
 }
 
-// Login functionality
 loginBtn.addEventListener('click', () => {
     const email = loginForm.querySelector('input[type="email"]').value;
     const password = loginForm.querySelector('input[type="password"]').value;
@@ -1558,14 +1548,12 @@ loginBtn.addEventListener('click', () => {
         document.body.style.overflow = 'auto';
         alert('Login successful!');
     })
-
         .catch((error) => {
             console.error("Error signing in:", error);
             alert('Error signing in: ' + error.message);
         });
 });
 
-// Signup functionality
 signupBtn.addEventListener('click', () => {
     const name = signupForm.querySelector('input[type="text"]').value;
     const email = signupForm.querySelector('input[type="email"]').value;
@@ -1591,14 +1579,11 @@ signupBtn.addEventListener('click', () => {
         .then((userCredential) => {
             const user = userCredential.user;
             
-            // Update profile with display name
             return user.updateProfile({
                 displayName: name
             }).then(() => {
-                // Send email verification
                 return user.sendEmailVerification();
             }).then(() => {
-                // Create user document in Firestore (only for profile data)
                 return db.collection('users').doc(user.uid).set({
                     displayName: name,
                     email: email,
@@ -1618,7 +1603,6 @@ signupBtn.addEventListener('click', () => {
         });
 });
 
-// Reset password functionality
 resetBtn.addEventListener('click', () => {
     const email = forgotForm.querySelector('input[type="email"]').value;
     
@@ -1640,9 +1624,7 @@ resetBtn.addEventListener('click', () => {
         });
 });
 
-// Google login
 googleLoginBtn.addEventListener('click', () => {
-    // Check if we're in a supported environment
     if (window.location.protocol !== 'https:' && window.location.protocol !== 'http:' && !window.location.hostname.includes('localhost')) {
         alert('Google login is not supported in this environment. Please use email/password login instead.');
         return;
@@ -1684,19 +1666,16 @@ googleLoginBtn.addEventListener('click', () => {
     }
 });
 
-// Forgot password link
 forgotPassword.addEventListener('click', (e) => {
     e.preventDefault();
     showForgotView();
 });
 
-// Sign up link
 signUp.addEventListener('click', (e) => {
     e.preventDefault();
     showSignupView();
 });
 
-// Checkout button - REDIRECT TO CHECKOUT.HTML
 if (checkoutBtn) {
     checkoutBtn.addEventListener('click', () => {
         if (cartProducts.length === 0) {
@@ -1704,38 +1683,31 @@ if (checkoutBtn) {
             return;
         }
         
-        // Save cart data to localStorage for checkout page
         localStorage.setItem('checkoutCart', JSON.stringify(cartProducts));
         
-        // Redirect to checkout page
         window.location.href = 'checkout.html';
     });
 }
 
-// Continue shopping button
 if (continueShopping) {
     continueShopping.addEventListener('click', function() {
         window.location.href = "shop.html";
     });
 }
 
-// Browse products button
 browseProducts.addEventListener('click', () => {
     closeAllSidebars();
     overlay.classList.remove('active');
     document.body.style.overflow = 'auto';
 });
 
-// Load guest data from localStorage
 function loadGuestData() {
-    // Load liked products
     const guestLikes = localStorage.getItem('guestLikes');
     if (guestLikes) {
         likedProducts = JSON.parse(guestLikes);
         updateLikeUI();
     }
     
-    // Load cart items
     const guestCart = localStorage.getItem('guestCart');
     if (guestCart) {
         cartProducts = JSON.parse(guestCart);
@@ -1743,7 +1715,55 @@ function loadGuestData() {
     }
 }
 
-// Hide notification bar on scroll down
+function showNotification(message, type = 'info') {
+    if (type === 'error') {
+        alert('Error: ' + message);
+    } else {
+        alert(message);
+    }
+}
+
+function attachAddressEventListeners(addressId) {
+    setTimeout(() => {
+        const editBtn = document.querySelector(`.edit-address-btn[data-id="${addressId}"]`);
+        if (editBtn) {
+            editBtn.addEventListener('click', function() {
+                document.getElementById(`edit-address-form-${addressId}`).style.display = 'block';
+            });
+        }
+        
+        const deleteBtn = document.querySelector(`.delete-address-btn[data-id="${addressId}"]`);
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this address?')) {
+                    deleteAddressFromFirestore(addressId);
+                }
+            });
+        }
+        
+        const saveBtn = document.querySelector(`.save-edit-address-btn[data-id="${addressId}"]`);
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                saveEditedAddressToFirestore(addressId);
+            });
+        }
+        
+        const cancelBtn = document.querySelector(`.cancel-edit-address-btn[data-id="${addressId}"]`);
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                document.getElementById(`edit-address-form-${addressId}`).style.display = 'none';
+            });
+        }
+        
+        const setDefaultBtn = document.querySelector(`.set-default-address-btn[data-id="${addressId}"]`);
+        if (setDefaultBtn) {
+            setDefaultBtn.addEventListener('click', function() {
+                setDefaultAddress(addressId);
+            });
+        }
+    }, 100);
+}
+
 let lastScrollTop = 0;
 window.addEventListener('scroll', () => {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -1763,11 +1783,10 @@ window.addEventListener('scroll', () => {
     lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
 }, { passive: true });
 
-// Initialize common functionality
 function initCommon() {
     loadGuestData();
+    initOrderTracking();
     
-    // Initialize profile close button if it exists
     const profileCloseBtn = document.getElementById('profileCloseBtn');
     if (profileCloseBtn) {
         profileCloseBtn.addEventListener('click', () => {
@@ -1780,13 +1799,11 @@ function initCommon() {
         });
     }
     
-    // Initialize order tracking close button
     const orderTrackingCloseBtn = document.getElementById('orderTrackingCloseBtn');
     if (orderTrackingCloseBtn) {
         orderTrackingCloseBtn.addEventListener('click', closeOrderTracking);
     }
     
-    // Initialize order tracking refresh button
     const refreshTrackingBtn = document.getElementById('refreshTrackingBtn');
     if (refreshTrackingBtn) {
         refreshTrackingBtn.addEventListener('click', function() {
@@ -1797,7 +1814,6 @@ function initCommon() {
         });
     }
     
-    // Initialize order tracking support button
     const supportTrackingBtn = document.getElementById('supportTrackingBtn');
     if (supportTrackingBtn) {
         supportTrackingBtn.addEventListener('click', function() {
@@ -1805,7 +1821,6 @@ function initCommon() {
         });
     }
     
-    // Initialize profile edit functionality if elements exist
     const editProfileBtn = document.getElementById('edit-profile-btn');
     const editProfileModal = document.getElementById('edit-profile-modal');
     const closeEditProfileModal = document.getElementById('close-edit-profile-modal');
@@ -1841,7 +1856,6 @@ function initCommon() {
             currentUser.updateProfile({
                 displayName: newName
             }).then(() => {
-                // Update Firestore (only for profile data)
                 return db.collection('users').doc(currentUser.uid).set({
                     displayName: newName,
                     email: currentUser.email,
@@ -1858,7 +1872,6 @@ function initCommon() {
         });
     }
     
-    // Initialize address functionality if elements exist
     const addAddressBtn = document.getElementById('add-address-btn');
     const addAddressForm = document.getElementById('add-address-form');
     const cancelNewAddress = document.getElementById('cancel-new-address');
@@ -1886,7 +1899,61 @@ function initCommon() {
     }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
 });
+
+function listAllUserOrders() {
+    if (!currentUser) {
+        console.log("User not logged in");
+        return;
+    }
+    
+    const db = firebase.firestore();
+    db.collection("users").doc(currentUser.uid).collection("orders").get()
+        .then((querySnapshot) => {
+            console.log("=== All User Orders ===");
+            console.log("Total orders:", querySnapshot.size);
+            querySnapshot.forEach((doc) => {
+                console.log("\n--- Order Document ---");
+                console.log("Document ID:", doc.id);
+                console.log("Order Data:", doc.data());
+                console.log("Has 'orderNumber' field:", 'orderNumber' in doc.data());
+                console.log("Has 'status' field:", 'status' in doc.data());
+                console.log("Has 'createdAt' field:", 'createdAt' in doc.data());
+            });
+        })
+        .catch((error) => {
+            console.error("Error listing orders:", error);
+        });
+}
+
+window.listAllUserOrders = listAllUserOrders;
+
+function debugOrderData() {
+    if (!currentUser) {
+        console.log("User not logged in");
+        return;
+    }
+    
+    const db = firebase.firestore();
+    db.collection("users").doc(currentUser.uid).collection("orders").get()
+        .then((querySnapshot) => {
+            console.log("=== DEBUG: All User Orders ===");
+            console.log("Total orders:", querySnapshot.size);
+            
+            querySnapshot.forEach((doc) => {
+                console.log("\n--- Order Document ---");
+                console.log("Document ID:", doc.id);
+                console.log("Order Data:", doc.data());
+                console.log("Has 'orderNumber' field:", 'orderNumber' in doc.data());
+                console.log("Has 'status' field:", 'status' in doc.data());
+                console.log("Has 'createdAt' field:", 'createdAt' in doc.data());
+            });
+        })
+        .catch((error) => {
+            console.error("Debug error:", error);
+        });
+}
+
+window.debugOrderData = debugOrderData;
