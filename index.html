@@ -2117,8 +2117,140 @@
   }
 }
 
+.form-grid {
+    display: grid;
+    gap: 16px;
+}
 
-  /* Add these styles to your existing CSS */
+@media (min-width: 768px) {
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    transition: border 0.3s;
+}
+
+.form-control:focus {
+    border-color: #5f2b27;
+    outline: none;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+@media (max-width: 767px) {
+    .review-form {
+        padding: 20px !important;
+    }
+    
+    .form-title {
+        font-size: 18px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .form-grid {
+        gap: 12px !important;
+    }
+    
+    .form-group label {
+        font-size: 13px !important;
+    }
+    
+    .form-control {
+        padding: 10px !important;
+        font-size: 13px !important;
+    }
+    
+    .star-rating label {
+        font-size: 20px !important;
+    }
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+    direction: rtl;
+    margin-top: 5px;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 24px;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #FFD700;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.submit-btn, .cancel-btn {
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    font-size: 14px;
+}
+
+.submit-btn {
+    background: #5f2b27;
+    color: white;
+    flex: 1;
+}
+
+.submit-btn:hover {
+    background: #7a3731;
+    transform: translateY(-2px);
+}
+
+.cancel-btn {
+    background: #ddd;
+    color: #333;
+}
+
+.cancel-btn:hover {
+    background: #ccc;
+}
+
+#reviewDate {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 .form-group select {
   width: 100%;
   padding: 12px;
@@ -6729,71 +6861,86 @@
       <a href="all-products.html" class="view-all" style="position: relative; z-index: 2;">View All</a>
     </div>
     
-    <div class="customers-section">
-      <h2 class="customers-title">Happy Customers</h2>
-      
-      <div class="reviews-carousel">
+   <div class="customers-section">
+    <h2 class="customers-title">Happy Customers</h2>
+    
+    <div class="reviews-carousel">
         <div class="reviews-container" id="reviewsContainer">
-          <!-- Reviews will be dynamically loaded from Firebase -->
+            <!-- Reviews will be dynamically loaded from Firebase -->
         </div>
         
         <div class="carousel-controls">
-          <button class="carousel-btn" id="prevBtn">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          
-          <div class="carousel-dots" id="carouselDots">
-          </div>
-          
-          <button class="carousel-btn" id="nextBtn">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+            <button class="carousel-btn" id="prevBtn">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="carousel-dots" id="carouselDots">
+            </div>
+            
+            <button class="carousel-btn" id="nextBtn">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
-      </div>
-      
-      <button class="add-review-btn" id="addReviewBtn">
-        <i class="fas fa-plus"></i> Add Your Review
-      </button>
     </div>
     
-    <div class="review-modal" id="reviewModal">
-      <div class="review-form">
+    <button class="add-review-btn" id="addReviewBtn">
+        <i class="fas fa-plus"></i> Add Your Review
+    </button>
+</div>
+
+<div class="review-modal" id="reviewModal">
+    <div class="review-form">
         <h3 class="form-title">Share Your Experience</h3>
         
-        <div class="form-group">
-          <label for="reviewProduct">Select Product</label>
-          <select id="reviewProduct">
-            <option value="">Select a product you've purchased</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label>Your Rating</label>
-          <div class="star-rating">
-            <input type="radio" id="star5" name="rating" value="5">
-            <label for="star5"><i class="fas fa-star"></i></label>
-            <input type="radio" id="star4" name="rating" value="4">
-            <label for="star4"><i class="fas fa-star"></i></label>
-            <input type="radio" id="star3" name="rating" value="3">
-            <label for="star3"><i class="fas fa-star"></i></label>
-            <input type="radio" id="star2" name="rating" value="2">
-            <label for="star2"><i class="fas fa-star"></i></label>
-            <input type="radio" id="star1" name="rating" value="1">
-            <label for="star1"><i class="fas fa-star"></i></label>
+        <div class="form-grid" style="display: grid; gap: 16px;">
+            <!-- Customer Name Field -->
+            <div class="form-group">
+                <label for="reviewName">Your Name</label>
+                <input type="text" id="reviewName" class="form-control" placeholder="Enter your name" required>
+            </div>
+            
+            <!-- Location Field -->
+            <div class="form-group">
+                <label for="reviewLocation">Your Location (City)</label>
+                <input type="text" id="reviewLocation" class="form-control" placeholder="Enter your city" required>
+            </div>
+            
+            <!-- Rating Field with 5 stars -->
+            <div class="form-group">
+                <label>Your Rating</label>
+                <div class="star-rating">
+                    <input type="radio" id="star5" name="rating" value="5">
+                    <label for="star5"><i class="fas fa-star"></i></label>
+                    <input type="radio" id="star4" name="rating" value="4">
+                    <label for="star4"><i class="fas fa-star"></i></label>
+                    <input type="radio" id="star3" name="rating" value="3">
+                    <label for="star3"><i class="fas fa-star"></i></label>
+                    <input type="radio" id="star2" name="rating" value="2">
+                    <label for="star2"><i class="fas fa-star"></i></label>
+                    <input type="radio" id="star1" name="rating" value="1">
+                    <label for="star1"><i class="fas fa-star"></i></label>
+                </div>
+            </div>
+            
+            <!-- Review Text Field -->
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="reviewText">Your Review</label>
+                <textarea id="reviewText" class="form-control" placeholder="Share your experience with our products" required></textarea>
+            </div>
+            
+            <!-- Date Field (Auto-set, not editable) -->
+            <div class="form-group">
+                <label>Review Date</label>
+                <input type="text" id="reviewDate" class="form-control" readonly style="background-color: #f5f5f5;">
             </div>
         </div>
         
-        <div class="form-group">
-          <label for="userReview">Your Review</label>
-          <textarea id="userReview" placeholder="Share your experience with our products"></textarea>
-        </div>
-        
         <div class="form-buttons">
-          <button type="button" class="cancel-btn" id="cancelReview">Cancel</button>
-          <button type="button" class="submit-btn" id="submitReview">Submit Review</button>
+            <button type="button" class="cancel-btn" id="cancelReview">Cancel</button>
+            <button type="button" class="submit-btn" id="submitReview">Submit Review</button>
         </div>
-      </div>
     </div>
+</div>
 
     <div class="our-team-section">
       <hr style="width:50px; border:2px solid #556b2f; margin:0 auto 15px;">
