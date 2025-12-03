@@ -1,3 +1,4 @@
+// your code goes here
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
     authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -776,8 +777,14 @@ function displayOrder(order) {
     const ordersContainer = document.getElementById('orders-container');
     if (!ordersContainer) return;
     
+    // Remove the "no orders" state if it exists
+    const noOrdersState = ordersContainer.querySelector('.no-orders');
+    if (noOrdersState) {
+        noOrdersState.remove();
+    }
+    
     const orderCard = document.createElement('div');
-    orderCard.className = 'order-card';
+    orderCard.className = 'order-card compact';
     
     const orderId = order.id || order.orderId;
     
@@ -809,59 +816,65 @@ function displayOrder(order) {
         statusDisplayText = 'Cancelled';
     }
     
-    // For debugging - log what we're getting
-    console.log('Order status:', status, '-> CSS Class:', statusClass, '-> Display Text:', statusDisplayText);
-    
     // Format date
     const orderDate = order.createdAt ? 
         (order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt)) : 
         new Date();
     
-    let orderItemsHTML = '';
+    let previewItemsHTML = '';
     if (order.items && Array.isArray(order.items)) {
-        orderItemsHTML += '<div class="order-items-container">';
-        order.items.forEach(item => {
-            const product = products.find(p => p.id === item.productId);
-            if (product) {
-                orderItemsHTML += `
-                    <div class="order-item">
-                        <div class="order-item-img-large">
-                            <img src="${product.image}" alt="${product.name}" loading="lazy">
+        const firstItem = order.items[0];
+        const product = products.find(p => p.id === firstItem.productId);
+        
+        if (product) {
+            previewItemsHTML = `
+                <div class="order-preview">
+                    <div class="preview-item">
+                        <div class="preview-image">
+                            <img src="${product.image}" alt="${product.name}" loading="lazy"
+                                 onerror="this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
                         </div>
-                        <div class="order-item-info">
-                            <div class="order-item-name">${product.name}</div>
-                            <div class="order-item-meta">
-                                <span class="order-item-weight">${product.weight}</span>
-                                <span class="order-item-qty">Quantity: ${item.quantity || 1}</span>
+                        <div class="preview-details">
+                            <span class="preview-name">${product.name}</span>
+                            <div class="preview-meta">
+                                <span class="preview-weight">${product.weight}</span>
+                                <span>•</span>
+                                <span class="preview-qty">Qty: ${firstItem.quantity || 1}</span>
                             </div>
-                            <div class="order-item-price">₹${(product.price * (item.quantity || 1)).toFixed(2)}</div>
                         </div>
                     </div>
-                `;
-            }
-        });
-        orderItemsHTML += '</div>';
+                    ${order.items.length > 1 ? `<div class="preview-more">+${order.items.length - 1} more item${order.items.length > 2 ? 's' : ''}</div>` : ''}
+                </div>
+            `;
+        }
     }
     
     const displayOrderId = order.orderNumber || `#${orderId.substring(0, 8).toUpperCase()}`;
     
     orderCard.innerHTML = `
-        <div class="order-header">
-            <div class="order-header-left">
-                <span class="order-id">${displayOrderId}</span>
-                <span class="order-date">${orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        <div class="order-header-compact">
+            <div class="order-info-row">
+                <div class="order-id-date">
+                    <span class="order-id-small">${displayOrderId}</span>
+                    <span class="order-date-small">${orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+                <span class="order-status-badge ${statusClass}">${statusDisplayText}</span>
             </div>
-            <span class="order-status ${statusClass}">${statusDisplayText}</span>
         </div>
-        ${orderItemsHTML}
-        <div class="order-footer">
-            <div class="order-total">Total: ₹${order.total ? order.total.toFixed(2) : '0.00'}</div>
-            <div class="order-actions">
-                <button class="btn btn-outline track-order-btn" data-id="${orderId}">
-                    <i class="fas fa-truck"></i> Track Order
+        ${previewItemsHTML}
+        <div class="order-footer-compact">
+            <div class="order-total-compact">
+                <span class="total-label">Total:</span>
+                <span class="total-amount">₹${order.total ? order.total.toFixed(2) : '0.00'}</span>
+            </div>
+            <div class="order-actions-compact">
+                <button class="btn btn-outline btn-sm track-order-btn" data-id="${orderId}">
+                    <i class="fas fa-truck"></i>
+                    <span class="action-text">Track</span>
                 </button>
-                <button class="btn reorder-btn" data-id="${orderId}">
-                    <i class="fas fa-redo"></i> Reorder
+                <button class="btn btn-sm reorder-btn" data-id="${orderId}">
+                    <i class="fas fa-redo"></i>
+                    <span class="action-text">Reorder</span>
                 </button>
             </div>
         </div>
@@ -869,6 +882,7 @@ function displayOrder(order) {
     
     ordersContainer.appendChild(orderCard);
     
+    // Add event listeners
     setTimeout(() => {
         const trackBtn = orderCard.querySelector('.track-order-btn');
         const reorderBtn = orderCard.querySelector('.reorder-btn');
@@ -886,6 +900,7 @@ function displayOrder(order) {
         }
     }, 100);
 }
+
 function reorderItems(items) {
     items.forEach(item => {
         addToCart(item.productId, item.quantity);
