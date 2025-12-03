@@ -1,662 +1,1134 @@
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-.reviews-view{padding:22px;background:#fff;min-height:100vh;}
-#rv-create{display:flex;align-items:center;gap:8px;padding:9px 14px;font-weight:700;border-radius:10px;cursor:pointer;border:none;background:black;color:white;}
-.reviews-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
-.reviews-title{font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:700;color:var(--dark);}
-.reviews-sub{font-size:.9rem;color:var(--muted);margin-top:4px;}
-.reviews-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-.reviews-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;border:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-.filter-select,.search-box{padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:.95rem;min-width:160px;}
-.search-box{display:flex;gap:8px;align-items:center;min-width:260px;max-width:420px;}
-.search-box input{border:0;outline:none;background:transparent;width:100%;font-size:.95rem;}
-.btn-primary{background:var(--dark);color:var(--secondary);border-radius:10px;padding:9px 14px;border:none;cursor:pointer;font-weight:700;}
-.btn-ghost{background:transparent;border:1px solid var(--border);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;}
-.btn-success{background:Black;color:white;border-radius:10px;padding:9px 14px;border:none;cursor:pointer;font-weight:700;}
-.btn-danger{background:var(--danger);color:white;border-radius:10px;padding:9px 14px;border:none;cursor:pointer;font-weight:700;}
-.table-card{margin-top:16px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;border:1px solid var(--border);}
-.table-wrapper{overflow:auto;background:#fff;}
-.reviews-table{width:100%;border-collapse:collapse;min-width:900px;font-size:.95rem;background:#fff;}
-.reviews-table thead th{text-align:left;padding:12px 16px;font-weight:700;color:var(--dark);border-bottom:1px solid var(--border);}
-.reviews-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--dark);}
-.status-pill{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700;font-size:.75rem;}
-.status-pending{background:rgba(245,158,11,0.08);color:#f59e0b;border:1px solid rgba(245,158,11,0.12);}
-.status-approved{background:rgba(16,185,129,0.08);color:#10b981;border:1px solid rgba(16,185,129,0.12);}
-.status-rejected{background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.12);}
-.rating i,
-.rating-stars i {
-    color: #facc15;
-    margin-right: 2px;
-}
-
-.customer-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.action-btn{border-radius:8px;border:0;padding:8px;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:.95rem;}
-.action-btn .fa-check{color:var(--success);}
-.action-btn .fa-times{color:var(--danger);}
-.action-btn .fa-eye{color:var(--dark);}
-.action-btn .fa-trash{color:var(--danger);}
-.mobile-cards{display:none;gap:12px;margin-top:12px;}
-.review-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;border:1px solid var(--border);}
-#rv-test{display:flex;align-items:center;gap:8px;padding:9px 14px;font-weight:700;border-radius:10px;cursor:pointer;border:none;background:#10b981;color:white;}
-
-.review-modal-bg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(6,8,15,0.6);z-index:1200;padding:20px;}
-.review-modal-bg.show{display:flex;}
-.review-modal{width:100%;max-width:620px;border-radius:12px;overflow:hidden;background:#fff;box-shadow:var(--shadow);border:1px solid var(--border);}
-.review-modal .modal-header,.review-modal .modal-body,.review-modal .modal-footer{padding:14px 16px;background:#fff;}
-.review-modal .modal-header{display:flex;align-items:center;justify-content:space-between;}
-.empty-state{text-align:center;padding:36px 12px;color:var(--muted);}
-.rv-toast{position:fixed;right:22px;bottom:22px;padding:12px 16px;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);border-left:4px solid var(--success);z-index:1400;display:flex;gap:10px;align-items:center;transform:translateY(10px);opacity:0;transition:all .2s ease;}
-.rv-toast.show{opacity:1;transform:translateY(0);}
-.review-text{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-@media(max-width:1023px){.table-wrapper{display:none;}.mobile-cards{display:flex;flex-direction:column;}.reviews-controls{width:100%;flex-direction:column;}.reviews-card{width:100%;flex-direction:column;}}
-@media(max-width:768px){.reviews-title{font-size:1.1rem;}.reviews-sub{font-size:.85rem;}.reviews-card{padding:12px;}}
-
-#rv-create-bg .modal-body{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:18px 20px;
-  padding:20px 18px;
-}
-
-#rv-create-bg .modal-body > div{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-#rv-create-bg .filter-select,
-#rv-create-bg textarea{
-  width:100%;
-  padding:10px 14px;
-  font-size:.93rem;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:#fff;
-}
-
-#cr-text{
-  resize:vertical;
-  min-height:120px;
-  grid-column:1/-1;
-}
-
-#rv-create-bg .modal-footer{
-  padding:14px 18px;
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  background:#fff;
-  border-top:1px solid var(--border);
-}
-
-@media(max-width:600px){
-  #rv-create-bg .modal-body{
-    grid-template-columns:1fr;
-  }
-  #cr-text{
-    grid-column:1/1;
-  }
-}
-</style>
-</head>
-<body>
-
-<div class="page-container">
-<div class="reviews-view fade-in">
-
-<!-- TOP BAR -->
-<div class="reviews-top">
-  <div>
-    <div class="reviews-title">Review Management</div>
-    <div class="reviews-sub muted">Manage and moderate customer reviews</div>
-  </div>
-
-  <div class="reviews-controls">
-
-    <div class="reviews-card filters-row">
-      <select id="rv-status" class="filter-select">
-        <option value="all">All Reviews</option>
-        <option value="pending">Pending</option>
-        <option value="approved">Approved</option>
-        <option value="rejected">Rejected</option>
-      </select>
-
-      <select id="rv-rating" class="filter-select">
-        <option value="all">All Ratings</option>
-        <option value="5">5 Stars</option>
-        <option value="4">4+ Stars</option>
-        <option value="3">3+ Stars</option>
-        <option value="2">2+ Stars</option>
-        <option value="1">1 Star</option>
-      </select>
-
-      <div class="search-box">
-        <i class="fas fa-search muted"></i>
-        <input id="rv-search" placeholder="Search customer, product, review text">
-      </div>
-    </div>
-
-    <button id="rv-refresh" class="btn-ghost">
-      <i class="fas fa-sync-alt"></i>
-    </button>
-
-    <button id="rv-export" class="btn-primary">
-      <i class="fas fa-download" style="margin-right:8px"></i> Export
-    </button>
-
-    <button id="rv-test" class="btn-success">
-      <i class="fas fa-flask" style="margin-right:8px"></i> Test Review
-    </button>
-
-    <button id="rv-create" class="btn-primary">
-      <i class="fas fa-plus" style="margin-right:8px"></i> Create
-    </button>
-
-  </div>
-</div>
-
-<!-- TABLE -->
-<div class="table-card">
-  <div class="table-wrapper">
-    <table class="reviews-table">
-      <thead>
-        <tr>
-          <th>Customer</th>
-          <th>Product</th>
-          <th>Rating</th>
-          <th>Review</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th style="text-align:right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="rv-tbody">
-        <tr><td colspan="7" class="muted">Loading reviews…</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="mobile-cards" id="rv-cards"></div>
-</div>
-
-<!-- VIEW MODAL -->
-<div class="review-modal-bg" id="rv-modal-bg">
-  <div class="review-modal">
-
-    <div class="modal-header">
-      <div id="rv-modal-title" style="font-weight:700">Review Details</div>
-      <button id="rv-modal-close" class="btn-ghost" style="padding:6px;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
-    <div class="modal-body" id="rv-modal-body"></div>
-
-    <div class="modal-footer">
-      <button id="rv-modal-reject" class="btn-danger">
-        <i class="fas fa-times" style="margin-right:8px"></i> Reject
-      </button>
-      <button id="rv-modal-approve" class="btn-success">
-        <i class="fas fa-check" style="margin-right:8px"></i> Approve
-      </button>
-      <button id="rv-modal-cancel" class="btn-ghost">Close</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- CREATE MODAL -->
-<div class="review-modal-bg" id="rv-create-bg">
-  <div class="review-modal">
-
-    <div class="modal-header">
-      <div style="font-weight:700">Create Review</div>
-      <button id="rv-create-close" class="btn-ghost" style="padding:6px;">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-
-    <div class="modal-body">
-      
-      <div>
-        <div class="muted">Customer Name</div>
-        <input id="cr-name" class="filter-select" placeholder="Enter customer name">
-      </div>
-
-      <div>
-        <div class="muted">Location</div>
-        <input id="cr-location" class="filter-select" placeholder="Enter location">
-      </div>
-
-      <div>
-        <div class="muted">Product</div>
-        <select id="cr-product" class="filter-select">
-          <option value="1">Natura Agmark Honey - 1Kg</option>
-          <option value="2">Natura Agmark Honey - 500g</option>
-          <option value="3">Natura Agmark Honey - 100g</option>
-          <option value="4">Natura Agmark Honey - 50g</option>
-          <option value="5">Natura Agmark Honey - 1Kg</option>
-          <option value="6">Natura Agmark Honey - Premium Pet 500g</option>
-        </select>
-      </div>
-
-      <div>
-        <div class="muted">Rating</div>
-        <select id="cr-rating" class="filter-select">
-          <option value="5">5.0 Stars</option>
-          <option value="4.5">4.5 Stars</option>
-          <option value="4">4.0 Stars</option>
-          <option value="3.5">3.5 Stars</option>
-          <option value="3">3.0 Stars</option>
-          <option value="2.5">2.5 Stars</option>
-          <option value="2">2.0 Stars</option>
-          <option value="1.5">1.5 Stars</option>
-          <option value="1">1.0 Stars</option>
-        </select>
-      </div>
-
-      <div>
-        <div class="muted">Review Text</div>
-        <textarea id="cr-text" class="filter-select" placeholder="Enter review text"></textarea>
-      </div>
-
-      <div>
-        <div class="muted">Status</div>
-        <select id="cr-status" class="filter-select">
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
-      </div>
-
-      <div>
-        <div class="muted">Date</div>
-        <input type="date" id="cr-date" class="filter-select">
-      </div>
-
-    </div>
-
-    <div class="modal-footer">
-      <button id="rv-create-save" class="btn-success">
-        <i class="fas fa-check" style="margin-right:8px"></i> Save
-      </button>
-
-      <button id="rv-create-cancel" class="btn-ghost">
-        Cancel
-      </button>
-    </div>
-
-  </div>
-</div>
-
-
-<div id="rv-toast" class="rv-toast">
-  <i class="fas fa-check-circle" style="color:var(--success)"></i>
-  <div id="rv-toast-text">Saved</div>
-</div>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
-<script>
-(function(){
-
-const config = {
-  apiKey:"AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-  authDomain:"hexahoney-96aed.firebaseapp.com",
-  projectId:"hexahoney-96aed",
-  storageBucket:"hexahoney-96aed.firebasestorage.app",
-  messagingSenderId:"700458850837",
-  appId:"1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-};
-
-if(!firebase.apps.length) firebase.initializeApp(config);
-const db = firebase.firestore();
-
-const t=document.getElementById("rv-tbody"),
-      c=document.getElementById("rv-cards"),
-      modal=document.getElementById("rv-modal-bg"),
-      modalClose=document.getElementById("rv-modal-close"),
-      modalCancel=document.getElementById("rv-modal-cancel"),
-      modalReject=document.getElementById("rv-modal-reject"),
-      modalApprove=document.getElementById("rv-modal-approve"),
-      modalBody=document.getElementById("rv-modal-body"),
-      fs=document.getElementById("rv-status"),
-      fr=document.getElementById("rv-rating"),
-      si=document.getElementById("rv-search"),
-      refresh=document.getElementById("rv-refresh"),
-      exportBtn=document.getElementById("rv-export"),
-      toastBox=document.getElementById("rv-toast"),
-      toastText=document.getElementById("rv-toast-text");
-
-let reviews=[], filtered=[], editing=null;
-
-const products=[
-  {id:1,name:"Natura Agmark Honey",weight:"1Kg"},
-  {id:2,name:"Natura Agmark Honey",weight:"500g"},
-  {id:3,name:"Natura Agmark Honey",weight:"100g"},
-  {id:4,name:"Natura Agmark Honey",weight:"50g"},
-  {id:5,name:"Natura Agmark Honey",weight:"1Kg"},
-  {id:6,name:"Natura Agmark Honey - Premium Pet",weight:"500g"},
-];
-
-function toast(msg,type="success"){
-  toastText.textContent=msg;
-  toastBox.style.borderLeftColor = type==="success" ? "var(--success)" : "var(--danger)";
-  toastBox.classList.add("show");
-  setTimeout(()=>toastBox.classList.remove("show"),2500);
-}
-
-
-
-function esc(str){return String(str||"").replace(/[&<>"']/g,a=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[a]));}
-function fdn(d) {
-  if (!d) return "—";
-  const x = d.toDate ? d.toDate() : new Date(d);
-
-  const dd = String(x.getDate()).padStart(2, "0");
-  const mm = String(x.getMonth() + 1).padStart(2, "0");
-  const yyyy = x.getFullYear();
-
-  return `${dd}/${mm}/${yyyy}`;
-}
-function sc(s){return "status-"+s;}
-function getProductName(id){const p=products.find(x=>x.id===id); return p ? `${p.name} - ${p.weight}` : `Product #${id}`;}
-function generateStarRating(value) {
-    const rating = Number(value) || 0;
-    let html = "";
-
-    for (let i = 1; i <= 5; i++) {
-        if (rating >= i) {
-            html += `<i class="fas fa-star"></i>`;
-        } else if (rating >= i - 0.5) {
-            html += `<i class="fas fa-star-half-stroke"></i>`;
-        } else {
-            html += `<i class="far fa-star"></i>`;
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    
+    <style>
+    :root {
+        --dark: #1a1a1a;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --radius: 8px;
+        --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        --success: #10b981;
+        --danger: #ef4444;
+        --primary: #2563eb;
+        --light: #f8fafc;
+    }
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    body {
+        background: #f3f4f6;
+        color: var(--dark);
+        line-height: 1.5;
+    }
+    
+    .page-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .reviews-view {
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+    
+    /* HEADER */
+    .reviews-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .header-top {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    @media (min-width: 768px) {
+        .header-top {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
         }
     }
-
-    return html;
-}
-
-function openView(id){
-  const r=reviews.find(x=>x.id===id);
-  if(!r) return;
-
-  editing=id;
-  const p=getProductName(r.productId);
-
-  modalBody.innerHTML=`
-    <div style="display:grid;gap:16px">
-      <div>
-        <div class="muted">Review ID</div>
-        <div style="font-weight:700">#${esc(id.slice(0,8))}</div>
-      </div>
-
-      <div style="display:flex;gap:12px">
-        <div style="flex:1">
-          <div class="muted">Customer</div>
-          <div style="font-weight:600">${esc(r.userName)}</div>
-          <div class="muted">${esc(r.userLocation)}</div>
+    
+    .header-title h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark);
+    }
+    
+    .header-title p {
+        color: var(--muted);
+        margin-top: 4px;
+        font-size: 0.9rem;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    /* BUTTONS */
+    .btn {
+        padding: 10px 16px;
+        border-radius: var(--radius);
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .btn-primary {
+        background: var(--dark);
+        color: white;
+    }
+    
+    .btn-success {
+        background: var(--success);
+        color: white;
+    }
+    
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--dark);
+    }
+    
+    .btn-icon {
+        padding: 10px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* FILTERS */
+    .reviews-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 16px;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 180px;
+    }
+    
+    .filter-select, .search-box {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: white;
+        font-size: 0.9rem;
+    }
+    
+    .search-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+    }
+    
+    .search-box input {
+        flex: 1;
+        border: none;
+        outline: none;
+        padding: 10px 0;
+        font-size: 0.9rem;
+    }
+    
+    /* TABLE */
+    .table-container {
+        padding: 0 20px 20px;
+        overflow-x: auto;
+    }
+    
+    .reviews-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+    
+    .reviews-table thead {
+        background: var(--light);
+    }
+    
+    .reviews-table th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--dark);
+        border-bottom: 2px solid var(--border);
+    }
+    
+    .reviews-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+    
+    .reviews-table tbody tr:hover {
+        background: var(--light);
+    }
+    
+    /* STATUS BADGES */
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    /* RATING STARS */
+    .rating-stars {
+        color: #fbbf24;
+        font-size: 0.9rem;
+    }
+    
+    /* ACTION BUTTONS */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+    
+    .action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 4px;
+        color: var(--muted);
+        transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+        background: var(--light);
+        color: var(--dark);
+    }
+    
+    .action-btn.approve { color: var(--success); }
+    .action-btn.reject { color: var(--danger); }
+    .action-btn.delete { color: var(--danger); }
+    .action-btn.view { color: var(--primary); }
+    
+    /* MOBILE CARDS */
+    .mobile-cards {
+        display: none;
+        gap: 12px;
+        padding: 20px;
+    }
+    
+    .review-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+    }
+    
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    
+    .card-avatar {
+        width: 40px;
+        height: 40px;
+        background: var(--dark);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+    
+    .card-info h4 {
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+    }
+    
+    .card-info p {
+        font-size: 0.8rem;
+        color: var(--muted);
+    }
+    
+    .card-content {
+        margin: 12px 0;
+    }
+    
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+    }
+    
+    /* MODAL */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+    
+    .modal-overlay.active {
+        display: flex;
+    }
+    
+    .modal {
+        background: white;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .modal-header h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+    
+    .modal-footer {
+        padding: 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+    
+    /* FORM */
+    .form-grid {
+        display: grid;
+        gap: 16px;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+        color: var(--muted);
+        font-weight: 500;
+    }
+    
+    .form-control {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+    }
+    
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    /* TOAST */
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--success);
+        border-radius: var(--radius);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s;
+    }
+    
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+        .table-container {
+            display: none;
+        }
+        
+        .mobile-cards {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+    
+    @media (max-width: 640px) {
+        .page-container {
+            padding: 10px;
+        }
+        
+        .reviews-header,
+        .table-container,
+        .mobile-cards {
+            padding: 16px;
+        }
+        
+        .header-actions {
+            width: 100%;
+        }
+        
+        .btn {
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .reviews-filters {
+            flex-direction: column;
+        }
+        
+        .filter-group {
+            min-width: 100%;
+        }
+    }
+    
+    @media (min-width: 768px) {
+        .form-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="reviews-view">
+            <!-- HEADER -->
+            <div class="reviews-header">
+                <div class="header-top">
+                    <div class="header-title">
+                        <h1>Review Management</h1>
+                        <p>Manage and moderate customer reviews</p>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <button class="btn btn-ghost" id="rv-refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="btn btn-ghost" id="rv-export">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <button class="btn btn-success" id="rv-test">
+                            <i class="fas fa-plus"></i> Test Review
+                        </button>
+                        <button class="btn btn-primary" id="rv-create">
+                            <i class="fas fa-plus"></i> Create Review
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- FILTERS -->
+                <div class="reviews-filters">
+                    <div class="filter-group">
+                        <select id="rv-status" class="filter-select">
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="rv-rating" class="filter-select">
+                            <option value="all">All Ratings</option>
+                            <option value="5">5 Stars</option>
+                            <option value="4">4+ Stars</option>
+                            <option value="3">3+ Stars</option>
+                            <option value="2">2+ Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="rv-search" placeholder="Search reviews...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DESKTOP TABLE -->
+            <div class="table-container">
+                <table class="reviews-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Product</th>
+                            <th>Rating</th>
+                            <th>Review</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rv-tbody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px; color: var(--muted);">
+                                Loading reviews...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- MOBILE CARDS -->
+            <div class="mobile-cards" id="rv-cards">
+                <!-- Cards will be inserted here by JavaScript -->
+            </div>
         </div>
-
-        <div style="flex:1">
-          <div class="muted">Product</div>
-          ${esc(p)}
-        </div>
-      </div>
-
-      <div style="display:flex;gap:12px">
-        <div style="flex:1">
-          <div class="muted">Rating</div>
-          <div class="rating-stars" style="font-size:1.2rem">${generateStarRating(r.rating)}</div>
-        </div>
-
-        <div style="flex:1">
-          <div class="muted">Date</div>
-          ${fdn(r.createdAt)}
-        </div>
-      </div>
-
-      <div>
-        <div class="muted">Status</div>
-        <span class="status-pill ${sc(r.status)}">${esc(r.status)}</span>
-      </div>
-
-      <div>
-        <div class="muted">Review</div>
-        <div style="background:#f8f9fa;padding:12px;border-radius:8px;border:1px solid var(--border);margin-top:8px;">
-          ${esc(r.reviewText)}
-        </div>
-      </div>
     </div>
-  `;
-
-  modal.classList.add("show");
-}
-
-function closeView(){modal.classList.remove("show"); editing=null;}
-
-function approveReview(id){
-  db.collection("reviews").doc(id).update({
-    status:"approved",
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>toast("Approved"));
-}
-
-function rejectReview(id){
-  db.collection("reviews").doc(id).update({
-    status:"rejected",
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>toast("Rejected"));
-}
-
-function deleteReview(id){
-  db.collection("reviews").doc(id).delete().then(()=>toast("Deleted"));
-}
-
-function list(data){
-  if(!data.length){
-    t.innerHTML=`<tr><td colspan="7"><div class="empty-state">No Reviews Found</div></td></tr>`;
-    return;
-  }
-
-  t.innerHTML=data.map(r=>{
-    const p=getProductName(r.productId);
-    const text=r.reviewText||"";
-
-return `
-<tr data-id="${r.id}">
-  <td>
-    <div style="display:flex;gap:10px;align-items:center">
-      <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
-        ${esc((r.userName||"C").slice(0,2).toUpperCase())}
-      </div>
-      <div>
-        <div style="font-weight:600">${esc(r.userName)}</div>
-        <div class="muted">${esc(r.userLocation)}</div>
-      </div>
+    
+    <!-- VIEW MODAL -->
+    <div class="modal-overlay" id="rv-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Review Details</h3>
+                <button class="btn btn-ghost btn-icon" id="rv-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body" id="rv-modal-body">
+                <!-- Content will be inserted here -->
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="rv-modal-cancel">Close</button>
+                <button class="btn btn-success" id="rv-modal-approve">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+                <button class="btn btn-danger" id="rv-modal-reject">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+            </div>
+        </div>
     </div>
-  </td>
-
-  <td class="muted">${esc(p)}</td>
-
-  <td><div class="rating-stars">${generateStarRating(r.rating)}</div></td>
-
-  <td><div class="review-text" title="${esc(text)}">${esc(text)}</div></td>
-
-  <td class="muted">${fdn(r.createdAt)}</td>
-
-  <td><span class="status-pill ${sc(r.status)}">${esc(r.status)}</span></td>
-
-  <td style="text-align:right">
-    <button class="action-btn view-btn" data-id="${r.id}">
-      <i class="fas fa-eye"></i>
-    </button>
-
-    ${r.status==="pending" ? `
-      <button class="action-btn approve-btn" data-id="${r.id}">
-        <i class="fas fa-check"></i>
-      </button>
-      <button class="action-btn reject-btn" data-id="${r.id}">
-        <i class="fas fa-times"></i>
-      </button>` : ""}
-
-    <button class="action-btn delete-btn" data-id="${r.id}">
-      <i class="fas fa-trash"></i>
-    </button>
-  </td>
-</tr>`;
-  }).join("");
-
-  bindRows();
-}
-
-function bindRows(){
-  document.querySelectorAll(".view-btn").forEach(b=>b.onclick=e=>openView(e.target.closest("button").dataset.id));
-  document.querySelectorAll(".approve-btn").forEach(b=>b.onclick=e=>approveReview(e.target.closest("button").dataset.id));
-  document.querySelectorAll(".reject-btn").forEach(b=>b.onclick=e=>rejectReview(e.target.closest("button").dataset.id));
-  document.querySelectorAll(".delete-btn").forEach(b=>b.onclick=e=>deleteReview(e.target.closest("button").dataset.id));
-}
-
-function applyFilters(){
-  let x=[...reviews];
-  const st=fs.value;
-  const rt=fr.value;
-  const q=si.value.toLowerCase();
-
-  if(st!=="all") x=x.filter(r=>r.status===st);
-if (rt !== "all") x = x.filter(r => r.rating >= parseFloat(rt));
-  if(q) x=x.filter(r=>r._customer.includes(q)||r._product.includes(q)||r._review.includes(q)||r.id.toLowerCase().includes(q));
-
-  filtered=x;
-  list(x);
-}
-
-function loadReviews(){
-  t.innerHTML=`<tr><td colspan="7" class="muted">Loading reviews…</td></tr>`;
-
-  db.collection("reviews").orderBy("createdAt","desc").onSnapshot(q=>{
-    reviews=q.docs.map(d=>{
-      const r=d.data();
-      return {
-        ...r,
-        id:d.id,
-        _customer:(r.userName||"").toLowerCase(),
-        _product:getProductName(r.productId).toLowerCase(),
-        _review:(r.reviewText||"").toLowerCase()
-      };
-    });
-    applyFilters();
-  });
-}
-
-function exportCSV(data){
-  if(!data.length){toast("No data","danger");return;}
-
-  const rows=[["Customer","Location","Product","Rating","Review","Status","Date"]];
-  data.forEach(r=>{
-    rows.push([
-      r.userName,
-      r.userLocation,
-      getProductName(r.productId),
-      r.rating,
-      r.reviewText,
-      r.status,
-      fdn(r.createdAt)
-    ]);
-  });
-
-  const out=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob=new Blob([out],{type:"text/csv"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download="reviews.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/* CREATE REVIEW MODAL */
-function openCreate(){document.getElementById("rv-create-bg").classList.add("show");}
-function closeCreate(){document.getElementById("rv-create-bg").classList.remove("show");}
-
-function saveCreateReview(){
-  const name = document.getElementById("cr-name").value.trim();
-  const loc = document.getElementById("cr-location").value.trim();
-  const product = parseInt(document.getElementById("cr-product").value);
-  const rating = parseFloat(document.getElementById("cr-rating").value);
-  const text = document.getElementById("cr-text").value.trim();
-  const status = document.getElementById("cr-status").value;
-  const dateInput = document.getElementById("cr-date").value;
-
-  if(!name || !loc || !text){
-    toast("Fill all fields","danger");
-    return;
-  }
-
-  db.collection("reviews").add({
-    userName: name,
-    userLocation: loc,
-    productId: product,
-    rating: rating,
-    reviewText: text,
-    status: status,
-    createdAt: dateInput ? new Date(dateInput) : firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>{
-    closeCreate();
-    toast("Review created");
-  });
-}
-
-function addTestReview(){
-  const id="test-"+Math.floor(Math.random()*999999);
-  db.collection("reviews").add({
-    userName:"Test User",
-    userLocation:"Test City",
-    productId:2,
-    rating:4,
-    reviewText:"Dashboard test review",
-    status:"pending",
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>toast("Test review added"));
-}
-
-/* EVENT BINDINGS */
-document.addEventListener("click",e=>{ if(e.target===modal) closeView(); });
-
-modalClose.onclick = closeView;
-modalCancel.onclick = closeView;
-modalReject.onclick = ()=>{ if(editing) rejectReview(editing); };
-modalApprove.onclick = ()=>{ if(editing) approveReview(editing); };
-
-fs.onchange = applyFilters;
-fr.onchange = applyFilters;
-si.oninput = ()=>setTimeout(applyFilters,250);
-
-refresh.onclick = ()=>{ loadReviews(); toast("Refreshing...","success"); };
-exportBtn.onclick = ()=>exportCSV(filtered.length ? filtered : reviews);
-
-document.getElementById("rv-test").onclick = addTestReview;
-
-document.getElementById("rv-create").onclick = openCreate;
-document.getElementById("rv-create-close").onclick = closeCreate;
-document.getElementById("rv-create-cancel").onclick = closeCreate;
-document.getElementById("rv-create-save").onclick = saveCreateReview;
-
-/* INITIAL LOAD */
-loadReviews();
-
-})();
-</script>
+    
+    <!-- CREATE MODAL -->
+    <div class="modal-overlay" id="rv-create-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Create New Review</h3>
+                <button class="btn btn-ghost btn-icon" id="rv-create-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Customer Name</label>
+                        <input type="text" id="cr-name" class="form-control" placeholder="Enter name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="cr-location" class="form-control" placeholder="Enter location">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Product</label>
+                        <select id="cr-product" class="form-control">
+                            <option value="1">Natura Agmark Honey - 1Kg</option>
+                            <option value="2">Natura Agmark Honey - 500g</option>
+                            <option value="3">Natura Agmark Honey - 100g</option>
+                            <option value="4">Natura Agmark Honey - 50g</option>
+                            <option value="5">Natura Agmark Honey - Premium 1Kg</option>
+                            <option value="6">Natura Agmark Honey - Premium Pet 500g</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Rating</label>
+                        <select id="cr-rating" class="form-control">
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="2">2 Stars</option>
+                            <option value="1">1 Star</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Review Text</label>
+                        <textarea id="cr-text" class="form-control" placeholder="Enter review text"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="cr-status" class="form-control">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="cr-date" class="form-control">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-ghost" id="rv-create-cancel">Cancel</button>
+                <button class="btn btn-success" id="rv-create-save">
+                    <i class="fas fa-save"></i> Save Review
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- TOAST -->
+    <div class="toast" id="rv-toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="rv-toast-text">Saved successfully!</span>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script>
+    (function(){
+        // Firebase config
+        const config = {
+            apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
+            authDomain: "hexahoney-96aed.firebaseapp.com",
+            projectId: "hexahoney-96aed",
+            storageBucket: "hexahoney-96aed.firebasestorage.app",
+            messagingSenderId: "700458850837",
+            appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
+        };
+        
+        if(!firebase.apps.length) firebase.initializeApp(config);
+        const db = firebase.firestore();
+        
+        // DOM Elements
+        const tbody = document.getElementById('rv-tbody');
+        const cardsContainer = document.getElementById('rv-cards');
+        let reviews = [];
+        let currentReviewId = null;
+        
+        // Toast function
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('rv-toast');
+            const icon = toast.querySelector('i');
+            const text = document.getElementById('rv-toast-text');
+            
+            text.textContent = message;
+            
+            if(type === 'success') {
+                icon.className = 'fas fa-check-circle';
+                toast.style.borderLeftColor = '#10b981';
+            } else {
+                icon.className = 'fas fa-exclamation-circle';
+                toast.style.borderLeftColor = '#ef4444';
+            }
+            
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // Format date
+        function formatDate(date) {
+            if(!date) return 'N/A';
+            const d = date.toDate ? date.toDate() : new Date(date);
+            return d.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        // Generate stars
+        function generateStars(rating) {
+            let stars = '';
+            for(let i = 1; i <= 5; i++) {
+                if(i <= rating) {
+                    stars += '<i class="fas fa-star"></i>';
+                } else if(i - 0.5 <= rating) {
+                    stars += '<i class="fas fa-star-half-alt"></i>';
+                } else {
+                    stars += '<i class="far fa-star"></i>';
+                }
+            }
+            return stars;
+        }
+        
+        // Get product name
+        function getProductName(id) {
+            const products = {
+                1: 'Natura Agmark Honey - 1Kg',
+                2: 'Natura Agmark Honey - 500g',
+                3: 'Natura Agmark Honey - 100g',
+                4: 'Natura Agmark Honey - 50g',
+                5: 'Natura Agmark Honey - Premium 1Kg',
+                6: 'Natura Agmark Honey - Premium Pet 500g'
+            };
+            return products[id] || `Product #${id}`;
+        }
+        
+        // Load reviews
+        function loadReviews() {
+            db.collection('reviews').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                reviews = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                renderTable();
+                renderCards();
+            });
+        }
+        
+        // Render table (desktop)
+        function renderTable() {
+            if(reviews.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--muted);">
+                            No reviews found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = reviews.map(review => `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="card-avatar">
+                                ${review.userName ? review.userName.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div>
+                                <div style="font-weight: 500;">${review.userName || 'Unknown'}</div>
+                                <div style="font-size: 0.85rem; color: var(--muted);">${review.userLocation || ''}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${getProductName(review.productId)}</td>
+                    <td>
+                        <div class="rating-stars">
+                            ${generateStars(review.rating || 0)}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${review.reviewText || ''}
+                        </div>
+                    </td>
+                    <td>${formatDate(review.createdAt)}</td>
+                    <td>
+                        <span class="status-badge status-${review.status || 'pending'}">
+                            ${review.status || 'pending'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn view" onclick="viewReview('${review.id}')" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn approve" onclick="approveReview('${review.id}')" title="Approve">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="action-btn reject" onclick="rejectReview('${review.id}')" title="Reject">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteReview('${review.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Render cards (mobile)
+        function renderCards() {
+            if(reviews.length === 0) {
+                cardsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--muted);">
+                        No reviews found
+                    </div>
+                `;
+                return;
+            }
+            
+            cardsContainer.innerHTML = reviews.map(review => `
+                <div class="review-card">
+                    <div class="card-header">
+                        <div class="card-avatar">
+                            ${review.userName ? review.userName.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div class="card-info">
+                            <h4>${review.userName || 'Unknown'}</h4>
+                            <p>${review.userLocation || ''}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div style="margin-bottom: 8px;">
+                            <strong>Product:</strong> ${getProductName(review.productId)}
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <strong>Rating:</strong> 
+                            <span class="rating-stars">${generateStars(review.rating || 0)}</span>
+                        </div>
+                        <div style="margin-bottom: 8px;">
+                            <strong>Review:</strong> ${review.reviewText || ''}
+                        </div>
+                    </div>
+                    
+                    <div class="card-meta">
+                        <div>
+                            <span class="status-badge status-${review.status || 'pending'}">
+                                ${review.status || 'pending'}
+                            </span>
+                            <div style="font-size: 0.85rem; color: var(--muted); margin-top: 4px;">
+                                ${formatDate(review.createdAt)}
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="action-btn view" onclick="viewReview('${review.id}')" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn approve" onclick="approveReview('${review.id}')" title="Approve">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="action-btn reject" onclick="rejectReview('${review.id}')" title="Reject">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteReview('${review.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // View review
+        window.viewReview = function(id) {
+            const review = reviews.find(r => r.id === id);
+            if(!review) return;
+            
+            currentReviewId = id;
+            
+            const modalBody = document.getElementById('rv-modal-body');
+            modalBody.innerHTML = `
+                <div style="display: grid; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="card-avatar" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                            ${review.userName ? review.userName.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div>
+                            <div style="font-size: 1.1rem; font-weight: 600;">${review.userName || 'Unknown'}</div>
+                            <div style="color: var(--muted);">${review.userLocation || ''}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 4px;">Product</div>
+                            <div>${getProductName(review.productId)}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 4px;">Rating</div>
+                            <div class="rating-stars">${generateStars(review.rating || 0)}</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 4px;">Status</div>
+                        <span class="status-badge status-${review.status || 'pending'}">
+                            ${review.status || 'pending'}
+                        </span>
+                    </div>
+                    
+                    <div>
+                        <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 8px;">Review Text</div>
+                        <div style="padding: 16px; background: var(--light); border-radius: var(--radius);">
+                            ${review.reviewText || 'No review text provided'}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-size: 0.9rem; color: var(--muted);">Date Created</div>
+                        <div>${formatDate(review.createdAt)}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('rv-modal').classList.add('active');
+        }
+        
+        // Approve review
+        window.approveReview = function(id) {
+            if(confirm('Are you sure you want to approve this review?')) {
+                db.collection('reviews').doc(id).update({
+                    status: 'approved',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    showToast('Review approved successfully');
+                }).catch(error => {
+                    showToast('Error approving review', 'error');
+                });
+            }
+        }
+        
+        // Reject review
+        window.rejectReview = function(id) {
+            if(confirm('Are you sure you want to reject this review?')) {
+                db.collection('reviews').doc(id).update({
+                    status: 'rejected',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    showToast('Review rejected successfully');
+                }).catch(error => {
+                    showToast('Error rejecting review', 'error');
+                });
+            }
+        }
+        
+        // Delete review
+        window.deleteReview = function(id) {
+            if(confirm('Are you sure you want to delete this review?')) {
+                db.collection('reviews').doc(id).delete().then(() => {
+                    showToast('Review deleted successfully');
+                }).catch(error => {
+                    showToast('Error deleting review', 'error');
+                });
+            }
+        }
+        
+        // Create new review
+        document.getElementById('rv-create').addEventListener('click', () => {
+            document.getElementById('cr-date').valueAsDate = new Date();
+            document.getElementById('rv-create-modal').classList.add('active');
+        });
+        
+        // Save new review
+        document.getElementById('rv-create-save').addEventListener('click', () => {
+            const name = document.getElementById('cr-name').value.trim();
+            const location = document.getElementById('cr-location').value.trim();
+            const product = document.getElementById('cr-product').value;
+            const rating = document.getElementById('cr-rating').value;
+            const text = document.getElementById('cr-text').value.trim();
+            const status = document.getElementById('cr-status').value;
+            const date = document.getElementById('cr-date').value;
+            
+            if(!name || !text) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const reviewData = {
+                userName: name,
+                userLocation: location,
+                productId: parseInt(product),
+                rating: parseFloat(rating),
+                reviewText: text,
+                status: status,
+                createdAt: date ? new Date(date) : firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('reviews').add(reviewData).then(() => {
+                showToast('Review created successfully');
+                closeCreateModal();
+            }).catch(error => {
+                showToast('Error creating review', 'error');
+            });
+        });
+        
+        // Test review
+        document.getElementById('rv-test').addEventListener('click', () => {
+            const testData = {
+                userName: 'Test User',
+                userLocation: 'Test City',
+                productId: Math.floor(Math.random() * 6) + 1,
+                rating: Math.floor(Math.random() * 5) + 1,
+                reviewText: 'This is a test review created from the dashboard.',
+                status: 'pending',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('reviews').add(testData).then(() => {
+                showToast('Test review created');
+            }).catch(error => {
+                showToast('Error creating test review', 'error');
+            });
+        });
+        
+        // Export reviews
+        document.getElementById('rv-export').addEventListener('click', () => {
+            if(reviews.length === 0) {
+                showToast('No reviews to export', 'error');
+                return;
+            }
+            
+            const headers = ['Customer', 'Location', 'Product', 'Rating', 'Review', 'Status', 'Date'];
+            const rows = reviews.map(review => [
+                review.userName,
+                review.userLocation,
+                getProductName(review.productId),
+                review.rating,
+                review.reviewText,
+                review.status,
+                formatDate(review.createdAt)
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reviews.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Reviews exported successfully');
+        });
+        
+        // Refresh reviews
+        document.getElementById('rv-refresh').addEventListener('click', () => {
+            loadReviews();
+            showToast('Refreshing reviews...');
+        });
+        
+        // Modal close functions
+        function closeViewModal() {
+            document.getElementById('rv-modal').classList.remove('active');
+            currentReviewId = null;
+        }
+        
+        function closeCreateModal() {
+            document.getElementById('rv-create-modal').classList.remove('active');
+            // Reset form
+            document.getElementById('cr-name').value = '';
+            document.getElementById('cr-location').value = '';
+            document.getElementById('cr-product').value = '1';
+            document.getElementById('cr-rating').value = '5';
+            document.getElementById('cr-text').value = '';
+            document.getElementById('cr-status').value = 'pending';
+            document.getElementById('cr-date').valueAsDate = new Date();
+        }
+        
+        // Event listeners for modals
+        document.getElementById('rv-modal-close').addEventListener('click', closeViewModal);
+        document.getElementById('rv-modal-cancel').addEventListener('click', closeViewModal);
+        document.getElementById('rv-create-close').addEventListener('click', closeCreateModal);
+        document.getElementById('rv-create-cancel').addEventListener('click', closeCreateModal);
+        
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if(e.target === this) {
+                    this.classList.remove('active');
+                    if(this.id === 'rv-create-modal') {
+                        closeCreateModal();
+                    } else {
+                        closeViewModal();
+                    }
+                }
+            });
+        });
+        
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'Escape') {
+                closeViewModal();
+                closeCreateModal();
+            }
+        });
+        
+        // Initialize
+        loadReviews();
+        
+        // Make functions available globally
+        window.closeViewModal = closeViewModal;
+        window.closeCreateModal = closeCreateModal;
+        
+    })();
+    </script>
