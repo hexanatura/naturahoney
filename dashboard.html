@@ -3598,6 +3598,8 @@ function loadDashboardRecentOrders() {
                 // Format the label properly
                 let label = status.charAt(0).toUpperCase() + status.slice(1);
                 label = label.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                label = label.replace(/-/g, ' ');
+label = label.replace(/\b\w/g, l => l.toUpperCase());
 
                 div.innerHTML = `
                     <div class="order-info">
