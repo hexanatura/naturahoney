@@ -158,7 +158,7 @@
     .reviews-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 900px;
+        min-width: 800px;
     }
     
     .reviews-table thead {
@@ -319,7 +319,7 @@
         background: white;
         border-radius: 12px;
         width: 100%;
-        max-width: 600px;
+        max-width: 500px;
         max-height: 90vh;
         overflow-y: auto;
     }
@@ -443,16 +443,6 @@
             min-width: 100%;
         }
     }
-    
-    @media (min-width: 768px) {
-        .form-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-    }
     </style>
 </head>
 <body>
@@ -519,7 +509,6 @@
                     <thead>
                         <tr>
                             <th>Customer</th>
-                            <th>Product</th>
                             <th>Rating</th>
                             <th>Review</th>
                             <th>Date</th>
@@ -529,7 +518,7 @@
                     </thead>
                     <tbody id="rv-tbody">
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px; color: var(--muted);">
+                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--muted);">
                                 Loading reviews...
                             </td>
                         </tr>
@@ -583,8 +572,8 @@
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Customer Name</label>
-                        <input type="text" id="cr-name" class="form-control" placeholder="Enter name">
+                        <label>Customer Name *</label>
+                        <input type="text" id="cr-name" class="form-control" placeholder="Enter customer name" required>
                     </div>
                     
                     <div class="form-group">
@@ -593,20 +582,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>Product</label>
-                        <select id="cr-product" class="form-control">
-                            <option value="1">Natura Agmark Honey - 1Kg</option>
-                            <option value="2">Natura Agmark Honey - 500g</option>
-                            <option value="3">Natura Agmark Honey - 100g</option>
-                            <option value="4">Natura Agmark Honey - 50g</option>
-                            <option value="5">Natura Agmark Honey - Premium 1Kg</option>
-                            <option value="6">Natura Agmark Honey - Premium Pet 500g</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Rating</label>
-                        <select id="cr-rating" class="form-control">
+                        <label>Rating *</label>
+                        <select id="cr-rating" class="form-control" required>
                             <option value="5">5 Stars</option>
                             <option value="4">4 Stars</option>
                             <option value="3">3 Stars</option>
@@ -615,9 +592,9 @@
                         </select>
                     </div>
                     
-                    <div class="form-group full-width">
-                        <label>Review Text</label>
-                        <textarea id="cr-text" class="form-control" placeholder="Enter review text"></textarea>
+                    <div class="form-group">
+                        <label>Review Text *</label>
+                        <textarea id="cr-text" class="form-control" placeholder="Enter review text" required></textarea>
                     </div>
                     
                     <div class="form-group">
@@ -709,10 +686,13 @@
         // Generate stars
         function generateStars(rating) {
             let stars = '';
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
             for(let i = 1; i <= 5; i++) {
-                if(i <= rating) {
+                if(i <= fullStars) {
                     stars += '<i class="fas fa-star"></i>';
-                } else if(i - 0.5 <= rating) {
+                } else if(i === fullStars + 1 && hasHalfStar) {
                     stars += '<i class="fas fa-star-half-alt"></i>';
                 } else {
                     stars += '<i class="far fa-star"></i>';
@@ -721,17 +701,36 @@
             return stars;
         }
         
-        // Get product name
-        function getProductName(id) {
-            const products = {
-                1: 'Natura Agmark Honey - 1Kg',
-                2: 'Natura Agmark Honey - 500g',
-                3: 'Natura Agmark Honey - 100g',
-                4: 'Natura Agmark Honey - 50g',
-                5: 'Natura Agmark Honey - Premium 1Kg',
-                6: 'Natura Agmark Honey - Premium Pet 500g'
-            };
-            return products[id] || `Product #${id}`;
+        // Filter reviews based on status and rating
+        function filterReviews() {
+            const statusFilter = document.getElementById('rv-status').value;
+            const ratingFilter = document.getElementById('rv-rating').value;
+            const searchFilter = document.getElementById('rv-search').value.toLowerCase();
+            
+            let filtered = reviews;
+            
+            // Filter by status
+            if(statusFilter !== 'all') {
+                filtered = filtered.filter(review => review.status === statusFilter);
+            }
+            
+            // Filter by rating
+            if(ratingFilter !== 'all') {
+                const minRating = parseFloat(ratingFilter);
+                filtered = filtered.filter(review => review.rating >= minRating);
+            }
+            
+            // Filter by search
+            if(searchFilter) {
+                filtered = filtered.filter(review => 
+                    (review.userName && review.userName.toLowerCase().includes(searchFilter)) ||
+                    (review.userLocation && review.userLocation.toLowerCase().includes(searchFilter)) ||
+                    (review.reviewText && review.reviewText.toLowerCase().includes(searchFilter))
+                );
+            }
+            
+            renderTable(filtered);
+            renderCards(filtered);
         }
         
         // Load reviews
@@ -741,17 +740,19 @@
                     id: doc.id,
                     ...doc.data()
                 }));
-                renderTable();
-                renderCards();
+                filterReviews();
+            }, error => {
+                console.error('Error loading reviews:', error);
+                showToast('Error loading reviews', 'error');
             });
         }
         
         // Render table (desktop)
-        function renderTable() {
-            if(reviews.length === 0) {
+        function renderTable(filteredReviews) {
+            if(filteredReviews.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--muted);">
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--muted);">
                             No reviews found
                         </td>
                     </tr>
@@ -759,7 +760,7 @@
                 return;
             }
             
-            tbody.innerHTML = reviews.map(review => `
+            tbody.innerHTML = filteredReviews.map(review => `
                 <tr>
                     <td>
                         <div style="display: flex; align-items: center; gap: 12px;">
@@ -772,7 +773,6 @@
                             </div>
                         </div>
                     </td>
-                    <td>${getProductName(review.productId)}</td>
                     <td>
                         <div class="rating-stars">
                             ${generateStars(review.rating || 0)}
@@ -794,12 +794,14 @@
                             <button class="action-btn view" onclick="viewReview('${review.id}')" title="View">
                                 <i class="fas fa-eye"></i>
                             </button>
+                            ${review.status === 'pending' ? `
                             <button class="action-btn approve" onclick="approveReview('${review.id}')" title="Approve">
                                 <i class="fas fa-check"></i>
                             </button>
                             <button class="action-btn reject" onclick="rejectReview('${review.id}')" title="Reject">
                                 <i class="fas fa-times"></i>
                             </button>
+                            ` : ''}
                             <button class="action-btn delete" onclick="deleteReview('${review.id}')" title="Delete">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -810,8 +812,8 @@
         }
         
         // Render cards (mobile)
-        function renderCards() {
-            if(reviews.length === 0) {
+        function renderCards(filteredReviews) {
+            if(filteredReviews.length === 0) {
                 cardsContainer.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: var(--muted);">
                         No reviews found
@@ -820,7 +822,7 @@
                 return;
             }
             
-            cardsContainer.innerHTML = reviews.map(review => `
+            cardsContainer.innerHTML = filteredReviews.map(review => `
                 <div class="review-card">
                     <div class="card-header">
                         <div class="card-avatar">
@@ -833,9 +835,6 @@
                     </div>
                     
                     <div class="card-content">
-                        <div style="margin-bottom: 8px;">
-                            <strong>Product:</strong> ${getProductName(review.productId)}
-                        </div>
                         <div style="margin-bottom: 8px;">
                             <strong>Rating:</strong> 
                             <span class="rating-stars">${generateStars(review.rating || 0)}</span>
@@ -859,12 +858,14 @@
                             <button class="action-btn view" onclick="viewReview('${review.id}')" title="View">
                                 <i class="fas fa-eye"></i>
                             </button>
+                            ${review.status === 'pending' ? `
                             <button class="action-btn approve" onclick="approveReview('${review.id}')" title="Approve">
                                 <i class="fas fa-check"></i>
                             </button>
                             <button class="action-btn reject" onclick="rejectReview('${review.id}')" title="Reject">
                                 <i class="fas fa-times"></i>
                             </button>
+                            ` : ''}
                             <button class="action-btn delete" onclick="deleteReview('${review.id}')" title="Delete">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -896,25 +897,20 @@
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                         <div>
-                            <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 4px;">Product</div>
-                            <div>${getProductName(review.productId)}</div>
-                        </div>
-                        <div>
                             <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 4px;">Rating</div>
                             <div class="rating-stars">${generateStars(review.rating || 0)}</div>
                         </div>
-                    </div>
-                    
-                    <div>
-                        <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 4px;">Status</div>
-                        <span class="status-badge status-${review.status || 'pending'}">
-                            ${review.status || 'pending'}
-                        </span>
+                        <div>
+                            <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 4px;">Status</div>
+                            <span class="status-badge status-${review.status || 'pending'}">
+                                ${review.status || 'pending'}
+                            </span>
+                        </div>
                     </div>
                     
                     <div>
                         <div style="font-size: 0.9rem; color: var(--muted); margin-bottom: 8px;">Review Text</div>
-                        <div style="padding: 16px; background: var(--light); border-radius: var(--radius);">
+                        <div style="padding: 16px; background: var(--light); border-radius: var(--radius); line-height: 1.6;">
                             ${review.reviewText || 'No review text provided'}
                         </div>
                     </div>
@@ -937,7 +933,9 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => {
                     showToast('Review approved successfully');
+                    closeViewModal();
                 }).catch(error => {
+                    console.error('Error approving review:', error);
                     showToast('Error approving review', 'error');
                 });
             }
@@ -951,7 +949,9 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => {
                     showToast('Review rejected successfully');
+                    closeViewModal();
                 }).catch(error => {
+                    console.error('Error rejecting review:', error);
                     showToast('Error rejecting review', 'error');
                 });
             }
@@ -962,7 +962,11 @@
             if(confirm('Are you sure you want to delete this review?')) {
                 db.collection('reviews').doc(id).delete().then(() => {
                     showToast('Review deleted successfully');
+                    if(currentReviewId === id) {
+                        closeViewModal();
+                    }
                 }).catch(error => {
+                    console.error('Error deleting review:', error);
                     showToast('Error deleting review', 'error');
                 });
             }
@@ -978,7 +982,6 @@
         document.getElementById('rv-create-save').addEventListener('click', () => {
             const name = document.getElementById('cr-name').value.trim();
             const location = document.getElementById('cr-location').value.trim();
-            const product = document.getElementById('cr-product').value;
             const rating = document.getElementById('cr-rating').value;
             const text = document.getElementById('cr-text').value.trim();
             const status = document.getElementById('cr-status').value;
@@ -992,7 +995,6 @@
             const reviewData = {
                 userName: name,
                 userLocation: location,
-                productId: parseInt(product),
                 rating: parseFloat(rating),
                 reviewText: text,
                 status: status,
@@ -1003,6 +1005,7 @@
                 showToast('Review created successfully');
                 closeCreateModal();
             }).catch(error => {
+                console.error('Error creating review:', error);
                 showToast('Error creating review', 'error');
             });
         });
@@ -1010,54 +1013,68 @@
         // Test review
         document.getElementById('rv-test').addEventListener('click', () => {
             const testData = {
-                userName: 'Test User',
+                userName: 'Test Customer',
                 userLocation: 'Test City',
-                productId: Math.floor(Math.random() * 6) + 1,
                 rating: Math.floor(Math.random() * 5) + 1,
-                reviewText: 'This is a test review created from the dashboard.',
+                reviewText: 'This is a test review created from the dashboard. The product was excellent!',
                 status: 'pending',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
             db.collection('reviews').add(testData).then(() => {
-                showToast('Test review created');
+                showToast('Test review created successfully');
             }).catch(error => {
+                console.error('Error creating test review:', error);
                 showToast('Error creating test review', 'error');
             });
         });
         
         // Export reviews
         document.getElementById('rv-export').addEventListener('click', () => {
-            if(reviews.length === 0) {
+            const filteredReviews = reviews.filter(review => {
+                const statusFilter = document.getElementById('rv-status').value;
+                const ratingFilter = document.getElementById('rv-rating').value;
+                const searchFilter = document.getElementById('rv-search').value.toLowerCase();
+                
+                if(statusFilter !== 'all' && review.status !== statusFilter) return false;
+                if(ratingFilter !== 'all' && review.rating < parseFloat(ratingFilter)) return false;
+                if(searchFilter && 
+                   !review.userName?.toLowerCase().includes(searchFilter) &&
+                   !review.userLocation?.toLowerCase().includes(searchFilter) &&
+                   !review.reviewText?.toLowerCase().includes(searchFilter)) return false;
+                
+                return true;
+            });
+            
+            if(filteredReviews.length === 0) {
                 showToast('No reviews to export', 'error');
                 return;
             }
             
-            const headers = ['Customer', 'Location', 'Product', 'Rating', 'Review', 'Status', 'Date'];
-            const rows = reviews.map(review => [
-                review.userName,
-                review.userLocation,
-                getProductName(review.productId),
-                review.rating,
-                review.reviewText,
-                review.status,
+            const headers = ['Customer', 'Location', 'Rating', 'Review', 'Status', 'Date'];
+            const rows = filteredReviews.map(review => [
+                review.userName || '',
+                review.userLocation || '',
+                review.rating || 0,
+                review.reviewText || '',
+                review.status || 'pending',
                 formatDate(review.createdAt)
             ]);
             
             const csvContent = [
                 headers.join(','),
-                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+                ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
             ].join('\n');
             
             const blob = new Blob([csvContent], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'reviews.csv';
+            a.download = `reviews_${new Date().toISOString().slice(0,10)}.csv`;
             a.click();
             URL.revokeObjectURL(url);
             
-            showToast('Reviews exported successfully');
+            showToast(`${filteredReviews.length} reviews exported successfully`);
         });
         
         // Refresh reviews
@@ -1077,7 +1094,6 @@
             // Reset form
             document.getElementById('cr-name').value = '';
             document.getElementById('cr-location').value = '';
-            document.getElementById('cr-product').value = '1';
             document.getElementById('cr-rating').value = '5';
             document.getElementById('cr-text').value = '';
             document.getElementById('cr-status').value = 'pending';
@@ -1089,6 +1105,19 @@
         document.getElementById('rv-modal-cancel').addEventListener('click', closeViewModal);
         document.getElementById('rv-create-close').addEventListener('click', closeCreateModal);
         document.getElementById('rv-create-cancel').addEventListener('click', closeCreateModal);
+        
+        // Approve/Reject from modal
+        document.getElementById('rv-modal-approve').addEventListener('click', () => {
+            if(currentReviewId) {
+                approveReview(currentReviewId);
+            }
+        });
+        
+        document.getElementById('rv-modal-reject').addEventListener('click', () => {
+            if(currentReviewId) {
+                rejectReview(currentReviewId);
+            }
+        });
         
         // Close modal on overlay click
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -1104,6 +1133,14 @@
             });
         });
         
+        // Filter event listeners
+        document.getElementById('rv-status').addEventListener('change', filterReviews);
+        document.getElementById('rv-rating').addEventListener('change', filterReviews);
+        document.getElementById('rv-search').addEventListener('input', () => {
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(filterReviews, 300);
+        });
+        
         // Close on Escape key
         document.addEventListener('keydown', function(e) {
             if(e.key === 'Escape') {
@@ -1113,11 +1150,8 @@
         });
         
         // Initialize
+        document.getElementById('cr-date').valueAsDate = new Date();
         loadReviews();
-        
-        // Make functions available globally
-        window.closeViewModal = closeViewModal;
-        window.closeCreateModal = closeCreateModal;
         
     })();
     </script>
