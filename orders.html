@@ -10,6 +10,43 @@
   box-sizing: border-box;
 }
 
+@media (max-width: 1023px) {
+  .table-wrapper {
+    display: none;
+  }
+  
+  .mobile-cards {
+    display: flex !important; 
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  
+  .orders-controls {
+    width: 100%;
+  }
+  
+  .orders-card.filters-row {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .search-box, .filter-select {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .table-wrapper {
+    display: block;
+  }
+  
+  .mobile-cards {
+    display: none !important;
+  }
+}
+
 .orders-view {
   width: 100%;
   padding: 20px;
@@ -607,91 +644,98 @@
   }
 }
 </style>
-<div class="orders-view fade-in">
-  <div class="orders-top">
-    <div>
-      <div class="orders-title">Order Management</div>
-      <div class="orders-sub muted">Manage and track customer orders</div>
+
+</head>
+<body>
+<div class="page-container">
+  <div class="orders-view fade-in">
+
+    <div class="orders-top">
+      <div>
+        <div class="orders-title">Order Management</div>
+        <div class="orders-sub muted">Manage and track customer orders</div>
+      </div>
+
+      <div class="orders-controls">
+        <div class="orders-card filters-row">
+          <select id="ov-status" class="filter-select" title="Filter by status">
+            <option value="all">All Orders</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="shipped">Shipped</option>
+            <option value="out-for-delivery">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+
+          <select id="ov-date" class="filter-select" title="Filter by date">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
+
+          <div class="search-box">
+            <i class="fas fa-search muted"></i>
+            <input id="ov-search" placeholder="Search order ID, customer, email">
+          </div>
+        </div>
+
+        <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+        <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
+      </div>
     </div>
 
-    <div class="orders-controls">
-      <div class="orders-card filters-row">
-        <select id="ov-status" class="filter-select" title="Filter by status">
-          <option value="all">All Orders</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="shipped">Shipped</option>
-          <option value="out-for-delivery">Out for Delivery</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table class="orders-table" aria-label="Orders table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ov-tbody">
+            <tr><td colspan="7" class="muted">Loading orders…</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-        <select id="ov-date" class="filter-select" title="Filter by date">
-          <option value="all">All Time</option>
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-        </select>
+      <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
+    </div>
 
-        <div class="search-box">
-          <i class="fas fa-search muted"></i>
-          <input id="ov-search" placeholder="Search order ID, customer, email">
+    <!-- Product Image Zoom Modal -->
+    <div class="image-zoom-modal" id="imageZoomModal">
+      <div class="image-zoom-content">
+        <button class="image-zoom-close" id="imageZoomClose" aria-label="Close zoom">
+          <i class="fas fa-times"></i>
+        </button>
+        <img id="zoomedImage" class="product-image-large" alt="Product image" />
+        <div id="imageCaption" class="image-zoom-caption"></div>
+      </div>
+    </div>
+
+    <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
+      <div class="orders-modal" role="document" aria-modal="true">
+        <div class="modal-header">
+          <div style="font-weight:700" id="ov-modal-title">Order Details</div>
+          <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="modal-body" id="ov-modal-body"></div>
+
+        <div class="modal-footer">
+          <button id="ov-modal-cancel" class="btn-ghost">Close</button>
+          <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
         </div>
       </div>
-
-      <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-      <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
-    </div>
-  </div>
-
-  <div class="table-card">
-    <div class="table-wrapper">
-      <table class="orders-table" aria-label="Orders table">
-        <thead>
-          <tr>
-            <th>Order ID</th>
-            <th>Customer</th>
-            <th>Date</th>
-            <th>Items</th>
-            <th>Total</th>
-            <th>Status</th>
-            <th style="text-align:right">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="ov-tbody">
-          <tr><td colspan="7" class="muted">Loading orders…</td></tr>
-        </tbody>
-      </table>
     </div>
 
-    <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
-  </div>
-
-  <!-- Product Image Zoom Modal -->
-  <div class="image-zoom-modal" id="imageZoomModal">
-    <div class="image-zoom-content">
-      <button class="image-zoom-close" id="imageZoomClose" aria-label="Close zoom">
-        <i class="fas fa-times"></i>
-      </button>
-      <img id="zoomedImage" class="product-image-large" alt="Product image" />
-      <div id="imageCaption" class="image-zoom-caption"></div>
-    </div>
-  </div>
-
-  <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
-    <div class="orders-modal" role="document" aria-modal="true">
-      <div class="modal-header">
-        <div style="font-weight:700" id="ov-modal-title">Order Details</div>
-        <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
-      </div>
-
-      <div class="modal-body" id="ov-modal-body"></div>
-
-      <div class="modal-footer">
-        <button id="ov-modal-cancel" class="btn-ghost">Close</button>
-        <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -699,6 +743,11 @@
   <i class="fas fa-check-circle" style="color:var(--success)"></i>
   <div id="oh-toast-text">Saved</div>
 </div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="activityLogger.js?v=1"></script>
 
 <script>
 (function () {
@@ -792,9 +841,7 @@
     return x.toLocaleDateString("en-IN");
   }
 
-  // Fixed: Added status class for "out for delivery"
   function sc(s) {
-    // Convert any variation to standard class name
     const statusMap = {
       'pending': 'pending',
       'confirmed': 'confirmed',
@@ -822,12 +869,11 @@
     document.body.style.overflow = 'auto';
   }
 
-imgZoomModal.addEventListener('click', function (e) {
-  // Close if clicked background OR close button (including icon inside)
-  if (e.target === imgZoomModal || e.target.closest('#imageZoomClose')) {
-    closeImageZoom();
-  }
-});
+  imgZoomModal.addEventListener('click', function (e) {
+    if (e.target === imgZoomModal || e.target.closest('#imageZoomClose')) {
+      closeImageZoom();
+    }
+  });
 
   // Close with Escape key
   document.addEventListener('keydown', function(e) {
@@ -838,7 +884,10 @@ imgZoomModal.addEventListener('click', function (e) {
 
   function load() {
     t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
-    c.innerHTML = "";
+    c.innerHTML = `<div class="order-card" style="text-align:center;padding:40px 20px;color:var(--muted)">
+      <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:16px;color:var(--accent)"></i>
+      <p>Loading orders...</p>
+    </div>`;
 
     cleanupOrders();
 
@@ -871,7 +920,11 @@ imgZoomModal.addEventListener('click', function (e) {
 
   function empty() {
     t.innerHTML = `<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>`;
-    c.innerHTML = `<div class="order-card muted">No orders</div>`;
+    c.innerHTML = `<div class="order-card" style="text-align:center;padding:40px 20px;color:var(--muted)">
+      <i class="fas fa-box-open" style="font-size:2rem;margin-bottom:16px;opacity:0.5"></i>
+      <p>No orders found</p>
+      <div class="muted" style="font-size:0.9rem">Try adjusting your filters</div>
+    </div>`;
   }
 
   function list(x) {
@@ -880,6 +933,7 @@ imgZoomModal.addEventListener('click', function (e) {
       return;
     }
 
+    // Update table view
     t.innerHTML = x
       .map((o) => {
         const it = (o.items || []).length,
@@ -888,7 +942,6 @@ imgZoomModal.addEventListener('click', function (e) {
           ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
           : o.email || "Customer";
 
-        // Create items preview with first product image
         let itemsPreview = 'No items';
         if (it > 0) {
           const firstItem = o.items[0];
@@ -913,7 +966,6 @@ imgZoomModal.addEventListener('click', function (e) {
           `;
         }
 
-        // Fixed: Added proper status display
         const statusDisplay = o.status === 'out for delivery' ? 'out for delivery' : (o.status || "pending");
 
         return `
@@ -944,7 +996,6 @@ imgZoomModal.addEventListener('click', function (e) {
             <td>
               <span class="status-pill ${sc(o.status)}">${esc(statusDisplay)}</span>
             </td>
-            <!-- FIXED: Action buttons in same line -->
             <td style="text-align:right">
               <div class="actions-container">
                 <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
@@ -956,6 +1007,66 @@ imgZoomModal.addEventListener('click', function (e) {
               </div>
             </td>
           </tr>
+        `;
+      })
+      .join("");
+
+    // Update mobile cards view
+    c.innerHTML = x
+      .map((o) => {
+        const it = (o.items || []).length,
+          tot = o.total || 0;
+        const cu = o.shippingAddress
+          ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
+          : o.email || "Customer";
+
+        const itemsText = (o.items || [])
+          .map(i => `${i.name || 'Item'} x${i.quantity || 1}`)
+          .join(', ');
+          
+        const statusDisplay = o.status === 'out for delivery' ? 'out for delivery' : (o.status || "pending");
+        const truncatedItemsText = itemsText.length > 50 ? itemsText.substring(0, 50) + '...' : itemsText;
+
+        return `
+          <div class="order-card" data-id="${esc(o.id)}">
+            <div class="card-header">
+              <div>
+                <div class="customer-name">${esc(cu)}</div>
+                <div class="card-meta">#${esc(sid(o.id))} • ${esc(o.email || "No email")}</div>
+              </div>
+              <span class="status-pill ${sc(o.status)}">${esc(statusDisplay)}</span>
+            </div>
+            
+            <div class="card-content">
+              <div class="card-row">
+                <span class="card-label">Date</span>
+                <span class="card-value">${fdn(o.createdAt)}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Items</span>
+                <span class="card-value">${esc(truncatedItemsText)}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Total</span>
+                <span class="card-value" style="font-weight:700;color:var(--dark)">₹${Number(tot).toFixed(2)}</span>
+              </div>
+              ${o.userId ? `
+              <div class="card-row">
+                <span class="card-label">User ID</span>
+                <span class="card-value">${esc(o.userId.substring(0, 8))}...</span>
+              </div>
+              ` : ''}
+            </div>
+            
+            <div class="card-actions">
+              <button class="btn-ghost view-btn-mobile" data-id="${o.id}" style="font-size:0.85rem;padding:8px 12px;">
+                <i class="fas fa-eye" style="margin-right:6px"></i>View
+              </button>
+              <button class="btn-primary edit-btn-mobile" data-id="${o.id}" style="font-size:0.85rem;padding:8px 12px;">
+                <i class="fas fa-edit" style="margin-right:6px"></i>Edit
+              </button>
+            </div>
+          </div>
         `;
       })
       .join("");
@@ -976,12 +1087,39 @@ imgZoomModal.addEventListener('click', function (e) {
   }
 
   function bind() {
+    // Bind table view buttons
     document.querySelectorAll(".view-btn").forEach((b) => {
       b.onclick = (e) => open(e.currentTarget.dataset.id);
     });
 
     document.querySelectorAll(".edit-btn").forEach((b) => {
       b.onclick = (e) => open(e.currentTarget.dataset.id);
+    });
+
+    // Bind mobile view buttons
+    document.querySelectorAll(".view-btn-mobile").forEach((b) => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        open(e.currentTarget.dataset.id);
+      };
+    });
+
+    document.querySelectorAll(".edit-btn-mobile").forEach((b) => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        open(e.currentTarget.dataset.id);
+      };
+    });
+
+    // Make entire mobile card clickable for view (except buttons)
+    document.querySelectorAll(".order-card[data-id]").forEach((card) => {
+      card.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-ghost') && 
+            !e.target.closest('.btn-primary') && 
+            !e.target.closest('.status-pill')) {
+          open(this.getAttribute('data-id'));
+        }
+      });
     });
 
     document.querySelectorAll(".user-btn").forEach((b) => {
