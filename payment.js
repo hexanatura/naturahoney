@@ -1,352 +1,3 @@
-// your code goes here
-const firebaseConfig = {
-    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
-    projectId: "hexahoney-96aed",
-    storageBucket: "hexahoney-96aed.firebasestorage.app",
-    messagingSenderId: "700458850837",
-    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-    measurementId: "G-MQGKK9709H"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-// Global State variables
-let currentUser = null;
-let likedProducts = [];
-let cartProducts = [];
-let userOrders = [];
-let currentModalView = 'login';
-
-// Product data (common across pages)
-const products = [
-    { 
-        id: 1, 
-        name: "Natura Agmark Honey", 
-        price: 249, 
-        weight: "1Kg",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022",
-        category: "crystal"
-    },
-    { 
-        id: 2, 
-        name: "Natura Agmark Honey", 
-        price: 449, 
-        weight: "500g",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026",
-        category: "crystal"
-    },
-    { 
-        id: 3, 
-        name: "Natura Agmark Honey", 
-        price: 149, 
-        weight: "100g",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115",
-        category: "crystal"
-    },
-    { 
-        id: 4, 
-        name: "Natura Agmark Honey", 
-        price: 349, 
-        weight: "50g",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864",
-        category: "crystal"
-    },
-    { 
-        id: 5, 
-        name: "Natura Agmark Honey", 
-        price: 199, 
-        weight: "1Kg",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894",
-        category: "premium"
-    },
-    { 
-        id: 6, 
-        name: "Natura Agmark Honey - Premium Pet", 
-        price: 329, 
-        weight: "500g",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908",
-        category: "premium"
-    }
-];
-
-// DOM Elements (common across pages)
-const notificationBar = document.getElementById('notificationBar');
-const navBar = document.getElementById('navBar');
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-const navLinks = document.getElementById('navLinks');
-const likeIcon = document.getElementById('likeIcon');
-const likeCount = document.getElementById('likeCount');
-const cartIcon = document.getElementById('cartIcon');
-const cartCount = document.getElementById('cartCount');
-const whatsappIcon = document.getElementById('whatsappIcon');
-const userIcon = document.getElementById('userIcon');
-const userDropdown = document.getElementById('userDropdown');
-const profileLink = document.getElementById('profileLink');
-const logoutLink = document.getElementById('logoutLink');
-
-// Sidebars and Modals
-const likesSidebar = document.getElementById('likesSidebar');
-const closeLikes = document.getElementById('closeLikes');
-const likesItems = document.getElementById('likesItems');
-const emptyLikes = document.getElementById('emptyLikes');
-const browseProducts = document.getElementById('browseProducts');
-
-const cartSidebar = document.getElementById('cartSidebar');
-const closeCart = document.getElementById('closeCart');
-const cartItems = document.getElementById('cartItems');
-const emptyCart = document.getElementById('emptyCart');
-const cartSummary = document.getElementById('cartSummary');
-const checkoutBtn = document.getElementById('checkoutBtn');
-const continueShopping = document.getElementById('continueShopping');
-
-const overlay = document.getElementById('overlay');
-const loginModal = document.getElementById('loginModal');
-const closeLogin = document.getElementById('closeLogin');
-const backBtn = document.getElementById('backBtn');
-const modalTitle = document.getElementById('modalTitle');
-const modalSubtitle = document.getElementById('modalSubtitle');
-
-const loginForm = document.getElementById('loginForm');
-const signupForm = document.getElementById('signupForm');
-const forgotForm = document.getElementById('forgotForm');
-const loginBtn = document.getElementById('loginBtn');
-const signupBtn = document.getElementById('signupBtn');
-const resetBtn = document.getElementById('resetBtn');
-const googleLoginBtn = document.getElementById('googleLoginBtn');
-const forgotPassword = document.getElementById('forgotPassword');
-const signUp = document.getElementById('signUp');
-const loginFooter = document.getElementById('loginFooter');
-const termsCheckbox = document.getElementById('termsCheckbox');
-
-// Checkout specific variables
-let currentDiscount = 0;
-let originalTotal = 0;
-let appliedPromoCode = null;
-let addressUnsubscribe = null; // For real-time address updates
-
-// Enhanced helper function to safely set form field values (including select elements)
-function safeSetFormField(fieldId, value) {
-    const field = document.getElementById(fieldId);
-    if (field && value) {
-        if (field.tagName === 'SELECT') {
-            // For select elements, find and set the option
-            const options = field.options;
-            for (let i = 0; i < options.length; i++) {
-                if (options[i].value === value) {
-                    field.selectedIndex = i;
-                    return true;
-                }
-            }
-            // If exact match not found, try case-insensitive match
-            for (let i = 0; i < options.length; i++) {
-                if (options[i].value.toLowerCase() === value.toLowerCase()) {
-                    field.selectedIndex = i;
-                    return true;
-                }
-            }
-        } else {
-            // For input and textarea elements
-            field.value = value;
-            return true;
-        }
-    }
-    return false;
-}
-
-// Initialize Firebase Auth State Listener
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        currentUser = user;
-        updateUIForUser(user);
-        // Load profile data including addresses
-        loadUserProfileData(user.uid);
-        // Update checkout UI
-        updateCheckoutUI();
-        // Load user's default address for auto-fill with real-time updates
-        loadUserDefaultAddress();
-    } else {
-        currentUser = null;
-        // Unsubscribe from address updates if user logs out
-        if (addressUnsubscribe) {
-            addressUnsubscribe();
-            addressUnsubscribe = null;
-        }
-        updateUIForGuest();
-        // Reset profile-related elements if they exist
-        const profilePage = document.getElementById('profilePage');
-        const mainContent = document.getElementById('mainContent');
-        if (profilePage && mainContent) {
-            profilePage.classList.remove('active');
-            mainContent.style.display = 'block';
-        }
-        // Update checkout UI
-        updateCheckoutUI();
-    }
-});
-
-// Save checkout address to user's profile
-function saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefault) {
-    if (!currentUser || !db) return;
-    
-    const fullName = `${firstName} ${lastName}`.trim();
-    
-    const newAddress = {
-        label: 'Home', // Default label, you can customize this
-        name: fullName,
-        address: address,
-        phone: phone.replace('+91 ', ''), // Remove country code for storage
-        pincode: zipCode,
-        city: city,
-        state: state,
-        country: 'India',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        isDefault: isDefault
-    };
-    
-    console.log('Saving checkout address to profile:', newAddress);
-    
-    // If setting as default, first remove default from all other addresses
-    if (isDefault) {
-        db.collection('users').doc(currentUser.uid).collection('addresses').get()
-            .then((querySnapshot) => {
-                const batch = db.batch();
-                
-                querySnapshot.forEach((doc) => {
-                    const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
-                    batch.update(addressRef, { isDefault: false });
-                });
-                
-                return batch.commit();
-            })
-            .then(() => {
-                // Now add the new address as default
-                return db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress);
-            })
-            .then((docRef) => {
-                console.log('Default address saved with ID:', docRef.id);
-                showNotification('Address saved as default in your profile!', 'success');
-            })
-            .catch((error) => {
-                console.error("Error saving default address:", error);
-                showNotification('Error saving address to profile: ' + error.message, 'error');
-            });
-    } else {
-        // Just add the address without setting as default
-        db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-            .then((docRef) => {
-                console.log('Address saved with ID:', docRef.id);
-                showNotification('Address saved to your profile!', 'success');
-            })
-            .catch((error) => {
-                console.error("Error saving address:", error);
-                showNotification('Error saving address to profile: ' + error.message, 'error');
-            });
-    }
-}
-
-// Load user's default address from Firestore and auto-fill checkout form with real-time updates
-function loadUserDefaultAddress() {
-    if (!currentUser || !db) return;
-    
-    console.log('Loading default address for user:', currentUser.uid);
-    
-    // Unsubscribe from previous listener if exists
-    if (addressUnsubscribe) {
-        addressUnsubscribe();
-    }
-    
-    // Set up real-time listener for default address changes
-    addressUnsubscribe = db.collection('users').doc(currentUser.uid).collection('addresses')
-        .where('isDefault', '==', true)
-        .onSnapshot((querySnapshot) => {
-            if (!querySnapshot.empty && querySnapshot.docs.length > 0) {
-                const defaultAddress = querySnapshot.docs[0].data();
-                console.log('Default address found (real-time):', defaultAddress);
-                
-                // Add a small delay to ensure DOM is ready
-                setTimeout(() => {
-                    fillAddressForm(defaultAddress);
-                }, 100);
-                
-            } else {
-                console.log('No default address found for user');
-                // Check if user has any addresses (even without default)
-                db.collection('users').doc(currentUser.uid).collection('addresses')
-                    .orderBy('createdAt', 'desc')
-                    .limit(1)
-                    .get()
-                    .then((addressSnapshot) => {
-                        if (!addressSnapshot.empty && addressSnapshot.docs.length > 0) {
-                            const recentAddress = addressSnapshot.docs[0].data();
-                            console.log('Using most recent address:', recentAddress);
-                            
-                            setTimeout(() => {
-                                fillAddressForm(recentAddress);
-                            }, 100);
-                        }
-                    });
-            }
-        }, (error) => {
-            console.error("Error in address listener:", error);
-        });
-}
-
-function fillAddressForm(address) {
-    console.log('Filling address form with:', address);
-    
-    if (address.name) {
-        const nameParts = address.name.split(' ');
-        if (nameParts.length > 1) {
-            safeSetFormField('firstName', nameParts[0]);
-            safeSetFormField('lastName', nameParts.slice(1).join(' '));
-        } else {
-            safeSetFormField('firstName', address.name);
-        }
-    }
-    
-    safeSetFormField('address', address.address);
-    safeSetFormField('zipCode', address.pincode);
-    
-    if (address.city) {
-        safeSetFormField('city', address.city);
-    }
-    
-    if (address.state) {
-        safeSetFormField('state', address.state);
-    }
-    
-    const phoneField = document.getElementById('phone');
-    if (phoneField && address.phone) {
-        let phoneNumber = address.phone.toString();
-        
-        phoneNumber = phoneNumber.replace(/\+91/g, '').replace(/\D/g, '');
-        
-        if (phoneNumber.length > 10) {
-            phoneNumber = phoneNumber.substring(phoneNumber.length - 10);
-        }
-        
-        if (phoneNumber.length === 10 && /^[6-9]\d{9}$/.test(phoneNumber)) {
-            phoneField.value = phoneNumber;
-            console.log('Phone number autofilled:', phoneNumber);
-        } else {
-            console.log('Invalid phone number format:', address.phone);
-            phoneField.value = '';
-        }
-    }
-    
-    const checkoutSection = document.querySelector('.checkout-section');
-    if (checkoutSection) {
-        const filledFields = document.querySelectorAll('#firstName, #lastName, #address, #phone, #state').length;
-        if (filledFields > 0) {
-            showNotification('Address auto-filled from your saved profile!', 'success');
-        }
-    }
-}
-
 function updateCheckoutUI() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
@@ -388,7 +39,7 @@ function updateCheckoutUI() {
         if (loginBtnCheckout) {
             loginBtnCheckout.textContent = 'LOGIN';
             loginBtnCheckout.style.backgroundColor = 'transparent';
-            loginBtnCheckout.style.color = '#3498db'; // Blue color for login
+            loginBtnCheckout.style.color = '#3498db';
             loginBtnCheckout.style.textDecoration = 'none';
             loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
             loginBtnCheckout.style.fontWeight = '600';
@@ -402,1864 +53,386 @@ function updateCheckoutUI() {
     }
 }
 
-// Update UI for logged in user - ENHANCED
-function updateUIForUser(user) {
-    userIcon.classList.add('logged-in');
-    profileLink.style.display = 'block';
+// Load user's default address for auto-fill
+function loadUserDefaultAddress() {
+    if (!currentUser || !db) return;
     
-    // Update profile info if elements exist
-    const userNameElement = document.getElementById('user-name');
-    const userEmailElement = document.getElementById('user-email');
-    const editNameElement = document.getElementById('edit-name');
-    const editEmailElement = document.getElementById('edit-email');
-    const memberSinceElement = document.getElementById('member-since');
+    console.log('Loading default address for user:', currentUser.uid);
     
-    if (userNameElement) userNameElement.textContent = user.displayName || 'User';
-    if (userEmailElement) userEmailElement.textContent = user.email;
-    if (editNameElement) editNameElement.value = user.displayName || '';
-    if (editEmailElement) editEmailElement.value = user.email;
-    
-    // Update member since date
-    if (memberSinceElement) {
-        const memberSince = user.metadata.creationTime;
-        memberSinceElement.textContent = new Date(memberSince).toLocaleDateString();
+    // Unsubscribe from previous listener if exists
+    if (window.addressUnsubscribe) {
+        window.addressUnsubscribe();
     }
-}
-
-// Update UI for guest
-function updateUIForGuest() {
-    userIcon.classList.remove('logged-in');
-    profileLink.style.display = 'block';
     
-    // Reset profile info if elements exist
-    const userNameElement = document.getElementById('user-name');
-    const userEmailElement = document.getElementById('user-email');
-    
-    if (userNameElement) userNameElement.textContent = 'User Name';
-    if (userEmailElement) userEmailElement.textContent = 'user@example.com';
-}
-
-// Load only profile data (orders, addresses) from Firestore - NOT cart/likes
-function loadUserProfileData(userId) {
-    console.log('Loading profile data for user:', userId);
-    
-    // Load addresses if on profile page
-    loadUserAddresses(userId);
-
-    // Load orders if on profile page
-    const ordersContainer = document.getElementById('orders-container');
-    if (ordersContainer) {
-        console.log('Loading orders...');
-        db.collection('users').doc(userId).collection('orders').get()
-            .then((querySnapshot) => {
-                console.log('Orders loaded:', querySnapshot.size);
-                ordersContainer.innerHTML = '';
-                userOrders = [];
+    // Set up real-time listener for default address changes
+    window.addressUnsubscribe = db.collection('users').doc(currentUser.uid).collection('addresses')
+        .where('isDefault', '==', true)
+        .onSnapshot((querySnapshot) => {
+            if (!querySnapshot.empty && querySnapshot.docs.length > 0) {
+                const defaultAddress = querySnapshot.docs[0].data();
+                console.log('Default address found (real-time):', defaultAddress);
                 
-                if (querySnapshot.empty) {
-ordersContainer.innerHTML = `
-    <div class="empty-state">
-        <i class="fas fa-shopping-bag"></i> No orders yet
-    </div>
-`;
-                    return;
-                }
+                // Add a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    fillAddressForm(defaultAddress);
+                }, 100);
                 
-                querySnapshot.forEach((doc) => {
-                    const order = doc.data();
-                    order.id = doc.id;
-                    userOrders.push(order);
-                    displayOrder(order);
-                });
-            })
-            .catch((error) => {
-                console.error("Error loading orders:", error);
-                ordersContainer.innerHTML = `
-                    <div class="error-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <h3>Error loading orders</h3>
-                        <p>Please try refreshing the page</p>
-                        <button class="btn btn-sm" onclick="loadUserProfileData('${userId}')">Retry</button>
-                    </div>
-                `;
-            });
-    }
-}
-
-// Load addresses from user's Firestore profile with better error handling
-function loadUserAddresses(userId) {
-    const addressesContainer = document.getElementById('addresses-container');
-    if (!addressesContainer) {
-        console.log('Addresses container not found');
-        return;
-    }
-    
-    console.log('Loading addresses for user:', userId);
-    addressesContainer.innerHTML = '<div class="loading">Loading addresses...</div>';
-    
-    // Add a small delay to ensure DOM is ready
-    setTimeout(() => {
-        db.collection('users').doc(userId).collection('addresses')
-            .orderBy('createdAt', 'desc')
-            .get()
-            .then((querySnapshot) => {
-                console.log('Addresses query result:', querySnapshot.size, 'addresses found');
-                addressesContainer.innerHTML = '';
-                
-                if (querySnapshot.empty) {
-        addressesContainer.innerHTML = `
-    <div class="empty-state">
-        <i class="fas fa-map-marker-alt"></i> No addresses saved
-    </div>
-`;
-                    return;
-                }
-                
-                querySnapshot.forEach((doc) => {
-                    const address = doc.data();
-                    console.log('Displaying address:', doc.id, address);
-                    displayAddress(doc.id, address);
-                });
-            })
-            .catch((error) => {
-                console.error("Error loading addresses:", error);
-                console.error("Error details:", error.code, error.message);
-                
-                // Check if it's a permissions error
-                if (error.code === 'permission-denied') {
-                    addressesContainer.innerHTML = `
-                        <div class="error-state">
-                            <i class="fas fa-shield-alt"></i>
-                            <h3>Permission Denied</h3>
-                            <p>Please check Firebase Firestore rules</p>
-                            <button class="btn btn-sm" onclick="loadUserAddresses('${userId}')">Retry</button>
-                        </div>
-                    `;
-                } else {
-                    addressesContainer.innerHTML = `
-                        <div class="error-state">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <h3>Error loading addresses</h3>
-                            <p>${error.message}</p>
-                            <button class="btn btn-sm" onclick="loadUserAddresses('${userId}')">Retry</button>
-                        </div>
-                    `;
-                }
-            });
-    }, 100);
-}
-
-// Display address in profile with NEW fields
-function displayAddress(addressId, address) {
-    const addressesContainer = document.getElementById('addresses-container');
-    if (!addressesContainer) {
-        console.error('Addresses container not found for displaying address');
-        return;
-    }
-    
-    // Remove loading or empty states if present
-    const loadingState = addressesContainer.querySelector('.loading, .empty-state, .error-state');
-    if (loadingState) {
-        loadingState.remove();
-    }
-    
-    const addressCard = document.createElement('div');
-    addressCard.className = 'address-card';
-    addressCard.innerHTML = `
-        <div class="address-header">
-            <h3>
-                ${address.label || 'Address'}
-                ${address.isDefault ? '<span class="default-badge">Default</span>' : ''}
-            </h3>
-            <span class="address-pincode">Pincode: ${address.pincode || 'N/A'}</span>
-        </div>
-        <div class="address-details">
-            <p><strong>${address.name || 'No name'}</strong></p>
-            <p><strong>Address:</strong> ${address.address || 'No address provided'}</p>
-            <p><strong>City:</strong> ${address.city || 'N/A'}</p>
-            <p><strong>State:</strong> ${address.state || 'N/A'}</p>
-            <p><strong>Country:</strong> ${address.country || 'India'}</p>
-            <p><strong>Phone:</strong> ${address.phone || 'N/A'}</p>
-        </div>
-        <div class="address-actions">
-            ${!address.isDefault ? `
-                <button class="btn btn-sm set-default-address-btn" data-id="${addressId}">
-                    <i class="fas fa-star"></i> Set Default
-                </button>
-            ` : ''}
-            <button class="btn btn-sm edit-address-btn" data-id="${addressId}">
-                <i class="fas fa-edit"></i> Edit
-            </button>
-            <button class="btn btn-sm btn-danger delete-address-btn" data-id="${addressId}">
-                <i class="fas fa-trash"></i> Delete
-            </button>
-        </div>
-        <div class="address-form edit-address-form" id="edit-address-form-${addressId}" style="display: none;">
-            <h4>Edit Address</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="edit-label-${addressId}">Address Label</label>
-                    <input type="text" id="edit-label-${addressId}" value="${address.label || ''}" placeholder="Home, Work, etc.">
-                </div>
-                <div class="form-group">
-                    <label for="edit-pincode-${addressId}">Pincode</label>
-                    <input type="text" id="edit-pincode-${addressId}" value="${address.pincode || ''}" maxlength="6">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="edit-name-${addressId}">Full Name</label>
-                <input type="text" id="edit-name-${addressId}" value="${address.name || ''}">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="edit-country-${addressId}">Country</label>
-                    <select id="edit-country-${addressId}" required>
-                        <option value="">Select Country</option>
-                        <option value="India" ${address.country === 'India' ? 'selected' : ''}>India</option>
-                        <option value="United States" ${address.country === 'United States' ? 'selected' : ''}>United States</option>
-                        <option value="United Kingdom" ${address.country === 'United Kingdom' ? 'selected' : ''}>United Kingdom</option>
-                        <option value="Canada" ${address.country === 'Canada' ? 'selected' : ''}>Canada</option>
-                        <option value="Australia" ${address.country === 'Australia' ? 'selected' : ''}>Australia</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit-state-${addressId}">State</label>
-                    <select id="edit-state-${addressId}" required>
-                        <option value="">Select State</option>
-                        <option value="Kerala" ${address.state === 'Kerala' ? 'selected' : ''}>Kerala</option>
-                        <option value="Tamil Nadu" ${address.state === 'Tamil Nadu' ? 'selected' : ''}>Tamil Nadu</option>
-                        <option value="Karnataka" ${address.state === 'Karnataka' ? 'selected' : ''}>Karnataka</option>
-                        <option value="Maharashtra" ${address.state === 'Maharashtra' ? 'selected' : ''}>Maharashtra</option>
-                        <option value="Delhi" ${address.state === 'Delhi' ? 'selected' : ''}>Delhi</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="edit-city-${addressId}">City</label>
-                    <input type="text" id="edit-city-${addressId}" value="${address.city || ''}" placeholder="Enter city" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-phone-${addressId}">Phone</label>
-                    <input type="text" id="edit-phone-${addressId}" value="${address.phone || ''}" maxlength="10">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="edit-address-${addressId}">Address</label>
-                <textarea id="edit-address-${addressId}" rows="3">${address.address || ''}</textarea>
-            </div>
-            <div class="form-actions">
-                <button class="btn save-edit-address-btn" data-id="${addressId}">
-                    <i class="fas fa-save"></i> Save Changes
-                </button>
-                <button class="btn btn-outline cancel-edit-address-btn" data-id="${addressId}">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-            </div>
-        </div>
-    `;
-    addressesContainer.appendChild(addressCard);
-    
-    // Add event listeners
-    attachAddressEventListeners(addressId);
-}
-
-// Save edited address to Firestore - UPDATED for new fields
-function saveEditedAddressToFirestore(addressId) {
-    const label = document.getElementById(`edit-label-${addressId}`).value.trim();
-    const name = document.getElementById(`edit-name-${addressId}`).value.trim();
-    const address = document.getElementById(`edit-address-${addressId}`).value.trim();
-    const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
-    const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
-    const city = document.getElementById(`edit-city-${addressId}`).value.trim();
-    const state = document.getElementById(`edit-state-${addressId}`).value;
-    const country = document.getElementById(`edit-country-${addressId}`).value;
-    
-    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    const updatedAddress = {
-        label: label,
-        name: name,
-        address: address,
-        phone: phone,
-        pincode: pincode,
-        city: city,
-        state: state,
-        country: country,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
-        .then(() => {
-            // Refresh addresses display
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserAddresses(currentUser.uid);
+            } else {
+                console.log('No default address found for user');
+                // Check if user has any addresses (even without default)
+                db.collection('users').doc(currentUser.uid).collection('addresses')
+                    .orderBy('createdAt', 'desc')
+                    .limit(1)
+                    .get()
+                    .then((addressSnapshot) => {
+                        if (!addressSnapshot.empty && addressSnapshot.docs.length > 0) {
+                            const recentAddress = addressSnapshot.docs[0].data();
+                            console.log('Using most recent address:', recentAddress);
+                            
+                            setTimeout(() => {
+                                fillAddressForm(recentAddress);
+                            }, 100);
+                        }
+                    });
             }
-            showNotification('Address updated successfully!', 'success');
-        })
-        .catch((error) => {
-            console.error("Error updating address:", error);
-            showNotification('Error updating address: ' + error.message, 'error');
+        }, (error) => {
+            console.error("Error in address listener:", error);
         });
 }
 
-// Attach event listeners to address actions
-function attachAddressEventListeners(addressId) {
-    setTimeout(() => {
-        // Edit button
-        const editBtn = document.querySelector(`.edit-address-btn[data-id="${addressId}"]`);
-        if (editBtn) {
-            editBtn.addEventListener('click', function() {
-                document.getElementById(`edit-address-form-${addressId}`).style.display = 'block';
-            });
-        }
-        
-        // Delete button
-        const deleteBtn = document.querySelector(`.delete-address-btn[data-id="${addressId}"]`);
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to delete this address?')) {
-                    deleteAddressFromFirestore(addressId);
-                }
-            });
-        }
-        
-        // Save edited address button
-        const saveBtn = document.querySelector(`.save-edit-address-btn[data-id="${addressId}"]`);
-        if (saveBtn) {
-            saveBtn.addEventListener('click', function() {
-                saveEditedAddressToFirestore(addressId);
-            });
-        }
-        
-        // Cancel edit button
-        const cancelBtn = document.querySelector(`.cancel-edit-address-btn[data-id="${addressId}"]`);
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', function() {
-                document.getElementById(`edit-address-form-${addressId}`).style.display = 'none';
-            });
-        }
-        
-        // Set default address button
-        const setDefaultBtn = document.querySelector(`.set-default-address-btn[data-id="${addressId}"]`);
-        if (setDefaultBtn) {
-            setDefaultBtn.addEventListener('click', function() {
-                setDefaultAddress(addressId);
-            });
-        }
-    }, 100);
-}
-
-// Save new address to user's profile in Firestore - UPDATED for new fields
-function saveNewAddressToProfile() {
-    const label = document.getElementById('new-label').value.trim();
-    const name = document.getElementById('new-name').value.trim();
-    const address = document.getElementById('new-address').value.trim();
-    const phone = document.getElementById('new-phone').value.trim();
-    const pincode = document.getElementById('new-pincode').value.trim();
-    const city = document.getElementById('new-city').value.trim();
-    const state = document.getElementById('new-state').value;
-    const country = document.getElementById('new-country').value;
+function fillAddressForm(address) {
+    console.log('Filling address form with:', address);
     
-    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    // Validate phone number (basic validation)
-    if (phone.length < 10 || !/^\d+$/.test(phone)) {
-        alert('Please enter a valid 10-digit phone number');
-        return;
-    }
-    
-    // Validate pincode (basic validation)
-    if (pincode.length < 6 || !/^\d+$/.test(pincode)) {
-        alert('Please enter a valid 6-digit pincode');
-        return;
-    }
-    
-    if (!currentUser) {
-        alert('Please log in to save addresses');
-        showLoginView();
-        loginModal.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        return;
-    }
-    
-    const newAddress = {
-        label: label,
-        name: name,
-        address: address,
-        phone: phone,
-        pincode: pincode,
-        city: city,
-        state: state,
-        country: country,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        isDefault: false
-    };
-    
-    console.log('Saving new address:', newAddress);
-    
-    // Save to Firestore under user's addresses collection
-    db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-        .then((docRef) => {
-            console.log('Address saved with ID:', docRef.id);
-            
-            // Add the new address to the UI
-            displayAddress(docRef.id, newAddress);
-            
-            // Reset the form
-            const addAddressForm = document.getElementById('add-address-form');
-            if (addAddressForm) {
-                addAddressForm.style.display = 'none';
-            }
-            document.getElementById('new-label').value = '';
-            document.getElementById('new-name').value = '';
-            document.getElementById('new-address').value = '';
-            document.getElementById('new-phone').value = '';
-            document.getElementById('new-pincode').value = '';
-            document.getElementById('new-city').value = '';
-            document.getElementById('new-state').value = '';
-            document.getElementById('new-country').value = 'India';
-            
-            // Show success message
-            showNotification('Address saved successfully!', 'success');
-        })
-        .catch((error) => {
-            console.error("Error adding address:", error);
-            showNotification('Error saving address: ' + error.message, 'error');
-        });
-}
-
-// Delete address from Firestore
-function deleteAddressFromFirestore(addressId) {
-    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
-        .then(() => {
-            // Refresh addresses display
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserAddresses(currentUser.uid);
-            }
-            showNotification('Address deleted successfully!', 'success');
-        })
-        .catch((error) => {
-            console.error("Error deleting address:", error);
-            showNotification('Error deleting address: ' + error.message, 'error');
-        });
-}
-
-// Set default address - UPDATED to trigger real-time update
-function setDefaultAddress(addressId) {
-    // First, remove default from all addresses
-    db.collection('users').doc(currentUser.uid).collection('addresses').get()
-        .then((querySnapshot) => {
-            const batch = db.batch();
-            
-            querySnapshot.forEach((doc) => {
-                const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
-                if (doc.id === addressId) {
-                    batch.update(addressRef, { isDefault: true });
-                } else {
-                    batch.update(addressRef, { isDefault: false });
-                }
-            });
-            
-            return batch.commit();
-        })
-        .then(() => {
-            // Refresh addresses display
-            const addressesContainer = document.getElementById('addresses-container');
-            if (addressesContainer) {
-                addressesContainer.innerHTML = '';
-                loadUserAddresses(currentUser.uid);
-            }
-            showNotification('Default address set successfully!', 'success');
-            
-            // The real-time listener in loadUserDefaultAddress will automatically update checkout form
-        })
-        .catch((error) => {
-            console.error("Error setting default address:", error);
-            showNotification('Error setting default address: ' + error.message, 'error');
-        });
-}
-
-// Display order in profile
-function displayOrder(order) {
-    const ordersContainer = document.getElementById('orders-container');
-    if (!ordersContainer) return;
-
-    let itemsHTML = '';
-
-    order.items.forEach(item => {
-        const product = products.find(p => p.id === item.productId);
-        if (!product) return;
-
-        itemsHTML += `
-            <div class="order-item">
-                <img src="${product.image}" class="order-product-img">
-
-                <div class="order-item-details">
-                    <div class="order-item-name">${product.name}</div>
-                    <div class="order-item-weight">${product.weight}</div>
-                    <div class="order-item-price">₹${product.price}</div>
-                    <div class="order-item-qty">Qty: ${item.quantity}</div>
-                </div>
-            </div>
-        `;
-    });
-
-    const card = document.createElement('div');
-    card.className = 'order-card';
-
-    card.innerHTML = `
-        <div class="order-header">
-            <span class="order-id">Order #${order.id.substring(0, 8)}</span>
-            <span class="order-date">${new Date(order.createdAt).toLocaleDateString()}</span>
-
-            <span class="order-status animate-status">${order.status}</span>
-        </div>
-
-        <div class="order-items-wrapper">${itemsHTML}</div>
-
-        <div class="order-total">Total: ₹${order.total}</div>
-
-        <div class="order-actions">
-            <button class="btn btn-outline track-order-btn" data-id="${order.id}">
-                <i class="fas fa-truck"></i> Track Order
-            </button>
-            <button class="btn reorder-btn" data-id="${order.id}">
-                <i class="fas fa-redo"></i> Reorder
-            </button>
-        </div>
-    `;
-
-    ordersContainer.appendChild(card);
-
-    // EVENTS
-    setTimeout(() => {
-        card.querySelector('.track-order-btn').onclick = () => {
-            alert(`Tracking #${order.id}`);
-        };
-
-        card.querySelector('.reorder-btn').onclick = () => {
-            reorderItems(order.items);
-        };
-    }, 50);
-}
-
-// Reorder items
-function reorderItems(items) {
-    items.forEach(item => {
-        addToCart(item.productId, item.quantity);
-    });
-    alert('Items added to cart!');
-}
-
-// Close all sidebars and modals
-function closeAllSidebars() {
-    likesSidebar.classList.remove('active');
-    cartSidebar.classList.remove('active');
-    loginModal.classList.remove('active');
-    
-    // Close filter sidebar if it exists
-    const filterSidebar = document.getElementById('filterSidebar');
-    if (filterSidebar) {
-        filterSidebar.classList.remove('active');
-    }
-    
-    // Close quick view modal if it exists
-    const quickViewModal = document.getElementById('quickViewModal');
-    if (quickViewModal) {
-        quickViewModal.style.display = 'none';
-    }
-    
-    // Close review modal if it exists
-    const reviewModal = document.getElementById('reviewModal');
-    if (reviewModal) {
-        reviewModal.style.display = 'none';
-    }
-    
-    navLinks.classList.remove('active');
-    userDropdown.classList.remove('active');
-    
-    // Reset hamburger icon
-    const icon = mobileMenuBtn.querySelector('i');
-    icon.classList.remove('fa-times');
-    icon.classList.add('fa-bars');
-    
-    overlay.classList.remove('active');
-    document.body.style.overflow = 'auto';
-}
-
-// Mobile menu functionality
-mobileMenuBtn.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-    overlay.classList.toggle('active');
-    document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : 'auto';
-    
-    // Toggle hamburger icon to close icon
-    const icon = mobileMenuBtn.querySelector('i');
-    if (navLinks.classList.contains('active')) {
-        icon.classList.remove('fa-bars');
-        icon.classList.add('fa-times');
-    } else {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-    }
-});
-
-// Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        overlay.classList.remove('active');
-        document.body.style.overflow = 'auto';
-        
-        // Reset hamburger icon
-        const icon = mobileMenuBtn.querySelector('i');
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-    });
-});
-
-// Overlay click to close modals
-overlay.addEventListener('click', () => {
-    closeAllSidebars();
-    overlay.classList.remove('active');
-    document.body.style.overflow = 'auto';
-});
-
-// User dropdown functionality
-userIcon.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (currentUser) {
-        userDropdown.classList.toggle('active');
-    } else {
-        closeAllSidebars();
-        showLoginView();
-        loginModal.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-});
-
-// Close dropdown when clicking outside
-document.addEventListener('click', () => {
-    userDropdown.classList.remove('active');
-});
-
-// Profile link functionality - ENHANCED
-profileLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    userDropdown.classList.remove('active');
-    if (currentUser) {
-        // Show profile page if it exists
-        const profilePage = document.getElementById('profilePage');
-        const mainContent = document.getElementById('mainContent');
-        if (profilePage && mainContent) {
-            mainContent.style.display = 'none';
-            profilePage.classList.add('active');
-            // Load user data for profile page
-            loadUserProfileData(currentUser.uid);
+    if (address.name) {
+        const nameParts = address.name.split(' ');
+        if (nameParts.length > 1) {
+            window.safeSetFormField('firstName', nameParts[0]);
+            window.safeSetFormField('lastName', nameParts.slice(1).join(' '));
         } else {
-            alert('Profile page would open here');
+            window.safeSetFormField('firstName', address.name);
         }
-    } else {
-        closeAllSidebars();
-        showLoginView();
-        loginModal.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-});
-
-// Logout functionality
-logoutLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    auth.signOut().then(() => {
-        alert('You have been logged out successfully!');
-        window.location.reload();
-    }).catch((error) => {
-        console.error("Error signing out:", error);
-    });
-});
-
-// Like icon functionality
-likeIcon.addEventListener('click', () => {
-    closeAllSidebars();
-    likesSidebar.classList.add('active');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-});
-
-// Close likes sidebar
-closeLikes.addEventListener('click', () => {
-    closeAllSidebars();
-    overlay.classList.remove('active');
-    document.body.style.overflow = 'auto';
-});
-
-// Update likes UI
-function updateLikeUI() {
-    if (likedProducts.length > 0) {
-        likeCount.textContent = likedProducts.length;
-        likeCount.classList.remove('hidden');
-    } else {
-        likeCount.classList.add('hidden');
     }
     
-    if (likedProducts.length === 0) {
-        emptyLikes.style.display = 'flex';
-        likesItems.innerHTML = '';
-    } else {
-        emptyLikes.style.display = 'none';
-        likesItems.innerHTML = '';
-        
-        likedProducts.forEach(productId => {
-            const product = products.find(p => p.id === productId);
-            if (product) {
-                const likeItem = document.createElement('div');
-                likeItem.className = 'like-item';
-                likeItem.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <div class="like-item-details">
-                        <div class="like-item-title">${product.name}</div>
-                        <div class="like-item-price">₹${product.price}</div>
-                        <div class="like-item-actions">
-                            <button class="add-to-cart-btn" data-id="${product.id}">
-                                <i class="fas fa-cart-plus"></i> Add to Cart
-                            </button>
-                            <button class="remove-like" data-id="${product.id}">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                likesItems.appendChild(likeItem);
-            }
-        });
-        
-        // Add event listeners for like items
-        document.querySelectorAll('.remove-like').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                removeFromLikes(productId);
-            });
-        });
-        
-        document.querySelectorAll('.likes-items .add-to-cart-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                addToCart(productId, 1);
-            });
-        });
-    }
-}
-
-// Add to likes with auto-open sidebar
-function addToLikes(productId) {
-    if (!likedProducts.includes(productId)) {
-        likedProducts.push(productId);
-        
-        // Save ONLY to localStorage (no Firestore saving)
-        localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
-        
-        updateLikeUI();
-        
-        const heartIcon = likeIcon.querySelector('i');
-        heartIcon.classList.remove('far');
-        heartIcon.classList.add('fas');
-        heartIcon.style.color = '#ff4d4d';
-        
-        // Auto-open likes sidebar when adding to favorites (close others first)
-        closeAllSidebars();
-        likesSidebar.classList.add('active');
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-// Remove from likes
-function removeFromLikes(productId) {
-    likedProducts = likedProducts.filter(id => id !== productId);
+    window.safeSetFormField('address', address.address);
+    window.safeSetFormField('zipCode', address.pincode);
     
-    // Update ONLY localStorage (no Firestore update)
-    localStorage.setItem('guestLikes', JSON.stringify(likedProducts));
-    
-    updateLikeUI();
-    
-    if (likedProducts.length === 0) {
-        const heartIcon = likeIcon.querySelector('i');
-        heartIcon.classList.remove('fas');
-        heartIcon.classList.add('far');
-        heartIcon.style.color = '';
-    }
-}
-
-// Cart functionality
-cartIcon.addEventListener('click', () => {
-    closeAllSidebars();
-    cartSidebar.classList.add('active');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-});
-
-// Close cart sidebar
-closeCart.addEventListener('click', () => {
-    closeAllSidebars();
-    overlay.classList.remove('active');
-    document.body.style.overflow = 'auto';
-});
-
-// Update cart UI - ENHANCED to update checkout order summary instantly
-function updateCartUI() {
-    const totalItems = cartProducts.reduce((total, item) => total + item.quantity, 0);
-    
-    if (totalItems > 0) {
-        cartCount.textContent = totalItems;
-        cartCount.classList.remove('hidden');
-    } else {
-        cartCount.classList.add('hidden');
+    if (address.city) {
+        window.safeSetFormField('city', address.city);
     }
     
-    if (cartProducts.length === 0) {
-        emptyCart.style.display = 'flex';
-        cartItems.innerHTML = '';
-        cartSummary.style.display = 'none';
-    } else {
-        emptyCart.style.display = 'none';
-        cartItems.innerHTML = '';
-        cartSummary.style.display = 'block';
-        
-        let subtotal = 0;
-        
-        cartProducts.forEach(item => {
-            const product = products.find(p => p.id === item.id);
-            if (product) {
-                const itemTotal = product.price * item.quantity;
-                subtotal += itemTotal;
-                
-                const cartItem = document.createElement('div');
-                cartItem.className = 'cart-item';
-                cartItem.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}">
-                    <div class="cart-item-details">
-                        <div class="cart-item-title">${product.name}</div>
-                        <div class="cart-item-price">₹${product.price}</div>
-                        <div class="cart-item-controls">
-                            <div class="cart-item-quantity">
-                                <button class="quantity-btn minus" data-id="${product.id}">-</button>
-                                <input type="text" class="quantity-input" value="${item.quantity}" data-id="${product.id}">
-                                <button class="quantity-btn plus" data-id="${product.id}">+</button>
-                            </div>
-                            <button class="delete-item" data-id="${product.id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                cartItems.appendChild(cartItem);
-            }
-        });
-        
-        // Update cart totals
-        const cartSubtotal = document.querySelector('.cart-subtotal span:last-child');
-        const cartTotal = document.querySelector('.cart-total span:last-child');
-        
-        if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal}`;
-        if (cartTotal) cartTotal.textContent = `₹${subtotal}`;
-        
-        // Add event listeners for cart items
-        document.querySelectorAll('.quantity-btn.minus').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                updateCartQuantity(productId, -1);
-            });
-        });
-        
-        document.querySelectorAll('.quantity-btn.plus').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                updateCartQuantity(productId, 1);
-            });
-        });
-        
-        document.querySelectorAll('.delete-item').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                removeFromCart(productId);
-            });
-        });
-        
-        document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('change', (e) => {
-                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
-                const newQuantity = parseInt(e.currentTarget.value) || 1;
-                setCartQuantity(productId, newQuantity);
-            });
-        });
+    if (address.state) {
+        window.safeSetFormField('state', address.state);
     }
     
-    // INSTANTLY update checkout order summary if on checkout page
-    if (document.querySelector('.checkout-section')) {
-        updateOrderSummary();
-        // Also refresh promo codes when cart changes
-        refreshPromoCodes();
-    }
-}
-
-// Enhanced Add to cart function with effects and auto-open sidebar
-function addToCart(productId, quantity = 1) {
-    const existingItem = cartProducts.find(item => item.id === productId);
-    
-    if (existingItem) {
-        existingItem.quantity += quantity;
-    } else {
-        cartProducts.push({ id: productId, quantity });
-    }
-    
-    // Save ONLY to localStorage (no Firestore saving)
-    localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-    
-    updateCartUI();
-    addCartVisualFeedback();
-    
-    // Auto-open cart sidebar when adding to cart (close others first)
-    closeAllSidebars();
-    cartSidebar.classList.add('active');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-}
-
-// Visual feedback for adding to cart
-function addCartVisualFeedback() {
-    cartIcon.classList.add('cart-icon-bounce');
-    cartCount.classList.add('badge-pulse');
-    
-    setTimeout(() => {
-        cartIcon.classList.remove('cart-icon-bounce');
-        cartCount.classList.remove('badge-pulse');
-    }, 600);
-}
-
-// Update cart quantity - ENHANCED to instantly update checkout
-function updateCartQuantity(productId, change) {
-    const item = cartProducts.find(item => item.id === productId);
-    
-    if (item) {
-        item.quantity += change;
+    const phoneField = document.getElementById('phone');
+    if (phoneField && address.phone) {
+        let phoneNumber = address.phone.toString();
         
-        if (item.quantity <= 0) {
-            removeFromCart(productId);
+        phoneNumber = phoneNumber.replace(/\+91/g, '').replace(/\D/g, '');
+        
+        if (phoneNumber.length > 10) {
+            phoneNumber = phoneNumber.substring(phoneNumber.length - 10);
+        }
+        
+        if (phoneNumber.length === 10 && /^[6-9]\d{9}$/.test(phoneNumber)) {
+            phoneField.value = phoneNumber;
+            console.log('Phone number autofilled:', phoneNumber);
         } else {
-            // Update ONLY localStorage (no Firestore update)
-            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-            
-            updateCartUI(); // This now also updates checkout order summary
+            console.log('Invalid phone number format:', address.phone);
+            phoneField.value = '';
         }
     }
-}
-
-// Set cart quantity - ENHANCED to instantly update checkout
-function setCartQuantity(productId, quantity) {
-    const item = cartProducts.find(item => item.id === productId);
     
-    if (item) {
-        if (quantity <= 0) {
-            removeFromCart(productId);
-        } else {
-            item.quantity = quantity;
-            
-            // Update ONLY localStorage (no Firestore update)
-            localStorage.setItem('guestCart', JSON.stringify(cartProducts));
-            
-            updateCartUI(); // This now also updates checkout order summary
-        }
+    const checkoutSection = document.querySelector('.checkout-section');
+    if (checkoutSection) {
+        const filledFields = document.querySelectorAll('#firstName, #lastName, #address, #phone, #state').length;
     }
 }
 
-// Remove from cart - ENHANCED to instantly update checkout
-function removeFromCart(productId) {
-    cartProducts = cartProducts.filter(item => item.id !== productId);
+
+// Update totals including discount
+function updateTotals() {
+    const subtotalElement = document.getElementById('subtotal');
+    const totalElement = document.getElementById('total');
+    const discountRow = document.getElementById('discountRow');
+    const discountAmount = document.getElementById('discountAmount');
     
-    // Update ONLY localStorage (no Firestore update)
-    localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+    if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
     
-    updateCartUI(); // This now also updates checkout order summary
-}
-
-// WhatsApp functionality
-whatsappIcon.addEventListener('click', () => {
-    const phoneNumber = "919876543210";
-    const message = "Hello, I'm interested in your honey products!";
-    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-});
-
-// Close login modal
-closeLogin.addEventListener('click', () => {
-    closeAllSidebars();
-    overlay.classList.remove('active');
-    document.body.style.overflow = 'auto';
-});
-
-// Back button functionality
-backBtn.addEventListener('click', () => {
-    showLoginView();
-});
-
-// Show login view
-function showLoginView() {
-    currentModalView = 'login';
-    loginForm.classList.add('active');
-    signupForm.classList.remove('active');
-    forgotForm.classList.remove('active');
-    backBtn.classList.remove('active');
-    modalTitle.textContent = 'Welcome Back';
-    modalSubtitle.textContent = 'Sign in to your account';
-    loginFooter.style.display = 'block';
-}
-
-// Show signup view
-function showSignupView() {
-    currentModalView = 'signup';
-    loginForm.classList.remove('active');
-    signupForm.classList.add('active');
-    forgotForm.classList.remove('active');
-    backBtn.classList.add('active');
-    modalTitle.textContent = 'Create Account';
-    modalSubtitle.textContent = 'Join Natura Honey today';
-    loginFooter.style.display = 'none';
-}
-
-// Show forgot password view
-function showForgotView() {
-    currentModalView = 'forgot';
-    loginForm.classList.remove('active');
-    signupForm.classList.remove('active');
-    forgotForm.classList.add('active');
-    backBtn.classList.add('active');
-    modalTitle.textContent = 'Reset Password';
-    modalSubtitle.textContent = 'Enter your email to reset your password';
-    loginFooter.style.display = 'none';
-}
-
-// Login functionality
-loginBtn.addEventListener('click', () => {
-    const email = loginForm.querySelector('input[type="email"]').value;
-    const password = loginForm.querySelector('input[type="password"]').value;
+    const newTotal = Math.max(0, window.originalTotal - window.currentDiscount);
     
-    if (!email || !password) {
-        alert('Please fill in all fields');
-        return;
-    }
+    subtotalElement.textContent = `₹${window.originalTotal}`;
     
-    auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            closeAllSidebars();
-            overlay.classList.remove('active');
-            document.body.style.overflow = 'auto';
-            alert('Login successful!');
-        })
-        .catch((error) => {
-            console.error("Error signing in:", error);
-            alert('Error signing in: ' + error.message);
-        });
-});
-
-// Signup functionality
-signupBtn.addEventListener('click', () => {
-    const name = signupForm.querySelector('input[type="text"]').value;
-    const email = signupForm.querySelector('input[type="email"]').value;
-    const password = signupForm.querySelectorAll('input[type="password"]')[0].value;
-    const confirmPassword = signupForm.querySelectorAll('input[type="password"]')[1].value;
-    
-    if (!name || !email || !password || !confirmPassword) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
-    }
-    
-    if (!termsCheckbox.checked) {
-        alert('Please agree to the Terms & Conditions and Privacy Policy');
-        return;
-    }
-    
-    auth.createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-            
-            // Update profile with display name
-            return user.updateProfile({
-                displayName: name
-            }).then(() => {
-                // Send email verification
-                return user.sendEmailVerification();
-            }).then(() => {
-                // Create user document in Firestore (only for profile data)
-                return db.collection('users').doc(user.uid).set({
-                    displayName: name,
-                    email: email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            });
-        })
-        .then(() => {
-            closeAllSidebars();
-            overlay.classList.remove('active');
-            document.body.style.overflow = 'auto';
-            alert('Account created successfully! Please check your email for verification.');
-        })
-        .catch((error) => {
-            console.error("Error creating account:", error);
-            alert('Error creating account: ' + error.message);
-        });
-});
-
-// Reset password functionality
-resetBtn.addEventListener('click', () => {
-    const email = forgotForm.querySelector('input[type="email"]').value;
-    
-    if (!email) {
-        alert('Please enter your email address');
-        return;
-    }
-    
-    auth.sendPasswordResetEmail(email)
-        .then(() => {
-            closeAllSidebars();
-            overlay.classList.remove('active');
-            document.body.style.overflow = 'auto';
-            alert('Password reset link sent to your email!');
-        })
-        .catch((error) => {
-            console.error("Error sending reset email:", error);
-            alert('Error sending reset email: ' + error.message);
-        });
-});
-
-// Google login
-googleLoginBtn.addEventListener('click', () => {
-    // Check if we're in a supported environment
-    if (window.location.protocol !== 'https:' && window.location.protocol !== 'http:' && !window.location.hostname.includes('localhost')) {
-        alert('Google login is not supported in this environment. Please use email/password login instead.');
-        return;
-    }
-    
-    try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        
-        auth.signInWithPopup(provider)
-            .then((result) => {
-                const user = result.user;
-                
-                // Check if user exists in Firestore, if not create document (only for profile data)
-                return db.collection('users').doc(user.uid).get().then((doc) => {
-                    if (!doc.exists) {
-                        return db.collection('users').doc(user.uid).set({
-                            displayName: user.displayName,
-                            email: user.email,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                });
-            })
-            .then(() => {
-                closeAllSidebars();
-                overlay.classList.remove('active');
-                document.body.style.overflow = 'auto';
-                alert('Google login successful!');
-            })
-            .catch((error) => {
-                console.error("Error with Google login:", error);
-                if (error.code === 'auth/operation-not-supported-in-this-environment') {
-                    alert('Google login is not supported in this environment. Please use email/password login instead.');
-                } else {
-                    alert('Error with Google login: ' + error.message);
-                }
-            });
-    } catch (error) {
-        console.error("Error with Google login:", error);
-        alert('Google login is not available in this environment. Please use email/password login instead.');
-    }
-});
-
-// Forgot password link
-forgotPassword.addEventListener('click', (e) => {
-    e.preventDefault();
-    showForgotView();
-});
-
-// Sign up link
-signUp.addEventListener('click', (e) => {
-    e.preventDefault();
-    showSignupView();
-});
-
-// Checkout button - REDIRECT TO CHECKOUT.HTML
-if (checkoutBtn) {
-    checkoutBtn.addEventListener('click', () => {
-        if (cartProducts.length === 0) {
-            alert('Your cart is empty!');
-            return;
-        }
-        
-        // Save cart data to localStorage for checkout page
-        localStorage.setItem('checkoutCart', JSON.stringify(cartProducts));
-        
-        // Redirect to checkout page
-        window.location.href = 'checkout.html';
-    });
-}
-
-// Continue shopping button
-if (continueShopping) {
-    continueShopping.addEventListener('click', function() {
-        window.location.href = "shop.html";
-    });
-}
-
-// Browse products button
-browseProducts.addEventListener('click', () => {
-    closeAllSidebars();
-    overlay.classList.remove('active');
-    document.body.style.overflow = 'auto';
-});
-
-// Load guest data from localStorage
-function loadGuestData() {
-    // Load liked products
-    const guestLikes = localStorage.getItem('guestLikes');
-    if (guestLikes) {
-        likedProducts = JSON.parse(guestLikes);
-        updateLikeUI();
-    }
-    
-    // Load cart items
-    const guestCart = localStorage.getItem('guestCart');
-    if (guestCart) {
-        cartProducts = JSON.parse(guestCart);
-        updateCartUI();
-    }
-}
-
-// Hide notification bar on scroll down
-let lastScrollTop = 0;
-window.addEventListener('scroll', () => {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    if (scrollTop > 5) {
-        if (!notificationBar.classList.contains('hidden')) {
-            notificationBar.classList.add('hidden');
-            navBar.style.top = '0';
-            document.querySelector('.content-wrapper').style.marginTop = '130px';
-        }
+    if (window.currentDiscount > 0 && window.appliedPromoCode) {
+        discountRow.style.display = 'flex';
+        discountAmount.textContent = `-₹${window.currentDiscount}`;
+        discountAmount.style.color = '#27ae60';
     } else {
-        if (notificationBar.classList.contains('hidden')) {
-            notificationBar.classList.remove('hidden');
-            navBar.style.top = '40px';
-            document.querySelector('.content-wrapper').style.marginTop = '165px';
-        }
-    }
-    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-}, { passive: true });
-
-// Initialize common functionality
-function initCommon() {
-    loadGuestData();
-    
-    // Initialize profile close button if it exists
-    const profileCloseBtn = document.getElementById('profileCloseBtn');
-    if (profileCloseBtn) {
-        profileCloseBtn.addEventListener('click', () => {
-            const profilePage = document.getElementById('profilePage');
-            const mainContent = document.getElementById('mainContent');
-            if (profilePage && mainContent) {
-                profilePage.classList.remove('active');
-                mainContent.style.display = 'block';
-            }
-        });
+        discountRow.style.display = 'none';
+        window.currentDiscount = 0;
+        window.appliedPromoCode = null;
     }
     
-    // Initialize profile edit functionality if elements exist
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-    const editProfileModal = document.getElementById('edit-profile-modal');
-    const closeEditProfileModal = document.getElementById('close-edit-profile-modal');
-    const cancelEditProfile = document.getElementById('cancel-edit-profile');
-    const saveProfileBtn = document.getElementById('save-profile-btn');
-    
-    if (editProfileBtn && editProfileModal) {
-        editProfileBtn.addEventListener('click', function() {
-            editProfileModal.style.display = 'flex';
-        });
-    }
-    
-    if (closeEditProfileModal && editProfileModal) {
-        closeEditProfileModal.addEventListener('click', function() {
-            editProfileModal.style.display = 'none';
-        });
-    }
-    
-    if (cancelEditProfile && editProfileModal) {
-        cancelEditProfile.addEventListener('click', function() {
-            editProfileModal.style.display = 'none';
-        });
-    }
-    
-    if (saveProfileBtn) {
-        saveProfileBtn.addEventListener('click', function() {
-            const newName = document.getElementById('edit-name').value;
-            if (newName.trim() === '') {
-                alert('Please enter a valid name');
-                return;
-            }
-            
-            currentUser.updateProfile({
-                displayName: newName
-            }).then(() => {
-                // Update Firestore (only for profile data)
-                return db.collection('users').doc(currentUser.uid).set({
-                    displayName: newName,
-                    email: currentUser.email,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            }).then(() => {
-                alert('Profile updated successfully!');
-                editProfileModal.style.display = 'none';
-                updateUIForUser(currentUser);
-            }).catch((error) => {
-                console.error("Error updating profile:", error);
-                alert('Error updating profile. Please try again.');
-            });
-        });
-    }
-    
-    // Initialize address functionality if elements exist
-    const addAddressBtn = document.getElementById('add-address-btn');
-    const addAddressForm = document.getElementById('add-address-form');
-    const cancelNewAddress = document.getElementById('cancel-new-address');
-    const saveNewAddress = document.getElementById('save-new-address');
-    
-    if (addAddressBtn && addAddressForm) {
-        addAddressBtn.addEventListener('click', function() {
-            addAddressForm.style.display = 'block';
-        });
-    }
-    
-    if (cancelNewAddress && addAddressForm) {
-        cancelNewAddress.addEventListener('click', function() {
-            addAddressForm.style.display = 'none';
-            document.getElementById('new-label').value = '';
-            document.getElementById('new-name').value = '';
-            document.getElementById('new-address').value = '';
-            document.getElementById('new-phone').value = '';
-            document.getElementById('new-pincode').value = '';
-        });
-    }
-    
-    if (saveNewAddress) {
-        saveNewAddress.addEventListener('click', saveNewAddressToProfile);
-    }
+    totalElement.textContent = `₹${newTotal}`;
+    refreshPromoCodes();
 }
 
-// PROMO CODE FUNCTIONALITY - ENHANCED
+// PROMO CODE FUNCTIONALITY
 
-// Get active promo codes from Firebase
+// Get active promo codes
 function getActivePromoCodes() {
-  return window.activePromoCodes || {};
+    return window.activePromoCodes || {};
 }
 
-function displayAvailablePromoCodes() {
-  const availablePromoCodesSection = document.querySelector('.available-promo-codes');
-  const promoCodesGrid = document.getElementById('promoCodesGrid');
-  
-  if (!availablePromoCodesSection || !promoCodesGrid) return;
-  
-  const activePromoCodes = getActivePromoCodes();
-  const availableCodes = Object.entries(activePromoCodes);
-
-  if (availableCodes.length === 0) {
-    availablePromoCodesSection.style.display = 'none';
-    return;
-  }
-
-  availablePromoCodesSection.style.display = 'block';
-  promoCodesGrid.innerHTML = '';
-
-  availableCodes.forEach(([code, details]) => {
-    const discountText =
-      details.type === 'percentage'
-        ? `${details.value}% OFF`
-        : details.type === 'shipping'
-        ? 'FREE SHIPPING'
-        : `₹${details.value} OFF`;
-    
-    const isApplicable = originalTotal >= (Number(details.minOrder) || 0);
-    const isAlreadyApplied = appliedPromoCode === code;
-    const isSelected =
-      document.querySelector('.promo-input')?.value.toUpperCase() === code &&
-      appliedPromoCode !== code;
-    
-    const promoCard = document.createElement('div');
-    promoCard.className = 'promo-code-card';
-    promoCard.setAttribute('data-code', code);
-    
-    if (isAlreadyApplied || isSelected) {
-      promoCard.classList.add('active');
-    } else if (!isApplicable) {
-      promoCard.classList.add('disabled');
-    }
-    
-    promoCard.innerHTML = `
-      <div class="promo-code-header">
-        <i class="fas fa-tag"></i>
-        <div class="promo-code-value">${code}</div>
-        ${(isAlreadyApplied || isSelected)
-          ? '<div class="applied-badge"><i class="fas fa-check"></i> Applied</div>'
-          : ''}
-      </div>
-      <div class="promo-code-desc">${details.description || discountText}</div>
-      <div class="promo-code-terms">${
-        details.terms || `Min. order ₹${Number(details.minOrder) || 0}`
-      }</div>
-    `;
-    
-    if (isApplicable) {
-      promoCard.addEventListener('click', () => {
-        selectPromoCode(code);
-      });
-      promoCard.style.cursor = 'pointer';
-    } else {
-      promoCard.style.cursor = 'not-allowed';
-    }
-    
-    promoCodesGrid.appendChild(promoCard);
-  });
-}
 
 // Select promo code with toggle behaviour
 function selectPromoCode(code) {
-  const promoInput = document.querySelector('.promo-input');
-  if (!promoInput) return;
-  
-  // If same code already applied → remove it
-  if (appliedPromoCode === code) {
-    removePromoCode();
-    return;
-  }
-  
-  // If same code is just selected → apply
-  if (promoInput.value.toUpperCase() === code && appliedPromoCode !== code) {
+    const promoInput = document.querySelector('.promo-input');
+    if (!promoInput) return;
+    
+    // If same code already applied → remove it
+    if (window.appliedPromoCode === code) {
+        removePromoCode();
+        return;
+    }
+    
+    // If same code is just selected → apply
+    if (promoInput.value.toUpperCase() === code && window.appliedPromoCode !== code) {
+        applyPromoCode();
+        return;
+    }
+    
+    // Otherwise select and auto-apply
+    promoInput.value = code;
+    refreshPromoCodes();
     applyPromoCode();
-    return;
-  }
-  
-  // Otherwise select and auto-apply
-  promoInput.value = code;
-  refreshPromoCodes();
-  applyPromoCode();
 }
 
 // Load promo codes from Firebase
 function loadPromoCodesFromFirebase() {
-  return new Promise((resolve) => {
-    db.collection('promoCodes')
-      .where('active', '==', true)
-      .get()
-      .then((querySnapshot) => {
-        const promoCodes = {};
-        const now = new Date();
-        
-        querySnapshot.forEach((doc) => {
-          const promoData = doc.data() || {};
-          
-          const isValid =
-            !promoData.validUntil ||
-            new Date(promoData.validUntil) >= now;
-          const showOnCheckout = promoData.showOnCheckout !== false;
-          
-          if (isValid && showOnCheckout) {
-            promoCodes[doc.id] = {
-              ...promoData,
-              id: doc.id,
-              // force numbers where needed
-              value: Number(promoData.value) || 0,
-              minOrder: Number(promoData.minOrder) || 0,
-              maxDiscount:
-                promoData.maxDiscount == null
-                  ? null
-                  : Number(promoData.maxDiscount),
-              usageLimit:
-                promoData.usageLimit == null || promoData.usageLimit === 0
-                  ? null // 0 or null => NO LIMIT
-                  : Number(promoData.usageLimit),
-              usedCount: Number(promoData.usedCount) || 0
-            };
-          }
-        });
-        
-        window.activePromoCodes = promoCodes;
-        resolve(promoCodes);
-      })
-      .catch((error) => {
-        console.error('Error loading promo codes:', error);
-        window.activePromoCodes = {};
-        resolve({});
-      });
-  });
+    return new Promise((resolve) => {
+        db.collection('promoCodes')
+            .where('active', '==', true)
+            .get()
+            .then((querySnapshot) => {
+                const promoCodes = {};
+                const now = new Date();
+                
+                querySnapshot.forEach((doc) => {
+                    const promoData = doc.data() || {};
+                    
+                    const isValid =
+                        !promoData.validUntil ||
+                        new Date(promoData.validUntil) >= now;
+                    const showOnCheckout = promoData.showOnCheckout !== false;
+                    
+                    if (isValid && showOnCheckout) {
+                        promoCodes[doc.id] = {
+                            ...promoData,
+                            id: doc.id,
+                            value: Number(promoData.value) || 0,
+                            minOrder: Number(promoData.minOrder) || 0,
+                            maxDiscount:
+                                promoData.maxDiscount == null
+                                    ? null
+                                    : Number(promoData.maxDiscount),
+                            usageLimit:
+                                promoData.usageLimit == null || promoData.usageLimit === 0
+                                    ? null
+                                    : Number(promoData.usageLimit),
+                            usedCount: Number(promoData.usedCount) || 0
+                        };
+                    }
+                });
+                
+                window.activePromoCodes = promoCodes;
+                resolve(promoCodes);
+            })
+            .catch((error) => {
+                console.error('Error loading promo codes:', error);
+                window.activePromoCodes = {};
+                resolve({});
+            });
+    });
 }
 
-// Apply promo code with fixed usage limit logic
+// Apply promo code
 function applyPromoCode() {
-  const promoInput = document.querySelector('.promo-input');
-  const applyBtn = document.querySelector('.apply-btn');
-  
-  if (!promoInput) return;
-  
-  const promoCode = promoInput.value.trim().toUpperCase();
-  if (!promoCode) {
-    showPromoError('Please enter a promo code');
-    return;
-  }
-  
-  hideAllPromoMessages();
-  
-  const activePromoCodes = getActivePromoCodes();
-  const matchingCode = Object.keys(activePromoCodes).find(
-    (code) => code === promoCode
-  );
-  
-  if (!matchingCode) {
-    showPromoError('Invalid promo code. Please select from available codes below.');
-    promoInput.value = '';
-    refreshPromoCodes();
-    return;
-  }
-  
-  const promoDetails = activePromoCodes[matchingCode];
-  
-  // Not active
-  if (!promoDetails.active) {
-    showPromoError('This promo code is no longer active');
-    promoInput.value = '';
-    refreshPromoCodes();
-    return;
-  }
-  
-  // Expired
-  if (
-    promoDetails.validUntil &&
-    new Date(promoDetails.validUntil) < new Date()
-  ) {
-    showPromoError('This promo code has expired');
-    promoInput.value = '';
-    refreshPromoCodes();
-    return;
-  }
-  
-  // Min order
-  const minOrder = Number(promoDetails.minOrder) || 0;
-  if (originalTotal < minOrder) {
-    showPromoError(
-      `Minimum order value of ₹${minOrder} required for this promo code`
-    );
-    promoInput.value = '';
-    refreshPromoCodes();
-    return;
-  }
-  
-  // ✅ FIXED: usageLimit 0 or null means UNLIMITED
-  if (
-    typeof promoDetails.usageLimit === 'number' &&
-    promoDetails.usageLimit > 0
-  ) {
-    const used = Number(promoDetails.usedCount) || 0;
-    const limit = promoDetails.usageLimit;
+    const promoInput = document.querySelector('.promo-input');
+    const applyBtn = document.querySelector('.apply-btn');
     
-    if (used >= limit) {
-      showPromoError('Promo usage limit reached');
-      
-      db.collection('activities').add({
-        type: 'PROMO_USAGE_LIMIT_REACHED',
-        promoCode: promoCode,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      
-      promoInput.value = '';
-      refreshPromoCodes();
-      return;
+    if (!promoInput) return;
+    
+    const promoCode = promoInput.value.trim().toUpperCase();
+    if (!promoCode) {
+        showPromoError('Please enter a promo code');
+        return;
     }
-  }
-  
-  // Calculate discount
-  let discountValue = 0;
-  const promoType = promoDetails.type;
-  const total = originalTotal;
-  
-  if (promoType === 'percentage') {
-    discountValue = Math.round(total * (promoDetails.value / 100));
-    if (
-      typeof promoDetails.maxDiscount === 'number' &&
-      promoDetails.maxDiscount > 0 &&
-      discountValue > promoDetails.maxDiscount
-    ) {
-      discountValue = promoDetails.maxDiscount;
+    
+    hideAllPromoMessages();
+    
+    const matchingCode = Object.keys(window.activePromoCodes).find(
+        (code) => code === promoCode
+    );
+    
+    if (!matchingCode) {
+        showPromoError('Invalid promo code. Please select from available codes below.');
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
     }
-  } else if (promoType === 'fixed') {
-    discountValue = Math.min(promoDetails.value, total);
-  } else if (promoType === 'shipping') {
-    discountValue = 0; // shipping handled separately if needed
-  }
-  
-  currentDiscount = discountValue;
-  appliedPromoCode = promoCode;
-  updateTotals();
-  
-  // Increment usage (only if limit exists OR for tracking)
-  db.collection('promoCodes')
-    .doc(promoCode)
-    .update({
-      usedCount: firebase.firestore.FieldValue.increment(1)
-    })
-    .catch((err) => {
-      console.error('Failed to increment promo usage:', err);
+    
+    const promoDetails = window.activePromoCodes[matchingCode];
+    
+    if (!promoDetails.active) {
+        showPromoError('This promo code is no longer active');
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
+    }
+    
+    if (promoDetails.validUntil && new Date(promoDetails.validUntil) < new Date()) {
+        showPromoError('This promo code has expired');
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
+    }
+    
+    const minOrder = Number(promoDetails.minOrder) || 0;
+    if (window.originalTotal < minOrder) {
+        showPromoError(`Minimum order value of ₹${minOrder} required for this promo code`);
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
+    }
+    
+    if (typeof promoDetails.usageLimit === 'number' && promoDetails.usageLimit > 0) {
+        const used = Number(promoDetails.usedCount) || 0;
+        const limit = promoDetails.usageLimit;
+        
+        if (used >= limit) {
+            showPromoError('Promo usage limit reached');
+            
+            db.collection('activities').add({
+                type: 'PROMO_USAGE_LIMIT_REACHED',
+                promoCode: promoCode,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            promoInput.value = '';
+            refreshPromoCodes();
+            return;
+        }
+    }
+    
+    let discountValue = 0;
+    const promoType = promoDetails.type;
+    const total = window.originalTotal;
+    
+    if (promoType === 'percentage') {
+        discountValue = Math.round(total * (promoDetails.value / 100));
+        if (typeof promoDetails.maxDiscount === 'number' && promoDetails.maxDiscount > 0 && discountValue > promoDetails.maxDiscount) {
+            discountValue = promoDetails.maxDiscount;
+        }
+    } else if (promoType === 'fixed') {
+        discountValue = Math.min(promoDetails.value, total);
+    } else if (promoType === 'shipping') {
+        discountValue = 0;
+    }
+    
+    window.currentDiscount = discountValue;
+    window.appliedPromoCode = promoCode;
+    updateTotals();
+    
+    db.collection('promoCodes').doc(promoCode).update({
+        usedCount: firebase.firestore.FieldValue.increment(1)
+    }).catch((err) => {
+        console.error('Failed to increment promo usage:', err);
     });
-  
-  db.collection('activities').add({
-    type: 'PROMO_USED',
-    promoCode: promoCode,
-    discount: discountValue,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  
-  refreshPromoCodes();
-  
-  let successMessage = `Promo code "${promoCode}" applied successfully!`;
-  if (promoType === 'shipping') {
-    successMessage += ' Free shipping applied.';
-  } else if (discountValue > 0) {
-    successMessage += ` ₹${discountValue} discount applied.`;
-  }
-  
-  showPromoSuccess(successMessage);
-  
-  if (applyBtn) {
-    applyBtn.disabled = true;
-    applyBtn.style.opacity = '0.6';
-    applyBtn.style.cursor = 'not-allowed';
-  }
-  
-  promoInput.disabled = true;
-  promoInput.style.backgroundColor = '#f5f5f5';
-  promoInput.style.cursor = 'not-allowed';
+    
+    db.collection('activities').add({
+        type: 'PROMO_USED',
+        promoCode: promoCode,
+        discount: discountValue,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    refreshPromoCodes();
+    
+    let successMessage = `Promo code "${promoCode}" applied successfully!`;
+    if (promoType === 'shipping') {
+        successMessage += ' Free shipping applied.';
+    } else if (discountValue > 0) {
+        successMessage += ` ₹${discountValue} discount applied.`;
+    }
+    
+    showPromoSuccess(successMessage);
+    
+    if (applyBtn) {
+        applyBtn.disabled = true;
+        applyBtn.style.opacity = '0.6';
+        applyBtn.style.cursor = 'not-allowed';
+    }
+    
+    promoInput.disabled = true;
+    promoInput.style.backgroundColor = '#f5f5f5';
+    promoInput.style.cursor = 'not-allowed';
 }
 
 // Refresh promo cards when totals/cart change
 function refreshPromoCodes() {
-  if (document.getElementById('promoCodesGrid')) {
-    displayAvailablePromoCodes();
-  }
-}
-
-// Remove promo code
-function removePromoCode() {
-  currentDiscount = 0;
-  appliedPromoCode = null;
-  
-  const promoInput = document.querySelector('.promo-input');
-  const applyBtn = document.querySelector('.apply-btn');
-  
-  if (promoInput) {
-    promoInput.value = '';
-    promoInput.disabled = false;
-    promoInput.style.backgroundColor = '';
-    promoInput.style.cursor = '';
-  }
-  
-  if (applyBtn) {
-    applyBtn.disabled = false;
-    applyBtn.style.opacity = '1';
-    applyBtn.style.cursor = 'pointer';
-  }
-  
-  updateTotals();
-  refreshPromoCodes();
-  showPromoSuccess('Promo code removed successfully!');
-}
-
-// Promo messages
-function showPromoSuccess(message) {
-  hideAllPromoMessages();
-  
-  const successDiv = document.createElement('div');
-  successDiv.className = 'promo-message promo-success';
-  successDiv.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;">
-      <span>${message}</span>
-      ${
-        appliedPromoCode
-          ? `<button onclick="removePromoCode()" style="background:none;border:none;color:#155724;cursor:pointer;font-size:12px;text-decoration:underline;">Remove</button>`
-          : ''
-      }
-    </div>
-  `;
-  
-  const promoCodeSection = document.querySelector('.promo-code');
-  if (!promoCodeSection) return;
-  const promoInputGroup = promoCodeSection.querySelector('.promo-input-group');
-  promoInputGroup.parentNode.insertBefore(successDiv, promoInputGroup.nextSibling);
-  
-  if (!appliedPromoCode) {
-    setTimeout(() => {
-      successDiv.remove();
-    }, 5000);
-  }
-}
-
-function showPromoError(message) {
-  hideAllPromoMessages();
-  
-  const errorDiv = document.createElement('div');
-  errorDiv.className = 'promo-message promo-error';
-  errorDiv.textContent = message;
-  
-  const promoCodeSection = document.querySelector('.promo-code');
-  if (!promoCodeSection) return;
-  const promoInputGroup = promoCodeSection.querySelector('.promo-input-group');
-  promoInputGroup.parentNode.insertBefore(errorDiv, promoInputGroup.nextSibling);
-  
-  setTimeout(() => {
-    errorDiv.remove();
-  }, 5000);
-}
-
-function hideAllPromoMessages() {
-  document.querySelectorAll('.promo-message').forEach((msg) => msg.remove());
-}
-
-// Update totals including discount
-function updateTotals() {
-  const subtotalElement = document.getElementById('subtotal');
-  const totalElement = document.getElementById('total');
-  const discountRow = document.getElementById('discountRow');
-  const discountAmount = document.getElementById('discountAmount');
-  
-  if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
-  
-  const newTotal = Math.max(0, originalTotal - currentDiscount);
-  
-  subtotalElement.textContent = `₹${originalTotal}`;
-  
-  if (currentDiscount > 0 && appliedPromoCode) {
-    discountRow.style.display = 'flex';
-    discountAmount.textContent = `-₹${currentDiscount}`;
-    discountAmount.style.color = '#27ae60';
-  } else {
-    discountRow.style.display = 'none';
-    currentDiscount = 0;
-    appliedPromoCode = null;
-  }
-  
-  totalElement.textContent = `₹${newTotal}`;
-  refreshPromoCodes();
-}
-
-// Initialize checkout page
-async function initCheckoutPage() {
-  updateOrderSummary();
-  setupCheckoutEventListeners();
-  updateCheckoutUI();
-  
-  try {
-    await loadPromoCodesFromFirebase();
-    displayAvailablePromoCodes();
-  } catch (error) {
-    console.error('Failed to load promo codes:', error);
-  }
-}
-
-
-
-// Apply promo code from card click
-function applyPromoCodeFromCard(code) {
-  const promoInput = document.querySelector('.promo-input');
-  if (promoInput) {
-    promoInput.value = code;
-  }
-  applyPromoCode();
-}
-
-
-
-// Handle quantity change in checkout - FIXED VERSION
-function handleCheckoutQuantityChange(e) {
-    const button = e.target.closest('.quantity-btn-checkout');
-    if (!button) return;
-    
-    const productId = parseInt(button.getAttribute('data-id'));
-    const action = button.getAttribute('data-action');
-    
-    if (action === 'decrease') {
-        const item = cartProducts.find(item => item.id === productId);
-        if (item && item.quantity <= 1) {
-            // Remove product from cart when quantity would go below 1
-            removeFromCart(productId);
-        } else {
-            updateCartQuantity(productId, -1);
-        }
-    } else if (action === 'increase') {
-        updateCartQuantity(productId, 1);
-    }
-    
-    // Order summary is now updated automatically via updateCartUI()
-}
-
-// Handle quantity input in checkout - FIXED VERSION  
-function handleCheckoutQuantityInput(e) {
-    const input = e.target;
-    const productId = parseInt(input.getAttribute('data-id'));
-    const newQuantity = parseInt(input.value) || 0;
-    
-    if (newQuantity <= 0) {
-        removeFromCart(productId);
-    } else {
-        setCartQuantity(productId, newQuantity);
+    if (document.getElementById('promoCodesGrid')) {
+        displayAvailablePromoCodes();
     }
 }
 
-// Update order summary with cart items - FIXED VERSION
+// Improved updateOrderSummary function
 function updateOrderSummary() {
     const orderItems = document.getElementById('orderItems');
+    const emptyState = document.querySelector('.empty-order-state');
+    
     if (!orderItems) return;
     
     orderItems.innerHTML = '';
     let subtotal = 0;
     
     if (cartProducts.length === 0) {
-        const emptyMessage = document.createElement('div');
-        emptyMessage.className = 'empty-order';
-        emptyMessage.style.textAlign = 'center';
-        emptyMessage.style.padding = '40px 20px';
-        emptyMessage.style.color = '#777';
-        emptyMessage.innerHTML = `
-            <i class="fas fa-shopping-cart" style="font-size: 48px; margin-bottom: 15px; color: #e0e0e0;"></i>
-            <p style="font-size: 16px;">Your cart is empty</p>
-        `;
-        orderItems.appendChild(emptyMessage);
+        if (!emptyState) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'empty-order-state';
+            emptyMsg.innerHTML = `
+                <div class="empty-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3>Your cart is empty</h3>
+                <p>Add some delicious honey products to get started</p>
+            `;
+            orderItems.appendChild(emptyMsg);
+        }
+        
+        // Hide promo section if cart is empty
+        const promoSection = document.querySelector('.promo-code-section');
+        if (promoSection) promoSection.style.display = 'none';
+        
+        // Disable checkout button
+        const checkoutBtn = document.getElementById('processCheckoutBtn');
+        if (checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = '0.7';
+        }
+        
     } else {
+        // Show promo section
+        const promoSection = document.querySelector('.promo-code-section');
+        if (promoSection) promoSection.style.display = 'block';
+        
+        // Enable checkout button
+        const checkoutBtn = document.getElementById('processCheckoutBtn');
+        if (checkoutBtn) {
+            checkoutBtn.disabled = false;
+            checkoutBtn.style.opacity = '1';
+        }
+        
         cartProducts.forEach(item => {
             const product = products.find(p => p.id === item.id);
             if (product) {
@@ -2271,9 +444,9 @@ function updateOrderSummary() {
                 orderItem.innerHTML = `
                     <div class="order-item-main">
                         <div class="order-item-image-container">
-                            <div class="order-item-image">
-                                <img src="${product.image || 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'}" alt="${product.name}" onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
-                            </div>
+                            <img src="${product.image}" alt="${product.name}" 
+                                 class="order-product-img" 
+                                 onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
                         </div>
                         <div class="order-item-content">
                             <div class="order-item-header">
@@ -2284,11 +457,13 @@ function updateOrderSummary() {
                                 <div class="order-item-price">₹${itemTotal}</div>
                             </div>
                             <div class="order-item-footer">
-                                <div class="order-item-quantity-controls">
+                                <div class="quantity-controls">
                                     <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}">
                                         <i class="fas fa-minus"></i>
                                     </button>
-                                    <input type="number" class="quantity-input-checkout" value="${item.quantity}" min="0" max="10" data-id="${item.id}">
+                                    <input type="number" class="quantity-input-checkout" 
+                                           value="${item.quantity}" min="1" max="10" 
+                                           data-id="${item.id}">
                                     <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
                                         <i class="fas fa-plus"></i>
                                     </button>
@@ -2302,88 +477,193 @@ function updateOrderSummary() {
         });
     }
     
-    originalTotal = subtotal;
+    window.originalTotal = subtotal;
     updateTotals();
+    refreshPromoCodes();
 }
 
-// Setup event listeners for checkout page
-function setupCheckoutEventListeners() {
-    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
-    const applyBtn = document.querySelector('.apply-btn');
-    const checkoutBtnMain = document.querySelector('.checkout-btn');
-    const promoInput = document.querySelector('.promo-input');
-
-    if (loginBtnCheckout) {
-        loginBtnCheckout.addEventListener('click', function() {
-            if (currentUser) {
-                // User is logged in - show logout confirmation
-                if (confirm('Are you sure you want to logout?')) {
-                    auth.signOut().then(() => {
-                        window.location.reload();
-                    }).catch((error) => {
-                        console.error("Error signing out:", error);
-                    });
-                }
-            } else {
-                // User is not logged in - show login modal
-                showLoginView();
-                loginModal.classList.add('active');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        });
+// Enhanced displayAvailablePromoCodes function
+function displayAvailablePromoCodes() {
+    const promoCodesGrid = document.getElementById('promoCodesGrid');
+    const noPromoCodes = document.getElementById('noPromoCodes');
+    const availablePromoCodes = document.getElementById('availablePromoCodes');
+    
+    if (!promoCodesGrid || !noPromoCodes) return;
+    
+    const availableCodes = Object.entries(window.activePromoCodes);
+    
+    if (availableCodes.length === 0) {
+        promoCodesGrid.style.display = 'none';
+        noPromoCodes.style.display = 'block';
+        availablePromoCodes.style.display = 'none';
+        return;
     }
-
-    if (applyBtn) {
-        applyBtn.addEventListener('click', applyPromoCode);
-    }
-
-    if (promoInput) {
-        promoInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                applyPromoCode();
-            }
-        });
+    
+    promoCodesGrid.style.display = 'grid';
+    noPromoCodes.style.display = 'none';
+    availablePromoCodes.style.display = 'block';
+    promoCodesGrid.innerHTML = '';
+    
+    availableCodes.forEach(([code, details]) => {
+        const discountText =
+            details.type === 'percentage'
+                ? `${details.value}% OFF`
+                : details.type === 'shipping'
+                ? 'FREE SHIPPING'
+                : `₹${details.value} OFF`;
         
-        // Prevent manual entry of unavailable codes
-        promoInput.addEventListener('input', function(e) {
-            const value = e.target.value.toUpperCase();
-            const activePromoCodes = getActivePromoCodes();
-            const availableCodes = Object.keys(activePromoCodes);
-            
-            // If user tries to type something that doesn't match available codes, show error
-            if (value && !availableCodes.some(code => code.startsWith(value))) {
-                showPromoError('Please select from available promo codes below');
-            } else {
-                hideAllPromoMessages();
-            }
-        });
-    }
-
-    if (checkoutBtnMain) {
-        checkoutBtnMain.addEventListener('click', processCheckout);
-    }
-
-    // Quantity controls
-    document.addEventListener('click', function(e) {
-        const button = e.target.closest('.quantity-btn-checkout');
-        if (button) {
-            handleCheckoutQuantityChange(e);
+        const isApplicable = window.originalTotal >= (Number(details.minOrder) || 0);
+        const isAlreadyApplied = window.appliedPromoCode === code;
+        
+        const promoCard = document.createElement('div');
+        promoCard.className = 'promo-code-card';
+        if (isAlreadyApplied) promoCard.classList.add('active');
+        if (!isApplicable) promoCard.classList.add('disabled');
+        promoCard.setAttribute('data-code', code);
+        
+        promoCard.innerHTML = `
+            <div class="promo-code-header">
+                <div class="promo-code-value">${code}</div>
+                ${isAlreadyApplied ? 
+                    '<div class="applied-badge"><i class="fas fa-check"></i> Applied</div>' : 
+                    ''}
+            </div>
+            <div class="promo-code-desc">${discountText} - ${details.description || ''}</div>
+            <div class="promo-code-terms">Min. order: ₹${Number(details.minOrder) || 0}</div>
+        `;
+        
+        if (isApplicable) {
+            promoCard.addEventListener('click', () => {
+                selectPromoCode(code);
+            });
         }
+        
+        promoCodesGrid.appendChild(promoCard);
     });
+}
 
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('quantity-input-checkout')) {
-            handleCheckoutQuantityInput(e);
+// Improved selectPromoCode function
+function selectPromoCode(code) {
+    const promoInput = document.getElementById('promoCodeInput');
+    const applyBtn = document.getElementById('applyPromoBtn');
+    
+    if (!promoInput || !applyBtn) return;
+    
+    // If same code already applied → remove it
+    if (window.appliedPromoCode === code) {
+        removePromoCode();
+        return;
+    }
+    
+    // Select the code and auto-apply if applicable
+    promoInput.value = code;
+    applyPromoCode();
+}
+
+// Enhanced showPromoSuccess function
+function showPromoSuccess(message) {
+    const promoMessage = document.getElementById('promoMessage');
+    if (!promoMessage) return;
+    
+    promoMessage.className = 'promo-message success';
+    promoMessage.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span>${message}</span>
+            ${window.appliedPromoCode ? 
+                '<button onclick="removePromoCode()" style="background:none;border:none;color:#155724;cursor:pointer;font-size:12px;text-decoration:underline;padding:0;">Remove</button>' : 
+                ''}
+        </div>
+    `;
+    
+    setTimeout(() => {
+        if (!window.appliedPromoCode) {
+            promoMessage.style.display = 'none';
         }
-    });
+    }, 5000);
+}
 
-    // Form validation
-    const formInputs = document.querySelectorAll('.checkout-form input, .checkout-form select');
-    formInputs.forEach(input => {
-        input.addEventListener('blur', validateField);
-        input.addEventListener('input', clearFieldError);
-    });
+// Enhanced removePromoCode function
+function removePromoCode() {
+    window.currentDiscount = 0;
+    window.appliedPromoCode = null;
+    
+    const promoInput = document.getElementById('promoCodeInput');
+    const applyBtn = document.getElementById('applyPromoBtn');
+    const promoMessage = document.getElementById('promoMessage');
+    
+    if (promoInput) {
+        promoInput.value = '';
+        promoInput.disabled = false;
+        promoInput.style.backgroundColor = '';
+        promoInput.style.cursor = '';
+    }
+    
+    if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.style.opacity = '1';
+        applyBtn.style.cursor = 'pointer';
+    }
+    
+    if (promoMessage) {
+        promoMessage.style.display = 'none';
+    }
+    
+    updateTotals();
+    refreshPromoCodes();
+}
+
+function showPromoError(message) {
+    hideAllPromoMessages();
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'promo-message promo-error';
+    errorDiv.textContent = message;
+    
+    const promoCodeSection = document.querySelector('.promo-code');
+    if (!promoCodeSection) return;
+    const promoInputGroup = promoCodeSection.querySelector('.promo-input-group');
+    promoInputGroup.parentNode.insertBefore(errorDiv, promoInputGroup.nextSibling);
+    
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+function hideAllPromoMessages() {
+    document.querySelectorAll('.promo-message').forEach((msg) => msg.remove());
+}
+
+// Handle quantity change in checkout
+function handleCheckoutQuantityChange(e) {
+    const button = e.target.closest('.quantity-btn-checkout');
+    if (!button) return;
+    
+    const productId = parseInt(button.getAttribute('data-id'));
+    const action = button.getAttribute('data-action');
+    
+    if (action === 'decrease') {
+        const item = cartProducts.find(item => item.id === productId);
+        if (item && item.quantity <= 1) {
+            removeFromCart(productId);
+        } else {
+            updateCartQuantity(productId, -1);
+        }
+    } else if (action === 'increase') {
+        updateCartQuantity(productId, 1);
+    }
+}
+
+// Handle quantity input in checkout  
+function handleCheckoutQuantityInput(e) {
+    const input = e.target;
+    const productId = parseInt(input.getAttribute('data-id'));
+    const newQuantity = parseInt(input.value) || 0;
+    
+    if (newQuantity <= 0) {
+        removeFromCart(productId);
+    } else {
+        setCartQuantity(productId, newQuantity);
+    }
 }
 
 // Validate form field
@@ -2428,13 +708,11 @@ function validateField(e) {
 function showFieldError(field, message) {
     field.classList.add('error');
     
-    // Remove existing error message
     const existingError = field.parentNode.querySelector('.field-error');
     if (existingError) {
         existingError.remove();
     }
     
-    // Add error message
     const errorElement = document.createElement('div');
     errorElement.className = 'field-error';
     errorElement.style.color = '#e74c3c';
@@ -2477,11 +755,9 @@ function validateCheckoutForm() {
     
     let isValid = true;
     
-    // Clear all errors first
     document.querySelectorAll('.field-error').forEach(error => error.remove());
     document.querySelectorAll('.error').forEach(field => field.classList.remove('error'));
     
-    // Validate each required field
     requiredFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
         if (field && !validateField({ target: field })) {
@@ -2489,7 +765,6 @@ function validateCheckoutForm() {
         }
     });
     
-    // Validate cart
     if (cartProducts.length === 0) {
         alert('Your cart is empty. Please add items to proceed.');
         isValid = false;
@@ -2498,7 +773,7 @@ function validateCheckoutForm() {
     return isValid;
 }
 
-// Process checkout - MODIFIED TO SAVE ADDRESS
+// Process checkout
 function processCheckout() {
     if (!validateCheckoutForm()) {
         return;
@@ -2539,22 +814,21 @@ function processCheckout() {
                 image: product ? product.image : ''
             };
         }),
-        subtotal: originalTotal,
-        discount: currentDiscount,
-        total: originalTotal - currentDiscount,
-        status: 'pending',
+        subtotal: window.originalTotal,
+        discount: window.currentDiscount,
+        total: window.originalTotal - window.currentDiscount,
+        status: 'ordered',
         createdAt: new Date().toISOString(),
         paymentMethod: 'razorpay'
     };
     
-    // Add promo code if applied
-    if (appliedPromoCode) {
-        orderData.promoCode = appliedPromoCode;
+    if (window.appliedPromoCode) {
+        orderData.promoCode = window.appliedPromoCode;
     }
     
-    // Save address to profile if user is logged in and checkbox is checked
+    // Use the function from common.js
     if (currentUser && isDefaultAddress) {
-        saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefaultAddress);
+        window.saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefaultAddress);
     }
     
     if (currentUser) {
@@ -2627,13 +901,11 @@ function clearCartAfterOrder() {
 
 // Process payment (simulated)
 function processPayment(orderData) {
-    // Show processing message
     const checkoutBtn = document.querySelector('.checkout-btn');
     const originalText = checkoutBtn.innerHTML;
     checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
     checkoutBtn.disabled = true;
     
-    // Simulate payment processing
     setTimeout(() => {
         if (currentUser && orderData.id && db) {
             db.collection('orders').doc(orderData.id).update({
@@ -2677,73 +949,828 @@ function processPayment(orderData) {
 function showOrderSuccess(orderData) {
     alert(`Order confirmed successfully! Order ID: ${orderData.id.substring(0, 8)}\n\nThank you for your purchase. You will receive an email confirmation shortly.`);
     
-    // Redirect to home page or order confirmation page
     setTimeout(() => {
         window.location.href = 'index.html';
     }, 3000);
 }
 
-// Helper function to show notifications
+// Setup event listeners for checkout page
+function setupCheckoutEventListeners() {
+    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+    const applyPromoBtn = document.getElementById('applyPromoBtn');
+    const processCheckoutBtn = document.getElementById('processCheckoutBtn');
+    const promoCodeInput = document.getElementById('promoCodeInput');
+
+    // Login/Logout button
+    if (loginBtnCheckout) {
+        loginBtnCheckout.addEventListener('click', function() {
+            if (currentUser) {
+                if (confirm('Are you sure you want to logout? This will clear your cart.')) {
+                    auth.signOut().then(() => {
+                        window.location.reload();
+                    });
+                }
+            } else {
+                showLoginView();
+                loginModal.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    }
+
+    // Apply promo button
+    if (applyPromoBtn) {
+        applyPromoBtn.addEventListener('click', applyPromoCode);
+    }
+
+    // Promo code input
+    if (promoCodeInput) {
+        promoCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyPromoCode();
+            }
+        });
+        
+        promoCodeInput.addEventListener('input', function(e) {
+            const value = e.target.value.toUpperCase();
+            const promoMessage = document.getElementById('promoMessage');
+            if (promoMessage) {
+                promoMessage.style.display = 'none';
+            }
+            
+            // Highlight matching promo cards
+            const promoCards = document.querySelectorAll('.promo-code-card');
+            promoCards.forEach(card => {
+                const code = card.getAttribute('data-code');
+                if (code && code.startsWith(value)) {
+                    card.style.borderColor = '#5f2b27';
+                    card.style.boxShadow = '0 0 0 2px rgba(95, 43, 39, 0.1)';
+                } else {
+                    card.style.borderColor = '';
+                    card.style.boxShadow = '';
+                }
+            });
+        });
+        
+        promoCodeInput.addEventListener('focus', function() {
+            this.parentElement.style.borderColor = '#5f2b27';
+            this.parentElement.style.boxShadow = '0 0 0 2px rgba(95, 43, 39, 0.1)';
+        });
+        
+        promoCodeInput.addEventListener('blur', function() {
+            this.parentElement.style.borderColor = '#ddd';
+            this.parentElement.style.boxShadow = 'none';
+        });
+    }
+
+    // Process checkout button
+    if (processCheckoutBtn) {
+        processCheckoutBtn.addEventListener('click', processCheckout);
+    }
+
+    // Quantity controls
+    document.addEventListener('click', handleCheckoutQuantityChange);
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('quantity-input-checkout')) {
+            handleCheckoutQuantityInput(e);
+        }
+    });
+
+    // Form validation
+    const formInputs = document.querySelectorAll('.checkout-form input, .checkout-form select');
+    formInputs.forEach(input => {
+        input.addEventListener('blur', validateField);
+        input.addEventListener('input', clearFieldError);
+        input.addEventListener('focus', function() {
+            this.style.borderColor = '#5f2b27';
+        });
+        input.addEventListener('blur', function() {
+            if (!this.classList.contains('error')) {
+                this.style.borderColor = '#ddd';
+            }
+        });
+    });
+}
+
+// Initialize checkout page
+// Initialize checkout page
+async function initCheckoutPage() {
+  console.log('Initializing checkout page...');
+  
+  // Initial updates
+  updateOrderSummary();
+  setupCheckoutEventListeners();
+  updateCheckoutUI();
+  
+  // Load promo codes with error handling
+  try {
+    console.log('Loading promo codes...');
+    await loadPromoCodesFromFirebase();
+    console.log('Promo codes loaded:', window.activePromoCodes);
+    
+    // Wait a bit for DOM to be fully ready
+    setTimeout(() => {
+      displayAvailablePromoCodes();
+      
+      // Debug: Check if elements exist
+      const promoCodesGrid = document.getElementById('promoCodesGrid');
+      const noPromoCodes = document.getElementById('noPromoCodes');
+      const availablePromoCodes = document.getElementById('availablePromoCodes');
+      
+      console.log('Promo elements found:', {
+        promoCodesGrid: !!promoCodesGrid,
+        noPromoCodes: !!noPromoCodes,
+        availablePromoCodes: !!availablePromoCodes
+      });
+      
+      // Add animation for promo cards
+      const promoCards = document.querySelectorAll('.promo-code-card');
+      promoCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate-fade-in');
+      });
+    }, 500);
+    
+  } catch (error) {
+    console.error('Failed to load promo codes:', error);
+    showPromoError('Unable to load promo codes. Please try again later.');
+  }
+  
+  // Update UI based on cart state
+  if (cartProducts.length === 0) {
+    const checkoutBtn = document.getElementById('processCheckoutBtn');
+    if (checkoutBtn) {
+      checkoutBtn.disabled = true;
+      checkoutBtn.style.opacity = '0.7';
+    }
+  }
+  
+  // Load user's default address if logged in
+  if (currentUser) {
+    loadUserDefaultAddress();
+  }
+}
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded, initializing checkout...');
+  
+  // Initialize checkout page if on checkout page
+  if (document.querySelector('.checkout-section')) {
+    console.log('Checkout section found, initializing...');
+    initCheckoutPage();
+    
+    // Test after a delay
+    setTimeout(() => {
+      console.log('Running promo code test...');
+      testPromoCodeDisplay();
+    }, 2000);
+  }
+});
+
+// Make functions available globally
+window.updateCheckoutUI = updateCheckoutUI;
+window.loadUserDefaultAddress = loadUserDefaultAddress;
+window.updateOrderSummary = updateOrderSummary;
+window.refreshPromoCodes = refreshPromoCodes;
+window.applyPromoCode = applyPromoCode;
+window.removePromoCode = removePromoCode;
+window.selectPromoCode = selectPromoCode;
+
+let isProcessingPayment = false;
+
+function generateOrderId() {
+    // Generate a random 5-digit number
+    const randomNumber = Math.floor(10000 + Math.random() * 90000);
+    return `NA-${randomNumber}`;
+}
+// Enhanced updateOrderSummary function
+function updateOrderSummary() {
+    const orderItems = document.getElementById('orderItems');
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    
+    if (!orderItems) return;
+    
+    orderItems.innerHTML = '';
+    let subtotal = 0;
+    
+    if (cartProducts.length === 0) {
+        orderItems.innerHTML = `
+            <div class="empty-order-state">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>Your cart is empty</h3>
+                <p>Add some delicious honey products to get started</p>
+            </div>
+        `;
+        
+        if (checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = '0.5';
+            checkoutBtn.style.cursor = 'not-allowed';
+        }
+    } else {
+        cartProducts.forEach(item => {
+            const product = products.find(p => p.id === item.id);
+            if (product) {
+                const itemTotal = product.price * item.quantity;
+                subtotal += itemTotal;
+                
+                const orderItem = document.createElement('div');
+                orderItem.className = 'order-item';
+                orderItem.innerHTML = `
+                    <div class="order-item-main">
+                        <div class="order-item-image-container">
+                            <img src="${product.image}" alt="${product.name}" 
+                                 class="order-product-img" 
+                                 onerror="this.onerror=null;this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
+                        </div>
+                        <div class="order-item-content">
+                            <div class="order-item-header">
+                                <div class="order-item-info">
+                                    <div class="order-item-name">${product.name}</div>
+                                    <div class="order-item-weight">${product.weight}</div>
+                                </div>
+                                <div class="order-item-price">₹${itemTotal}</div>
+                            </div>
+                            <div class="order-item-footer">
+                                <div class="quantity-controls">
+                                    <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="quantity-input-checkout" 
+                                           value="${item.quantity}" min="1" max="99" 
+                                           data-id="${item.id}">
+                                    <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                orderItems.appendChild(orderItem);
+            }
+        });
+        
+        if (checkoutBtn) {
+            checkoutBtn.disabled = false;
+            checkoutBtn.style.opacity = '1';
+            checkoutBtn.style.cursor = 'pointer';
+        }
+    }
+    
+    window.originalTotal = subtotal;
+    updateTotals();
+    refreshPromoCodes();
+}
+
+// Enhanced validateCheckoutForm function
+function validateCheckoutForm() {
+    const requiredFields = [
+        'email', 'firstName', 'lastName', 'address', 
+        'city', 'state', 'zipCode', 'phone'
+    ];
+    
+    let isValid = true;
+    let errorMessages = [];
+    
+    // Clear previous errors
+    document.querySelectorAll('.field-error').forEach(error => error.remove());
+    document.querySelectorAll('.error').forEach(field => field.classList.remove('error'));
+    
+    // Validate required fields
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            const value = field.value.trim();
+            if (field.hasAttribute('required') && !value) {
+                field.classList.add('error');
+                showFieldError(field, 'This field is required');
+                errorMessages.push(`${fieldId} is required`);
+                isValid = false;
+            }
+            
+            // Specific validations
+            if (fieldId === 'email' && value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                    field.classList.add('error');
+                    showFieldError(field, 'Please enter a valid email address');
+                    errorMessages.push('Invalid email address');
+                    isValid = false;
+                }
+            }
+            
+            if (fieldId === 'phone' && value) {
+                const phoneNumber = value.replace(/\D/g, '');
+                if (phoneNumber.length !== 10 || !/^[6-9]\d{9}$/.test(phoneNumber)) {
+                    field.classList.add('error');
+                    showFieldError(field, 'Please enter a valid 10-digit phone number');
+                    errorMessages.push('Invalid phone number');
+                    isValid = false;
+                }
+            }
+            
+            if (fieldId === 'zipCode' && value) {
+                const zipRegex = /^\d{6}$/;
+                if (!zipRegex.test(value)) {
+                    field.classList.add('error');
+                    showFieldError(field, 'Please enter a valid 6-digit PIN code');
+                    errorMessages.push('Invalid PIN code');
+                    isValid = false;
+                }
+            }
+        }
+    });
+    
+    // Validate cart
+    if (cartProducts.length === 0) {
+        showNotification('Your cart is empty. Please add items to proceed.', 'error');
+        isValid = false;
+    }
+    
+    if (!isValid && errorMessages.length > 0) {
+        showNotification('Please fix the errors in the form', 'error');
+    }
+    
+    return isValid;
+}
+
+// Enhanced processCheckout function
+async function processCheckout() {
+    // Prevent double-click
+    if (isProcessingPayment) {
+        return;
+    }
+    
+    isProcessingPayment = true;
+    
+    // Validate form
+    if (!validateCheckoutForm()) {
+        isProcessingPayment = false;
+        return;
+    }
+    
+    // Collect form data
+    const email = document.getElementById('email').value.trim();
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const address = document.getElementById('address').value.trim();
+    const apartment = document.getElementById('apartment')?.value.trim() || '';
+    const city = document.getElementById('city').value.trim();
+    const state = document.getElementById('state').value;
+    const zipCode = document.getElementById('zipCode').value.trim();
+    const phoneInput = document.getElementById('phone').value.replace(/\D/g, '');
+    const phone = phoneInput.length === 10 ? phoneInput : '';
+    const isDefaultAddress = document.getElementById('defaultAddress')?.checked || false;
+    
+    // Generate order data
+const orderId = `${generateOrderId()}`;    const orderDate = new Date();
+    const orderData = {
+        orderId: orderId,
+        orderNumber: orderId,
+        email: email,
+        shippingAddress: {
+            firstName: firstName,
+            lastName: lastName,
+            address: address,
+            apartment: apartment,
+            city: city,
+            state: state,
+            zipCode: zipCode,
+            phone: '+91 ' + phone,
+            country: 'India'
+        },
+        items: cartProducts.map(item => {
+            const product = products.find(p => p.id === item.id);
+            return {
+                productId: item.id,
+                name: product ? product.name : 'Unknown Product',
+                weight: product ? product.weight : '',
+                price: product ? product.price : 0,
+                quantity: item.quantity,
+                image: product ? product.image : '',
+                subtotal: (product ? product.price : 0) * item.quantity
+            };
+        }),
+        subtotal: window.originalTotal,
+        discount: window.currentDiscount,
+        shipping: 0,
+        total: window.originalTotal - window.currentDiscount,
+        status: 'ordered',
+        paymentStatus: 'ordered',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        orderDate: orderDate,
+        paymentMethod: 'razorpay',
+        paymentGateway: 'razorpay'
+    };
+    
+    // Add promo code if applied
+    if (window.appliedPromoCode) {
+        orderData.promoCode = window.appliedPromoCode;
+        orderData.promoDiscount = window.currentDiscount;
+    }
+    
+    // Add user info if logged in
+    if (currentUser) {
+        orderData.userId = currentUser.uid;
+        orderData.userEmail = currentUser.email;
+        orderData.userName = currentUser.displayName || `${firstName} ${lastName}`;
+    }
+    
+    // Show processing animation
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    const originalBtnText = checkoutBtn.innerHTML;
+    checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Order...';
+    checkoutBtn.disabled = true;
+    
+    try {
+        // Save address to profile if user is logged in and checkbox is checked
+        if (currentUser && isDefaultAddress) {
+            await window.saveCheckoutAddressToProfile(
+                firstName, lastName, address, city, state, zipCode, '+91 ' + phone, isDefaultAddress
+            );
+        }
+        
+        // Save order to Firestore
+        const orderRef = await saveOrderToFirestore(orderData);
+        console.log('Order saved with ID:', orderRef.id);
+        
+        // Process payment (simulated for now)
+        await processPayment(orderData, orderRef.id);
+        
+    } catch (error) {
+        console.error('Checkout error:', error);
+        checkoutBtn.innerHTML = originalBtnText;
+        checkoutBtn.disabled = false;
+        isProcessingPayment = false;
+        
+        showNotification('Payment failed. Please try again.', 'error');
+    }
+}
+
+// Enhanced saveOrderToFirestore function
+async function saveOrderToFirestore(orderData) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            let orderRef;
+            
+            // Save to main orders collection
+            orderRef = await db.collection('orders').add(orderData);
+            console.log('Order saved to main collection:', orderRef.id);
+            
+            // Save to user's orders if logged in
+            if (currentUser) {
+                await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderRef.id).set({
+                    ...orderData,
+                    id: orderRef.id
+                });
+                console.log('Order saved to user collection:', orderRef.id);
+            }
+            
+            resolve(orderRef);
+        } catch (error) {
+            console.error('Error saving order:', error);
+            reject(error);
+        }
+    });
+}
+
+// Enhanced processPayment function
+// Enhanced processPayment function
+async function processPayment(orderData, orderDocId) {
+    return new Promise((resolve, reject) => {
+        // Simulate payment processing
+        setTimeout(async () => {
+            try {
+                const checkoutBtn = document.querySelector('.checkout-btn');
+                
+                // Update order status to ordered (not confirmed)
+                await db.collection('orders').doc(orderDocId).update({
+                    status: 'ordered', // CHANGED from 'confirmed' to 'ordered'
+                    paymentStatus: 'paid',
+                    paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Update user's order if logged in
+                if (currentUser) {
+                    await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderDocId).update({
+                        status: 'ordered', // CHANGED from 'confirmed' to 'ordered'
+                        paymentStatus: 'paid',
+                        paidAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                
+                // Clear cart after successful payment
+                await clearCartAfterOrder();
+                
+                // Show success notification
+
+                // Reset button
+                checkoutBtn.innerHTML = '<i class="fas fa-check"></i> Order Placed Successfully!';
+                checkoutBtn.style.backgroundColor = '#27ae60';
+                
+                // Redirect after 3 seconds
+                setTimeout(() => {
+                    window.location.href = `index.html?orderSuccess=${orderData.orderId}`;
+                }, 3000);
+                
+                resolve();
+            } catch (error) {
+                console.error('Payment processing error:', error);
+                reject(error);
+            }
+        }, 2000);
+    });
+}
+// Enhanced clearCartAfterOrder function
+async function clearCartAfterOrder() {
+    try {
+        // Clear from localStorage
+        localStorage.removeItem('guestCart');
+        
+        // Clear from Firestore if user is logged in
+        if (currentUser) {
+            const cartItems = await db.collection('users').doc(currentUser.uid).collection('cart').get();
+            const deletePromises = [];
+            cartItems.forEach(doc => {
+                deletePromises.push(doc.ref.delete());
+            });
+            await Promise.all(deletePromises);
+        }
+        
+        // Clear local cart
+        cartProducts = [];
+        
+        // Update UI
+        updateCartUI();
+        updateOrderSummary();
+        
+        console.log('Cart cleared successfully');
+    } catch (error) {
+        console.error('Error clearing cart:', error);
+    }
+}
+
+// Add button animation function
+function addButtonAnimation(button) {
+    button.classList.add('processing');
+    button.style.transform = 'scale(0.98)';
+    button.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+    
+    // Add ripple effect
+    const ripple = document.createElement('span');
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = 0;
+    const y = 0;
+    
+    ripple.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.7);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        width: ${size}px;
+        height: ${size}px;
+        left: ${x}px;
+        top: ${y}px;
+    `;
+    
+    button.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+// Enhanced setupCheckoutEventListeners function
+function setupCheckoutEventListeners() {
+    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+    const applyPromoBtn = document.getElementById('applyPromoBtn');
+    const checkoutBtn = document.querySelector('.checkout-btn');
+    const promoCodeInput = document.getElementById('promoCodeInput');
+    
+    // Login/Logout button
+    if (loginBtnCheckout) {
+        loginBtnCheckout.addEventListener('click', function() {
+            if (currentUser) {
+                if (confirm('Are you sure you want to logout? This will clear your cart.')) {
+                    auth.signOut().then(() => {
+                        window.location.reload();
+                    });
+                }
+            } else {
+                showLoginView();
+                loginModal.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    }
+    
+    // Apply promo button
+    if (applyPromoBtn) {
+        applyPromoBtn.addEventListener('click', applyPromoCode);
+    }
+    
+    // Promo code input
+    if (promoCodeInput) {
+        promoCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyPromoCode();
+            }
+        });
+    }
+    
+    // Checkout button with animation
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Add animation
+            addButtonAnimation(this);
+            
+            // Process checkout
+            setTimeout(() => {
+                processCheckout();
+            }, 300);
+        });
+        
+        // Add hover effects
+        checkoutBtn.addEventListener('mouseenter', function() {
+            if (!this.disabled) {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 6px 20px rgba(95, 43, 39, 0.4)';
+            }
+        });
+        
+        checkoutBtn.addEventListener('mouseleave', function() {
+            if (!this.disabled) {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 4px 15px rgba(95, 43, 39, 0.3)';
+            }
+        });
+    }
+    
+    // Quantity controls
+    document.addEventListener('click', handleCheckoutQuantityChange);
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('quantity-input-checkout')) {
+            handleCheckoutQuantityInput(e);
+        }
+    });
+    
+    // Form validation
+    const formInputs = document.querySelectorAll('.checkout-form input, .checkout-form select');
+    formInputs.forEach(input => {
+        input.addEventListener('blur', validateField);
+        input.addEventListener('input', clearFieldError);
+        input.addEventListener('focus', function() {
+            this.style.borderColor = '#5f2b27';
+            this.style.boxShadow = '0 0 0 2px rgba(95, 43, 39, 0.1)';
+        });
+        input.addEventListener('blur', function() {
+            if (!this.classList.contains('error')) {
+                this.style.borderColor = '#ddd';
+                this.style.boxShadow = 'none';
+            }
+        });
+    });
+}
+
+// Add to common.js (update existing function)
 function showNotification(message, type = 'info') {
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
+    notification.className = `checkout-notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="close-notification">&times;</button>
+    `;
+    
+    // Add styles
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        padding: 15px 20px;
-        border-radius: 5px;
+        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
         color: white;
-        font-weight: 500;
-        z-index: 10000;
-        max-width: 300px;
+        padding: 15px 20px;
+        border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 300px;
+        max-width: 400px;
         animation: slideIn 0.3s ease;
+        font-family: 'Unbounded', sans-serif;
     `;
     
-    if (type === 'success') {
-        notification.style.backgroundColor = '#27ae60';
-    } else if (type === 'error') {
-        notification.style.backgroundColor = '#e74c3c';
-    } else {
-        notification.style.backgroundColor = '#3498db';
-    }
+    // Animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+        .checkout-btn.processing {
+            animation: pulse 0.6s ease;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.98); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
     
-    notification.textContent = message;
+    // Close button
+    const closeBtn = notification.querySelector('.close-notification');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        margin-left: 15px;
+    `;
     
-    document.body.appendChild(notification);
-    
-    // Remove notification after 5 seconds
-    setTimeout(() => {
+    closeBtn.addEventListener('click', () => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
             }
         }, 300);
+    });
+    
+    // Add to document
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
     }, 5000);
 }
 
-// Add CSS for notifications
-const notificationStyles = document.createElement('style');
-notificationStyles.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+// Initialize checkout page
+async function initCheckoutPage() {
+    console.log('Initializing checkout page...');
+    
+    // Initial updates
+    updateOrderSummary();
+    setupCheckoutEventListeners();
+    updateCheckoutUI();
+    
+    // Load promo codes
+    try {
+        await loadPromoCodesFromFirebase();
+        displayAvailablePromoCodes();
+    } catch (error) {
+        console.error('Failed to load promo codes:', error);
     }
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
+    
+    // Load user's default address if logged in
+    if (currentUser) {
+        loadUserDefaultAddress();
     }
-`;
-document.head.appendChild(notificationStyles);
+}
+
+// Make functions available globally
+window.updateCheckoutUI = updateCheckoutUI;
+window.loadUserDefaultAddress = loadUserDefaultAddress;
+window.updateOrderSummary = updateOrderSummary;
+window.refreshPromoCodes = refreshPromoCodes;
+window.applyPromoCode = applyPromoCode;
+window.removePromoCode = removePromoCode;
+window.selectPromoCode = selectPromoCode;
+window.processCheckout = processCheckout;
+window.showNotification = showNotification;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    initCommon();
-    
-    // Initialize checkout page if on checkout page
     if (document.querySelector('.checkout-section')) {
         initCheckoutPage();
     }
