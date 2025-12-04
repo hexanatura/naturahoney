@@ -924,31 +924,20 @@
           .limit(50)
           .get()
           .then(ordersSnapshot => {
-ordersSnapshot.forEach(orderDoc => {
-  const orderData = orderDoc.data();
-  
-  let createdTimestamp;
-  if (orderData.createdAt && orderData.createdAt.toDate) {
-    createdTimestamp = orderData.createdAt.toDate().getTime();
-  } else if (orderData.createdAt && typeof orderData.createdAt === 'number') {
-    createdTimestamp = orderData.createdAt;
-  } else if (orderData.createdAt && orderData.createdAt.seconds) {
-    createdTimestamp = orderData.createdAt.seconds * 1000;
-  } else {
-    createdTimestamp = Date.now();
-  }
-  
-  allOrders.push({
-    ...orderData,
-    id: orderDoc.id,
-    userId: userDoc.id,
-    _source: "user",
-    _name: ((orderData.shippingAddress?.firstName || "") + " " + (orderData.shippingAddress?.lastName || "")).toLowerCase(),
-    _email: (orderData.email || "").toLowerCase(),
-    _created: createdTimestamp, // Use proper timestamp
-    items: orderData.items || [],
-  });
-        });
+            ordersSnapshot.forEach(orderDoc => {
+              const orderData = orderDoc.data();
+              allOrders.push({
+                ...orderData,
+                id: orderDoc.id,
+                userId: userDoc.id,
+                _source: "user",
+                _name: ((orderData.shippingAddress?.firstName || "") + " " + (orderData.shippingAddress?.lastName || "")).toLowerCase(),
+                _email: (orderData.email || "").toLowerCase(),
+                _created: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : 0,
+                items: orderData.items || [],
+              });
+            });
+          });
         promises.push(promise);
       });
 
@@ -977,50 +966,31 @@ ordersSnapshot.forEach(orderDoc => {
     }
   }
 
-function processOrdersFromMainCollection(ordersSnapshot) {
-  const allOrders = [];
-  
-  ordersSnapshot.forEach(doc => {
-    const orderData = doc.data();
+  function processOrdersFromMainCollection(ordersSnapshot) {
+    const allOrders = [];
     
-    // Properly handle the timestamp for sorting
-    let createdTimestamp;
-    if (orderData.createdAt && orderData.createdAt.toDate) {
-      createdTimestamp = orderData.createdAt.toDate().getTime();
-    } else if (orderData.createdAt && typeof orderData.createdAt === 'number') {
-      createdTimestamp = orderData.createdAt;
-    } else if (orderData.createdAt && orderData.createdAt.seconds) {
-      // Handle Firestore Timestamp object
-      createdTimestamp = orderData.createdAt.seconds * 1000;
-    } else {
-      // Fallback to current time if no timestamp
-      createdTimestamp = Date.now();
-    }
-    
-    allOrders.push({
-      ...orderData,
-      id: doc.id,
-      userId: orderData.userId || null,
-      _source: "main",
-      _name: ((orderData.shippingAddress?.firstName || "") + " " + (orderData.shippingAddress?.lastName || "")).toLowerCase(),
-      _email: (orderData.email || "").toLowerCase(),
-      _created: createdTimestamp, // Use the properly calculated timestamp
-      items: orderData.items || [],
+    ordersSnapshot.forEach(doc => {
+      const orderData = doc.data();
+      allOrders.push({
+        ...orderData,
+        id: doc.id,
+        userId: orderData.userId || null,
+        _source: "main",
+        _name: ((orderData.shippingAddress?.firstName || "") + " " + (orderData.shippingAddress?.lastName || "")).toLowerCase(),
+        _email: (orderData.email || "").toLowerCase(),
+        _created: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : 0,
+        items: orderData.items || [],
+      });
     });
-  });
 
-  console.log(`Processed ${allOrders.length} orders from main collection`);
-  
-  // Sort by timestamp (newest first)
-  allOrders.sort((a, b) => b._created - a._created);
-  
-  orders = allOrders;
-  requestAnimationFrame(() => {
-    list(allOrders);
-    toast(`Loaded ${allOrders.length} orders`);
-  });
-}
-
+    console.log(`Processed ${allOrders.length} orders from main collection`);
+    
+    orders = allOrders;
+    requestAnimationFrame(() => {
+      list(allOrders);
+      toast(`Loaded ${allOrders.length} orders`);
+    });
+  }
 
   function setupRealTimeListener() {
     cleanupOrders();
