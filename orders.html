@@ -1,758 +1,3 @@
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-@media (max-width: 1023px) {
-  .table-wrapper {
-    display: none;
-  }
-  
-  .mobile-cards {
-    display: flex !important; 
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 12px;
-  }
-  
-  .orders-controls {
-    width: 100%;
-  }
-  
-  .orders-card.filters-row {
-    width: 100%;
-    flex-direction: column;
-  }
-  
-  .search-box, .filter-select {
-    width: 100%;
-    max-width: 100%;
-  }
-}
-
-@media (min-width: 1024px) {
-  .table-wrapper {
-    display: block;
-  }
-  
-  .mobile-cards {
-    display: none !important;
-  }
-}
-
-.orders-view {
-  width: 100%;
-  padding: 20px;
-  background: transparent;
-  min-height: calc(100vh - 40px);
-  font-family: 'Inter', sans-serif;
-}
-
-.orders-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.orders-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.45rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.modal-title-bold {
-  font-weight: 700 !important;
-  color: var(--primary);
-  margin-bottom: 4px;
-  font-size: 0.95rem;
-}
-
-.product-image-small {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  object-fit: cover;
-  border: 1px solid var(--border);
-  background: #f5f5f5;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.product-image-small:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.product-image-large {
-  max-width: 90vw;
-  max-height: 90vh;
-  object-fit: contain;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-}
-
-.orders-sub {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-top: 4px;
-}
-
-.orders-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* Card shells (match dashboard cards) */
-.orders-card {
-  background: #ffffff;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  padding: 14px;
-  border: 1px solid var(--border);
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.orders-card.filters-row {
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-}
-
-.filter-select,
-.search-box {
-  font-size: 0.92rem;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: #ffffff;
-}
-
-.filter-select {
-  min-width: 160px;
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 260px;
-  max-width: 420px;
-}
-
-.search-box input {
-  border: 0;
-  outline: none;
-  background: transparent;
-  width: 100%;
-  font-size: 0.92rem;
-}
-
-/* Buttons – same style logic as dashboard */
-.btn-ghost {
-  background: #ffffff;
-  border: 1px solid var(--border);
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-ghost:hover {
-  background: rgba(34, 197, 94, 0.08);
-}
-
-.btn-primary {
-  background: var(--accent);
-  color: #ffffff;
-  border-radius: var(--radius-sm);
-  padding: 9px 14px;
-  border: 1px solid rgba(22, 163, 74, 0.7);
-  cursor: pointer;
-  font-weight: 700;
-  box-shadow: var(--shadow-sm);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-primary:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.table-card {
-  margin-top: 16px;
-  background: #ffffff;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: 16px;
-  border: 1px solid var(--border);
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  margin-top: 12px;
-}
-
-.orders-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 900px;
-  font-size: 0.9rem;
-}
-
-.orders-table thead th {
-  text-align: left;
-  padding: 12px 16px;
-  font-weight: 700;
-  color: var(--primary);
-  border-bottom: 1px solid var(--border);
-}
-
-.orders-table tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-
-.orders-table tbody tr:hover {
-  background: rgba(148, 163, 184, 0.08);
-}
-
-.orders-table td {
-  padding: 12px 16px;
-  vertical-align: middle;
-  color: var(--primary);
-}
-
-.status-pill {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.75rem;
-}
-
-.status-pending { background: rgba(245,158,11,0.08); color:#f59e0b; border:1px solid rgba(245,158,11,0.12); }
-.status-confirmed { background: rgba(59,130,246,0.08); color:#3b82f6; border:1px solid rgba(59,130,246,0.12); }
-.status-shipped { background: rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.12); }
-.status-out-for-delivery { 
-    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-    color: #0c4a6e;
-    border-color: #38bdf8;
-}
-.status-delivered { background: rgba(101,163,13,0.08); color:#65a30d; border:1px solid rgba(101,163,13,0.12); }
-.status-cancelled { background: rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.12); }
-
-.action-btn {
-  border-radius: var(--radius-sm);
-  border: 0;
-  padding: 8px;
-  cursor: pointer;
-  background: transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-}
-
-.action-btn .fa-eye { color: var(--primary); }
-.action-btn .fa-edit { color: var(--success); }
-
-/* Fixed: Action buttons container */
-.actions-container {
-  display: flex;
-  justify-content: flex-end;
-  gap: 4px;
-  align-items: center;
-  width: 100%;
-}
-
-.mobile-cards {
-  display: none;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.order-card {
-  background: #ffffff;
-  border-radius: var(--radius-md);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
-  transition: all 0.2s ease;
-}
-
-.order-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.customer-name {
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.card-meta {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.card-content {
-  margin-bottom: 12px;
-}
-
-.card-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-.card-row:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.card-label {
-  font-size: 0.8rem;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.card-value {
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.card-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-/* Empty State Styles */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--muted);
-}
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
-  opacity: 0.5;
-}
-
-.empty-state p {
-  font-size: 1rem;
-  margin-bottom: 8px;
-}
-
-.empty-state .muted {
-  font-size: 0.9rem;
-}
-
-/* Loading State */
-.loading-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--muted);
-}
-
-.loading-spinner {
-  font-size: 2rem;
-  margin-bottom: 16px;
-  color: var(--accent);
-}
-
-/* Error State */
-.error-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: #dc2626;
-}
-
-.error-icon {
-  font-size: 2rem;
-  margin-bottom: 16px;
-}
-
-/* Image Zoom Modal */
-.image-zoom-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.9);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-  animation: fadeIn 0.3s ease;
-}
-
-.image-zoom-modal.show {
-  display: flex;
-}
-
-.image-zoom-content {
-  position: relative;
-  max-width: 95%;
-  max-height: 95%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.image-zoom-close {
-  position: absolute;
-  top: -40px;
-  right: 0;
-  background: rgba(255,255,255,0.1);
-  border: none;
-  color: white;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 1.2rem;
-  transition: background 0.2s ease;
-}
-
-.image-zoom-close:hover {
-  background: rgba(255,255,255,0.2);
-}
-
-.image-zoom-caption {
-  position: absolute;
-  bottom: -40px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  color: white;
-  font-size: 0.95rem;
-  padding: 8px;
-  background: rgba(0,0,0,0.7);
-  border-radius: 6px;
-}
-
-/* Orders Modal */
-.orders-modal-bg {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(15, 23, 42, 0.6);
-  z-index: 1400;
-  padding: 20px;
-}
-
-.orders-modal-bg.show {
-  display: flex;
-}
-
-.orders-modal {
-  width: 100%;
-  max-width: 760px;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: #ffffff;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border);
-}
-
-.orders-modal .modal-header {
-  padding: 14px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border);
-  background: #f9fafb;
-}
-
-.orders-modal .modal-body {
-  padding: 16px;
-  font-size: 0.92rem;
-  max-height: 70vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.orders-modal .modal-body > div {
-  overflow-y: auto;
-  padding-right: 4px;
-  flex: 1;
-}
-
-.orders-modal .modal-footer {
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  background: #f9fafb;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.muted {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-/* Toast */
-.oh-toast {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  padding: 12px 16px;
-  background: #fff;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  border-left: 4px solid var(--success);
-  z-index: 1400;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  transform: translateY(10px);
-  opacity: 0;
-  transition: all .2s ease;
-}
-
-.oh-toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@media (max-width: 1023px) {
-  .table-wrapper {
-    display: none;
-  }
-  
-  .mobile-cards {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .orders-controls {
-    width: 100%;
-  }
-  
-  .orders-card.filters-row {
-    width: 100%;
-    flex-direction: column;
-  }
-  
-  .search-box, .filter-select {
-    width: 100%;
-    max-width: 100%;
-  }
-}
-
-@media (min-width: 1024px) {
-  .table-wrapper {
-    display: block;
-  }
-  
-  .mobile-cards {
-    display: none !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .orders-top {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .orders-controls {
-    width: 100%;
-  }
-  
-  .orders-view {
-    padding: 16px;
-  }
-  
-  .orders-modal {
-    max-width: 90%;
-  }
-}
-
-@media (max-width: 480px) {
-  .orders-view {
-    padding: 14px;
-  }
-  
-  .orders-card {
-    padding: 12px;
-  }
-  
-  .orders-modal {
-    max-width: calc(100% - 20px);
-  }
-  
-  .product-image-large {
-    max-width: 100%;
-    max-height: 80vh;
-  }
-}
-</style>
-
-</head>
-<body>
-<div class="page-container">
-  <div class="orders-view fade-in">
-
-    <div class="orders-top">
-      <div>
-        <div class="orders-title">Order Management</div>
-        <div class="orders-sub muted">Manage and track customer orders</div>
-      </div>
-
-      <div class="orders-controls">
-        <div class="orders-card filters-row">
-          <select id="ov-status" class="filter-select" title="Filter by status">
-            <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="out-for-delivery">Out for Delivery</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-
-          <select id="ov-date" class="filter-select" title="Filter by date">
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-          </select>
-
-          <div class="search-box">
-            <i class="fas fa-search muted"></i>
-            <input id="ov-search" placeholder="Search order ID, customer, email">
-          </div>
-        </div>
-
-        <button id="ov-refresh" class="btn-ghost" title="Refresh"><i class="fas fa-sync-alt"></i></button>
-        <button id="ov-export" class="btn-primary" title="Export visible orders"><i class="fas fa-download" style="margin-right:8px"></i> Export</button>
-      </div>
-    </div>
-
-    <div class="table-card">
-      <div class="table-wrapper">
-        <table class="orders-table" aria-label="Orders table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Date</th>
-              <th>Items</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th style="text-align:right">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="ov-tbody">
-            <tr><td colspan="7" class="muted">Loading orders…</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mobile-cards" id="ov-cards" aria-hidden="true"></div>
-    </div>
-
-    <!-- Product Image Zoom Modal -->
-    <div class="image-zoom-modal" id="imageZoomModal">
-      <div class="image-zoom-content">
-        <button class="image-zoom-close" id="imageZoomClose" aria-label="Close zoom">
-          <i class="fas fa-times"></i>
-        </button>
-        <img id="zoomedImage" class="product-image-large" alt="Product image" />
-        <div id="imageCaption" class="image-zoom-caption"></div>
-      </div>
-    </div>
-
-    <div class="orders-modal-bg" id="ov-modal-bg" role="dialog" aria-hidden="true">
-      <div class="orders-modal" role="document" aria-modal="true">
-        <div class="modal-header">
-          <div style="font-weight:700" id="ov-modal-title">Order Details</div>
-          <button id="ov-modal-close" class="btn-ghost" aria-label="Close"><i class="fas fa-times"></i></button>
-        </div>
-
-        <div class="modal-body" id="ov-modal-body"></div>
-
-        <div class="modal-footer">
-          <button id="ov-modal-cancel" class="btn-ghost">Close</button>
-          <button id="ov-modal-save" class="btn-primary"><i class="fas fa-save" style="margin-right:8px"></i> Save</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<div id="oh-toast" class="oh-toast" role="status" aria-live="polite">
-  <i class="fas fa-check-circle" style="color:var(--success)"></i>
-  <div id="oh-toast-text">Saved</div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="activityLogger.js?v=1"></script>
-
 <script>
 (function () {
   const config = {
@@ -771,6 +16,7 @@
   
   let ordersCleanup = new Set();
   let ordersListener = null;
+  let usersListener = null;
 
   function cleanupOrders() {
     ordersCleanup.forEach(fn => fn());
@@ -778,6 +24,10 @@
     if (ordersListener) {
       ordersListener();
       ordersListener = null;
+    }
+    if (usersListener) {
+      usersListener();
+      usersListener = null;
     }
   }
 
@@ -845,31 +95,32 @@
     return x.toLocaleDateString("en-IN");
   }
 
-function sc(s) {
-  const statusMap = {
-    'pending': 'pending',
-    'confirmed': 'confirmed',
-    'shipped': 'shipped',
-    'out-for-delivery': 'out-for-delivery',
-    'delivered': 'delivered',
-    'cancelled': 'cancelled'
-  };
-  
-  const normalizedStatus = statusMap[s?.toLowerCase()] || 'pending';
-  return "status-" + normalizedStatus;
-}
-
-function formatStatusForDisplay(status) {
-  if (!status) return "Pending";
-  
-  // Handle special cases
-  if (status.toLowerCase() === 'out for delivery' || status.toLowerCase() === 'out-for-delivery') {
-    return "Out For Delivery";
+  function sc(s) {
+    const statusMap = {
+      'pending': 'pending',
+      'confirmed': 'confirmed',
+      'shipped': 'shipped',
+      'out-for-delivery': 'out-for-delivery',
+      'delivered': 'delivered',
+      'cancelled': 'cancelled'
+    };
+    
+    const normalizedStatus = statusMap[s?.toLowerCase()] || 'pending';
+    return "status-" + normalizedStatus;
   }
-  
-  // Capitalize first letter and make rest lowercase
-  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-}
+
+  function formatStatusForDisplay(status) {
+    if (!status) return "Pending";
+    
+    // Handle special cases
+    if (status.toLowerCase() === 'out for delivery' || status.toLowerCase() === 'out-for-delivery') {
+      return "Out For Delivery";
+    }
+    
+    // Capitalize first letter and make rest lowercase
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  }
+
   // Image zoom functions
   function openImageZoom(imageSrc, altText) {
     zoomedImage.src = imageSrc;
@@ -896,34 +147,138 @@ function formatStatusForDisplay(status) {
     }
   });
 
-  function load() {
-    t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
-    c.innerHTML = `<div class="order-card" style="text-align:center;padding:40px 20px;color:var(--muted)">
-      <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:16px;color:var(--accent)"></i>
-      <p>Loading orders...</p>
-    </div>`;
+  async function loadOrdersFromAllUsers() {
+    try {
+      console.log("Loading orders from all users...");
+      t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders from all users…</td></tr>`;
+      c.innerHTML = `<div class="order-card" style="text-align:center;padding:40px 20px;color:var(--muted)">
+        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:16px;color:var(--accent)"></i>
+        <p>Loading orders from all users...</p>
+      </div>`;
 
+      // First, try to get orders from the main orders collection
+      const ordersSnapshot = await db.collection("orders")
+        .orderBy("createdAt", "desc")
+        .limit(100)
+        .get();
+
+      if (!ordersSnapshot.empty) {
+        console.log(`Found ${ordersSnapshot.size} orders in main collection`);
+        processOrdersFromMainCollection(ordersSnapshot);
+        return;
+      }
+
+      // If no orders in main collection, try to get from all users
+      console.log("No orders in main collection, checking all users...");
+      const allOrders = [];
+
+      // Get all users
+      const usersSnapshot = await db.collection("users").get();
+      
+      if (usersSnapshot.empty) {
+        console.log("No users found");
+        empty();
+        return;
+      }
+
+      console.log(`Found ${usersSnapshot.size} users`);
+
+      // For each user, get their orders
+      const promises = [];
+      usersSnapshot.forEach(userDoc => {
+        const promise = db.collection("users")
+          .doc(userDoc.id)
+          .collection("orders")
+          .orderBy("createdAt", "desc")
+          .limit(50)
+          .get()
+          .then(ordersSnapshot => {
+            ordersSnapshot.forEach(orderDoc => {
+              const orderData = orderDoc.data();
+              allOrders.push({
+                ...orderData,
+                id: orderDoc.id,
+                userId: userDoc.id,
+                _source: "user",
+                _name: ((orderData.shippingAddress?.firstName || "") + " " + (orderData.shippingAddress?.lastName || "")).toLowerCase(),
+                _email: (orderData.email || "").toLowerCase(),
+                _created: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : 0,
+                items: orderData.items || [],
+              });
+            });
+          });
+        promises.push(promise);
+      });
+
+      await Promise.all(promises);
+      
+      console.log(`Total orders found: ${allOrders.length}`);
+      
+      if (allOrders.length === 0) {
+        empty();
+        return;
+      }
+
+      // Sort by date (newest first)
+      allOrders.sort((a, b) => b._created - a._created);
+      
+      orders = allOrders;
+      requestAnimationFrame(() => {
+        list(allOrders);
+        toast(`Loaded ${allOrders.length} orders from users`);
+      });
+
+    } catch (error) {
+      console.error("Error loading orders:", error);
+      empty();
+      toast("Error loading orders", "error");
+    }
+  }
+
+  function processOrdersFromMainCollection(ordersSnapshot) {
+    const allOrders = [];
+    
+    ordersSnapshot.forEach(doc => {
+      const orderData = doc.data();
+      allOrders.push({
+        ...orderData,
+        id: doc.id,
+        userId: orderData.userId || null,
+        _source: "main",
+        _name: ((orderData.shippingAddress?.firstName || "") + " " + (orderData.shippingAddress?.lastName || "")).toLowerCase(),
+        _email: (orderData.email || "").toLowerCase(),
+        _created: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : 0,
+        items: orderData.items || [],
+      });
+    });
+
+    console.log(`Processed ${allOrders.length} orders from main collection`);
+    
+    orders = allOrders;
+    requestAnimationFrame(() => {
+      list(allOrders);
+      toast(`Loaded ${allOrders.length} orders`);
+    });
+  }
+
+  function setupRealTimeListener() {
     cleanupOrders();
 
+    // Listen to main orders collection
     ordersListener = db.collection("orders")
       .orderBy("createdAt", "desc")
-      .limit(50)
-      .onSnapshot((q) => {
-        orders = q.docs.map((d) => {
-          const o = d.data();
-          return {
-            ...o,
-            id: d.id,
-            userId: o.userId || null,
-            _name: ((o.shippingAddress?.firstName || "") + " " + (o.shippingAddress?.lastName || "")).toLowerCase(),
-            _email: (o.email || "").toLowerCase(),
-            _created: o.createdAt?.toDate ? o.createdAt.toDate().getTime() : 0,
-            items: o.items || [],
-          };
-        });
-        requestAnimationFrame(apply);
+      .limit(100)
+      .onSnapshot((snapshot) => {
+        if (!snapshot.empty) {
+          console.log("Real-time update from main collection");
+          processOrdersFromMainCollection(snapshot);
+        } else {
+          // If main collection is empty, set up listener for new users with orders
+          console.log("Main collection empty, setting up user listeners");
+          setupUserOrderListeners();
+        }
       }, (err) => {
-        empty();
+        console.error("Error in real-time listener:", err);
         toast("Error loading orders", "error");
       });
 
@@ -932,8 +287,41 @@ function formatStatusForDisplay(status) {
     });
   }
 
+  function setupUserOrderListeners() {
+    // Listen to users collection
+    usersListener = db.collection("users")
+      .onSnapshot((usersSnapshot) => {
+        if (!usersSnapshot.empty) {
+          console.log("Users updated, checking for orders...");
+          loadOrdersFromAllUsers();
+        }
+      }, (err) => {
+        console.error("Error in users listener:", err);
+      });
+
+    ordersCleanup.add(() => {
+      if (usersListener) usersListener();
+    });
+  }
+
+  function load() {
+    t.innerHTML = `<tr><td colspan="7" class="muted">Loading orders…</td></tr>`;
+    c.innerHTML = `<div class="order-card" style="text-align:center;padding:40px 20px;color:var(--muted)">
+      <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:16px;color:var(--accent)"></i>
+      <p>Loading orders...</p>
+    </div>`;
+
+    // Load initial orders and set up real-time listeners
+    loadOrdersFromAllUsers();
+    setupRealTimeListener();
+  }
+
   function empty() {
-    t.innerHTML = `<tr><td colspan="7"><div class="empty-state">No Orders Found</div></td></tr>`;
+    t.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+      <i class="fas fa-box-open" style="font-size:3rem;margin-bottom:16px;opacity:0.5"></i>
+      <p>No Orders Found</p>
+      <div class="muted" style="font-size:0.9rem;margin-top:8px">Start accepting orders to see them here</div>
+    </div></td></tr>`;
     c.innerHTML = `<div class="order-card" style="text-align:center;padding:40px 20px;color:var(--muted)">
       <i class="fas fa-box-open" style="font-size:2rem;margin-bottom:16px;opacity:0.5"></i>
       <p>No orders found</p>
@@ -980,17 +368,17 @@ function formatStatusForDisplay(status) {
           `;
         }
 
-const statusDisplay = formatStatusForDisplay(o.status || "pending");
+        const statusDisplay = formatStatusForDisplay(o.status || "pending");
 
         return `
-          <tr data-id="${esc(o.id)}">
+          <tr data-id="${esc(o.id)}" data-user-id="${esc(o.userId || '')}" data-source="${esc(o._source || 'main')}">
             <td>
-              <div style="font-weight:700">#${esc(sid(o.id))}</div>
+              <div style="font-weight:700">#${esc(o.orderId || sid(o.id))}</div>
               ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
             </td>
             <td>
               <div style="display:flex;gap:10px;align-items:center">
-                <div style="width:36px;height:36px;border-radius:8px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
+                <div style="width:36px;height:36px;border-radius:8px;background:#5f2b27;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600">
                   ${esc(cu.slice(0, 2).toUpperCase())}
                 </div>
                 <div>
@@ -1012,10 +400,10 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
             </td>
             <td style="text-align:right">
               <div class="actions-container">
-                <button class="action-btn view-btn" data-id="${o.id}" title="View Details">
+                <button class="action-btn view-btn" data-id="${o.id}" data-user-id="${o.userId || ''}" data-source="${o._source || 'main'}" title="View Details">
                   <i class="fas fa-eye"></i>
                 </button>
-                <button class="action-btn edit-btn" data-id="${o.id}" title="Edit Status">
+                <button class="action-btn edit-btn" data-id="${o.id}" data-user-id="${o.userId || ''}" data-source="${o._source || 'main'}" title="Edit Status">
                   <i class="fas fa-edit"></i>
                 </button>
               </div>
@@ -1038,15 +426,15 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
           .map(i => `${i.name || 'Item'} x${i.quantity || 1}`)
           .join(', ');
           
-const statusDisplay = formatStatusForDisplay(o.status || "pending");
+        const statusDisplay = formatStatusForDisplay(o.status || "pending");
         const truncatedItemsText = itemsText.length > 50 ? itemsText.substring(0, 50) + '...' : itemsText;
 
         return `
-          <div class="order-card" data-id="${esc(o.id)}">
+          <div class="order-card" data-id="${esc(o.id)}" data-user-id="${esc(o.userId || '')}" data-source="${esc(o._source || 'main')}">
             <div class="card-header">
               <div>
                 <div class="customer-name">${esc(cu)}</div>
-                <div class="card-meta">#${esc(sid(o.id))} • ${esc(o.email || "No email")}</div>
+                <div class="card-meta">#${esc(o.orderId || sid(o.id))} • ${esc(o.email || "No email")}</div>
               </div>
               <span class="status-pill ${sc(o.status)}">${esc(statusDisplay)}</span>
             </div>
@@ -1070,13 +458,19 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
                 <span class="card-value">${esc(o.userId.substring(0, 8))}...</span>
               </div>
               ` : ''}
+              ${o._source === 'user' ? `
+              <div class="card-row">
+                <span class="card-label">Source</span>
+                <span class="card-value">User's Orders</span>
+              </div>
+              ` : ''}
             </div>
             
             <div class="card-actions">
-              <button class="btn-ghost view-btn-mobile" data-id="${o.id}" style="font-size:0.85rem;padding:8px 12px;">
+              <button class="btn-ghost view-btn-mobile" data-id="${o.id}" data-user-id="${o.userId || ''}" data-source="${o._source || 'main'}" style="font-size:0.85rem;padding:8px 12px;">
                 <i class="fas fa-eye" style="margin-right:6px"></i>View
               </button>
-              <button class="btn-primary edit-btn-mobile" data-id="${o.id}" style="font-size:0.85rem;padding:8px 12px;">
+              <button class="btn-primary edit-btn-mobile" data-id="${o.id}" data-user-id="${o.userId || ''}" data-source="${o._source || 'main'}" style="font-size:0.85rem;padding:8px 12px;">
                 <i class="fas fa-edit" style="margin-right:6px"></i>Edit
               </button>
             </div>
@@ -1099,30 +493,37 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
 
     bind();
   }
-  
 
   function bind() {
     // Bind table view buttons
     document.querySelectorAll(".view-btn").forEach((b) => {
-      b.onclick = (e) => open(e.currentTarget.dataset.id);
+      b.onclick = (e) => {
+        const dataset = e.currentTarget.dataset;
+        open(dataset.id, dataset.userId, dataset.source);
+      };
     });
 
     document.querySelectorAll(".edit-btn").forEach((b) => {
-      b.onclick = (e) => open(e.currentTarget.dataset.id);
+      b.onclick = (e) => {
+        const dataset = e.currentTarget.dataset;
+        open(dataset.id, dataset.userId, dataset.source);
+      };
     });
 
     // Bind mobile view buttons
     document.querySelectorAll(".view-btn-mobile").forEach((b) => {
       b.onclick = (e) => {
         e.stopPropagation();
-        open(e.currentTarget.dataset.id);
+        const dataset = e.currentTarget.dataset;
+        open(dataset.id, dataset.userId, dataset.source);
       };
     });
 
     document.querySelectorAll(".edit-btn-mobile").forEach((b) => {
       b.onclick = (e) => {
         e.stopPropagation();
-        open(e.currentTarget.dataset.id);
+        const dataset = e.currentTarget.dataset;
+        open(dataset.id, dataset.userId, dataset.source);
       };
     });
 
@@ -1132,25 +533,51 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
         if (!e.target.closest('.btn-ghost') && 
             !e.target.closest('.btn-primary') && 
             !e.target.closest('.status-pill')) {
-          open(this.getAttribute('data-id'));
+          const dataset = this.dataset;
+          open(dataset.id, dataset.userId, dataset.source);
         }
       });
     });
-
-    document.querySelectorAll(".user-btn").forEach((b) => {
-      b.onclick = (e) => {
-        const userId = e.currentTarget.dataset.user;
-        alert(`User ID: ${userId}\nWould open user profile here.`);
-      };
-    });
   }
 
-  function open(id) {
-    const o = orders.find((x) => x.id === id);
-    if (!o) return;
+  async function open(id, userId = null, source = 'main') {
+    try {
+      let orderData = null;
+      
+      if (source === 'main') {
+        // Get from main orders collection
+        const doc = await db.collection("orders").doc(id).get();
+        if (doc.exists) {
+          orderData = doc.data();
+          orderData.id = doc.id;
+          orderData.source = 'main';
+        }
+      } else if (userId) {
+        // Get from user's orders collection
+        const doc = await db.collection("users").doc(userId).collection("orders").doc(id).get();
+        if (doc.exists) {
+          orderData = doc.data();
+          orderData.id = doc.id;
+          orderData.userId = userId;
+          orderData.source = 'user';
+        }
+      }
 
-    editing = id;
+      if (!orderData) {
+        toast("Order not found", "error");
+        return;
+      }
 
+      editing = { id, userId, source };
+      displayOrderDetails(orderData);
+
+    } catch (error) {
+      console.error("Error opening order:", error);
+      toast("Error loading order details", "error");
+    }
+  }
+
+  function displayOrderDetails(o) {
     const ad = o.shippingAddress
       ? [
           o.shippingAddress.address,
@@ -1212,8 +639,9 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
         <div>
           <div class="modal-title-bold">Order ID</div>
           <div style="font-family:monospace;background:#f5f5f5;padding:8px 12px;border-radius:8px;border:1px solid var(--border);">
-            #${esc(sid(id))}
+            #${esc(o.orderId || sid(o.id))}
           </div>
+          ${o.source === 'user' ? `<div style="margin-top:4px;font-size:0.85rem;color:var(--muted)">From user's orders</div>` : ''}
         </div>
 
         <!-- Customer Information -->
@@ -1297,6 +725,17 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
             </div>
           </div>
         ` : ''}
+        
+        <!-- Order Source -->
+        <div style="background:#f0f9ff;padding:12px;border-radius:8px;border:1px solid #bae6fd;margin-top:8px;">
+          <div class="modal-title-bold" style="color:#0369a1">Order Information</div>
+          <div style="font-size:0.85rem;color:#0c4a6e;margin-top:4px;">
+            ${o.source === 'user' ? 
+              `• This order is stored in the user's personal orders collection<br>
+               • User ID: ${o.userId ? esc(o.userId.substring(0, 12)) + '...' : 'Unknown'}` : 
+              `• This order is stored in the main orders collection`}
+          </div>
+        </div>
       </div>
     `;
 
@@ -1333,31 +772,7 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
     editing = null;
   }
   
-  function searchAndUpdateInUsers(orderId, updateData) {
-    return db.collection("users").get().then(users => {
-      const promises = [];
-      let foundInUsers = false;
-      
-      users.forEach(u => {
-        const userOrderRef = db.collection("users").doc(u.id).collection("orders").doc(orderId);
-        promises.push(
-          userOrderRef.get().then(snap => {
-            if (snap.exists) {
-              foundInUsers = true;
-              return userOrderRef.update(updateData);
-            }
-            return Promise.resolve();
-          })
-        );
-      });
-      
-      return Promise.all(promises).then(() => {
-        return { updatedInUser: foundInUsers };
-      });
-    });
-  }
-
-  function save() {
+  async function save() {
     if (!editing) return;
 
     const st = document.getElementById("ov-modal-status").value;
@@ -1366,64 +781,95 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
     const ot = ms.innerHTML;
     ms.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-    const rootRef = db.collection("orders").doc(editing);
-    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-    const updateData = {
-      status: st,
-      updatedAt: timestamp
-    };
+    try {
+      const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+      const updateData = {
+        status: st,
+        updatedAt: timestamp
+      };
 
-    if (st === 'confirmed') {
-      updateData.confirmedAt = timestamp;
-    } else if (st === 'shipped') {
-      updateData.shippedAt = timestamp;
-    } else if (st === 'out-for-delivery' || st === 'out for delivery') {
-      updateData.outForDeliveryAt = timestamp;
-    } else if (st === 'delivered') {
-      updateData.deliveredAt = timestamp;
-    }
-
-    rootRef.get().then(doc => {
-      if (doc.exists) {
-        const orderData = doc.data();
-        
-        return rootRef.update(updateData).then(() => {
-          if (orderData.userId) {
-            const userOrderRef = db.collection("users").doc(orderData.userId)
-              .collection("orders").doc(editing);
-            
-            return userOrderRef.update(updateData).then(() => {
-              return { updatedInUser: true, userId: orderData.userId };
-            }).catch(err => {
-              console.log("Couldn't update with userId, trying email...", err);
-              return searchAndUpdateInUsers(editing, updateData);
-            });
-          } else {
-            return searchAndUpdateInUsers(editing, updateData);
-          }
-        });
-      } else {
-        return searchAndUpdateInUsers(editing, updateData);
+      if (st === 'confirmed') {
+        updateData.confirmedAt = timestamp;
+      } else if (st === 'shipped') {
+        updateData.shippedAt = timestamp;
+      } else if (st === 'out-for-delivery' || st === 'out for delivery') {
+        updateData.outForDeliveryAt = timestamp;
+      } else if (st === 'delivered') {
+        updateData.deliveredAt = timestamp;
       }
-    })
-    .then((result) => {
+
+      // Update in main orders collection if exists
+      const mainRef = db.collection("orders").doc(editing.id);
+      const mainDoc = await mainRef.get();
+      let mainUpdated = false;
+      
+      if (mainDoc.exists) {
+        await mainRef.update(updateData);
+        mainUpdated = true;
+        console.log("Updated in main orders collection");
+      }
+
+      // Update in user's orders collection if user ID exists
+      let userUpdated = false;
+      if (editing.userId) {
+        const userRef = db.collection("users").doc(editing.userId).collection("orders").doc(editing.id);
+        const userDoc = await userRef.get();
+        
+        if (userDoc.exists) {
+          await userRef.update(updateData);
+          userUpdated = true;
+          console.log("Updated in user's orders collection");
+        }
+      }
+
+      // If not found in specific user, try to find and update in all users
+      if (!userUpdated && !mainUpdated) {
+        console.log("Order not found in specific location, searching all users...");
+        
+        const usersSnapshot = await db.collection("users").get();
+        const promises = [];
+        
+        usersSnapshot.forEach(userDoc => {
+          const userOrderRef = db.collection("users").doc(userDoc.id).collection("orders").doc(editing.id);
+          promises.push(
+            userOrderRef.get().then(snap => {
+              if (snap.exists) {
+                return userOrderRef.update(updateData).then(() => {
+                  console.log(`Found and updated in user: ${userDoc.id}`);
+                  userUpdated = true;
+                });
+              }
+              return Promise.resolve();
+            })
+          );
+        });
+        
+        await Promise.all(promises);
+      }
+
       ms.disabled = false;
       ms.innerHTML = ot;
       
-      if (result && result.updatedInUser) {
-        toast(`Order updated (User: ${result.userId ? '✓' : 'found via email'})`);
+      if (mainUpdated || userUpdated) {
+        const message = mainUpdated ? 
+          (userUpdated ? "Updated in all locations" : "Updated in main orders") :
+          "Updated in user's orders";
+        toast(message);
+        
+        // Refresh the orders list to show updated status
+        loadOrdersFromAllUsers();
       } else {
-        toast("Order updated in admin view");
+        toast("Order not found in any location", "error");
       }
       
       m.classList.remove("show");
-    })
-    .catch((err) => {
+      
+    } catch (error) {
       ms.disabled = false;
       ms.innerHTML = ot;
-      console.error("Save error:", err);
-      toast("Save failed: " + err.message, "error");
-    });
+      console.error("Save error:", error);
+      toast("Save failed: " + error.message, "error");
+    }
   }
 
   function apply() {
@@ -1456,7 +902,7 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
 
     if (q) {
       x = x.filter(o => 
-        o.id.toLowerCase().includes(q) ||
+        (o.orderId || o.id).toLowerCase().includes(q) ||
         o._name.toLowerCase().includes(q) ||
         o._email.includes(q)
       );
@@ -1472,7 +918,7 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
       return;
     }
 
-    const rows = [["Order ID", "Customer", "Email", "Date", "Items", "Total", "Status"]];
+    const rows = [["Order ID", "Customer", "Email", "Date", "Items", "Total", "Status", "User ID", "Source"]];
 
     x.forEach((o) => {
       const cu =
@@ -1481,13 +927,15 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
         (o.shippingAddress?.lastName || "");
 
       rows.push([
-        `#${sid(o.id)}`,
+        `#${o.orderId || sid(o.id)}`,
         cu.trim(),
         o.email || "",
         fdn(o.createdAt),
         (o.items || []).length,
         o.total || 0,
         o.status || "",
+        o.userId || "",
+        o._source || "main"
       ]);
     });
 
@@ -1500,11 +948,11 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
       a = document.createElement("a");
 
     a.href = u;
-    a.download = "orders.csv";
+    a.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
 
     URL.revokeObjectURL(u);
-    toast("Export started");
+    toast(`Exported ${x.length} orders`);
   }
 
   document.addEventListener("click", (e) => {
@@ -1523,6 +971,7 @@ const statusDisplay = formatStatusForDisplay(o.status || "pending");
   };
   xb.onclick = () => csv(filtered.length ? filtered : orders);
 
+  // Initialize
   load();
 })();
 </script>
