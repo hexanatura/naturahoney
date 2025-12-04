@@ -2344,57 +2344,6 @@ function initCommon() {
         });
     }
     
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-    const editProfileModal = document.getElementById('edit-profile-modal');
-    const closeEditProfileModal = document.getElementById('close-edit-profile-modal');
-    const cancelEditProfile = document.getElementById('cancel-edit-profile');
-    const saveProfileBtn = document.getElementById('save-profile-btn');
-    
-    if (editProfileBtn && editProfileModal) {
-        editProfileBtn.addEventListener('click', function() {
-            editProfileModal.style.display = 'flex';
-        });
-    }
-    
-    if (closeEditProfileModal && editProfileModal) {
-        closeEditProfileModal.addEventListener('click', function() {
-            editProfileModal.style.display = 'none';
-        });
-    }
-    
-    if (cancelEditProfile && editProfileModal) {
-        cancelEditProfile.addEventListener('click', function() {
-            editProfileModal.style.display = 'none';
-        });
-    }
-    
-    if (saveProfileBtn) {
-        saveProfileBtn.addEventListener('click', function() {
-            const newName = document.getElementById('edit-name').value;
-            if (newName.trim() === '') {
-                alert('Please enter a valid name');
-                return;
-            }
-            
-            currentUser.updateProfile({
-                displayName: newName
-            }).then(() => {
-                return db.collection('users').doc(currentUser.uid).set({
-                    displayName: newName,
-                    email: currentUser.email,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-            }).then(() => {
-                alert('Profile updated successfully!');
-                editProfileModal.style.display = 'none';
-                updateUIForUser(currentUser);
-            }).catch((error) => {
-                console.error("Error updating profile:", error);
-                alert('Error updating profile. Please try again.');
-            });
-        });
-    }
-    
     const addAddressBtn = document.getElementById('add-address-btn');
     const addAddressForm = document.getElementById('add-address-form');
     const cancelNewAddress = document.getElementById('cancel-new-address');
@@ -2480,5 +2429,6 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
 
 
