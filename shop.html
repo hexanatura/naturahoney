@@ -34,6 +34,34 @@
       width: 100%;
       overflow-x: hidden;
     }
+
+  .cancelled-order {
+    position: relative;
+}
+
+/* Blurred overlay */
+.cancelled-order::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(2px);
+    background: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Lift the visible parts above blur */
+.cancelled-order .order-footer-compact,
+.cancelled-order .order-header-compact {
+    position: relative;
+    z-index: 2;
+}
+
+/* Strike the total */
+.cancelled-order .total-amount {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
     
     .status-out-for-delivery {
     background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
