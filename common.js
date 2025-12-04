@@ -2373,6 +2373,7 @@ function initCommon() {
 
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
+    initEditProfile();
 });
 
 function listAllUserOrders() {
@@ -2429,6 +2430,7 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
 
 
 
