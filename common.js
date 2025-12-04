@@ -2322,9 +2322,6 @@ function initCommon() {
         });
     }
     
-    // Initialize edit profile functionality
-    initEditProfile();
-    
     const orderTrackingCloseBtn = document.getElementById('orderTrackingCloseBtn');
     if (orderTrackingCloseBtn) {
         orderTrackingCloseBtn.addEventListener('click', closeOrderTracking);
@@ -2483,4 +2480,5 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
 
