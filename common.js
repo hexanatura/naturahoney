@@ -1,4 +1,3 @@
-// your code goes here
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
     authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -18,6 +17,13 @@ let likedProducts = [];
 let cartProducts = [];
 let userOrders = [];
 let currentModalView = 'login';
+
+// Checkout-specific variables (will be used by payment.js)
+window.currentDiscount = 0;
+window.originalTotal = 0;
+window.appliedPromoCode = null;
+window.addressUnsubscribe = null;
+window.activePromoCodes = {};
 
 const products = [
     { 
@@ -70,6 +76,7 @@ const products = [
     }
 ];
 
+// DOM Elements
 const notificationBar = document.getElementById('notificationBar');
 const navBar = document.getElementById('navBar');
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
@@ -112,6 +119,288 @@ const forgotPassword = document.getElementById('forgotPassword');
 const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
+
+// Main auth state listener - UPDATED for checkout support
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        updateUIForUser(user);
+        loadUserProfileData(user.uid);
+        
+        // Check if we're on checkout page and call checkout functions
+        if (document.querySelector('.checkout-section')) {
+            if (typeof window.updateCheckoutUI === 'function') {
+                window.updateCheckoutUI();
+            }
+            if (typeof window.loadUserDefaultAddress === 'function') {
+                window.loadUserDefaultAddress();
+            }
+        }
+    } else {
+        currentUser = null;
+        // Unsubscribe from address updates if user logs out
+        if (window.addressUnsubscribe) {
+            window.addressUnsubscribe();
+            window.addressUnsubscribe = null;
+        }
+        updateUIForGuest();
+        const profilePage = document.getElementById('profilePage');
+        const mainContent = document.getElementById('mainContent');
+        if (profilePage && mainContent) {
+            profilePage.classList.remove('active');
+            mainContent.style.display = 'block';
+        }
+        
+        // Update checkout UI if on checkout page
+        if (document.querySelector('.checkout-section')) {
+            if (typeof window.updateCheckoutUI === 'function') {
+                window.updateCheckoutUI();
+            }
+        }
+    }
+});
+
+// Edit Profile Functionality
+function initEditProfile() {
+    // Check if edit profile button exists
+    const editProfileBtn = document.getElementById('edit-profile-btn');
+    if (!editProfileBtn) return;
+    
+    // Create the edit profile modal dynamically
+    const modal = document.createElement('div');
+    modal.id = 'editProfileModal';
+    modal.style.cssText = `
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 15px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e7d90f;">
+                <h2 style="font-family: 'Akira Expanded', sans-serif; font-size: 22px; color: #5f2b27; margin: 0;">Edit Profile</h2>
+                <button id="closeEditProfileModal" style="background: none; border: none; font-size: 28px; color: #777; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="padding: 10px 0;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-family: 'Unbounded', sans-serif; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 14px;">
+                        Full Name
+                    </label>
+                    <input type="text" id="editProfileName" 
+                           style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Unbounded', sans-serif; font-size: 15px;"
+                           placeholder="Enter your full name">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-family: 'Unbounded', sans-serif; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 14px;">
+                        Email Address
+                    </label>
+                    <input type="email" id="editProfileEmail" disabled
+                           style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; 
+                                  font-family: 'Unbounded', sans-serif; font-size: 15px;
+                                  background-color: #f5f5f5; color: #666; cursor: not-allowed; opacity: 0.7;"
+                           placeholder="your@email.com">
+                    <p style="font-size: 12px; color: #777; margin-top: 5px; font-family: 'Quicksand', sans-serif; font-style: italic;">
+                        Email cannot be changed
+                    </p>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 25px; justify-content: flex-end;">
+                    <button id="saveProfileBtn" 
+                            style="background: #5f2b27; color: white; border: none; padding: 12px 24px; 
+                                   border-radius: 8px; font-family: 'Unbounded', sans-serif; font-weight: 600; 
+                                   cursor: pointer; font-size: 15px;">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button id="cancelProfileEdit" 
+                            style="background: transparent; color: #5f2b27; border: 1px solid #5f2b27; padding: 12px 24px; 
+                                   border-radius: 8px; font-family: 'Unbounded', sans-serif; font-weight: 600; 
+                                   cursor: pointer; font-size: 15px;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Event Listeners
+    editProfileBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        openEditProfileModal();
+    });
+    
+    function openEditProfileModal() {
+        if (!currentUser) return;
+        
+        // Populate fields with current user data
+        document.getElementById('editProfileName').value = currentUser.displayName || '';
+        document.getElementById('editProfileEmail').value = currentUser.email || '';
+        
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeEditProfileModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Close modal buttons
+    document.getElementById('closeEditProfileModal').addEventListener('click', closeEditProfileModal);
+    document.getElementById('cancelProfileEdit').addEventListener('click', closeEditProfileModal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeEditProfileModal();
+        }
+    });
+    
+    // Save profile changes
+    document.getElementById('saveProfileBtn').addEventListener('click', async function() {
+        const newName = document.getElementById('editProfileName').value.trim();
+        
+        if (!newName) {
+            alert('Please enter your name');
+            return;
+        }
+        
+        const saveBtn = this;
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+        
+        try {
+            // Update profile in Firebase
+            await currentUser.updateProfile({
+                displayName: newName
+            });
+            
+            // Update in Firestore
+            await db.collection('users').doc(currentUser.uid).set({
+                displayName: newName,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            
+            // Update UI
+            const userNameElement = document.getElementById('user-name');
+            if (userNameElement) {
+                userNameElement.textContent = newName;
+            }
+            
+            // Show success
+            alert('Profile updated successfully!');
+            closeEditProfileModal();
+            
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            alert('Error updating profile. Please try again.');
+        } finally {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    });
+}
+
+// Save checkout address to user's profile - MOVED TO COMMON.JS
+function saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefault) {
+    if (!currentUser || !db) return;
+    
+    const fullName = `${firstName} ${lastName}`.trim();
+    
+    const newAddress = {
+        label: 'Home',
+        name: fullName,
+        address: address,
+        phone: phone.replace('+91 ', ''),
+        pincode: zipCode,
+        city: city,
+        state: state,
+        country: 'India',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        isDefault: isDefault
+    };
+    
+    console.log('Saving checkout address to profile:', newAddress);
+    
+    if (isDefault) {
+        db.collection('users').doc(currentUser.uid).collection('addresses').get()
+            .then((querySnapshot) => {
+                const batch = db.batch();
+                
+                querySnapshot.forEach((doc) => {
+                    const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
+                    batch.update(addressRef, { isDefault: false });
+                });
+                
+                return batch.commit();
+            })
+            .then(() => {
+                return db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress);
+            })
+            .then((docRef) => {
+                console.log('Default address saved with ID:', docRef.id);
+                showNotification('Address saved as default in your profile!', 'success');
+            })
+            .catch((error) => {
+                console.error("Error saving default address:", error);
+                showNotification('Error saving address to profile: ' + error.message, 'error');
+            });
+    } else {
+        db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
+            .then((docRef) => {
+                console.log('Address saved with ID:', docRef.id);
+                showNotification('Address saved to your profile!', 'success');
+            })
+            .catch((error) => {
+                console.error("Error saving address:", error);
+                showNotification('Error saving address to profile: ' + error.message, 'error');
+            });
+    }
+}
+
+// Make this function available globally
+window.saveCheckoutAddressToProfile = saveCheckoutAddressToProfile;
+
+// Enhanced helper function for form fields (for checkout)
+function safeSetFormField(fieldId, value) {
+    const field = document.getElementById(fieldId);
+    if (field && value) {
+        if (field.tagName === 'SELECT') {
+            const options = field.options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === value) {
+                    field.selectedIndex = i;
+                    return true;
+                }
+            }
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value.toLowerCase() === value.toLowerCase()) {
+                    field.selectedIndex = i;
+                    return true;
+                }
+            }
+        } else {
+            field.value = value;
+            return true;
+        }
+    }
+    return false;
+}
+
+// Make this function available globally
+window.safeSetFormField = safeSetFormField;
+
 
 function showOrderTracking(orderId) {
     const orderTrackingSection = document.getElementById('orderTrackingSection');
@@ -240,7 +529,7 @@ function updateStepDates(orderData) {
                     dateElement.textContent = 'Date not available';
                 }
             } else {
-                dateElement.textContent = 'Pending';
+                dateElement.textContent = 'Ordered';
             }
         }
     });
@@ -278,7 +567,6 @@ function updateProgressBar(status) {
     
     // Map status to CSS class
     const progressClassMap = {
-        'pending': 'step-0',
         'ordered': 'step-0',
         'confirmed': 'step-25',
         'processing': 'step-25',
@@ -290,7 +578,9 @@ function updateProgressBar(status) {
     
     const progressClass = progressClassMap[status] || 'step-0';
     progressBar.classList.add(progressClass);
-}window.addEventListener('resize', function() {
+}
+
+window.addEventListener('resize', function() {
     const status = document.querySelector('.status-step.active .step-label')?.textContent?.toLowerCase();
     if (status) {
         updateProgressBar(status);
@@ -318,7 +608,7 @@ function handleResize() {
 window.addEventListener('resize', handleResize);
 
 function updateStatusTimeline(orderData) {
-    const status = orderData.status || 'pending';
+    const status = orderData.status || 'ordered';
     
     const statuses = ['ordered', 'confirmed', 'shipped', 'out-for-delivery', 'delivered'];
     
@@ -333,7 +623,6 @@ function updateStatusTimeline(orderData) {
     
     switch(status.toLowerCase()) {
         case 'ordered':
-        case 'pending':
             activeStepIndex = 0;
             break;
         case 'confirmed':
@@ -439,11 +728,11 @@ function displayOrderTrackingData(orderData) {
     const orderTotalElement = document.getElementById('tracking-order-total');
     
     if (orderData.orderNumber) {
-        orderIdElement.textContent = `#${orderData.orderNumber}`;
+        orderIdElement.textContent = `${orderData.orderNumber}`;
     } else if (orderData.id) {
-        orderIdElement.textContent = `#${orderData.id.substring(0, 8).toUpperCase()}`;
+        orderIdElement.textContent = `${orderData.id.substring(0, 8).toUpperCase()}`;
     } else {
-        orderIdElement.textContent = `#ORD${Math.floor(100000 + Math.random() * 900000)}`;
+        orderIdElement.textContent = `ORD${Math.floor(100000 + Math.random() * 900000)}`;
     }
     
     let orderDate;
@@ -487,7 +776,7 @@ function displayOrderTrackingData(orderData) {
     
     updateStatusTimeline(orderData);
     updateStepDates(orderData);
-    const status = orderData.status || 'pending';
+    const status = orderData.status || 'ordered';
     updateProgressBar(status);
     updateOrderDetails(orderData);
 }
@@ -681,23 +970,6 @@ function initOrderTracking() {
     }
 }
 
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        currentUser = user;
-        updateUIForUser(user);
-        loadUserProfileData(user.uid);
-    } else {
-        currentUser = null;
-        updateUIForGuest();
-        const profilePage = document.getElementById('profilePage');
-        const mainContent = document.getElementById('mainContent');
-        if (profilePage && mainContent) {
-            profilePage.classList.remove('active');
-            mainContent.style.display = 'block';
-        }
-    }
-});
-
 function updateUIForUser(user) {
     userIcon.classList.add('logged-in');
     profileLink.style.display = 'block';
@@ -777,7 +1049,6 @@ function displayOrder(order) {
     const ordersContainer = document.getElementById('orders-container');
     if (!ordersContainer) return;
     
-    // Remove the "no orders" state if it exists
     const noOrdersState = ordersContainer.querySelector('.no-orders');
     if (noOrdersState) {
         noOrdersState.remove();
@@ -788,17 +1059,16 @@ function displayOrder(order) {
     
     const orderId = order.id || order.orderId;
     
-    // Enhanced status handling
-    let status = order.status || 'pending';
+    let status = order.status || 'ordered';
     let statusLower = status.toLowerCase();
+    const isCancelled = statusLower.includes('cancelled');
     
-    // Map status to CSS class and display text
-    let statusClass = 'status-pending';
+    let statusClass = 'status-ordered';
     let statusDisplayText = status.charAt(0).toUpperCase() + status.slice(1);
     
-    if (statusLower.includes('pending')) {
-        statusClass = 'status-pending';
-        statusDisplayText = 'Pending';
+    if (statusLower.includes('ordered')) {
+        statusClass = 'status-ordered';
+        statusDisplayText = 'ordered';
     } else if (statusLower.includes('confirmed') || statusLower.includes('processing')) {
         statusClass = 'status-confirmed';
         statusDisplayText = 'Confirmed';
@@ -811,12 +1081,12 @@ function displayOrder(order) {
     } else if (statusLower.includes('delivered')) {
         statusClass = 'status-delivered';
         statusDisplayText = 'Delivered';
-    } else if (statusLower.includes('cancelled')) {
+    } else if (isCancelled) {
         statusClass = 'status-cancelled';
         statusDisplayText = 'Cancelled';
+        orderCard.classList.add('cancelled-order');
     }
     
-    // Format date
     const orderDate = order.createdAt ? 
         (order.createdAt.toDate ? order.createdAt.toDate() : new Date(order.createdAt)) : 
         new Date();
@@ -830,77 +1100,130 @@ function displayOrder(order) {
             previewItemsHTML = `
                 <div class="order-preview">
                     <div class="preview-item">
-                        <div class="preview-image">
+                        <div class="preview-image" style="${isCancelled ? 'opacity: 0.7;' : ''}">
                             <img src="${product.image}" alt="${product.name}" loading="lazy"
-                                 onerror="this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'">
+                                 onerror="this.src='https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022'"
+                                 style="${isCancelled ? 'opacity: 0.7;' : ''}">
                         </div>
                         <div class="preview-details">
-                            <span class="preview-name">${product.name}</span>
-                            <div class="preview-meta">
+                            <span class="preview-name" style="${isCancelled ? 'opacity: 0.7;' : ''}">${product.name}</span>
+                            <div class="preview-meta" style="${isCancelled ? 'opacity: 0.7;' : ''}">
                                 <span class="preview-weight">${product.weight}</span>
                                 <span>•</span>
                                 <span class="preview-qty">Qty: ${firstItem.quantity || 1}</span>
                             </div>
                         </div>
                     </div>
-                    ${order.items.length > 1 ? `<div class="preview-more">+${order.items.length - 1} more item${order.items.length > 2 ? 's' : ''}</div>` : ''}
+                    ${order.items.length > 1 ? 
+                        `<div class="preview-more" style="${isCancelled ? 'opacity: 0.7;' : ''}">
+                            +${order.items.length - 1} more item${order.items.length > 2 ? 's' : ''}
+                        </div>` 
+                        : ''}
                 </div>
             `;
         }
     }
     
-    const displayOrderId = order.orderNumber || `#${orderId.substring(0, 8).toUpperCase()}`;
+    const displayOrderId = order.orderNumber || `${orderId.substring(0, 8).toUpperCase()}`;
+    
+    // Create action buttons based on order status
+    let actionButtonsHTML = '';
+    if (isCancelled) {
+        actionButtonsHTML = `
+            <button class="btn btn-outline contact-support-btn" onclick="window.location.href='contact.html'}">
+                <i class="fas fa-headset"></i>
+                <span class="action-text">Contact Support</span>
+            </button>
+            <button class="btn btn-sm reorder-btn" data-id="${orderId}">
+                <i class="fas fa-redo"></i>
+                <span class="action-text">Reorder</span>
+            </button>
+        `;
+    } else {
+        actionButtonsHTML = `
+            <button class="btn btn-outline btn-sm track-order-btn" data-id="${orderId}">
+                <i class="fas fa-truck"></i>
+                <span class="action-text">Track</span>
+            </button>
+            <button class="btn btn-sm reorder-btn" data-id="${orderId}">
+                <i class="fas fa-redo"></i>
+                <span class="action-text">Reorder</span>
+            </button>
+        `;
+    }
+    
+    // Add strike-through styling ONLY for total amount in cancelled orders
+    const totalAmountStyle = isCancelled ? 'text-decoration: line-through; opacity: 0.7;' : '';
+    
+    // Hide status badge for cancelled orders (remove status from right)
+    const statusBadgeHTML = isCancelled ? 
+    `<span class="order-status-badge ${statusClass}">${statusDisplayText}</span>` : 
+    `<span class="order-status-badge ${statusClass}">${statusDisplayText}</span>`;
     
     orderCard.innerHTML = `
-        <div class="order-header-compact">
+        <div class="order-header-compact" style="${isCancelled ? 'opacity: 0.8;' : ''}">
             <div class="order-info-row">
                 <div class="order-id-date">
                     <span class="order-id-small">${displayOrderId}</span>
                     <span class="order-date-small">${orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
-                <span class="order-status-badge ${statusClass}">${statusDisplayText}</span>
+                ${statusBadgeHTML}
             </div>
         </div>
         ${previewItemsHTML}
         <div class="order-footer-compact">
             <div class="order-total-compact">
-                <span class="total-label">Total:</span>
-                <span class="total-amount">₹${order.total ? order.total.toFixed(2) : '0.00'}</span>
+                <span class="total-label" style="${isCancelled ? 'opacity: 0.7;' : ''}">Total:</span>
+                <span class="total-amount" style="${totalAmountStyle}">₹${order.total ? order.total.toFixed(2) : '0.00'}</span>
             </div>
-            <div class="order-actions-compact">
-                <button class="btn btn-outline btn-sm track-order-btn" data-id="${orderId}">
-                    <i class="fas fa-truck"></i>
-                    <span class="action-text">Track</span>
-                </button>
-                <button class="btn btn-sm reorder-btn" data-id="${orderId}">
-                    <i class="fas fa-redo"></i>
-                    <span class="action-text">Reorder</span>
-                </button>
+            <div class="order-actions-compact" style="${isCancelled ? 'opacity: 0.9;' : ''}">
+                ${actionButtonsHTML}
             </div>
         </div>
     `;
     
     ordersContainer.appendChild(orderCard);
     
-    // Add event listeners
+    // Add event listeners for BOTH cancelled and non-cancelled orders
     setTimeout(() => {
-        const trackBtn = orderCard.querySelector('.track-order-btn');
-        const reorderBtn = orderCard.querySelector('.reorder-btn');
-        
-        if (trackBtn) {
-            trackBtn.addEventListener('click', function() {
-                showOrderTracking(orderId);
-            });
-        }
-        
-        if (reorderBtn) {
-            reorderBtn.addEventListener('click', function() {
-                reorderItems(order.items || []);
-            });
+        // For cancelled orders, only add reorder button listener
+        if (isCancelled) {
+            const reorderBtn = orderCard.querySelector('.reorder-btn');
+            const contactSupportBtn = orderCard.querySelector('.contact-support-btn');
+            
+            if (reorderBtn) {
+                reorderBtn.addEventListener('click', function() {
+                    reorderItems(order.items || []);
+                });
+            }
+            
+            // Fix contact support button onclick
+            if (contactSupportBtn) {
+                // Remove existing onclick and add proper event listener
+                contactSupportBtn.removeAttribute('onclick');
+                contactSupportBtn.addEventListener('click', function() {
+                    window.location.href = 'contact.html';
+                });
+            }
+        } else {
+            // For non-cancelled orders, add both track and reorder listeners
+            const trackBtn = orderCard.querySelector('.track-order-btn');
+            const reorderBtn = orderCard.querySelector('.reorder-btn');
+            
+            if (trackBtn) {
+                trackBtn.addEventListener('click', function() {
+                    showOrderTracking(orderId);
+                });
+            }
+            
+            if (reorderBtn) {
+                reorderBtn.addEventListener('click', function() {
+                    reorderItems(order.items || []);
+                });
+            }
         }
     }, 100);
 }
-
 function reorderItems(items) {
     items.forEach(item => {
         addToCart(item.productId, item.quantity);
@@ -1072,58 +1395,6 @@ function displayAddress(addressId, address) {
     addressesContainer.appendChild(addressCard);
     
     attachAddressEventListeners(addressId);
-}
-
-function saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefault) {
-    if (!currentUser || !db) return;
-    
-    const fullName = `${firstName} ${lastName}`.trim();
-    
-    const newAddress = {
-        label: 'Home',
-        name: fullName,
-        address: address,
-        phone: phone.replace('+91 ', ''),
-        pincode: zipCode,
-        city: city,
-        state: state,
-        country: 'India',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        isDefault: isDefault
-    };
-    
-    if (isDefault) {
-        db.collection('users').doc(currentUser.uid).collection('addresses').get()
-            .then((querySnapshot) => {
-                const batch = db.batch();
-                
-                querySnapshot.forEach((doc) => {
-                    const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
-                    batch.update(addressRef, { isDefault: false });
-                });
-                
-                return batch.commit();
-            })
-            .then(() => {
-                return db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress);
-            })
-            .then((docRef) => {
-                showNotification('Address saved as default in your profile!', 'success');
-            })
-            .catch((error) => {
-                console.error("Error saving default address:", error);
-                showNotification('Error saving address to profile: ' + error.message, 'error');
-            });
-    } else {
-        db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
-            .then((docRef) => {
-                showNotification('Address saved to your profile!', 'success');
-            })
-            .catch((error) => {
-                console.error("Error saving address:", error);
-                showNotification('Error saving address to profile: ' + error.message, 'error');
-            });
-    }
 }
 
 function closeAllSidebars() {
@@ -1446,6 +1717,14 @@ function updateCartUI() {
             });
         });
     }
+    
+    // Update checkout order summary if on checkout page
+    if (document.querySelector('.checkout-section') && typeof window.updateOrderSummary === 'function') {
+        window.updateOrderSummary();
+        if (typeof window.refreshPromoCodes === 'function') {
+            window.refreshPromoCodes();
+        }
+    }
 }
 
 function addToCart(productId, quantity = 1) {
@@ -1758,16 +2037,215 @@ function loadGuestData() {
     }
 }
 
-function showNotification(message, type = 'info') {
-    if (type === 'error') {
-        alert('Error: ' + message);
-    } else {
-        alert(message);
+
+// Save new address to user's profile in Firestore - UPDATED for new fields
+function saveNewAddressToProfile() {
+    const label = document.getElementById('new-label').value.trim();
+    const name = document.getElementById('new-name').value.trim();
+    const address = document.getElementById('new-address').value.trim();
+    const phone = document.getElementById('new-phone').value.trim();
+    const pincode = document.getElementById('new-pincode').value.trim();
+    const city = document.getElementById('new-city').value.trim();
+    const state = document.getElementById('new-state').value;
+    const country = document.getElementById('new-country').value;
+    
+    console.log('Saving new address with data:', { label, name, address, phone, pincode, city, state, country });
+    
+    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
+        alert('Please fill in all fields');
+        return;
     }
+    
+    // Validate phone number
+    if (phone.length < 10 || !/^\d+$/.test(phone)) {
+        alert('Please enter a valid 10-digit phone number');
+        return;
+    }
+    
+    // Validate pincode
+    if (pincode.length < 6 || !/^\d+$/.test(pincode)) {
+        alert('Please enter a valid 6-digit pincode');
+        return;
+    }
+    
+    if (!currentUser) {
+        alert('Please log in to save addresses');
+        showLoginView();
+        loginModal.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        return;
+    }
+    
+    const newAddress = {
+        label: label,
+        name: name,
+        address: address,
+        phone: phone,
+        pincode: pincode,
+        city: city,
+        state: state,
+        country: country,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        isDefault: false
+    };
+    
+    console.log('Saving new address to Firestore:', newAddress);
+    
+    // Save to Firestore under user's addresses collection
+    db.collection('users').doc(currentUser.uid).collection('addresses').add(newAddress)
+        .then((docRef) => {
+            console.log('Address saved with ID:', docRef.id);
+            
+            // Refresh addresses display
+            const addressesContainer = document.getElementById('addresses-container');
+            if (addressesContainer) {
+                addressesContainer.innerHTML = '';
+                loadUserAddresses(currentUser.uid);
+            }
+            
+            // Reset the form
+            const addAddressForm = document.getElementById('add-address-form');
+            if (addAddressForm) {
+                addAddressForm.style.display = 'none';
+            }
+            
+            // Reset form fields
+            document.getElementById('new-label').value = '';
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-address').value = '';
+            document.getElementById('new-phone').value = '';
+            document.getElementById('new-pincode').value = '';
+            document.getElementById('new-city').value = '';
+            document.getElementById('new-state').value = '';
+            document.getElementById('new-country').value = 'India';
+            
+            // Show success message
+            showNotification('Address saved successfully!', 'success');
+        })
+        .catch((error) => {
+            console.error("Error adding address:", error);
+            showNotification('Error saving address: ' + error.message, 'error');
+        });
 }
 
+// Save edited address to Firestore - UPDATED for new fields
+function saveEditedAddressToFirestore(addressId) {
+    const label = document.getElementById(`edit-label-${addressId}`).value.trim();
+    const name = document.getElementById(`edit-name-${addressId}`).value.trim();
+    const address = document.getElementById(`edit-address-${addressId}`).value.trim();
+    const phone = document.getElementById(`edit-phone-${addressId}`).value.trim();
+    const pincode = document.getElementById(`edit-pincode-${addressId}`).value.trim();
+    const city = document.getElementById(`edit-city-${addressId}`).value.trim();
+    const state = document.getElementById(`edit-state-${addressId}`).value;
+    const country = document.getElementById(`edit-country-${addressId}`).value;
+    
+    console.log('Editing address:', addressId, { label, name, address, phone, pincode, city, state, country });
+    
+    if (!label || !name || !address || !phone || !pincode || !city || !state || !country) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    const updatedAddress = {
+        label: label,
+        name: name,
+        address: address,
+        phone: phone,
+        pincode: pincode,
+        city: city,
+        state: state,
+        country: country,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).update(updatedAddress)
+        .then(() => {
+            console.log('Address updated successfully');
+            
+            // Refresh addresses display
+            const addressesContainer = document.getElementById('addresses-container');
+            if (addressesContainer) {
+                addressesContainer.innerHTML = '';
+                loadUserAddresses(currentUser.uid);
+            }
+            showNotification('Address updated successfully!', 'success');
+        })
+        .catch((error) => {
+            console.error("Error updating address:", error);
+            showNotification('Error updating address: ' + error.message, 'error');
+        });
+}
+
+// Delete address from Firestore
+function deleteAddressFromFirestore(addressId) {
+    if (!confirm('Are you sure you want to delete this address?')) {
+        return;
+    }
+    
+    console.log('Deleting address:', addressId);
+    
+    db.collection('users').doc(currentUser.uid).collection('addresses').doc(addressId).delete()
+        .then(() => {
+            console.log('Address deleted successfully');
+            
+            // Refresh addresses display
+            const addressesContainer = document.getElementById('addresses-container');
+            if (addressesContainer) {
+                addressesContainer.innerHTML = '';
+                loadUserAddresses(currentUser.uid);
+            }
+            showNotification('Address deleted successfully!', 'success');
+        })
+        .catch((error) => {
+            console.error("Error deleting address:", error);
+            showNotification('Error deleting address: ' + error.message, 'error');
+        });
+}
+
+// Set default address - UPDATED to trigger real-time update
+function setDefaultAddress(addressId) {
+    console.log('Setting default address:', addressId);
+    
+    // First, remove default from all addresses
+    db.collection('users').doc(currentUser.uid).collection('addresses').get()
+        .then((querySnapshot) => {
+            const batch = db.batch();
+            
+            querySnapshot.forEach((doc) => {
+                const addressRef = db.collection('users').doc(currentUser.uid).collection('addresses').doc(doc.id);
+                if (doc.id === addressId) {
+                    batch.update(addressRef, { isDefault: true });
+                } else {
+                    batch.update(addressRef, { isDefault: false });
+                }
+            });
+            
+            return batch.commit();
+        })
+        .then(() => {
+            console.log('Default address set successfully');
+            
+            // Refresh addresses display
+            const addressesContainer = document.getElementById('addresses-container');
+            if (addressesContainer) {
+                addressesContainer.innerHTML = '';
+                loadUserAddresses(currentUser.uid);
+            }
+            showNotification('Default address set successfully!', 'success');
+            
+            // The real-time listener in loadUserDefaultAddress will automatically update checkout form
+        })
+        .catch((error) => {
+            console.error("Error setting default address:", error);
+            showNotification('Error setting default address: ' + error.message, 'error');
+        });
+}
+
+// Updated attachAddressEventListeners function
 function attachAddressEventListeners(addressId) {
     setTimeout(() => {
+        // Edit button
         const editBtn = document.querySelector(`.edit-address-btn[data-id="${addressId}"]`);
         if (editBtn) {
             editBtn.addEventListener('click', function() {
@@ -1775,15 +2253,15 @@ function attachAddressEventListeners(addressId) {
             });
         }
         
+        // Delete button
         const deleteBtn = document.querySelector(`.delete-address-btn[data-id="${addressId}"]`);
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to delete this address?')) {
-                    deleteAddressFromFirestore(addressId);
-                }
+                deleteAddressFromFirestore(addressId);
             });
         }
         
+        // Save edited address button
         const saveBtn = document.querySelector(`.save-edit-address-btn[data-id="${addressId}"]`);
         if (saveBtn) {
             saveBtn.addEventListener('click', function() {
@@ -1791,6 +2269,7 @@ function attachAddressEventListeners(addressId) {
             });
         }
         
+        // Cancel edit button
         const cancelBtn = document.querySelector(`.cancel-edit-address-btn[data-id="${addressId}"]`);
         if (cancelBtn) {
             cancelBtn.addEventListener('click', function() {
@@ -1798,6 +2277,7 @@ function attachAddressEventListeners(addressId) {
             });
         }
         
+        // Set default address button
         const setDefaultBtn = document.querySelector(`.set-default-address-btn[data-id="${addressId}"]`);
         if (setDefaultBtn) {
             setDefaultBtn.addEventListener('click', function() {
@@ -1841,6 +2321,9 @@ function initCommon() {
             }
         });
     }
+    
+    // Initialize edit profile functionality
+    initEditProfile();
     
     const orderTrackingCloseBtn = document.getElementById('orderTrackingCloseBtn');
     if (orderTrackingCloseBtn) {
@@ -2000,3 +2483,4 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
