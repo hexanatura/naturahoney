@@ -1803,7 +1803,7 @@
       const dateTime = formatDateTime(o.createdAt);
 
       rows.push([
-        `#${o.orderId || sid(o.id)}`,
+        `${o.orderId || sid(o.id)}`,
         cu.trim(),
         o.email || "",
         dateTime.date,
