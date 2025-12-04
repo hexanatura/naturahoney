@@ -1,4 +1,3 @@
-
 <style>
 * {
   margin: 0;
@@ -239,24 +238,52 @@
   color: var(--primary);
 }
 
+/* Updated Status Colors - More Distinct */
 .status-pill {
   display: inline-block;
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
   font-weight: 700;
   font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
-.status-pending { background: rgba(245,158,11,0.08); color:#f59e0b; border:1px solid rgba(245,158,11,0.12); }
-.status-confirmed { background: rgba(59,130,246,0.08); color:#3b82f6; border:1px solid rgba(59,130,246,0.12); }
-.status-shipped { background: rgba(16,185,129,0.08); color:#10b981; border:1px solid rgba(16,185,129,0.12); }
-.status-out-for-delivery { 
-    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-    color: #0c4a6e;
-    border-color: #38bdf8;
+.status-pending { 
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+  border: 1px solid #fbbf24;
 }
-.status-delivered { background: rgba(101,163,13,0.08); color:#65a30d; border:1px solid rgba(101,163,13,0.12); }
-.status-cancelled { background: rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.12); }
+
+.status-confirmed { 
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1e40af;
+  border: 1px solid #60a5fa;
+}
+
+.status-shipped { 
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+  border: 1px solid #34d399;
+}
+
+.status-out-for-delivery { 
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  color: #3730a3;
+  border: 1px solid #818cf8;
+}
+
+.status-delivered { 
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #166534;
+  border: 1px solid #22c55e;
+}
+
+.status-cancelled { 
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #991b1b;
+  border: 1px solid #f87171;
+}
 
 .action-btn {
   border-radius: var(--radius-sm);
@@ -643,6 +670,59 @@
     max-height: 80vh;
   }
 }
+
+/* New Order Highlight */
+.new-order-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  margin-left: 4px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Order time indicator */
+.order-time-indicator {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #6b7280;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.order-time-new {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.order-time-recent {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
 </style>
 
 </head>
@@ -693,7 +773,7 @@
             <tr>
               <th>Order ID</th>
               <th>Customer</th>
-              <th>Date</th>
+              <th>Date & Time</th>
               <th>Items</th>
               <th>Total</th>
               <th>Status</th>
@@ -829,6 +909,41 @@
     return x.toLocaleDateString("en-IN");
   }
 
+  function formatDateTime(d) {
+    if (!d) return "—";
+    const x = d.toDate ? d.toDate() : new Date(d);
+    const now = new Date();
+    const diffMs = now - x;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    // Return formatted date and time
+    return {
+      date: x.toLocaleDateString("en-IN"),
+      time: x.toLocaleTimeString("en-IN", {hour: '2-digit', minute:'2-digit'}),
+      isNew: diffHours < 24, // Less than 24 hours old
+      isRecent: diffHours < 72 // Less than 3 days old
+    };
+  }
+
+  function getTimeIndicator(d) {
+    if (!d) return '';
+    const x = d.toDate ? d.toDate() : new Date(d);
+    const now = new Date();
+    const diffMs = now - x;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    if (diffHours < 1) {
+      return '<span class="order-time-indicator order-time-new">Just Now</span>';
+    } else if (diffHours < 24) {
+      const hours = Math.floor(diffHours);
+      return `<span class="order-time-indicator order-time-new">${hours}h ago</span>`;
+    } else if (diffHours < 72) {
+      const days = Math.floor(diffHours / 24);
+      return `<span class="order-time-indicator order-time-recent">${days}d ago</span>`;
+    }
+    return '';
+  }
+
   function sc(s) {
     const statusMap = {
       'pending': 'pending',
@@ -893,7 +1008,7 @@
       // First, try to get orders from the main orders collection
       const ordersSnapshot = await db.collection("orders")
         .orderBy("createdAt", "desc")
-        .limit(100)
+        .limit(200) // Increased limit to show more orders
         .get();
 
       if (!ordersSnapshot.empty) {
@@ -924,11 +1039,12 @@
           .doc(userDoc.id)
           .collection("orders")
           .orderBy("createdAt", "desc")
-          .limit(50)
+          .limit(100) // Increased limit per user
           .get()
           .then(ordersSnapshot => {
             ordersSnapshot.forEach(orderDoc => {
               const orderData = orderDoc.data();
+              const orderDate = orderData.createdAt?.toDate ? orderData.createdAt.toDate() : new Date();
               allOrders.push({
                 ...orderData,
                 id: orderDoc.id,
@@ -936,7 +1052,8 @@
                 _source: "user",
                 _name: ((orderData.shippingAddress?.firstName || "") + " " + (orderData.shippingAddress?.lastName || "")).toLowerCase(),
                 _email: (orderData.email || "").toLowerCase(),
-                _created: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : 0,
+                _created: orderDate.getTime(),
+                _createdDate: orderDate,
                 items: orderData.items || [],
               });
             });
@@ -953,7 +1070,7 @@
         return;
       }
 
-      // Sort by date (newest first)
+      // Sort by date (newest first) - Ensures new orders are always at top
       allOrders.sort((a, b) => b._created - a._created);
       
       orders = allOrders;
@@ -974,6 +1091,7 @@
     
     ordersSnapshot.forEach(doc => {
       const orderData = doc.data();
+      const orderDate = orderData.createdAt?.toDate ? orderData.createdAt.toDate() : new Date();
       allOrders.push({
         ...orderData,
         id: doc.id,
@@ -981,12 +1099,16 @@
         _source: "main",
         _name: ((orderData.shippingAddress?.firstName || "") + " " + (orderData.shippingAddress?.lastName || "")).toLowerCase(),
         _email: (orderData.email || "").toLowerCase(),
-        _created: orderData.createdAt?.toDate ? orderData.createdAt.toDate().getTime() : 0,
+        _created: orderDate.getTime(),
+        _createdDate: orderDate,
         items: orderData.items || [],
       });
     });
 
     console.log(`Processed ${allOrders.length} orders from main collection`);
+    
+    // Sort by date (newest first)
+    allOrders.sort((a, b) => b._created - a._created);
     
     orders = allOrders;
     requestAnimationFrame(() => {
@@ -1001,7 +1123,7 @@
     // Listen to main orders collection
     ordersListener = db.collection("orders")
       .orderBy("createdAt", "desc")
-      .limit(100)
+      .limit(200)
       .onSnapshot((snapshot) => {
         if (!snapshot.empty) {
           console.log("Real-time update from main collection");
@@ -1078,6 +1200,9 @@
           ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
           : o.email || "Customer";
 
+        const dateTime = formatDateTime(o.createdAt);
+        const timeIndicator = getTimeIndicator(o.createdAt);
+
         let itemsPreview = 'No items';
         if (it > 0) {
           const firstItem = o.items[0];
@@ -1103,11 +1228,15 @@
         }
 
         const statusDisplay = formatStatusForDisplay(o.status || "pending");
+        const isNew = dateTime.isNew;
 
         return `
           <tr data-id="${esc(o.id)}" data-user-id="${esc(o.userId || '')}" data-source="${esc(o._source || 'main')}">
             <td>
-              <div style="font-weight:700">#${esc(o.orderId || sid(o.id))}</div>
+              <div style="font-weight:700;display:flex;align-items:center;gap:4px;">
+                #${esc(o.orderId || sid(o.id))}
+                ${isNew ? '<span class="new-order-badge" title="New order"></span>' : ''}
+              </div>
               ${o.userId ? `<small class="muted" style="font-size:0.75rem">UID: ${esc(o.userId.substring(0, 6))}</small>` : ''}
             </td>
             <td>
@@ -1122,10 +1251,11 @@
               </div>
             </td>
             <td>
-              <div style="font-weight:600">${fdn(o.createdAt)}</div>
-              ${o.createdAt ? `<small class="muted" style="font-size:0.75rem">
-                ${new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'})}
-              </small>` : ''}
+              <div style="font-weight:600">${dateTime.date}</div>
+              <div class="muted" style="font-size:0.75rem">
+                ${dateTime.time}
+                ${timeIndicator}
+              </div>
             </td>
             <td>${itemsPreview}</td>
             <td style="font-weight:700">₹${Number(tot).toFixed(2)}</td>
@@ -1156,18 +1286,25 @@
           ? o.shippingAddress.firstName + " " + o.shippingAddress.lastName
           : o.email || "Customer";
 
+        const dateTime = formatDateTime(o.createdAt);
+        const timeIndicator = getTimeIndicator(o.createdAt);
+
         const itemsText = (o.items || [])
           .map(i => `${i.name || 'Item'} x${i.quantity || 1}`)
           .join(', ');
           
         const statusDisplay = formatStatusForDisplay(o.status || "pending");
         const truncatedItemsText = itemsText.length > 50 ? itemsText.substring(0, 50) + '...' : itemsText;
+        const isNew = dateTime.isNew;
 
         return `
           <div class="order-card" data-id="${esc(o.id)}" data-user-id="${esc(o.userId || '')}" data-source="${esc(o._source || 'main')}">
             <div class="card-header">
               <div>
-                <div class="customer-name">${esc(cu)}</div>
+                <div style="display:flex;align-items:center;gap:4px;">
+                  <span class="customer-name">${esc(cu)}</span>
+                  ${isNew ? '<span class="new-order-badge" title="New order"></span>' : ''}
+                </div>
                 <div class="card-meta">#${esc(o.orderId || sid(o.id))} • ${esc(o.email || "No email")}</div>
               </div>
               <span class="status-pill ${sc(o.status)}">${esc(statusDisplay)}</span>
@@ -1175,8 +1312,11 @@
             
             <div class="card-content">
               <div class="card-row">
-                <span class="card-label">Date</span>
-                <span class="card-value">${fdn(o.createdAt)}</span>
+                <span class="card-label">Date & Time</span>
+                <span class="card-value">
+                  <div>${dateTime.date}</div>
+                  <div style="font-size:0.8rem;color:var(--muted)">${dateTime.time} ${timeIndicator}</div>
+                </span>
               </div>
               <div class="card-row">
                 <span class="card-label">Items</span>
@@ -1401,8 +1541,8 @@
             <div style="padding:8px 0">${esc(o.shippingAddress?.phone || "—")}</div>
           </div>
           <div>
-            <div class="modal-title-bold">Order Date</div>
-            <div style="padding:8px 0">${fdn(o.createdAt)}</div>
+            <div class="modal-title-bold">Order Date & Time</div>
+            <div style="padding:8px 0">${fdn(o.createdAt)} ${o.createdAt ? new Date(o.createdAt.toDate ? o.createdAt.toDate() : o.createdAt).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit'}) : ''}</div>
           </div>
         </div>
 
@@ -1652,7 +1792,7 @@
       return;
     }
 
-    const rows = [["Order ID", "Customer", "Email", "Date", "Items", "Total", "Status", "User ID", "Source"]];
+    const rows = [["Order ID", "Customer", "Email", "Date", "Time", "Items", "Total", "Status", "User ID", "Source"]];
 
     x.forEach((o) => {
       const cu =
@@ -1660,11 +1800,14 @@
         " " +
         (o.shippingAddress?.lastName || "");
 
+      const dateTime = formatDateTime(o.createdAt);
+
       rows.push([
         `#${o.orderId || sid(o.id)}`,
         cu.trim(),
         o.email || "",
-        fdn(o.createdAt),
+        dateTime.date,
+        dateTime.time,
         (o.items || []).length,
         o.total || 0,
         o.status || "",
