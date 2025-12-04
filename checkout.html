@@ -9,6 +9,7 @@
   <link href="https://fonts.cdnfonts.com/css/akira-expanded" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Shadow+Into+Light&display=swap" rel="stylesheet">
+  
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -34,6 +35,113 @@ body {
   width: 100%;
   overflow-x: hidden;
 }
+
+.cancelled-order {
+    position: relative;
+}
+
+/* Blurred overlay */
+.cancelled-order::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(2px);
+    background: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Lift the visible parts above blur */
+.cancelled-order .order-footer-compact,
+.cancelled-order .order-header-compact {
+    position: relative;
+    z-index: 2;
+}
+
+/* Strike the total */
+.cancelled-order .total-amount {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+
+
+/* Ripple animation for buttons */
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Pulse animation for processing */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.98);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Button animations */
+.checkout-btn.processing {
+    animation: pulse 0.6s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.checkout-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Notification animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Enhanced button hover effects */
+.checkout-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(95, 43, 39, 0.4);
+}
+
+.checkout-btn:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+ @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+     100% { transform: scale(1); }
+ }
+ 
 
 .status-out-for-delivery {
     background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
@@ -1026,7 +1134,7 @@ body {
     font-family: 'Unbounded', sans-serif;
 }
 
-.order-status-badge.status-pending {
+.order-status-badge.status-ordered {
     background: #fff3e0;
     color: #f57c00;
     border: 1px solid #ffcc80;
@@ -2126,6 +2234,49 @@ body {
     padding: 15px !important;
   }
 }
+
+/* Edit Profile Modal Input Focus */
+#editProfileName:focus {
+    border-color: #5f2b27 !important;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(95, 43, 39, 0.1) !important;
+}
+
+/* Modal animations */
+#editProfileModal {
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Mobile responsive for modal */
+@media (max-width: 767px) {
+    #editProfileModal > div {
+        padding: 20px !important;
+        margin: 15px !important;
+        width: calc(100% - 30px) !important;
+    }
+    
+    #editProfileModal h2 {
+        font-size: 18px !important;
+    }
+    
+    #editProfileModal > div > div:last-child {
+        flex-direction: column !important;
+    }
+    
+    #editProfileModal > div > div:last-child button {
+        width: 100% !important;
+    }
+}
+
 
 
 /* Animation for promo cards */
@@ -7181,7 +7332,8 @@ footer a:hover {
       </div>
     </div>
   </footer>
-  
+
+  <script src="common.js"></script>
 <script src="payment.js"></script>
 </body>
 </html>
