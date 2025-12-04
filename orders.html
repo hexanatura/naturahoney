@@ -249,7 +249,7 @@
   letter-spacing: 0.3px;
 }
 
-.status-pending { 
+.status-ordered { 
   background: linear-gradient(135deg, #fef3c7, #fde68a);
   color: #92400e;
   border: 1px solid #fbbf24;
@@ -740,7 +740,7 @@
         <div class="orders-card filters-row">
           <select id="ov-status" class="filter-select" title="Filter by status">
             <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
+            <option value="ordered">Ordered</option>
             <option value="confirmed">Confirmed</option>
             <option value="shipped">Shipped</option>
             <option value="out-for-delivery">Out for Delivery</option>
@@ -946,7 +946,7 @@
 
   function sc(s) {
     const statusMap = {
-      'pending': 'pending',
+      'ordered': 'ordered',
       'confirmed': 'confirmed',
       'shipped': 'shipped',
       'out-for-delivery': 'out-for-delivery',
@@ -954,12 +954,12 @@
       'cancelled': 'cancelled'
     };
     
-    const normalizedStatus = statusMap[s?.toLowerCase()] || 'pending';
+    const normalizedStatus = statusMap[s?.toLowerCase()] || 'ordered';
     return "status-" + normalizedStatus;
   }
 
   function formatStatusForDisplay(status) {
-    if (!status) return "Pending";
+    if (!status) return "Ordered";
     
     // Handle special cases
     if (status.toLowerCase() === 'out for delivery' || status.toLowerCase() === 'out-for-delivery') {
@@ -1227,7 +1227,7 @@
           `;
         }
 
-        const statusDisplay = formatStatusForDisplay(o.status || "pending");
+        const statusDisplay = formatStatusForDisplay(o.status || "ordered");
         const isNew = dateTime.isNew;
 
         return `
@@ -1293,7 +1293,7 @@
           .map(i => `${i.name || 'Item'} x${i.quantity || 1}`)
           .join(', ');
           
-        const statusDisplay = formatStatusForDisplay(o.status || "pending");
+        const statusDisplay = formatStatusForDisplay(o.status || "ordered");
         const truncatedItemsText = itemsText.length > 50 ? itemsText.substring(0, 50) + '...' : itemsText;
         const isNew = dateTime.isNew;
 
@@ -1565,7 +1565,7 @@
           <div class="modal-title-bold">Order Status</div>
           <select id="ov-modal-status" 
                   style="padding:10px;border:1px solid var(--border);border-radius:8px;width:100%;margin-top:4px;background:#fff;">
-            <option value="pending">Pending</option>
+            <option value="ordered">ordered</option>
             <option value="confirmed">Confirmed</option>
             <option value="shipped">Shipped</option>
             <option value="out-for-delivery">Out for Delivery</option>
@@ -1602,7 +1602,7 @@
     `;
 
     // Set current status
-    document.getElementById("ov-modal-status").value = o.status || "pending";
+    document.getElementById("ov-modal-status").value = o.status || "ordered";
 
     // Show modal
     m.classList.add("show");
