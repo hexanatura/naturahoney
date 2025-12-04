@@ -1599,18 +1599,6 @@
             </div>
           </div>
         ` : ''}
-        
-        <!-- Order Source -->
-        <div style="background:#f0f9ff;padding:12px;border-radius:8px;border:1px solid #bae6fd;margin-top:8px;">
-          <div class="modal-title-bold" style="color:#0369a1">Order Information</div>
-          <div style="font-size:0.85rem;color:#0c4a6e;margin-top:4px;">
-            ${o.source === 'user' ? 
-              `• This order is stored in the user's personal orders collection<br>
-               • User ID: ${o.userId ? esc(o.userId.substring(0, 12)) + '...' : 'Unknown'}` : 
-              `• This order is stored in the main orders collection`}
-          </div>
-        </div>
-      </div>
     `;
 
     // Set current status
