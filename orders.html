@@ -1421,66 +1421,31 @@ function processOrdersFromMainCollection(ordersSnapshot) {
           </div>
         </div>
 
-     <!-- Contact Information -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-  <div>
-    <div class="modal-title-bold">Phone Number</div>
-    <div style="padding:8px 0;font-size:0.95rem;color:var(--dark)">
-      ${esc(o.shippingAddress?.phone || "Not provided")}
-    </div>
-  </div>
-  <div>
-    <div class="modal-title-bold">Order Date & Time</div>
-    <div style="padding:8px 0">
-      <div style="font-size:0.95rem;color:var(--dark);margin-bottom:2px">
-        ${fdn(o.createdAt)}
-      </div>
-      <div style="font-size:0.85rem;color:var(--muted)">
-        ${o.createdAt && o.createdAt.toDate ? 
-          new Date(o.createdAt.toDate()).toLocaleTimeString('en-IN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-          }) : 
-          (o._created ? new Date(o._created).toLocaleTimeString('en-IN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-          }) : "—")
-        }
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Order Details -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
-  <div>
-    <div class="modal-title-bold">Total Amount</div>
-    <div style="font-weight:700;font-size:1.2rem;padding:6px 0;color:var(--dark)">
-      ₹${Number(o.total || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-    </div>
-    <div style="font-size:0.85rem;color:var(--muted);margin-top:2px">
-      ${o.items ? `${o.items.length} item${o.items.length !== 1 ? 's' : ''}` : 'No items'}
-    </div>
-  </div>
-  <div>
-    <div class="modal-title-bold">Payment Method</div>
-    <div style="padding:8px 0">
-      <div style="font-size:0.95rem;color:var(--dark);margin-bottom:2px">
-        ${esc(o.paymentMethod || "Cash on Delivery")}
-      </div>
-      ${o.paymentStatus ? `
-        <div style="display:inline-flex;align-items:center;gap:4px;font-size:0.8rem;padding:2px 8px;border-radius:12px;background:${o.paymentStatus === 'paid' ? 'rgba(34, 197, 94, 0.1)' : o.paymentStatus === 'pending' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)'};color:${o.paymentStatus === 'paid' ? 'rgb(21, 128, 61)' : o.paymentStatus === 'pending' ? 'rgb(180, 83, 9)' : 'rgb(185, 28, 28)'}">
-          <i class="fas fa-${o.paymentStatus === 'paid' ? 'check-circle' : o.paymentStatus === 'pending' ? 'clock' : 'exclamation-circle'}" style="font-size:0.7rem"></i>
-          ${o.paymentStatus.charAt(0).toUpperCase() + o.paymentStatus.slice(1)}
+        <!-- Contact Information -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="modal-title-bold">Phone Number</div>
+            <div style="padding:8px 0">${esc(o.shippingAddress?.phone || "—")}</div>
+          </div>
+          <div>
+            <div class="modal-title-bold">Order Date</div>
+            <div style="padding:8px 0">${fdn(o.createdAt)}</div>
+          </div>
         </div>
-      ` : ''}
-    </div>
-  </div>
-</div>
+
+        <!-- Order Details -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div class="modal-title-bold">Total Amount</div>
+            <div style="font-weight:700;font-size:1.2rem;padding:8px 0;color:var(--dark)">
+              ₹${Number(o.total || 0).toFixed(2)}
+            </div>
+          </div>
+          <div>
+            <div class="modal-title-bold">Payment Method</div>
+            <div style="padding:8px 0">${esc(o.paymentMethod || "Cash on Delivery")}</div>
+          </div>
+        </div>
 
         <!-- Order Status -->
         <div>
