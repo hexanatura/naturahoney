@@ -1,7 +1,3 @@
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
 
 <style>
 * {
@@ -748,27 +744,10 @@
   <div id="oh-toast-text">Saved</div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="activityLogger.js?v=1"></script>
 
 <script>
 (function () {
-  const config = {
-    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
-    projectId: "hexahoney-96aed",
-    storageBucket: "hexahoney-96aed.firebasestorage.app",
-    messagingSenderId: "700458850837",
-    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-    measurementId: "G-MQGKK9709H",
-  };
-
-  if (window.firebase) {
-    if (!firebase.apps.length) firebase.initializeApp(config);
-  }
-  
+ 
   let ordersCleanup = new Set();
   let ordersListener = null;
   let usersListener = null;
