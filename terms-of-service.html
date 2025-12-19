@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <title>Privacy Policy - Natura Honey</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.cdnfonts.com/css/akira-expanded" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background-color: white;
+      color: #333;
+      line-height: 1.6;
+      font-family: 'Unbounded', sans-serif;
+      scroll-padding-top: 120px;
+      transition: all 0.3s ease;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Notification Bar */
+    .notification-bar {
+      background: #e7d90f;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      font-weight: 600;
+      font-size: 10px;
+      letter-spacing: 1px;
+      position: fixed;
+      top: 0px;
+      left: 0;
+      right: 0;
+      z-index: 1001;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      will-change: transform, opacity;
+      height: 43px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .notification-bar::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1;
+    }
+    
+    .notification-bar p {
+      position: relative;
+      z-index: 2;
+      margin: 0;
+    }
+    
+    .notification-bar.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Navigation */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 5%;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 43px;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      font-family: 'Nirmala UI', sans-serif;
+      font-weight: 600px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: top 0.3s ease;
+      flex-direction: row !important;
+    }
+    
+    .notification-bar.hidden + nav {
+      top: 0;
+    }
+    
+    .logo {
+      position: absolute;
+      left: 50%;
+      top: 30px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 101;
+    }
+    
+    .logo img {
+      height: 70px;
+      width: auto;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    
+    .logo img:hover {
+      transform: scale(1.05);
+    }
+    
+    .nav-links {
+      display: flex;
+      list-style: none;
+    }
+    
+    .nav-links li {
+      margin: 0 15px;
+      position: relative;
+    }
+    
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      padding: 5px 0;
+    }
+    
+    .nav-links a:hover,
+    .nav-links a:focus {
+      color: #5f2b27;
+      transform: scale(1.1);
+    }
+    
+    .nav-links a.active {
+      color: #5f2b27;
+      border-bottom: 2px solid #ff4d4d;
+    }
+    
+    .nav-icons {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+      gap: 35px;
+    }
+    
+    .icon {
+      font-size: 20px;
+      color: #333;
+      transition: color 0.3s;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .icon:hover {
+      color: #5f2b27;
+    }
+    
+    /* Mobile Navigation */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #333;
+      cursor: pointer;
+      margin-right: 10px;
+      order: 1;
+      flex-shrink: 0;
+      z-index: 101;
+      position: relative;
+    }
+    
+    /* Main Content */
+    .content-wrapper {
+      margin-top: 165px;
+      min-height: calc(100vh - 165px);
+      padding-bottom: 40px;
+    }
+    
+    /* Page Header with Banner Effect */
+    .page-header {
+      background: url('https://ik.imagekit.io/hexaanatura/Desktop%20-%201.jpg?updatedAt=1756993544883') center/cover no-repeat;
+      padding: 80px 5%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 40px;
+      border-radius: 50px;
+    }
+    
+    .page-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1;
+      border-radius: 50px;
+    }
+    
+    .page-header h1 {
+      font-family: 'Akira Expanded', sans-serif;
+      font-size: 3.5rem;
+      color: #5f2b27;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .page-header p {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.2rem;
+      color: #5f2b27;
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .rectangle-banner {
+      background: url('https://ik.imagekit.io/hexaanatura/Desktop%20-%201.jpg?updatedAt=1756993544883') center/cover no-repeat;
+      padding: 50px;
+      width: 95%;
+      max-width: 1800px;
+      border-radius: 132px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      height: 500px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+    }
+
+/* MOBILE */
+@media (max-width: 767px) {
+  .rectangle-banner {
+    top: -30px !important;  
+  }
+}
+
+    
+    .banner-row {
+      font-family: 'Akira Expanded', sans-serif;
+      font-weight: 900;
+      font-size: 100px;
+      color: white;
+      mix-blend-mode: soft-light;
+      white-space: nowrap;
+      display: inline-block;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      line-height: 0.75;
+      opacity: 0.9;
+    }
+    
+    .slide-right {
+      animation: slideRight 60s linear infinite;
+    }
+    
+    .slide-left {
+      animation: slideLeft 60s linear infinite;
+    }
+    
+    @keyframes slideRight {
+      0% {
+        transform: translateX(-50%);
+      }
+      100% {
+        transform: translateX(0%);
+      }
+    }
+    
+    @keyframes slideLeft {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+    
+    /* Content Sections */
+    .content-section {
+      padding: 40px 5%;
+      max-width: 1200px;
+      margin: 0 auto 60px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .content-section h2 {
+      font-family: 'Akira Expanded', sans-serif;
+      font-size: 2.5rem;
+      color: #5f2b27;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .content-section h3 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.5rem;
+      color: #5f2b27;
+      margin: 25px 0 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #e7d90f;
+    }
+    
+    .content-section p {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #444;
+      margin-bottom: 20px;
+      text-align: justify;
+      letter-spacing: 0.3px;
+    }
+    
+    .content-section ul {
+      margin: 20px 0;
+      padding-left: 20px;
+    }
+    
+    .content-section li {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #444;
+      margin-bottom: 10px;
+      position: relative;
+      padding-left: 10px;
+    }
+    
+    .content-section li:before {
+      content: "•";
+      color: #5f2b27;
+      font-weight: bold;
+      position: absolute;
+      left: -10px;
+    }
+    
+    .policy-highlight {
+      background: linear-gradient(135deg, rgba(95, 43, 39, 0.05) 0%, rgba(231, 217, 15, 0.05) 100%);
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 4px solid #5f2b27;
+      margin: 25px 0;
+    }
+    
+    .policy-highlight p {
+      font-style: italic;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 0;
+    }
+    
+    .last-updated {
+      text-align: center;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1rem;
+      color: #777;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      font-style: italic;
+    }
+    
+    /* Footer */
+    footer {
+      background: #556b2f;
+      color: white;
+      padding: 60px 5%;
+      text-align: center;
+      position: relative;
+      margin-top: 40px;
+    }
+    
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+    }
+    
+    .footer-column {
+      flex: 1;
+      min-width: 250px;
+      text-align: left;
+    }
+    
+    footer h3 {
+      font-family: 'Akira Expanded', sans-serif;
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: white;
+    }
+    
+    footer ul {
+      list-style: none;
+      padding: 0;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 16px;
+    }
+    
+    footer ul li {
+      margin-bottom: 12px;
+    }
+    
+    footer a {
+      color: white;
+      text-decoration: none;
+      transition: color 0.3s;
+      display: inline-block;
+    }
+    
+    footer a:hover {
+      color: #FFD700;
+      transform: translateX(5px);
+    }
+    
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .contact-icon {
+      color: white;
+      font-size: 16px;
+      width: 16px;
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+    
+    .contact-text {
+      flex: 1;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 16px;
+      line-height: 1.2;
+      margin: 0;
+    }
+    
+    .footer-social {
+      margin-top: 20px;
+    }
+    
+    .footer-social h4 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: white;
+    }
+    
+    .social-icons {
+      display: flex;
+      gap: 15px;
+      font-size: 20px;
+    }
+    
+    .social-icons a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+    
+    .social-icons a:hover {
+      background: #FFD700;
+      color: #333;
+      transform: translateY(-3px);
+    }
+    
+    .enquiries {
+      margin-top: 20px;
+    }
+    
+    .enquiries h4 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #FFD700;
+    }
+    
+    .enquiries-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .enquiry-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 5px;
+      transition: all 0.3s;
+    }
+    
+    .enquiry-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(5px);
+    }
+    
+    .enquiry-item i {
+      color: #FFD700;
+      font-size: 16px;
+    }
+    
+    .enquiry-item a {
+      color: white;
+      text-decoration: none;
+      font-family: 'Unbounded', sans-serif;
+      font-size: 15px;
+    }
+    
+    .enquiry-item:hover a {
+      color: #FFD700;
+    }
+    
+    .footer-bottom {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      width: 100%;
+    }
+    
+    .footer-bottom p {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 1023px) {
+      .content-wrapper {
+        margin-top: 120px;
+      }
+      
+      nav {
+        padding: 15px 5%;
+      }
+      
+      .logo img {
+        height: 50px;
+      }
+      
+      .page-header {
+        padding: 60px 5%;
+        margin-bottom: 30px;
+        border-radius: 30px;
+      }
+      
+      .page-header h1 {
+        font-size: 2.5rem;
+      }
+      
+      .page-header p {
+        font-size: 1rem;
+      }
+      
+      .content-section {
+        padding: 30px 5%;
+        margin-bottom: 40px;
+        border-radius: 15px;
+      }
+      
+      .content-section h2 {
+        font-size: 2rem;
+      }
+      
+      .content-section h3 {
+        font-size: 1.3rem;
+      }
+      
+      .content-section p,
+      .content-section li {
+        font-size: 1rem;
+      }
+      
+      footer {
+        padding: 40px 5%;
+      }
+      
+      .footer-container {
+        gap: 30px;
+      }
+    }
+    
+    @media (max-width: 767px) {
+      .content-wrapper {
+        margin-top: 100px;
+      }
+      
+      .page-header {
+    padding: 40px 5% !important;
+    margin-bottom: 20px !important;
+    border-radius: 25px !important;
+    min-height: 300px !important;
+  }
+  
+  .rectangle-banner {
+    display: flex !important;
+    position: absolute !important;
+    height: 300px !important;
+    border-radius: 25px !important;
+    padding: 20px !important;
+  }
+  
+  .banner-row {
+    font-size: 70px !important;
+    line-height: 0.7 !important;
+  }
+      
+      nav {
+        padding: 12px 5%;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .mobile-menu-btn {
+        display: block !important;
+      }
+      
+      .logo {
+        position: static !important;
+        transform: none !important;
+        order: 2;
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+      }
+      
+      .logo img {
+        height: 35px !important;
+        margin: 0 auto;
+      }
+      
+      .nav-icons {
+        margin-left: 0 !important;
+        display: flex;
+        align-items: center;
+        gap: 8px !important;
+        order: 3;
+        flex-shrink: 0;
+      }
+      
+      .icon {
+        margin-left: 0 !important;
+        font-size: 18px;
+      }
+      
+      .nav-links {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 80%;
+        height: 100vh;
+        background: white;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 80px 25px 30px;
+        transition: left 0.3s ease;
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+        z-index: 99;
+        overflow-y: auto;
+      }
+      
+      .nav-links.active {
+        left: 0;
+      }
+      
+      .nav-links li {
+        margin: 0 0 15px 0;
+        width: 100%;
+      }
+      
+      .nav-links a {
+        font-size: 14px;
+        padding: 10px 0;
+        display: block;
+        width: 100%;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      
+      .page-header {
+        padding: 40px 5% !important;
+        margin-bottom: 20px !important;
+        border-radius: 25px !important;
+        min-height: 200px !important;
+      }
+      
+      .page-header h1 {
+        font-size: 1.8rem !important;
+        margin-bottom: 10px !important;
+      }
+      
+      .page-header p {
+        font-size: 0.9rem !important;
+        max-width: 90%;
+      }
+      
+      .rectangle-banner {
+        display: none;
+      }
+      
+      .content-section {
+        padding: 20px 5% !important;
+        margin-bottom: 20px !important;
+        border-radius: 15px !important;
+      }
+      
+      .content-section h2 {
+        font-size: 1.5rem !important;
+        margin-bottom: 20px !important;
+      }
+      
+      .content-section h3 {
+        font-size: 1.2rem !important;
+        margin: 20px 0 12px 0;
+      }
+      
+      .content-section p {
+        font-size: 0.95rem !important;
+        line-height: 1.6;
+        margin-bottom: 15px !important;
+      }
+      
+      .content-section li {
+        font-size: 0.95rem !important;
+        line-height: 1.5;
+      }
+      
+      .policy-highlight {
+        padding: 15px;
+      }
+      
+      footer {
+        padding: 30px 5% !important;
+        margin-top: 25px !important;
+      }
+      
+      .footer-container {
+        flex-direction: column;
+        gap: 25px;
+      }
+      
+      .footer-column {
+        min-width: 100%;
+        text-align: center;
+      }
+      
+      .contact-info {
+        align-items: center;
+      }
+      
+      .footer-bottom p {
+        font-size: 12px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .page-header h1 {
+        font-size: 1.5rem !important;
+      }
+      
+      .page-header p {
+        font-size: 0.85rem !important;
+      }
+      
+      .content-section h2 {
+        font-size: 1.3rem !important;
+      }
+      
+      .content-section h3 {
+        font-size: 1.1rem !important;
+      }
+      
+      .content-section p,
+      .content-section li {
+        font-size: 0.9rem !important;
+      }
+      
+      .notification-bar {
+        font-size: 8px !important;
+        padding: 8px 10px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Notification Bar -->
+  <div class="notification-bar" id="notificationBar">
+    <p>Free shipping on all orders over ₹599! Limited time offer.</p>
+  </div>
+
+  <!-- Navigation Bar -->
+  <nav id="navBar">
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="#">Collections</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="logo">
+      <img src="https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119" alt="Logo of Natura Honey brand with stylized text and honeycomb design" />
+    </div>
+    <div class="nav-icons">
+      <div class="icon" id="likeIcon">
+        <i class="far fa-heart" aria-label="Favorites"></i>
+        <span class="badge hidden" id="likeCount">0</span>
+      </div>
+      <div class="icon" id="cartIcon">
+        <i class="fas fa-shopping-cart" aria-label="Shopping cart"></i>
+        <span class="badge hidden" id="cartCount">0</span>
+      </div>
+      <div class="icon" id="whatsappIcon">
+        <i class="fab fa-whatsapp" aria-label="WhatsApp"></i>
+      </div>
+      <div class="icon user-dropdown" id="userIcon">
+        <i class="fas fa-user" aria-label="User account"></i>
+      </div>
+    </div>
+  </nav>
+
+   <!-- Main Content -->
+  <div class="content-wrapper" id="mainContent">
+    <!-- Page Header with Banner Effect -->
+    <div class="page-header">
+      <div class="rectangle-banner" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50px; pointer-events: none; z-index: 1;" aria-hidden="true">
+        <div class="banner-row slide-right" style="font-size:150px;">TERMS OF SERVICE TERMS OF SERVICE TERMS OF SERVICE</div>
+        <div class="banner-row slide-left" style="font-size:150px;">TERMS OF SERVICE TERMS OF SERVICE TERMS OF SERVICE</div>
+        <div class="banner-row slide-right" style="font-size:150px;">TERMS OF SERVICE TERMS OF SERVICE TERMS OF SERVICE</div>
+        <div class="banner-row slide-left" style="font-size:150px;">TERMS OF SERVICE TERMS OF SERVICE TERMS OF SERVICE</div>
+      </div>
+      
+      <h1>Terms of Service</h1>
+      <p>Please read these terms carefully before using our website or purchasing our products.</p>
+    </div>
+    
+    <!-- Terms of Service Content -->
+    <div class="content-section" id="terms-section">
+      <h2>Terms and Conditions</h2>
+      
+      <div class="terms-highlight">
+        <p>These Terms of Service ("Terms") govern your use of the Natura Honey website and services operated by Hexa Apiarium Pvt. Ltd. By accessing or using our website, you agree to be bound by these Terms.</p>
+      </div>
+      
+      <h3>1. Acceptance of Terms</h3>
+      <p>By accessing, browsing, or using the Natura Honey website (the "Site"), you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree to these Terms, please do not use our Site.</p>
+      
+      <h3>2. About Us</h3>
+      <p>Natura Honey is operated by Hexa Apiarium Pvt. Ltd., an Indian Private Limited Company registered under the Companies Act, 1956/2013. Our company registration number and other business details are available upon request.</p>
+      
+      <h3>3. Eligibility</h3>
+      <p>You must be at least 16 years of age to use our Site and services. By using the Site, you represent and warrant that you are of legal age to form a binding contract with the Company.</p>
+      
+      <h3>4. Account Registration</h3>
+      <p>To access certain features, you may need to register an account. You agree to:</p>
+      <ul>
+        <li>Provide accurate, current, and complete information</li>
+        <li>Maintain the security of your password and account</li>
+        <li>Accept responsibility for all activities that occur under your account</li>
+        <li>Notify us immediately of any unauthorized use of your account</li>
+      </ul>
+      
+      <h3>5. Products and Pricing</h3>
+      <h4>5.1 Product Information</h4>
+      <p>We strive to display accurate product descriptions, images, and pricing. However, we cannot guarantee that all information is error-free. We reserve the right to correct any errors and to update product information at any time without prior notice.</p>
+      
+      <h4>5.2 Pricing</h4>
+      <p>All prices are in Indian Rupees (₹) and include applicable taxes unless stated otherwise. Prices are subject to change without notice.</p>
+      
+      <h4>5.3 Availability</h4>
+      <p>All products are subject to availability. We reserve the right to limit quantities and to discontinue products at any time.</p>
+      
+      <h3>6. Orders and Payment</h3>
+      <h4>6.1 Order Acceptance</h4>
+      <p>Your order constitutes an offer to purchase products. We reserve the right to accept or decline your order for any reason, including product availability, errors in product or pricing information, or suspected fraud.</p>
+      
+      <h4>6.2 Payment Terms</h4>
+      <p>Payment must be completed at the time of purchase through our secure payment gateway. We accept various payment methods as displayed during checkout.</p>
+      
+      <h4>6.3 Order Confirmation</h4>
+      <p>You will receive an order confirmation email once your payment is processed. This email confirms we have received your order but does not constitute acceptance of your order.</p>
+      
+      <h3>7. Shipping and Delivery</h3>
+      <h4>7.1 Shipping Methods</h4>
+      <p>We ship through trusted courier partners. Shipping times are estimates and not guaranteed.</p>
+      
+      <h4>7.2 Shipping Charges</h4>
+      <p>Shipping charges are calculated based on weight, destination, and shipping method selected during checkout.</p>
+      
+      <h4>7.3 Delivery Issues</h4>
+      <p>If you experience delivery issues, please contact our customer service within 48 hours of expected delivery.</p>
+      
+      <h3>8. Returns and Refunds</h3>
+      <h4>8.1 Return Policy</h4>
+      <p>Due to the nature of our products (food items), we generally do not accept returns unless the product is damaged, defective, or incorrect. Please refer to our detailed Return Policy for specific conditions.</p>
+      
+      <h4>8.2 Refund Process</h4>
+      <p>Refunds, when applicable, will be processed to the original payment method within 7-14 business days of receiving the returned product or determining eligibility for refund.</p>
+      
+      <h3>9. Intellectual Property</h3>
+      <p>All content on this Site, including text, graphics, logos, images, and software, is the property of Hexa Apiarium Pvt. Ltd. or its content suppliers and is protected by Indian and international copyright laws.</p>
+      
+      <h3>10. User Conduct</h3>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Use the Site for any illegal purpose</li>
+        <li>Attempt to gain unauthorized access to any part of the Site</li>
+        <li>Interfere with the proper working of the Site</li>
+        <li>Use any automated means to access the Site</li>
+        <li>Impersonate any person or entity</li>
+      </ul>
+      
+      <h3>11. Disclaimer of Warranties</h3>
+      <p>The Site and products are provided "as is" and "as available" without any warranties of any kind, either express or implied. We do not warrant that the Site will be uninterrupted or error-free.</p>
+      
+      <div class="legal-note">
+        <p><strong>Note:</strong> While our honey products are 100% natural and pure, individual results and experiences may vary. We recommend consulting with a healthcare professional regarding any health concerns.</p>
+      </div>
+      
+      <h3>12. Limitation of Liability</h3>
+      <p>To the maximum extent permitted by law, Hexa Apiarium Pvt. Ltd. shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Site or products.</p>
+      
+      <h3>13. Indemnification</h3>
+      <p>You agree to indemnify and hold harmless Hexa Apiarium Pvt. Ltd., its officers, directors, employees, and agents from any claims, damages, or expenses arising from your use of the Site or violation of these Terms.</p>
+      
+      <h3>14. Governing Law and Jurisdiction</h3>
+      <p>These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising from these Terms shall be subject to the exclusive jurisdiction of the courts in Kannur, Kerala, India.</p>
+      
+      <h3>15. Changes to Terms</h3>
+      <p>We reserve the right to modify these Terms at any time. Changes will be effective immediately upon posting on the Site. Your continued use of the Site constitutes acceptance of the modified Terms.</p>
+      
+      <h3>16. Contact Information</h3>
+      <p>For questions about these Terms, please contact us:</p>
+      <ul>
+        <li><strong>Email:</strong> hexanatura.info@gmail.com</li>
+        <li><strong>Phone:</strong> +91 6282 904614</li>
+        <li><strong>Address:</strong> Hexa Apiarium Pvt. Ltd., Thalassery, Kannur, Kerala, India</li>
+      </ul>
+      
+      <div class="last-updated">
+        <p><strong>Last Updated:</strong> December 19, 2025</p>
+        <p>These Terms of Service replace all prior versions.</p>
+      </div>
+    </div>
+  </div>
+
+      <div id="footer-placeholder"></div>
+
+  </script>
+</body>
+</html>
