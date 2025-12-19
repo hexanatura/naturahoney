@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <title>Privacy Policy - Natura Honey</title>
+  <title>Terms of Service - Natura Honey</title>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link href="https://fonts.cdnfonts.com/css/akira-expanded" rel="stylesheet" />
@@ -1055,12 +1055,56 @@
     <div class="last-updated">
   <p><strong>Last Updated:</strong> December 19, 2025</p>
   <p>These Privacy Policy replace all prior versions.</p>
-</div>
-</div> 
-</div> 
+      </div>
+    </div>
+  </div>
 
-<div id="footer-placeholder"></div>
+  <!-- Footer Placeholder -->
+  <div id="footer-placeholder"></div>
 
-<script src="common.js"></script>
+  <script>
+    // Scroll behavior for notification bar and navbar
+    let lastScrollTop = 0;
+    const notificationBar = document.getElementById('notificationBar');
+    const navBar = document.getElementById('navBar');
+    
+    window.addEventListener('scroll', function() {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      // Hide notification bar and move navbar up when scrolled down
+      if (scrollTop > 50) {
+        notificationBar.classList.add('hidden');
+        navBar.classList.add('scrolled-up');
+        document.querySelector('.content-wrapper').style.marginTop = '130px';
+      } else {
+        notificationBar.classList.remove('hidden');
+        navBar.classList.remove('scrolled-up');
+        document.querySelector('.content-wrapper').style.marginTop = '165px';
+      }
+      
+      lastScrollTop = scrollTop;
+    }, { passive: true });
+
+    // Load footer dynamically
+    fetch("footer.html")
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Failed to load footer: ${res.status}`);
+        }
+        return res.text();
+      })
+      .then(html => {
+        document.getElementById("footer-placeholder").innerHTML = html;
+        console.log("Footer loaded successfully");
+      })
+      .catch(err => {
+        console.error("Footer load failed:", err);
+        // Fallback footer if fetch fails
+        document.getElementById("footer-placeholder").innerHTML = `
+        `;
+      });
+  </script>
+  
+  <script src="common.js"></script>
 </body>
 </html>
