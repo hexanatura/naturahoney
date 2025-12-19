@@ -4647,6 +4647,409 @@
     .terms-checkbox a:hover {
       color: #7a3731;
     }
+
+    footer {
+            background: #556b2f;
+            color: white;
+            padding: 60px 5%;
+            text-align: center;
+            position: relative;
+            margin-top: 40px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .footer-column {
+            flex: 1;
+            min-width: 250px;
+            text-align: left;
+        }
+
+        footer h3 {
+            font-family: 'Akira Expanded', sans-serif;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        footer ul {
+            list-style: none;
+            padding: 0;
+            font-family: 'Unbounded', sans-serif;
+            font-size: 16px;
+        }
+
+        footer ul li {
+            margin-bottom: 12px;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+            display: inline-block;
+        }
+
+        footer a:hover {
+            color: #FFD700;
+            transform: translateX(5px);
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .contact-icon {
+            color: white;
+            font-size: 16px;
+            width: 16px;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .contact-text {
+            flex: 1;
+            font-family: 'Unbounded', sans-serif;
+            font-size: 16px;
+            line-height: 1.2;
+            margin: 0;
+        }
+
+        .footer-social {
+            margin-top: 20px;
+        }
+
+        .footer-social h4 {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            font-size: 20px;
+        }
+
+        .social-icons a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .social-icons a:hover {
+            background: #FFD700;
+            color: #333;
+            transform: translateY(-3px);
+        }
+
+        .enquiries {
+            margin-top: 20px;
+        }
+
+        .enquiries h4 {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #FFD700;
+        }
+
+        .enquiries-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .enquiry-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .enquiry-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .enquiry-item i {
+            color: #FFD700;
+            font-size: 16px;
+        }
+
+        .enquiry-item a {
+            color: white;
+            text-decoration: none;
+            font-family: 'Unbounded', sans-serif;
+            font-size: 15px;
+        }
+
+        .enquiry-item:hover a {
+            color: #FFD700;
+        }
+
+        .footer-bottom {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+        }
+
+        .footer-bottom p {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Mobile Footer Styles */
+        @media (max-width: 767px) {
+            footer {
+                padding: 30px 5% !important;
+                margin-top: 25px !important;
+            }
+
+            .footer-container {
+                gap: 20px !important;
+            }
+
+            .footer-column {
+                min-width: 100% !important;
+                text-align: left !important;
+            }
+
+            footer h3 {
+                font-size: 16px !important;
+                margin-bottom: 12px !important;
+            }
+
+            footer ul {
+                font-size: 13px !important;
+            }
+
+            footer ul li {
+                margin-bottom: 6px !important;
+            }
+
+            .contact-info {
+                gap: 15px !important;
+                align-items: flex-start !important;
+            }
+
+            .contact-item {
+                gap: 6px !important;
+                justify-content: flex-start !important;
+                align-items: flex-start;
+            }
+
+            .contact-icon {
+                font-size: 12px !important;
+                width: 12px !important;
+                margin-top: 0 !important;
+            }
+
+            .contact-text {
+                font-size: 13px !important;
+                line-height: 1.1 !important;
+                text-align: left !important;
+                margin: 0 !important;
+            }
+
+            .footer-social h4 {
+                font-size: 14px !important;
+                margin-bottom: 10px !important;
+                text-align: left !important;
+            }
+
+            .social-icons {
+                gap: 10px !important;
+                font-size: 16px !important;
+                justify-content: flex-start !important;
+            }
+
+            .social-icons a {
+                width: 32px !important;
+                height: 32px !important;
+            }
+
+            .enquiries h4 {
+                font-size: 14px !important;
+                margin-bottom: 10px !important;
+                text-align: left !important;
+            }
+
+            .enquiries-list {
+                gap: 6px !important;
+            }
+
+            .enquiry-item {
+                padding: 6px 10px !important;
+                gap: 6px !important;
+                justify-content: flex-start !important;
+            }
+
+            .enquiry-item i {
+                font-size: 12px !important;
+            }
+
+            .enquiry-item a {
+                font-size: 12px !important;
+            }
+
+            .footer-bottom {
+                margin-top: 25px !important;
+                padding-top: 12px !important;
+                text-align: left !important;
+            }
+
+            .footer-bottom p {
+                font-size: 11px !important;
+            }
+        }
+
+        /* Tablet Footer Styles */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            footer {
+                padding: 35px 5% !important;
+                margin-top: 30px !important;
+            }
+
+            .footer-container {
+                gap: 25px !important;
+            }
+
+            .footer-column {
+                min-width: 45% !important;
+                text-align: left !important;
+            }
+
+            footer h3 {
+                font-size: 17px !important;
+                margin-bottom: 15px !important;
+            }
+
+            footer ul {
+                font-size: 14px !important;
+            }
+
+            footer ul li {
+                margin-bottom: 8px !important;
+            }
+
+            .contact-info {
+                gap: 8px !important;
+                align-items: flex-start !important;
+            }
+
+            .contact-item {
+                gap: 8px !important;
+                justify-content: flex-start !important;
+                align-items: flex-start;
+            }
+
+            .contact-icon {
+                font-size: 14px !important;
+                width: 14px !important;
+                margin-top: 0 !important;
+            }
+
+            .contact-text {
+                font-size: 14px !important;
+                line-height: 1.15 !important;
+                text-align: left !important;
+                margin: 0 !important;
+            }
+
+            .footer-social h4 {
+                font-size: 15px !important;
+                margin-bottom: 12px !important;
+                text-align: left !important;
+            }
+
+            .social-icons {
+                gap: 12px !important;
+                font-size: 17px !important;
+                justify-content: flex-start !important;
+            }
+
+            .social-icons a {
+                width: 34px !important;
+                height: 34px !important;
+            }
+
+            .enquiries h4 {
+                font-size: 15px !important;
+                margin-bottom: 12px !important;
+                text-align: left !important;
+            }
+
+            .enquiries-list {
+                gap: 8px !important;
+            }
+
+            .enquiry-item {
+                padding: 8px 12px !important;
+                gap: 8px !important;
+                justify-content: flex-start !important;
+            }
+
+            .enquiry-item i {
+                font-size: 13px !important;
+            }
+
+            .enquiry-item a {
+                font-size: 13px !important;
+            }
+
+            .footer-bottom {
+                margin-top: 30px !important;
+                padding-top: 15px !important;
+                text-align: left !important;
+            }
+
+            .footer-bottom p {
+                font-size: 12px !important;
+            }
+        }
+
+        /* Desktop Footer Styles */
+        @media (min-width: 1024px) {
+            .contact-info {
+                gap: 15px;
+            }
+
+            .contact-text {
+                line-height: 1.15;
+            }
+
+            .contact-item {
+                gap: 8px;
+            }
+        }
+    
   </style>
 </head>
 <body>
