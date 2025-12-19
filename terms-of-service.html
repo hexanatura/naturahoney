@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <title>Privacy Policy - Natura Honey</title>
+  <title>Terms of Service - Natura Honey</title>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link href="https://fonts.cdnfonts.com/css/akira-expanded" rel="stylesheet" />
@@ -40,7 +40,7 @@
       font-size: 10px;
       letter-spacing: 1px;
       position: fixed;
-      top: 0px;
+      top: 0;
       left: 0;
       right: 0;
       z-index: 1001;
@@ -50,6 +50,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transform: translateY(0);
     }
     
     .notification-bar::before {
@@ -89,14 +90,14 @@
       right: 0;
       z-index: 1000;
       font-family: 'Nirmala UI', sans-serif;
-      font-weight: 600px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 2px;
       transition: top 0.3s ease;
       flex-direction: row !important;
     }
     
-    .notification-bar.hidden + nav {
+    nav.scrolled-up {
       top: 0;
     }
     
@@ -250,14 +251,6 @@
       justify-content: center;
       gap: 2px;
     }
-
-/* MOBILE */
-@media (max-width: 767px) {
-  .rectangle-banner {
-    top: -30px !important;  
-  }
-}
-
     
     .banner-row {
       font-family: 'Akira Expanded', sans-serif;
@@ -385,182 +378,184 @@
       font-style: italic;
     }
     
-    /* Footer */
+    /* Footer Styles - Added here since footer will be loaded dynamically */
     footer {
-      background: #556b2f;
-      color: white;
-      padding: 60px 5%;
-      text-align: center;
-      position: relative;
-      margin-top: 40px;
+      background: #556b2f !important;
+      color: white !important;
+      padding: 60px 5% !important;
+      text-align: center !important;
+      position: relative !important;
+      margin-top: 40px !important;
+      width: 100% !important;
+      clear: both !important;
     }
-    
+
     .footer-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 40px;
+      max-width: 1200px !important;
+      margin: 0 auto !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      gap: 40px !important;
     }
-    
+
     .footer-column {
-      flex: 1;
-      min-width: 250px;
-      text-align: left;
+      flex: 1 !important;
+      min-width: 250px !important;
+      text-align: left !important;
     }
-    
+
     footer h3 {
-      font-family: 'Akira Expanded', sans-serif;
-      font-size: 24px;
-      margin-bottom: 20px;
-      color: white;
+      font-family: 'Akira Expanded', sans-serif !important;
+      font-size: 24px !important;
+      margin-bottom: 20px !important;
+      color: white !important;
     }
-    
+
     footer ul {
-      list-style: none;
-      padding: 0;
-      font-family: 'Unbounded', sans-serif;
-      font-size: 16px;
+      list-style: none !important;
+      padding: 0 !important;
+      font-family: 'Unbounded', sans-serif !important;
+      font-size: 16px !important;
     }
-    
+
     footer ul li {
-      margin-bottom: 12px;
+      margin-bottom: 12px !important;
     }
-    
+
     footer a {
-      color: white;
-      text-decoration: none;
-      transition: color 0.3s;
-      display: inline-block;
+      color: white !important;
+      text-decoration: none !important;
+      transition: color 0.3s !important;
+      display: inline-block !important;
     }
-    
+
     footer a:hover {
-      color: #FFD700;
-      transform: translateX(5px);
+      color: #FFD700 !important;
+      transform: translateX(5px) !important;
     }
-    
-    .contact-info {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+
+    .footer-contact-info {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 4px !important;
     }
-    
-    .contact-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
+
+    .footer-contact-item {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
     }
-    
-    .contact-icon {
-      color: white;
-      font-size: 16px;
-      width: 16px;
-      margin-top: 1px;
-      flex-shrink: 0;
+
+    .footer-contact-icon {
+      color: white !important;
+      font-size: 16px !important;
+      width: 16px !important;
+      margin-top: 1px !important;
+      flex-shrink: 0 !important;
     }
-    
-    .contact-text {
-      flex: 1;
-      font-family: 'Unbounded', sans-serif;
-      font-size: 16px;
-      line-height: 1.2;
-      margin: 0;
+
+    .footer-contact-text {
+      flex: 1 !important;
+      font-family: 'Unbounded', sans-serif !important;
+      font-size: 16px !important;
+      line-height: 1.2 !important;
+      margin: 0 !important;
     }
-    
+
     .footer-social {
-      margin-top: 20px;
+      margin-top: 20px !important;
     }
-    
+
     .footer-social h4 {
-      font-family: 'Unbounded', sans-serif;
-      font-size: 18px;
-      margin-bottom: 15px;
-      color: white;
+      font-family: 'Unbounded', sans-serif !important;
+      font-size: 18px !important;
+      margin-bottom: 15px !important;
+      color: white !important;
     }
-    
-    .social-icons {
-      display: flex;
-      gap: 15px;
-      font-size: 20px;
+
+    .footer-social-icons {
+      display: flex !important;
+      gap: 15px !important;
+      font-size: 20px !important;
     }
-    
-    .social-icons a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-      transition: all 0.3s;
+
+    .footer-social-icons a {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 40px !important;
+      height: 40px !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-radius: 50% !important;
+      transition: all 0.3s !important;
     }
-    
-    .social-icons a:hover {
-      background: #FFD700;
-      color: #333;
-      transform: translateY(-3px);
+
+    .footer-social-icons a:hover {
+      background: #FFD700 !important;
+      color: #333 !important;
+      transform: translateY(-3px) !important;
     }
-    
-    .enquiries {
-      margin-top: 20px;
+
+    .footer-enquiries {
+      margin-top: 20px !important;
     }
-    
-    .enquiries h4 {
-      font-family: 'Unbounded', sans-serif;
-      font-size: 18px;
-      margin-bottom: 15px;
-      color: #FFD700;
+
+    .footer-enquiries h4 {
+      font-family: 'Unbounded', sans-serif !important;
+      font-size: 18px !important;
+      margin-bottom: 15px !important;
+      color: #FFD700 !important;
     }
-    
-    .enquiries-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+
+    .footer-enquiries-list {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 10px !important;
     }
-    
-    .enquiry-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 15px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 5px;
-      transition: all 0.3s;
+
+    .footer-enquiry-item {
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      padding: 10px 15px !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-radius: 5px !important;
+      transition: all 0.3s !important;
     }
-    
-    .enquiry-item:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateX(5px);
+
+    .footer-enquiry-item:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+      transform: translateX(5px) !important;
     }
-    
-    .enquiry-item i {
-      color: #FFD700;
-      font-size: 16px;
+
+    .footer-enquiry-item i {
+      color: #FFD700 !important;
+      font-size: 16px !important;
     }
-    
-    .enquiry-item a {
-      color: white;
-      text-decoration: none;
-      font-family: 'Unbounded', sans-serif;
-      font-size: 15px;
+
+    .footer-enquiry-item a {
+      color: white !important;
+      text-decoration: none !important;
+      font-family: 'Unbounded', sans-serif !important;
+      font-size: 15px !important;
     }
-    
-    .enquiry-item:hover a {
-      color: #FFD700;
+
+    .footer-enquiry-item:hover a {
+      color: #FFD700 !important;
     }
-    
+
     .footer-bottom {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      width: 100%;
+      margin-top: 40px !important;
+      padding-top: 20px !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+      width: 100% !important;
     }
-    
+
     .footer-bottom p {
-      font-family: 'Unbounded', sans-serif;
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.8);
+      font-family: 'Unbounded', sans-serif !important;
+      font-size: 14px !important;
+      color: rgba(255, 255, 255, 0.8) !important;
     }
     
     /* Mobile Responsive Styles */
@@ -625,24 +620,24 @@
       }
       
       .page-header {
-    padding: 40px 5% !important;
-    margin-bottom: 20px !important;
-    border-radius: 25px !important;
-    min-height: 300px !important;
-  }
-  
-  .rectangle-banner {
-    display: flex !important;
-    position: absolute !important;
-    height: 300px !important;
-    border-radius: 25px !important;
-    padding: 20px !important;
-  }
-  
-  .banner-row {
-    font-size: 70px !important;
-    line-height: 0.7 !important;
-  }
+        padding: 40px 5% !important;
+        margin-bottom: 20px !important;
+        border-radius: 25px !important;
+        min-height: 300px !important;
+      }
+      
+      .rectangle-banner {
+        display: flex !important;
+        position: absolute !important;
+        height: 300px !important;
+        border-radius: 25px !important;
+        padding: 20px !important;
+      }
+      
+      .banner-row {
+        font-size: 70px !important;
+        line-height: 0.7 !important;
+      }
       
       nav {
         padding: 12px 5%;
@@ -861,7 +856,7 @@
     </div>
   </nav>
 
-   <!-- Main Content -->
+  <!-- Main Content -->
   <div class="content-wrapper" id="mainContent">
     <!-- Page Header with Banner Effect -->
     <div class="page-header">
@@ -979,15 +974,59 @@
         <li><strong>Address:</strong> Hexa Apiarium Pvt. Ltd., Thalassery, Kannur, Kerala, India</li>
       </ul>
       
-  <div class="last-updated">
-  <p><strong>Last Updated:</strong> December 19, 2025</p>
-  <p>These Terms of Service replace all prior versions.</p>
-</div>
-</div> 
-</div> 
+      <div class="last-updated">
+        <p><strong>Last Updated:</strong> December 19, 2025</p>
+        <p>These Terms of Service replace all prior versions.</p>
+      </div>
+    </div>
+  </div>
 
-<div id="footer-placeholder"></div>
+  <!-- Footer Placeholder -->
+  <div id="footer-placeholder"></div>
 
-<script src="common.js"></script>
+  <script>
+    // Scroll behavior for notification bar and navbar
+    let lastScrollTop = 0;
+    const notificationBar = document.getElementById('notificationBar');
+    const navBar = document.getElementById('navBar');
+    
+    window.addEventListener('scroll', function() {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      
+      // Hide notification bar and move navbar up when scrolled down
+      if (scrollTop > 50) {
+        notificationBar.classList.add('hidden');
+        navBar.classList.add('scrolled-up');
+        document.querySelector('.content-wrapper').style.marginTop = '130px';
+      } else {
+        notificationBar.classList.remove('hidden');
+        navBar.classList.remove('scrolled-up');
+        document.querySelector('.content-wrapper').style.marginTop = '165px';
+      }
+      
+      lastScrollTop = scrollTop;
+    }, { passive: true });
+
+    // Load footer dynamically
+    fetch("footer.html")
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Failed to load footer: ${res.status}`);
+        }
+        return res.text();
+      })
+      .then(html => {
+        document.getElementById("footer-placeholder").innerHTML = html;
+        console.log("Footer loaded successfully");
+      })
+      .catch(err => {
+        console.error("Footer load failed:", err);
+        // Fallback footer if fetch fails
+        document.getElementById("footer-placeholder").innerHTML = `
+        `;
+      });
+  </script>
+  
+  <script src="common.js"></script>
 </body>
 </html>
