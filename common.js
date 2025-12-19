@@ -717,6 +717,13 @@ function searchAllOrders(searchTerm) {
         });
 }
 
+  fetch("footer.html")
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById("footer-placeholder").innerHTML = html;
+    })
+    .catch(err => console.error("Footer load failed", err));
+
 function displayOrderTrackingData(orderData) {
     if (!orderData) {
         showTrackingError("No order data available");
@@ -2430,6 +2437,7 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
 
 
 
