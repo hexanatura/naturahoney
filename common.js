@@ -2343,17 +2343,83 @@ function initCommon() {
         EditProfile();
     
     
-    const profileCloseBtn = document.getElementById('profileCloseBtn');
-    if (profileCloseBtn) {
-        profileCloseBtn.addEventListener('click', () => {
+        // Profile close button - Use event delegation instead
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'profileCloseBtn') {
             const profilePage = document.getElementById('profilePage');
             const mainContent = document.getElementById('mainContent');
             if (profilePage && mainContent) {
                 profilePage.classList.remove('active');
                 mainContent.style.display = 'block';
+                window.scrollTo(0, 0);
             }
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        // Also check if the click is on the close icon inside the button
+        if (e.target && e.target.closest && e.target.closest('#profileCloseBtn')) {
+            const profilePage = document.getElementById('profilePage');
+            const mainContent = document.getElementById('mainContent');
+            if (profilePage && mainContent) {
+                profilePage.classList.remove('active');
+                mainContent.style.display = 'block';
+                window.scrollTo(0, 0);
+            }
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+    
+    function loadProfile() {
+    const profilePlaceholder = document.getElementById('profile-placeholder');
+    if (profilePlaceholder) {
+        fetch("profile.html")
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.text();
+            })
+            .then(html => {
+                profilePlaceholder.innerHTML = html;
+                console.log('Profile loaded successfully');
+                
+                // Setup profile close button AFTER profile is loaded
+                setupProfileCloseButton();
+            })
+            .catch(err => {
+                console.error("Profile load failed", err);
+                profilePlaceholder.innerHTML = ``;
+            });
+    }
+}
+
+
+function setupProfileCloseButton() {
+    const profileCloseBtn = document.getElementById('profileCloseBtn');
+    if (profileCloseBtn) {
+        console.log('Setting up profile close button');
+        
+        // Remove any existing event listeners first
+        const newProfileCloseBtn = profileCloseBtn.cloneNode(true);
+        profileCloseBtn.parentNode.replaceChild(newProfileCloseBtn, profileCloseBtn);
+        
+        // Add fresh event listener
+        newProfileCloseBtn.addEventListener('click', function(e) {
+            console.log('Profile close button clicked');
+            const profilePage = document.getElementById('profilePage');
+            const mainContent = document.getElementById('mainContent');
+            if (profilePage && mainContent) {
+                profilePage.classList.remove('active');
+                mainContent.style.display = 'block';
+                window.scrollTo(0, 0);
+            }
+            e.preventDefault();
+            e.stopPropagation();
         });
     }
+}
     
     const orderTrackingCloseBtn = document.getElementById('orderTrackingCloseBtn');
     if (orderTrackingCloseBtn) {
