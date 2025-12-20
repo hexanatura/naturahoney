@@ -161,7 +161,7 @@ auth.onAuthStateChanged((user) => {
 });
 
 // Edit Profile Functionality
-function initEditProfile() {
+function EditProfile() {
     // Check if edit profile button exists
     const editProfileBtn = document.getElementById('edit-profile-btn');
     if (!editProfileBtn) return;
@@ -2332,6 +2332,7 @@ window.addEventListener('scroll', () => {
 function initCommon() {
     loadGuestData();
     initOrderTracking();
+    loadFooter();
     
     const profileCloseBtn = document.getElementById('profileCloseBtn');
     if (profileCloseBtn) {
@@ -2453,6 +2454,7 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
 
 
 
