@@ -11,10 +11,6 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-  
   <style>
     * {
       margin: 0;
@@ -1064,52 +1060,12 @@
 
   <!-- Footer Placeholder -->
   <div id="footer-placeholder"></div>
-
-  <script>
-    // Scroll behavior for notification bar and navbar
-    let lastScrollTop = 0;
-    const notificationBar = document.getElementById('notificationBar');
-    const navBar = document.getElementById('navBar');
-    
-    window.addEventListener('scroll', function() {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      
-      // Hide notification bar and move navbar up when scrolled down
-      if (scrollTop > 50) {
-        notificationBar.classList.add('hidden');
-        navBar.classList.add('scrolled-up');
-        document.querySelector('.content-wrapper').style.marginTop = '130px';
-      } else {
-        notificationBar.classList.remove('hidden');
-        navBar.classList.remove('scrolled-up');
-        document.querySelector('.content-wrapper').style.marginTop = '165px';
-      }
-      
-      lastScrollTop = scrollTop;
-    }, { passive: true });
-
-    // Load footer dynamically
-    fetch("footer.html")
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`Failed to load footer: ${res.status}`);
-        }
-        return res.text();
-      })
-      .then(html => {
-        document.getElementById("footer-placeholder").innerHTML = html;
-        console.log("Footer loaded successfully");
-      })
-      .catch(err => {
-        console.error("Footer load failed:", err);
-        // Fallback footer if fetch fails
-        document.getElementById("footer-placeholder").innerHTML = `
-        `;
-      });
-  </script>
   
-  <script src="common.js"></script>
-      <script src="privacy.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js"></script>
+<script src="common.js"></script>
+<script src="terms.js"></script>
 
 </body>
 </html>
