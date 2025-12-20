@@ -166,6 +166,11 @@ function EditProfile() {
     const editProfileBtn = document.getElementById('edit-profile-btn');
     if (!editProfileBtn) return;
     
+    // Check if modal already exists to avoid duplicates
+    if (document.getElementById('editProfileModal')) {
+        return;
+    }
+    
     // Create the edit profile modal dynamically
     const modal = document.createElement('div');
     modal.id = 'editProfileModal';
@@ -1027,6 +1032,7 @@ function updateUIForGuest() {
 
 function loadUserProfileData(userId) {
     loadUserAddresses(userId);
+    EditProfile();
 
     const ordersContainer = document.getElementById('orders-container');
     if (ordersContainer) {
@@ -2334,6 +2340,8 @@ function initCommon() {
     initOrderTracking();
     loadFooter();
     loadProfile();
+        EditProfile();
+    
     
     const profileCloseBtn = document.getElementById('profileCloseBtn');
     if (profileCloseBtn) {
@@ -2398,7 +2406,6 @@ function initCommon() {
 
 document.addEventListener('DOMContentLoaded', function() {
     initCommon();
-    initEditProfile();
 });
 
 function listAllUserOrders() {
