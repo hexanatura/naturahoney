@@ -3781,17 +3781,22 @@ function loadDashboardRecentOrders() {
                 
                 const total = Number(o.total || 0).toFixed(2);
                 const status = (o.status || "pending").toLowerCase();
+                
                 // Format the label properly
                 let label = status.charAt(0).toUpperCase() + status.slice(1);
                 label = label.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 label = label.replace(/-/g, ' ');
-label = label.replace(/\b\w/g, l => l.toUpperCase());
+                label = label.replace(/\b\w/g, l => l.toUpperCase());
 
+                // Use the orderNumber field from Firestore document
+                // If orderNumber doesn't exist, fall back to Firebase ID
+                const orderNum = o.orderNumber || o.orderNo || o.order_id || `#${doc.id.substring(0, 8)}`;
+                
                 div.innerHTML = `
                     <div class="order-info">
                         <div class="order-icon"><i class="fas fa-shopping-bag"></i></div>
                         <div class="order-details">
-                            <div class="order-id">#${doc.id.substring(0, 8)}</div>
+                            <div class="order-id">${orderNum}</div>
                             <div class="order-amount">₹${total}</div>
                         </div>
                     </div>
@@ -3840,7 +3845,6 @@ label = label.replace(/\b\w/g, l => l.toUpperCase());
             renderDashboardEmptyOrders(list);
         });
 }
-
 function openDashboardOrderModal(orderId, orderData = null) {
     // First, navigate to Orders page
     const menuItems = document.querySelectorAll('.menu-item');
