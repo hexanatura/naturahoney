@@ -740,29 +740,6 @@ function loadFooter() {
     }
 }
 
-function loadProfile() {
-    const profilePlaceholder = document.getElementById('profile-placeholder');
-    if (profilePlaceholder) {
-        fetch("profile.html")
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-                return res.text();
-            })
-            .then(html => {
-                profilePlaceholder.innerHTML = html;
-                console.log('Profile loaded successfully');
-            })
-            .catch(err => {
-                console.error("Profile load failed", err);
-                // Create a simple fallback profile
-                profilePlaceholder.innerHTML = ``;
-            });
-    }
-}
-
-
 function displayOrderTrackingData(orderData) {
     if (!orderData) {
         showTrackingError("No order data available");
@@ -2478,4 +2455,3 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
-
