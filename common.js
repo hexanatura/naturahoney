@@ -735,16 +735,6 @@ function loadFooter() {
                 console.error("Footer load failed", err);
                 // Create a simple fallback footer
                 footerPlaceholder.innerHTML = `
-                    <footer style="background: #556b2f; color: white; padding: 40px 5%; text-align: center;">
-                        <div style="max-width: 1200px; margin: 0 auto;">
-                            <p style="font-family: 'Unbounded', sans-serif; font-size: 24px; margin-bottom: 20px;">
-                                Natura Honey
-                            </p>
-                            <p style="margin-bottom: 10px;">&copy; ${new Date().getFullYear()} Natura Honey. All rights reserved.</p>
-                            <p style="margin-bottom: 20px;">Contact: hexanatura.info@gmail.com | +91 6282 904614</p>
-                            <p style="font-size: 14px; opacity: 0.8;">Thalassery, Kannur, Kerala, India</p>
-                        </div>
-                    </footer>
                 `;
             });
     }
@@ -2463,6 +2453,7 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
 
 
 
