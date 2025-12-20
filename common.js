@@ -31,7 +31,7 @@ const products = [
         name: "Natura Agmark Honey", 
         price: 249, 
         weight: "1Kg",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_gyalrfgyalrfgyal.jpg?updatedAt=1757217705022",
+        image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20500g?updatedAt=1766222498725",
         category: "crystal"
     },
     { 
@@ -39,7 +39,7 @@ const products = [
         name: "Natura Agmark Honey", 
         price: 449, 
         weight: "500g",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo.jpg?updatedAt=1757217705026",
+        image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%201kg?updatedAt=1766222517443",
         category: "crystal"
     },
     { 
@@ -47,7 +47,7 @@ const products = [
         name: "Natura Agmark Honey", 
         price: 149, 
         weight: "100g",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_imbwdcimbwdcimbw.jpg?updatedAt=1757217705115",
+        image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20100g?updatedAt=1766222470748",
         category: "crystal"
     },
     { 
@@ -55,7 +55,7 @@ const products = [
         name: "Natura Agmark Honey", 
         price: 349, 
         weight: "50g",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_i8jo3di8jo3di8jo4.jpg?updatedAt=1757217704864",
+        image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%2050g?updatedAt=1766222568792",
         category: "crystal"
     },
     { 
@@ -63,15 +63,15 @@ const products = [
         name: "Natura Agmark Honey", 
         price: 199, 
         weight: "1Kg",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_84o9o484o9o484o9.jpg?updatedAt=1757217704894",
+        image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%201kg%20pet?updatedAt=1766222544459",
         category: "premium"
     },
     { 
         id: 6, 
-        name: "Natura Agmark Honey - Premium Pet", 
+        name: "Natura Agmark Honey", 
         price: 329, 
         weight: "500g",
-        image: "https://ik.imagekit.io/hexaanatura/Gemini_Generated_Image_cbat36cbat36cbat.jpg?updatedAt=1757217704908",
+        image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20500g%20pet?updatedAt=1766223840598",
         category: "premium"
     }
 ];
