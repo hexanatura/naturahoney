@@ -717,12 +717,38 @@ function searchAllOrders(searchTerm) {
         });
 }
 
-  fetch("footer.html")
-    .then(res => res.text())
-    .then(html => {
-      document.getElementById("footer-placeholder").innerHTML = html;
-    })
-    .catch(err => console.error("Footer load failed", err));
+function loadFooter() {
+    const footerPlaceholder = document.getElementById('footer-placeholder');
+    if (footerPlaceholder) {
+        fetch("footer.html")
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.text();
+            })
+            .then(html => {
+                footerPlaceholder.innerHTML = html;
+                console.log('Footer loaded successfully');
+            })
+            .catch(err => {
+                console.error("Footer load failed", err);
+                // Create a simple fallback footer
+                footerPlaceholder.innerHTML = `
+                    <footer style="background: #556b2f; color: white; padding: 40px 5%; text-align: center;">
+                        <div style="max-width: 1200px; margin: 0 auto;">
+                            <p style="font-family: 'Unbounded', sans-serif; font-size: 24px; margin-bottom: 20px;">
+                                Natura Honey
+                            </p>
+                            <p style="margin-bottom: 10px;">&copy; ${new Date().getFullYear()} Natura Honey. All rights reserved.</p>
+                            <p style="margin-bottom: 20px;">Contact: hexanatura.info@gmail.com | +91 6282 904614</p>
+                            <p style="font-size: 14px; opacity: 0.8;">Thalassery, Kannur, Kerala, India</p>
+                        </div>
+                    </footer>
+                `;
+            });
+    }
+}
 
 function displayOrderTrackingData(orderData) {
     if (!orderData) {
@@ -2437,6 +2463,7 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
 
 
 
