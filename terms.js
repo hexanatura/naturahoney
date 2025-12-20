@@ -20,7 +20,6 @@
       lastScrollTop = scrollTop;
     }, { passive: true });
 
-// terms.js - Standalone version for Terms of Service page
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Terms page loaded');
     
@@ -105,38 +104,3 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { passive: true });
     }
 });
-
-function loadFooter() {
-    const footerPlaceholder = document.getElementById('footer-placeholder');
-    if (footerPlaceholder) {
-        fetch("footer.html")
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-                return res.text();
-            })
-            .then(html => {
-                footerPlaceholder.innerHTML = html;
-                console.log('Footer loaded successfully');
-            })
-            .catch(err => {
-                console.error("Footer load failed", err);
-                // Create a simple fallback footer
-                footerPlaceholder.innerHTML = `
-                    <footer style="background: #556b2f; color: white; padding: 40px 5%; text-align: center;">
-                        <div style="max-width: 1200px; margin: 0 auto;">
-                            <p style="font-family: 'Akira Expanded', sans-serif; font-size: 24px; margin-bottom: 20px;">
-                                Natura Honey
-                            </p>
-                            <p style="margin-bottom: 10px; font-family: 'Unbounded', sans-serif;">&copy; ${new Date().getFullYear()} Natura Honey. All rights reserved.</p>
-                            <p style="margin-bottom: 20px; font-family: 'Unbounded', sans-serif;">Contact: hexanatura.info@gmail.com | +91 6282 904614</p>
-                            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
-                                <p style="font-size: 14px; opacity: 0.8;">Thalassery, Kannur, Kerala, India</p>
-                            </div>
-                        </div>
-                    </footer>
-                `;
-            });
-    }
-}
