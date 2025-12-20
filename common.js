@@ -1985,28 +1985,65 @@ googleLoginBtn.addEventListener('click', () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         
         auth.signInWithPopup(provider)
-    .then(async (result) => {
-    const user = result.user;
-
-    await db.collection("users").doc(user.uid).set({
-        displayName: user.displayName,
-        email: user.email,
-        phone: user.phoneNumber || null,
-        lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-})
-
-            .then(() => {
-                closeAllSidebars();
-                overlay.classList.remove('active');
-                document.body.style.overflow = 'auto';
-                alert('Google login successful!');
+            .then(async (result) => {
+                const user = result.user;
+                
+                // CRITICAL FIX: Use merge: true to avoid permission issues
+                const userRef = db.collection("users").doc(user.uid);
+                
+                try {
+                    // First check if user document exists
+                    const userDoc = await userRef.get();
+                    
+                    if (!userDoc.exists()) {
+                        // Document doesn't exist - CREATE it with all required fields
+                        await userRef.set({
+                            displayName: user.displayName,
+                            email: user.email,
+                            phone: user.phoneNumber || null,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log("New user document created");
+                    } else {
+                        // Document exists - UPDATE it with merge: true
+                        await userRef.set({
+                            displayName: user.displayName,
+                            email: user.email,
+                            lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                        console.log("Existing user document updated");
+                    }
+                    
+                    // Close modal and show success
+                    closeAllSidebars();
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                    
+                    // Show success without alert to avoid popup blocking
+                    showNotification('Google login successful!', 'success');
+                    
+                } catch (error) {
+                    console.error("Error with user document:", error);
+                    
+                    // Even if Firestore fails, continue with auth success
+                    closeAllSidebars();
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                    
+                    showNotification('Signed in with Google!', 'success');
+                }
             })
             .catch((error) => {
                 console.error("Error with Google login:", error);
+                
+                // More specific error messages
                 if (error.code === 'auth/operation-not-supported-in-this-environment') {
                     alert('Google login is not supported in this environment. Please use email/password login instead.');
+                } else if (error.code === 'auth/popup-blocked') {
+                    alert('Popup was blocked by your browser. Please allow popups for this site.');
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    // User cancelled, no need to show error
                 } else {
                     alert('Error with Google login: ' + error.message);
                 }
