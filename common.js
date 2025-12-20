@@ -1988,7 +1988,7 @@ googleLoginBtn.addEventListener('click', () => {
             .then(async (result) => {
                 const user = result.user;
                 
-                // CRITICAL FIX: Use merge: true to avoid permission issues
+                // Use merge: true to avoid permission issues
                 const userRef = db.collection("users").doc(user.uid);
                 
                 try {
@@ -1996,7 +1996,7 @@ googleLoginBtn.addEventListener('click', () => {
                     const userDoc = await userRef.get();
                     
                     if (!userDoc.exists()) {
-                        // Document doesn't exist - CREATE it with all required fields
+                        // Document doesn't exist - CREATE it
                         await userRef.set({
                             displayName: user.displayName,
                             email: user.email,
@@ -2006,7 +2006,7 @@ googleLoginBtn.addEventListener('click', () => {
                         });
                         console.log("New user document created");
                     } else {
-                        // Document exists - UPDATE it with merge: true
+                        // Document exists - UPDATE it
                         await userRef.set({
                             displayName: user.displayName,
                             email: user.email,
@@ -2015,13 +2015,13 @@ googleLoginBtn.addEventListener('click', () => {
                         console.log("Existing user document updated");
                     }
                     
-                    // Close modal and show success
+                    // Close modal
                     closeAllSidebars();
                     overlay.classList.remove('active');
                     document.body.style.overflow = 'auto';
                     
-                    // Show success without alert to avoid popup blocking
-                    showNotification('Google login successful!', 'success');
+                    // Show success message
+                    alert('Google login successful!');
                     
                 } catch (error) {
                     console.error("Error with user document:", error);
@@ -2031,13 +2031,12 @@ googleLoginBtn.addEventListener('click', () => {
                     overlay.classList.remove('active');
                     document.body.style.overflow = 'auto';
                     
-                    showNotification('Signed in with Google!', 'success');
+                    alert('Signed in with Google!');
                 }
             })
             .catch((error) => {
                 console.error("Error with Google login:", error);
                 
-                // More specific error messages
                 if (error.code === 'auth/operation-not-supported-in-this-environment') {
                     alert('Google login is not supported in this environment. Please use email/password login instead.');
                 } else if (error.code === 'auth/popup-blocked') {
