@@ -1,5 +1,3 @@
-
-
 const mainContent = document.getElementById('mainContent');
 const profilePage = document.getElementById('profilePage');
 const profileCloseBtn = document.getElementById('profileCloseBtn');
@@ -661,3 +659,4 @@ function initIndexPage() {
 document.addEventListener('DOMContentLoaded', function() {
     initIndexPage();
 });
+
