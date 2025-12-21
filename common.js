@@ -899,7 +899,7 @@ function updateOrderDetails(orderData) {
     
     const shipping = orderData.shipping || orderData.shippingCost || 0;
     if (shippingElement) {
-        shippingElement.textContent = `₹${parseFloat(shipping).toFixed(2)}`;
+        shippingElement.textContent = `FREE`;
     }
     
     const total = (orderData.total !== undefined && orderData.total !== null) 
@@ -2564,3 +2564,4 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
