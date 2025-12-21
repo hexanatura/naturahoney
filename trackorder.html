@@ -35,6 +35,752 @@
       overflow-x: hidden;
     } 
     
+    /* TRACK ORDER PAGE SPECIFIC STYLES - Updated to match profile timeline */
+
+/* Main container */
+.track-order-page {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.track-order-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.track-order-header h1 {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: 2.5rem;
+  color: #5f2b27;
+  margin-bottom: 10px;
+}
+
+.track-order-header p {
+  color: #666;
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Order input section */
+.order-input-section {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 40px;
+}
+
+.input-group {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 15px 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #5f2b27;
+}
+
+.btn-track {
+  background: #5f2b27;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-track:hover {
+  background: #7a3731;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(95, 43, 39, 0.2);
+}
+
+/* Order status section */
+.order-status-section {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 40px;
+  display: none;
+}
+
+.order-status-section.active {
+  display: block;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.order-info-left {
+  flex: 1;
+  min-width: 300px;
+}
+
+.order-id-display {
+  font-family: 'Akira Expanded', sans-serif;
+  font-size: 1.8rem;
+  color: #5f2b27;
+  margin-bottom: 10px;
+}
+
+.order-date-display {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.customer-info {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 4px solid #5f2b27;
+}
+
+.customer-info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.customer-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.customer-info-row i {
+  color: #5f2b27;
+  width: 20px;
+  text-align: center;
+}
+
+.order-info-right {
+  min-width: 200px;
+}
+
+.order-status-right {
+  text-align: right;
+}
+
+.status-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Status badge colors */
+.status-badge.placed { background: #fff3cd; color: #856404; }
+.status-badge.confirmed { background: #d1ecf1; color: #0c5460; }
+.status-badge.processing { background: #cce5ff; color: #004085; }
+.status-badge.shipped { background: #d4edda; color: #155724; }
+.status-badge.out-for-delivery { background: #e0f2fe; color: #0c4a6e; }
+.status-badge.delivered { background: #d4edda; color: #155724; }
+.status-badge.cancelled { background: #f8d7da; color: #721c24; }
+
+/* Timeline styles matching profile */
+.order-timeline-wrapper {
+  margin: 40px 0;
+  position: relative;
+}
+
+.order-timeline {
+  position: relative;
+  padding: 20px 0;
+}
+
+/* Horizontal timeline for desktop */
+.timeline-horizontal {
+  display: none;
+}
+
+.timeline-progress {
+  position: absolute;
+  top: 30px;
+  left: 100px;
+  right: 100px;
+  height: 3px;
+  background: #e0e0e0;
+  z-index: 1;
+}
+
+.timeline-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #5f2b27;
+  width: 0%;
+  transition: width 0.8s ease;
+  z-index: 2;
+}
+
+.timeline-steps {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 3;
+  margin: 0 -10px;
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  padding: 0 10px;
+}
+
+.timeline-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #999;
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 3;
+}
+
+.timeline-step-content {
+  text-align: center;
+  padding: 0 5px;
+}
+
+.timeline-step-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #999;
+  margin-bottom: 4px;
+  transition: color 0.3s ease;
+}
+
+.timeline-step-date {
+  font-size: 10px;
+  color: #999;
+  transition: color 0.3s ease;
+}
+
+/* Step states */
+.timeline-step.completed .timeline-step-circle {
+  background: #5f2b27;
+  border-color: #5f2b27;
+  color: white;
+  transform: scale(1.05);
+}
+
+.timeline-step.completed .timeline-step-label,
+.timeline-step.completed .timeline-step-date {
+  color: #5f2b27;
+  font-weight: 600;
+}
+
+.timeline-step.active .timeline-step-circle {
+  background: white;
+  border-color: #5f2b27;
+  color: #5f2b27;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(95, 43, 39, 0.15);
+}
+
+.timeline-step.active .timeline-step-label,
+.timeline-step.active .timeline-step-date {
+  color: #5f2b27;
+  font-weight: 700;
+}
+
+.timeline-step.cancelled .timeline-step-circle {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.timeline-step.cancelled .timeline-step-label,
+.timeline-step.cancelled .timeline-step-date {
+  color: #dc3545;
+}
+
+/* Vertical timeline for mobile */
+.timeline-vertical {
+  display: none;
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-vertical-line {
+  position: absolute;
+  left: 35px;
+  top: 30px;
+  bottom: 15px;
+  width: 2px;
+  background: #e0e0e0;
+  z-index: 1;
+}
+
+.timeline-vertical-fill {
+  position: absolute;
+  left: 35px;
+  top: 20px;
+  width: 2px;
+  background: #5f2b27;
+  height: 0%;
+  transition: height 0.8s ease;
+  z-index: 2;
+}
+
+.timeline-step-vertical {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  position: relative;
+}
+
+.timeline-step-vertical:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-step-circle-vertical {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #999;
+  transition: all 0.4s ease;
+  position: relative;
+  left: -8px;
+  z-index: 3;
+  flex-shrink: 0;
+}
+
+.timeline-step-content-vertical {
+  margin-left: 15px;
+  padding-top: 3px;
+}
+
+.timeline-step-label-vertical {
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+  margin-bottom: 4px;
+  transition: color 0.3s ease;
+}
+
+.timeline-step-date-vertical {
+  font-size: 12px;
+  color: #999;
+  transition: color 0.3s ease;
+}
+
+/* Mobile step states */
+.timeline-step-vertical.completed .timeline-step-circle-vertical {
+  background: #5f2b27;
+  border-color: #5f2b27;
+  color: white;
+  transform: scale(1.05);
+}
+
+.timeline-step-vertical.completed .timeline-step-label-vertical,
+.timeline-step-vertical.completed .timeline-step-date-vertical {
+  color: #5f2b27;
+  font-weight: 600;
+}
+
+.timeline-step-vertical.active .timeline-step-circle-vertical {
+  background: white;
+  border-color: #5f2b27;
+  color: #5f2b27;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(95, 43, 39, 0.15);
+}
+
+.timeline-step-vertical.active .timeline-step-label-vertical,
+.timeline-step-vertical.active .timeline-step-date-vertical {
+  color: #5f2b27;
+  font-weight: 700;
+}
+
+.timeline-step-vertical.cancelled .timeline-step-circle-vertical {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.timeline-step-vertical.cancelled .timeline-step-label-vertical,
+.timeline-step-vertical.cancelled .timeline-step-date-vertical {
+  color: #dc3545;
+}
+
+/* Order items section */
+.order-items-section {
+  margin-top: 40px;
+}
+
+.order-items-section h3 {
+  font-size: 1.3rem;
+  color: #5f2b27;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.order-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  gap: 15px;
+  transition: all 0.3s;
+}
+
+.order-item:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.item-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #e0e0e0;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 16px;
+}
+
+.item-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 14px;
+  color: #666;
+}
+
+.item-price {
+  font-weight: 700;
+  color: #5f2b27;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.order-summary {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.summary-row.total {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 2px solid #ddd;
+  font-weight: 700;
+  font-size: 18px;
+  color: #5f2b27;
+}
+
+/* Error and loading states */
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.error-message.active {
+  display: flex;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  display: none;
+}
+
+.loading.active {
+  display: block;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #5f2b27;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  display: none;
+}
+
+.empty-state.active {
+  display: block;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #e0e0e0;
+  margin-bottom: 20px;
+}
+
+/* Order actions */
+.order-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+  justify-content: center;
+}
+
+.btn-action {
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: #5f2b27;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #7a3731;
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background: white;
+  color: #5f2b27;
+  border: 2px solid #5f2b27;
+}
+
+.btn-outline:hover {
+  background: #5f2b27;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (min-width: 769px) {
+  .timeline-horizontal {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .timeline-vertical {
+    display: block;
+  }
+  
+  .track-order-page {
+    margin: 20px auto;
+    padding: 0 15px;
+  }
+
+  .track-order-header h1 {
+    font-size: 2rem;
+  }
+
+  .order-input-section {
+    padding: 20px;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+
+  .order-header {
+    flex-direction: column;
+  }
+
+  .order-info-right {
+    text-align: left;
+    width: 100%;
+  }
+
+  .order-status-right {
+    text-align: left;
+  }
+
+  .order-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .item-details {
+    width: 100%;
+  }
+
+  .item-meta {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .order-actions {
+    flex-direction: column;
+  }
+
+  .btn-action {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .track-order-page {
+    padding: 0 10px;
+  }
+  
+  .order-input-section,
+  .order-status-section {
+    padding: 15px;
+  }
+  
+  .order-header {
+    gap: 15px;
+  }
+  
+  .order-id-display {
+    font-size: 1.4rem;
+  }
+  
+  .order-date-display {
+    font-size: 0.9rem;
+  }
+  
+  .customer-info-row {
+    font-size: 0.9rem;
+  }
+  
+  .order-items-section h3 {
+    font-size: 1.1rem;
+  }
+  
+  .item-name {
+    font-size: 14px;
+  }
+  
+  .item-meta {
+    font-size: 12px;
+  }
+  
+  .item-price {
+    font-size: 14px;
+  }
+  
+  .summary-row {
+    font-size: 14px;
+  }
+  
+  .summary-row.total {
+    font-size: 16px;
+  }
+}
+
+    
 .timeline-container {
   position: relative;
   padding: 40px 20px 20px;
@@ -5806,212 +6552,44 @@
         <div class="banner-row slide-left" style="font-size:150px;">TRACK YOUR ORDER</div>
       </div>
       
-      <h1>Track Your Order</h1>
-      <p>Enter your order number and email to check your order status</p>
+    <h1>Track Your Order</h1>
+    <p>Enter your order ID and email to track the status of your order in real-time</p>
+  </div>
+  
+  <div class="track-order-page">
+
+
+  <div class="order-input-section">
+    <div class="input-group">
+      <input type="text" id="orderId" placeholder="Enter Order ID (e.g., ORD-123456)" required>
+      <input type="email" id="orderEmail" placeholder="Enter your email address" required>
+      <button class="btn-track" id="trackBtn">
+        <i class="fas fa-search"></i> Track Order
+      </button>
     </div>
-    
-    <div class="track-order-container">
-
-    <div class="order-input-section">
-      <div class="input-group">
-        <input type="text" id="orderIdInput" placeholder="Enter Order Number (e.g., NA-00123)">
-        <input type="email" id="orderEmailInput" placeholder="Enter Email Address">
-        <button class="btn-track" id="trackOrderBtn">
-          <i class="fas fa-search"></i> Track Order
-        </button>
-      </div>
-      <div class="error-message" id="errorMessage">
-        <i class="fas fa-exclamation-circle"></i>
-        <span id="errorText">Order not found. Please check your details.</span>
-      </div>
-    </div>
-
-    <div class="loading" id="loadingState">
-      <div class="spinner"></div>
-      <p>Loading order details...</p>
-    </div>
-
-    <div class="empty-state" id="emptyState">
-      <div class="empty-icon">
-        <i class="fas fa-box-open"></i>
-      </div>
-      <h3>Track Your Order</h3>
-      <p>Enter your order number and email above to view order status</p>
-    </div>
-
-    <div class="order-status-section" id="orderStatusSection">
-      <div class="order-header-simple">
-        <div class="order-info-left">
-          <div class="order-id-display" id="displayOrderId">Order #NA-00123</div>
-          <div class="order-date-display" id="displayOrderDate">Order Date: December 19, 2025</div>
-          
-          <div class="customer-info-simple">
-            <div class="customer-info-row">
-              <i class="fas fa-user"></i>
-              <span id="customerName">Customer: Loading...</span>
-            </div>
-            <div class="customer-info-row">
-              <i class="fas fa-envelope"></i>
-              <span id="customerEmail">Email: Loading...</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="order-info-right">
-          <div class="order-status-right">
-            <div class="status-label">Current Status</div>
-            <div class="status-badge-simple placed" id="orderStatusBadge">Order Placed</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="status-timeline-simple">
-        <!-- Desktop Timeline -->
-        <div class="timeline-container timeline-desktop">
-          <div class="timeline-progress-bar">
-            <div class="timeline-progress-fill" id="desktopProgressFill"></div>
-          </div>
-          
-          <div class="timeline-steps">
-            <div class="timeline-step completed" id="desktopStepOrdered">
-              <div class="step-indicator">
-                <i class="fas fa-shopping-cart"></i>
-              </div>
-              <div class="step-content">
-                <div class="step-label">Ordered</div>
-                <div class="step-date" id="desktopStepOrderedDate">Dec 19</div>
-              </div>
-            </div>
-
-            <div class="timeline-step" id="desktopStepConfirmed">
-              <div class="step-indicator">
-                <i class="fas fa-check-circle"></i>
-              </div>
-              <div class="step-content">
-                <div class="step-label">Confirmed</div>
-                <div class="step-date" id="desktopStepConfirmedDate">-</div>
-              </div>
-            </div>
-
-            <div class="timeline-step" id="desktopStepShipped">
-              <div class="step-indicator">
-                <i class="fas fa-shipping-fast"></i>
-              </div>
-              <div class="step-content">
-                <div class="step-label">Shipped</div>
-                <div class="step-date" id="desktopStepShippedDate">-</div>
-              </div>
-            </div>
-
-            <div class="timeline-step" id="desktopStepOutForDelivery">
-              <div class="step-indicator">
-                <i class="fas fa-truck"></i>
-              </div>
-              <div class="step-content">
-                <div class="step-label">Out for Delivery</div>
-                <div class="step-date" id="desktopStepOutForDeliveryDate">-</div>
-              </div>
-            </div>
-
-            <div class="timeline-step" id="desktopStepDelivered">
-              <div class="step-indicator">
-                <i class="fas fa-home"></i>
-              </div>
-              <div class="step-content">
-                <div class="step-label">Delivered</div>
-                <div class="step-date" id="desktopStepDeliveredDate">-</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mobile Timeline -->
-        <div class="timeline-mobile">
-          <div class="timeline-vertical-line"></div>
-          <div class="timeline-vertical-fill" id="mobileProgressFill"></div>
-          
-          <div class="timeline-step-mobile completed" id="mobileStepOrdered">
-            <div class="step-indicator-mobile">
-              <i class="fas fa-shopping-cart"></i>
-            </div>
-            <div class="step-content-mobile">
-              <div class="step-label-mobile">Ordered</div>
-              <div class="step-date-mobile" id="mobileStepOrderedDate">Dec 19</div>
-            </div>
-          </div>
-
-          <div class="timeline-step-mobile" id="mobileStepConfirmed">
-            <div class="step-indicator-mobile">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="step-content-mobile">
-              <div class="step-label-mobile">Confirmed</div>
-              <div class="step-date-mobile" id="mobileStepConfirmedDate">-</div>
-            </div>
-          </div>
-
-          <div class="timeline-step-mobile" id="mobileStepShipped">
-            <div class="step-indicator-mobile">
-              <i class="fas fa-shipping-fast"></i>
-            </div>
-            <div class="step-content-mobile">
-              <div class="step-label-mobile">Shipped</div>
-              <div class="step-date-mobile" id="mobileStepShippedDate">-</div>
-            </div>
-          </div>
-
-          <div class="timeline-step-mobile" id="mobileStepOutForDelivery">
-            <div class="step-indicator-mobile">
-              <i class="fas fa-truck"></i>
-            </div>
-            <div class="step-content-mobile">
-              <div class="step-label-mobile">Out for Delivery</div>
-              <div class="step-date-mobile" id="mobileStepOutForDeliveryDate">-</div>
-            </div>
-          </div>
-
-          <div class="timeline-step-mobile" id="mobileStepDelivered">
-            <div class="step-indicator-mobile">
-              <i class="fas fa-home"></i>
-            </div>
-            <div class="step-content-mobile">
-              <div class="step-label-mobile">Delivered</div>
-              <div class="step-date-mobile" id="mobileStepDeliveredDate">-</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="order-items-section">
-        <h3>Order Items</h3>
-        <div class="order-items-list" id="orderItemsList"></div>
-
-        <div class="order-summary">
-          <div class="summary-row">
-            <span>Subtotal:</span>
-            <span id="orderSubtotal">₹0.00</span>
-          </div>
-          <div class="summary-row">
-            <span>Shipping:</span>
-            <span id="orderShipping">FREE</span>
-          </div>
-          <div class="summary-row total">
-            <span>Total:</span>
-            <span id="orderTotal">₹0.00</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="order-actions">
-        <button class="btn-action btn-outline" id="contactSupportBtn">
-          <i class="fas fa-headset"></i> Need Help?
-        </button>
-        <button class="btn-action btn-outline" id="trackAnotherBtn">
-          <i class="fas fa-redo"></i> Track Another
-        </button>
-      </div>
+    <div class="error-message" id="trackError">
+      <i class="fas fa-exclamation-circle"></i>
+      <span id="errorText">Please enter a valid order ID and email address</span>
     </div>
   </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Loading order details...</p>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">
+      <i class="fas fa-box-open"></i>
+    </div>
+    <h3>No Order Found</h3>
+    <p>Enter your order ID and email above to track your order status</p>
+  </div>
+
+  <div class="order-status-section" id="orderStatus">
+    <!-- Order status content will be dynamically inserted here -->
+  </div>
+</div>
         </div>
       </div>
     </div>
