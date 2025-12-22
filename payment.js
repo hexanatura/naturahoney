@@ -1,3 +1,4 @@
+
 function updateCheckoutUI() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
@@ -254,6 +255,38 @@ function loadPromoCodesFromFirebase() {
                 resolve({});
             });
     });
+}
+
+
+
+// Add this to your existing initCheckoutPage function:
+async function initCheckoutPage() {
+    console.log('Initializing checkout page...');
+    
+    // Initial updates
+    updateOrderSummary();
+    setupCheckoutEventListeners();
+    updateCheckoutUI();
+    
+    // Load promo codes
+    try {
+        await loadPromoCodesFromFirebase();
+        displayAvailablePromoCodes();
+    } catch (error) {
+        console.error('Failed to load promo codes:', error);
+    }
+    
+    // Load user's default address if logged in
+    if (currentUser) {
+        loadUserDefaultAddress();
+    }
+    
+    // Check if we're coming from a successful order
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('orderSuccess')) {
+        // You could show a simpler success message here if needed
+        console.log('Order was successful! Order ID:', urlParams.get('orderSuccess'));
+    }
 }
 
 // Apply promo code
@@ -1311,73 +1344,6 @@ async function processCheckout() {
         return;
     }
     
-    // Collect form data
-    const email = document.getElementById('email').value.trim();
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
-    const address = document.getElementById('address').value.trim();
-    const apartment = document.getElementById('apartment')?.value.trim() || '';
-    const city = document.getElementById('city').value.trim();
-    const state = document.getElementById('state').value;
-    const zipCode = document.getElementById('zipCode').value.trim();
-    const phoneInput = document.getElementById('phone').value.replace(/\D/g, '');
-    const phone = phoneInput.length === 10 ? phoneInput : '';
-    const isDefaultAddress = document.getElementById('defaultAddress')?.checked || false;
-    
-    // Generate order data
-const orderId = `${generateOrderId()}`;    const orderDate = new Date();
-    const orderData = {
-        orderId: orderId,
-        orderNumber: orderId,
-        email: email,
-        shippingAddress: {
-            firstName: firstName,
-            lastName: lastName,
-            address: address,
-            apartment: apartment,
-            city: city,
-            state: state,
-            zipCode: zipCode,
-            phone: '+91 ' + phone,
-            country: 'India'
-        },
-        items: cartProducts.map(item => {
-            const product = products.find(p => p.id === item.id);
-            return {
-                productId: item.id,
-                name: product ? product.name : 'Unknown Product',
-                weight: product ? product.weight : '',
-                price: product ? product.price : 0,
-                quantity: item.quantity,
-                image: product ? product.image : '',
-                subtotal: (product ? product.price : 0) * item.quantity
-            };
-        }),
-        subtotal: window.originalTotal,
-        discount: window.currentDiscount,
-        shipping: 0,
-        total: window.originalTotal - window.currentDiscount,
-        status: 'ordered',
-        paymentStatus: 'ordered',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        orderDate: orderDate,
-        paymentMethod: 'razorpay',
-        paymentGateway: 'razorpay'
-    };
-    
-    // Add promo code if applied
-    if (window.appliedPromoCode) {
-        orderData.promoCode = window.appliedPromoCode;
-        orderData.promoDiscount = window.currentDiscount;
-    }
-    
-    // Add user info if logged in
-    if (currentUser) {
-        orderData.userId = currentUser.uid;
-        orderData.userEmail = currentUser.email;
-        orderData.userName = currentUser.displayName || `${firstName} ${lastName}`;
-    }
-    
     // Show processing animation
     const checkoutBtn = document.querySelector('.checkout-btn');
     const originalBtnText = checkoutBtn.innerHTML;
@@ -1385,6 +1351,75 @@ const orderId = `${generateOrderId()}`;    const orderDate = new Date();
     checkoutBtn.disabled = true;
     
     try {
+        // Collect form data
+        const email = document.getElementById('email').value.trim();
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const address = document.getElementById('address').value.trim();
+        const apartment = document.getElementById('apartment')?.value.trim() || '';
+        const city = document.getElementById('city').value.trim();
+        const state = document.getElementById('state').value;
+        const zipCode = document.getElementById('zipCode').value.trim();
+        const phoneInput = document.getElementById('phone').value.replace(/\D/g, '');
+        const phone = phoneInput.length === 10 ? phoneInput : '';
+        const isDefaultAddress = document.getElementById('defaultAddress')?.checked || false;
+        
+        // Generate order data
+        const orderId = generateOrderId();
+        const orderData = {
+            orderId: orderId,
+            orderNumber: orderId,
+            email: email,
+            shippingAddress: {
+                firstName: firstName,
+                lastName: lastName,
+                address: address,
+                apartment: apartment,
+                city: city,
+                state: state,
+                zipCode: zipCode,
+                phone: '+91 ' + phone,
+                country: 'India'
+            },
+            items: cartProducts.map(item => {
+                const product = products.find(p => p.id === item.id);
+                return {
+                    productId: item.id,
+                    name: product ? product.name : 'Unknown Product',
+                    weight: product ? product.weight : '',
+                    price: product ? product.price : 0,
+                    quantity: item.quantity,
+                    image: product ? product.image : '',
+                    subtotal: (product ? product.price : 0) * item.quantity
+                };
+            }),
+            subtotal: window.originalTotal,
+            discount: window.currentDiscount,
+            shipping: 0,
+            total: window.originalTotal - window.currentDiscount,
+            status: 'ordered',
+            paymentStatus: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            orderDate: new Date(),
+            paymentMethod: 'razorpay',
+            paymentGateway: 'razorpay'
+        };
+        
+        // Add promo code if applied
+        if (window.appliedPromoCode) {
+            orderData.promoCode = window.appliedPromoCode;
+            orderData.promoDiscount = window.currentDiscount;
+        }
+        
+        // Add user info if logged in
+        if (currentUser) {
+            orderData.userId = currentUser.uid;
+            orderData.userEmail = currentUser.email;
+            orderData.userName = currentUser.displayName || `${firstName} ${lastName}`;
+        }
+        
+        console.log('Creating order with data:', orderData);
+        
         // Save address to profile if user is logged in and checkbox is checked
         if (currentUser && isDefaultAddress) {
             await window.saveCheckoutAddressToProfile(
@@ -1396,11 +1431,16 @@ const orderId = `${generateOrderId()}`;    const orderDate = new Date();
         const orderRef = await saveOrderToFirestore(orderData);
         console.log('Order saved with ID:', orderRef.id);
         
-        // Process payment (simulated for now)
+        // Process payment - THIS WILL SHOW THE POPUP
         await processPayment(orderData, orderRef.id);
+        
+        // Reset processing flag
+        isProcessingPayment = false;
         
     } catch (error) {
         console.error('Checkout error:', error);
+        
+        // Reset button state
         checkoutBtn.innerHTML = originalBtnText;
         checkoutBtn.disabled = false;
         isProcessingPayment = false;
@@ -1408,6 +1448,332 @@ const orderId = `${generateOrderId()}`;    const orderDate = new Date();
         showNotification('Payment failed. Please try again.', 'error');
     }
 }
+
+// Enhanced processPayment function with proper popup triggering
+async function processPayment(orderData, orderDocId) {
+    console.log('processPayment called with orderDocId:', orderDocId);
+    
+    return new Promise((resolve, reject) => {
+        // Update button to show processing
+        const checkoutBtn = document.querySelector('.checkout-btn');
+        if (checkoutBtn) {
+            checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Payment...';
+        }
+        
+        // Simulate payment processing (2 seconds)
+        setTimeout(async () => {
+            try {
+                console.log('Payment processing completed for order:', orderDocId);
+                
+                // Update order status in Firestore
+                if (db && orderDocId) {
+                    await db.collection('orders').doc(orderDocId).update({
+                        status: 'ordered',
+                        paymentStatus: 'paid',
+                        paidAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    console.log('Order updated in main collection');
+                    
+                    // Update user's orders if logged in
+                    if (currentUser) {
+                        await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderDocId).update({
+                            status: 'ordered',
+                            paymentStatus: 'paid',
+                            paidAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log('Order updated in user collection');
+                    }
+                }
+                
+                // Clear cart
+                cartProducts = [];
+                localStorage.removeItem('guestCart');
+                
+                // Update UI
+                updateCartUI();
+                updateOrderSummary();
+                
+                console.log('Cart cleared, showing success popup...');
+                
+                // Show success popup with updated order data
+                const updatedOrderData = {
+                    ...orderData,
+                    id: orderDocId,
+                    orderId: orderData.orderId || `NA-${Math.floor(10000 + Math.random() * 90000)}`,
+                    status: 'ordered',
+                    paymentStatus: 'paid',
+                    paidAt: new Date().toISOString(),
+                    total: orderData.total || (window.originalTotal - window.currentDiscount)
+                };
+                
+                // Call the success popup function
+                if (typeof showOrderSuccessPopup === 'function') {
+                    showOrderSuccessPopup(updatedOrderData);
+                } else {
+                    console.error('showOrderSuccessPopup function not found!');
+                    // Fallback to alert
+                    alert(`Order confirmed successfully! Order ID: ${updatedOrderData.orderId}`);
+                    window.location.href = 'index.html';
+                }
+                
+                resolve();
+                
+            } catch (error) {
+                console.error('Payment processing error:', error);
+                
+                // Reset button state on error
+                if (checkoutBtn) {
+                    checkoutBtn.innerHTML = '<i class="fas fa-lock"></i> Pay Now';
+                    checkoutBtn.disabled = false;
+                }
+                
+                reject(error);
+            }
+        }, 2000); // 2 second delay for payment simulation
+    });
+}
+
+// Enhanced showOrderSuccessPopup function with redirect on close
+function showOrderSuccessPopup(orderData) {
+    console.log('showOrderSuccessPopup called with:', orderData);
+    
+    const modal = document.getElementById('orderSuccessModal');
+    if (!modal) {
+        console.error('Order success modal not found!');
+        // Create modal dynamically
+        createOrderSuccessModal();
+        // Show modal after creation
+        setTimeout(() => showOrderSuccessPopup(orderData), 100);
+        return;
+    }
+    
+    // Set order details
+    const successOrderId = document.getElementById('successOrderId');
+    const successOrderDate = document.getElementById('successOrderDate');
+    const successOrderTotal = document.getElementById('successOrderTotal');
+    
+    if (successOrderId) {
+        successOrderId.textContent = orderData.orderId || 
+                                    orderData.orderNumber || 
+                                    orderData.id || 
+                                    `NA-${Date.now().toString().slice(-8)}`;
+    }
+    
+    if (successOrderDate) {
+        successOrderDate.textContent = new Date().toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    if (successOrderTotal) {
+        const total = orderData.total || (window.originalTotal - window.currentDiscount);
+        successOrderTotal.textContent = `₹${total.toFixed(2)}`;
+    }
+    
+    // Show modal with animation
+    modal.classList.add('active');
+    
+    // Remove any existing event listeners first to avoid duplicates
+    const closeBtn = document.getElementById('closeSuccessModal');
+    const trackBtn = document.getElementById('trackOrderBtn');
+    const continueBtn = document.getElementById('continueShoppingBtn');
+    
+    // Close button event - REDIRECT TO INDEX.HTML
+    if (closeBtn) {
+        // Remove existing listeners
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        
+        // Add new listener that redirects to index.html
+        newCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Close modal with animation
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Redirect after animation completes
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 300);
+        });
+    }
+    
+    // Track order button event
+    if (trackBtn) {
+        const newTrackBtn = trackBtn.cloneNode(true);
+        trackBtn.parentNode.replaceChild(newTrackBtn, trackBtn);
+        
+        newTrackBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Call existing tracking function
+            if (typeof window.showOrderTracking === 'function' && orderData.id) {
+                window.showOrderTracking(orderData.id);
+            }
+        });
+    }
+    
+    // Continue shopping button event - REDIRECT TO INDEX.HTML
+    if (continueBtn) {
+        const newContinueBtn = continueBtn.cloneNode(true);
+        continueBtn.parentNode.replaceChild(newContinueBtn, continueBtn);
+        
+        newContinueBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            window.location.href = 'index.html';
+        });
+    }
+    
+    // Close when clicking outside the content - REDIRECT TO INDEX.HTML
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            // Close modal with animation
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Redirect after animation completes
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 300);
+        }
+    };
+    
+    // Close with Escape key - REDIRECT TO INDEX.HTML
+    const closeOnEscape = function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            // Close modal with animation
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Redirect after animation completes
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 300);
+            
+            // Remove the event listener
+            document.removeEventListener('keydown', closeOnEscape);
+        }
+    };
+    
+    // Remove previous event listener and add new one
+    document.removeEventListener('keydown', closeOnEscape);
+    document.addEventListener('keydown', closeOnEscape);
+    
+    // Disable body scroll
+    document.body.style.overflow = 'hidden';
+}
+
+// Update the createOrderSuccessModal function to include redirect
+function createOrderSuccessModal() {
+    console.log('Creating order success modal dynamically');
+    
+    const modalHTML = `
+    <div id="orderSuccessModal" class="order-success-modal">
+        <div class="order-success-content">
+            <!-- Close button should be the first element inside content -->
+            <button id="closeSuccessModal" class="close-modal-btn">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="success-header">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Order Confirmed!</h2>
+                <p>Thank you for your purchase</p>
+            </div>
+            
+            <div class="order-details">
+                <div class="detail-row">
+                    <span class="detail-label">Order ID</span>
+                    <span id="successOrderId" class="detail-value">NA-12345</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Date</span>
+                    <span id="successOrderDate" class="detail-value">${new Date().toLocaleString()}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount</span>
+                    <span id="successOrderTotal" class="detail-value">₹0.00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value status-paid">Paid</span>
+                </div>
+            </div>
+            
+            <div class="order-actions">
+                <button id="trackOrderBtn" class="btn track-order-btn">
+                    <i class="fas fa-truck"></i> Track Order
+                </button>
+                <button id="continueShoppingBtn" class="btn continue-shopping-btn">
+                    <i class="fas fa-shopping-cart"></i> Continue Shopping
+                </button>
+            </div>
+            
+            <div class="order-tips">
+                <div class="tip">
+                    <i class="fas fa-envelope"></i>
+                    <span>You will receive an order confirmation email shortly.</span>
+                </div>
+                <div class="tip">
+                    <i class="fas fa-phone"></i>
+                    <span>Need help? <a href="contact.html">Contact our support</a></span>
+                </div>
+                <div class="tip">
+                    <i class="fas fa-star"></i>
+                    <span>Review your products after delivery for special offers!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners after modal is created
+    setTimeout(() => {
+        const closeBtn = document.getElementById('closeSuccessModal');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                const modal = document.getElementById('orderSuccessModal');
+                if (modal) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 300);
+                }
+            });
+        }
+    }, 100);
+}
+
+// Close popup function
+function closeOrderSuccessPopup() {
+    const modal = document.getElementById('orderSuccessModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+
+// Make functions available globally
+window.showOrderSuccessPopup = showOrderSuccessPopup;
+window.closeOrderSuccessPopup = closeOrderSuccessPopup;
+window.processCheckout = processCheckout;
+
 
 // Enhanced saveOrderToFirestore function
 async function saveOrderToFirestore(orderData) {
@@ -1436,55 +1802,6 @@ async function saveOrderToFirestore(orderData) {
     });
 }
 
-// Enhanced processPayment function
-// Enhanced processPayment function
-async function processPayment(orderData, orderDocId) {
-    return new Promise((resolve, reject) => {
-        // Simulate payment processing
-        setTimeout(async () => {
-            try {
-                const checkoutBtn = document.querySelector('.checkout-btn');
-                
-                // Update order status to ordered (not confirmed)
-                await db.collection('orders').doc(orderDocId).update({
-                    status: 'ordered', // CHANGED from 'confirmed' to 'ordered'
-                    paymentStatus: 'paid',
-                    paidAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                // Update user's order if logged in
-                if (currentUser) {
-                    await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderDocId).update({
-                        status: 'ordered', // CHANGED from 'confirmed' to 'ordered'
-                        paymentStatus: 'paid',
-                        paidAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }
-                
-                // Clear cart after successful payment
-                await clearCartAfterOrder();
-                
-                // Show success notification
-
-                // Reset button
-                checkoutBtn.innerHTML = '<i class="fas fa-check"></i> Order Placed Successfully!';
-                checkoutBtn.style.backgroundColor = '#27ae60';
-                
-                // Redirect after 3 seconds
-                setTimeout(() => {
-                    window.location.href = `index.html?orderSuccess=${orderData.orderId}`;
-                }, 3000);
-                
-                resolve();
-            } catch (error) {
-                console.error('Payment processing error:', error);
-                reject(error);
-            }
-        }, 2000);
-    });
-}
 // Enhanced clearCartAfterOrder function
 async function clearCartAfterOrder() {
     try {
@@ -1735,7 +2052,6 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Initialize checkout page
 async function initCheckoutPage() {
     console.log('Initializing checkout page...');
     
@@ -1744,12 +2060,47 @@ async function initCheckoutPage() {
     setupCheckoutEventListeners();
     updateCheckoutUI();
     
-    // Load promo codes
+    // Load promo codes with error handling
     try {
+        console.log('Loading promo codes...');
         await loadPromoCodesFromFirebase();
-        displayAvailablePromoCodes();
+        console.log('Promo codes loaded:', window.activePromoCodes);
+        
+        // Wait a bit for DOM to be fully ready
+        setTimeout(() => {
+            displayAvailablePromoCodes();
+            
+            // Debug: Check if elements exist
+            const promoCodesGrid = document.getElementById('promoCodesGrid');
+            const noPromoCodes = document.getElementById('noPromoCodes');
+            const availablePromoCodes = document.getElementById('availablePromoCodes');
+            
+            console.log('Promo elements found:', {
+                promoCodesGrid: !!promoCodesGrid,
+                noPromoCodes: !!noPromoCodes,
+                availablePromoCodes: !!availablePromoCodes
+            });
+            
+            // Add animation for promo cards
+            const promoCards = document.querySelectorAll('.promo-code-card');
+            promoCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate-fade-in');
+            });
+        }, 500);
+        
     } catch (error) {
         console.error('Failed to load promo codes:', error);
+        showPromoError('Unable to load promo codes. Please try again later.');
+    }
+    
+    // Update UI based on cart state
+    if (cartProducts.length === 0) {
+        const checkoutBtn = document.querySelector('.checkout-btn');
+        if (checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = '0.7';
+        }
     }
     
     // Load user's default address if logged in
@@ -1771,7 +2122,11 @@ window.showNotification = showNotification;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    if (document.querySelector('.checkout-section')) {
-        initCheckoutPage();
-    }
+  console.log('DOM loaded, initializing checkout...');
+  
+  // Initialize checkout page if on checkout page
+  if (document.querySelector('.checkout-section')) {
+    console.log('Checkout section found, initializing...');
+    initCheckoutPage();
+  }
 });
