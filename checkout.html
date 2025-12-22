@@ -36,8 +36,543 @@ body {
   overflow-x: hidden;
 }
 
+/* Order Success Modal Styles */
+.order-success-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.order-success-modal.active {
+  display: flex;
+  opacity: 1;
+}
+
+.order-success-content {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  transform: translateY(30px);
+  opacity: 0;
+  transition: all 0.4s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(95, 43, 39, 0.1);
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+.order-success-modal.active .order-success-content {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.success-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  animation: bounceIn 0.6s ease;
+}
+
+.success-icon i {
+  font-size: 40px;
+  color: white;
+}
+
+.success-header h2 {
+  font-family: 'Akira Expanded', sans-serif;
+  color: #5f2b27;
+  font-size: 28px;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.success-header p {
+  color: #666;
+  font-size: 16px;
+  font-family: 'Quicksand', sans-serif;
+  line-height: 1.4;
+}
+
+.order-details {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  border: 1px solid #eee;
+  box-sizing: border-box;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  font-family: 'Unbounded', sans-serif;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detail-label {
+  color: #666;
+  font-size: 15px;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-right: 15px;
+}
+
+.detail-value {
+  color: #333;
+  font-weight: 600;
+  font-size: 16px;
+  text-align: right;
+  word-break: break-word;
+  min-width: 0; /* Allow text to shrink */
+}
+
+.detail-value.status-paid {
+  color: #27ae60;
+  background: #d4edda;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.order-actions {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.order-actions .btn {
+  flex: 1;
+  min-width: 200px;
+  padding: 15px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.track-order-btn {
+  background: linear-gradient(135deg, #5f2b27 0%, #7a3731 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+
+.track-order-btn:hover {
+  background: linear-gradient(135deg, #7a3731 0%, #5f2b27 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(95, 43, 39, 0.3);
+}
+
+.continue-shopping-btn {
+  background: transparent;
+  border: 2px solid #5f2b27;
+  color: #5f2b27;
+  border-radius: 8px;
+}
+
+.continue-shopping-btn:hover {
+  background: #5f2b27;
+  color: white;
+  box-shadow: 0 4px 12px rgba(95, 43, 39, 0.3);
+}
+
+.order-tips {
+  background: #f0f7ff;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #3498db;
+  box-sizing: border-box;
+}
+
+.tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #333;
+  font-family: 'Quicksand', sans-serif;
+  line-height: 1.4;
+}
+
+.tip:last-child {
+  margin-bottom: 0;
+}
+
+.tip i {
+  color: #3498db;
+  font-size: 16px;
+  width: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tip a {
+  color: #5f2b27;
+  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.tip a:hover {
+  color: #7a3731;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 22px;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.close-modal-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+  transform: rotate(90deg);
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Tablet Responsive */
+@media (max-width: 768px) {
+  .order-success-modal {
+    padding: 15px;
+  }
+  
+  .order-success-content {
+    padding: 30px 25px;
+    max-width: 90%;
+  }
+  
+  .success-header h2 {
+    font-size: 24px;
+  }
+  
+  .success-header p {
+    font-size: 15px;
+  }
+  
+  .success-icon {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .success-icon i {
+    font-size: 35px;
+  }
+  
+  .order-details {
+    padding: 20px;
+    margin-bottom: 25px;
+  }
+  
+  .detail-row {
+    padding: 10px 0;
+  }
+  
+  .detail-label,
+  .detail-value {
+    font-size: 14px;
+  }
+  
+  .order-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .order-actions .btn {
+    min-width: 100%;
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+  }
+  
+  .order-tips {
+    padding: 18px;
+    font-size: 13px;
+  }
+  
+  .tip i {
+    font-size: 15px;
+  }
+  
+  .close-modal-btn {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .order-success-modal {
+    padding: 10px;
+  }
+  
+  .order-success-content {
+    padding: 25px 20px;
+    max-width: 95%;
+    border-radius: 15px;
+  }
+  
+  .success-header h2 {
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  
+  .success-header p {
+    font-size: 14px;
+  }
+  
+  .success-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 15px;
+  }
+  
+  .success-icon i {
+    font-size: 30px;
+  }
+  
+  .order-details {
+    padding: 18px 15px;
+    margin-bottom: 20px;
+  }
+  
+  .detail-row {
+    flex-direction: row; /* Keep horizontal layout */
+    padding: 8px 0;
+  }
+  
+  .detail-label {
+    font-size: 13px;
+    margin-right: 10px;
+    flex: 1;
+    min-width: 100px; /* Fixed width for labels */
+  }
+  
+  .detail-value {
+    font-size: 13px;
+    text-align: left;
+    flex: 2; /* Allow values to take more space */
+    word-break: break-all; /* Break long words if needed */
+  }
+  
+  .order-actions .btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .order-tips {
+    padding: 15px;
+    font-size: 12px;
+  }
+  
+  .tip {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .tip i {
+    font-size: 14px;
+    width: 18px;
+  }
+  
+  .close-modal-btn {
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+}
+
+/* Small Mobile Devices (iPhone 5/SE size) */
+@media (max-width: 320px) {
+  .order-success-content {
+    padding: 20px 15px;
+    max-width: 100%;
+    border-radius: 12px;
+  }
+  
+  .success-header h2 {
+    font-size: 20px;
+  }
+  
+  .success-header p {
+    font-size: 13px;
+  }
+  
+  .success-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 12px;
+  }
+  
+  .success-icon i {
+    font-size: 25px;
+  }
+  
+  .order-details {
+    padding: 15px 12px;
+    margin-bottom: 18px;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 6px 0;
+  }
+  
+  .detail-label {
+    font-size: 12px;
+    margin-right: 0;
+    min-width: auto;
+    font-weight: 600;
+  }
+  
+  .detail-value {
+    font-size: 12px;
+    text-align: left;
+    width: 100%;
+  }
+  
+  .order-actions .btn {
+    padding: 10px;
+    font-size: 13px;
+  }
+  
+  .order-tips {
+    padding: 12px;
+    font-size: 11px;
+  }
+  
+  .tip {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .tip i {
+    font-size: 12px;
+    width: 16px;
+  }
+  
+  .close-modal-btn {
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+  }
+}
+
+/* Landscape Mode */
+@media (max-width: 768px) and (orientation: landscape) {
+  .order-success-content {
+    max-width: 80%;
+    max-height: 85vh;
+    overflow-y: auto; /* Only add scroll if absolutely necessary */
+  }
+  
+  .success-header {
+    margin-bottom: 20px;
+  }
+  
+  .success-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 15px;
+  }
+  
+  .success-icon i {
+    font-size: 25px;
+  }
+  
+  .order-details {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .detail-row {
+    padding: 8px 0;
+  }
+  
+  .order-tips {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+}
+
 .cancelled-order {
-    position: relative;
+  position: relative;
 }
 
 /* Blurred overlay */
@@ -6982,6 +7517,68 @@ nav {
             <p>Need help? Contact our customer support team for assistance with your order.</p>
         </div>
          </div>
+</div> <!-- Close order-tracking-section -->
+
+<!-- This should be in your checkout.html file -->
+<div id="orderSuccessModal" class="order-success-modal">
+    <div class="order-success-content">
+        <!-- Close button is FIRST element -->
+        <button id="closeSuccessModal" class="close-modal-btn">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="success-header">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Order Confirmed!</h2>
+            <p>Thank you for your purchase</p>
+        </div>
+        
+        <div class="order-details">
+            <div class="detail-row">
+                <span class="detail-label">Order ID</span>
+                <span id="successOrderId" class="detail-value">NA-12345</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Order Date</span>
+                <span id="successOrderDate" class="detail-value">Date here</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Total Amount</span>
+                <span id="successOrderTotal" class="detail-value">₹0.00</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-value status-paid">Paid</span>
+            </div>
+        </div>
+        
+        <div class="order-actions">
+            <button id="trackOrderBtn" class="btn track-order-btn">
+                <i class="fas fa-truck"></i> Track Order
+            </button>
+            <button id="continueShoppingBtn" class="btn continue-shopping-btn">
+                <i class="fas fa-shopping-cart"></i> Continue Shopping
+            </button>
+        </div>
+        
+        <div class="order-tips">
+            <div class="tip">
+                <i class="fas fa-envelope"></i>
+                <span>You will receive an order confirmation email shortly.</span>
+            </div>
+            <div class="tip">
+                <i class="fas fa-phone"></i>
+                <span>Need help? <a href="contact.html">Contact our support</a></span>
+            </div>
+            <div class="tip">
+                <i class="fas fa-star"></i>
+                <span>Review your products after delivery for special offers!</span>
+            </div>
+        </div>
+    </div>
+</div>
 
       <div id="footer-placeholder"></div>
 
