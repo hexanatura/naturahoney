@@ -1,3 +1,4 @@
+
 function updateCheckoutUI() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
@@ -27,6 +28,7 @@ function updateCheckoutUI() {
         }
         
     } else {
+        // User is not logged in
         if (emailInput) {
             emailInput.value = '';
             emailInput.disabled = false;
@@ -1327,20 +1329,26 @@ function validateCheckoutForm() {
     return isValid;
 }
 
-// Enhanced processCheckout function
+// Enhanced processCheckout function with better logging
 async function processCheckout() {
     // Prevent double-click
     if (isProcessingPayment) {
+        console.log('Payment already processing, ignoring click');
         return;
     }
     
     isProcessingPayment = true;
     
+    console.log('=== STARTING CHECKOUT PROCESS ===');
+    
     // Validate form
     if (!validateCheckoutForm()) {
+        console.log('Form validation failed');
         isProcessingPayment = false;
         return;
     }
+    
+    console.log('Form validation passed');
     
     // Show processing animation
     const checkoutBtn = document.querySelector('.checkout-btn');
@@ -1361,6 +1369,8 @@ async function processCheckout() {
         const phoneInput = document.getElementById('phone').value.replace(/\D/g, '');
         const phone = phoneInput.length === 10 ? phoneInput : '';
         const isDefaultAddress = document.getElementById('defaultAddress')?.checked || false;
+        
+        console.log('Form data collected:', { email, firstName, lastName, phone });
         
         // Generate order data
         const orderId = generateOrderId();
@@ -1416,38 +1426,45 @@ async function processCheckout() {
             orderData.userName = currentUser.displayName || `${firstName} ${lastName}`;
         }
         
-        console.log('Creating order with data:', orderData);
+        console.log('Order data prepared:', orderData);
         
         // Save address to profile if user is logged in and checkbox is checked
         if (currentUser && isDefaultAddress) {
+            console.log('Saving address to profile...');
             await window.saveCheckoutAddressToProfile(
                 firstName, lastName, address, city, state, zipCode, '+91 ' + phone, isDefaultAddress
             );
         }
         
         // Save order to Firestore
+        console.log('Saving order to Firestore...');
         const orderRef = await saveOrderToFirestore(orderData);
         console.log('Order saved with ID:', orderRef.id);
         
         // Process payment - THIS WILL SHOW THE POPUP
+        console.log('Starting payment processing...');
         await processPayment(orderData, orderRef.id);
+        
+        console.log('Payment processing completed successfully');
         
         // Reset processing flag
         isProcessingPayment = false;
         
     } catch (error) {
         console.error('Checkout error:', error);
+        console.error('Error stack:', error.stack);
+        
+        // Show detailed error
+        showNotification(`Payment failed: ${error.message}`, 'error');
         
         // Reset button state
         checkoutBtn.innerHTML = originalBtnText;
         checkoutBtn.disabled = false;
         isProcessingPayment = false;
-        
-        showNotification('Payment failed. Please try again.', 'error');
     }
 }
 
-// Enhanced processPayment function with proper popup triggering
+// Enhanced processPayment function with better error handling
 async function processPayment(orderData, orderDocId) {
     console.log('processPayment called with orderDocId:', orderDocId);
     
@@ -1458,33 +1475,46 @@ async function processPayment(orderData, orderDocId) {
             checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Payment...';
         }
         
+        console.log('Starting payment simulation (2 seconds)...');
+        
         // Simulate payment processing (2 seconds)
         setTimeout(async () => {
             try {
-                console.log('Payment processing completed for order:', orderDocId);
+                console.log('Payment simulation completed for order:', orderDocId);
                 
                 // Update order status in Firestore
                 if (db && orderDocId) {
-                    await db.collection('orders').doc(orderDocId).update({
-                        status: 'ordered',
-                        paymentStatus: 'paid',
-                        paidAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    console.log('Updating order status in Firestore...');
                     
-                    console.log('Order updated in main collection');
-                    
-                    // Update user's orders if logged in
-                    if (currentUser) {
-                        await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderDocId).update({
+                    try {
+                        await db.collection('orders').doc(orderDocId).update({
                             status: 'ordered',
                             paymentStatus: 'paid',
                             paidAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
-                        console.log('Order updated in user collection');
+                        
+                        console.log('Order updated in main collection');
+                        
+                        // Update user's orders if logged in
+                        if (currentUser) {
+                            await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderDocId).update({
+                                status: 'ordered',
+                                paymentStatus: 'paid',
+                                paidAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log('Order updated in user collection');
+                        }
+                    } catch (firestoreError) {
+                        console.error('Firestore update error:', firestoreError);
+                        // Don't fail the whole process if Firestore update fails
+                        // Continue with success popup
                     }
+                } else {
+                    console.error('db or orderDocId missing:', { db: !!db, orderDocId });
                 }
                 
                 // Clear cart
+                console.log('Clearing cart...');
                 cartProducts = [];
                 localStorage.removeItem('guestCart');
                 
@@ -1505,9 +1535,12 @@ async function processPayment(orderData, orderDocId) {
                     total: orderData.total || (window.originalTotal - window.currentDiscount)
                 };
                 
+                console.log('Calling showOrderSuccessPopup...');
+                
                 // Call the success popup function
                 if (typeof showOrderSuccessPopup === 'function') {
                     showOrderSuccessPopup(updatedOrderData);
+                    console.log('Success popup should be visible now');
                 } else {
                     console.error('showOrderSuccessPopup function not found!');
                     // Fallback to alert
@@ -1519,6 +1552,11 @@ async function processPayment(orderData, orderDocId) {
                 
             } catch (error) {
                 console.error('Payment processing error:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
                 
                 // Reset button state on error
                 if (checkoutBtn) {
@@ -1526,7 +1564,7 @@ async function processPayment(orderData, orderDocId) {
                     checkoutBtn.disabled = false;
                 }
                 
-                reject(error);
+                reject(new Error(`Payment processing failed: ${error.message}`));
             }
         }, 2000); // 2 second delay for payment simulation
     });
@@ -2101,11 +2139,13 @@ async function initCheckoutPage() {
         }
     }
     
+    // Load user's default address if logged in
     if (currentUser) {
         loadUserDefaultAddress();
     }
 }
 
+// Make functions available globally
 window.updateCheckoutUI = updateCheckoutUI;
 window.loadUserDefaultAddress = loadUserDefaultAddress;
 window.updateOrderSummary = updateOrderSummary;
