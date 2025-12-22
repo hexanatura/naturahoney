@@ -18,7 +18,6 @@ let cartProducts = [];
 let userOrders = [];
 let currentModalView = 'login';
 
-// Checkout-specific variables (will be used by payment.js)
 window.currentDiscount = 0;
 window.originalTotal = 0;
 window.appliedPromoCode = null;
@@ -408,41 +407,41 @@ window.safeSetFormField = safeSetFormField;
 
 
 function showOrderTracking(orderId) {
+    console.log('showOrderTracking called with:', orderId);
+    
+    // Close the success popup if it's open
+    const successModal = document.getElementById('orderSuccessModal');
+    if (successModal) {
+        successModal.classList.remove('show');
+        document.body.style.overflow = 'auto';
+    }
+    
     const orderTrackingSection = document.getElementById('orderTrackingSection');
     
     if (!orderTrackingSection) {
-        window.location.href = `index.html?track=${orderId}`;
+        console.error('Order tracking section not found');
         return;
     }
-    const profilePage = document.getElementById('profilePage');
+    
+    // Hide other sections
     const mainContent = document.getElementById('mainContent');
+    const profilePage = document.getElementById('profilePage');
+    const checkoutSection = document.querySelector('.checkout-section');
     
-    if (profilePage && profilePage.classList.contains('active')) {
-        profilePage.classList.remove('active');
-    }
-    if (mainContent) {
-        mainContent.style.display = 'none';
+    if (mainContent) mainContent.style.display = 'none';
+    if (profilePage) profilePage.classList.remove('active');
+    
+    // Close sidebars
+    if (typeof closeAllSidebars === 'function') {
+        closeAllSidebars();
     }
     
-    if (orderTrackingSection) {
-        orderTrackingSection.classList.add('active');
-        
-        window.scrollTo(0, 0);
-        
-        const orderIdElement = document.getElementById('tracking-order-id');
-        const orderDateElement = document.getElementById('tracking-order-date');
-        
-        if (orderIdElement) orderIdElement.textContent = 'Loading...';
-        if (orderDateElement) orderDateElement.textContent = 'Loading...';
-        
-        if (orderId) {
-            loadOrderTrackingData(orderId);
-        } else {
-            showTrackingError("No order ID provided");
-        }
-    } else {
-        console.error("Order tracking section not found!");
-    }
+    // Show tracking section
+    orderTrackingSection.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    // Load order data
+    loadOrderTrackingData(orderId);
 }
 
 function closeOrderTracking() {
@@ -454,16 +453,16 @@ function closeOrderTracking() {
         orderTrackingSection.classList.remove('active');
     }
     
-    if (profilePage) {
+    if (profilePage && profilePage.classList.contains('active')) {
+        // Keep profile page open if it was active
         profilePage.classList.add('active');
-        if (mainContent) {
-            mainContent.style.display = 'none';
-        }
+        if (mainContent) mainContent.style.display = 'none';
     } else if (mainContent) {
+        // Otherwise show main content
         mainContent.style.display = 'block';
     }
     
-    window.scrollTo(0, 0);
+    document.body.style.overflow = 'auto';
 }
 
 function loadOrderTrackingData(orderId) {
@@ -2564,4 +2563,3 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
-
