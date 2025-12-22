@@ -28,7 +28,6 @@ function updateCheckoutUI() {
         }
         
     } else {
-        // User is not logged in
         if (emailInput) {
             emailInput.value = '';
             emailInput.disabled = false;
