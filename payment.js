@@ -1,4 +1,3 @@
-
 function updateCheckoutUI() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
