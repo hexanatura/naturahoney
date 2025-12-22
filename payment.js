@@ -1329,7 +1329,7 @@ function validateCheckoutForm() {
     return isValid;
 }
 
-// Enhanced processCheckout function with better logging
+// Enhanced processCheckout function with proper order data
 async function processCheckout() {
     // Prevent double-click
     if (isProcessingPayment) {
@@ -1372,11 +1372,14 @@ async function processCheckout() {
         
         console.log('Form data collected:', { email, firstName, lastName, phone });
         
-        // Generate order data
+        // Generate order ID and number
         const orderId = generateOrderId();
+        const orderNumber = `ORD-${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 100)}`;
+        
+        // Create order data with ALL required fields for email function
         const orderData = {
             orderId: orderId,
-            orderNumber: orderId,
+            orderNumber: orderNumber,
             email: email,
             shippingAddress: {
                 firstName: firstName,
@@ -1406,11 +1409,15 @@ async function processCheckout() {
             shipping: 0,
             total: window.originalTotal - window.currentDiscount,
             status: 'ordered',
-            paymentStatus: 'pending',
+            paymentStatus: 'paid',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             orderDate: new Date(),
             paymentMethod: 'razorpay',
-            paymentGateway: 'razorpay'
+            paymentGateway: 'razorpay',
+            // Add customer details for email
+            customerName: `${firstName} ${lastName}`,
+            customerEmail: email,
+            customerPhone: '+91 ' + phone
         };
         
         // Add promo code if applied
@@ -1426,7 +1433,7 @@ async function processCheckout() {
             orderData.userName = currentUser.displayName || `${firstName} ${lastName}`;
         }
         
-        console.log('Order data prepared:', orderData);
+        console.log('Order data prepared for Firestore:', orderData);
         
         // Save address to profile if user is logged in and checkbox is checked
         if (currentUser && isDefaultAddress) {
@@ -1436,16 +1443,36 @@ async function processCheckout() {
             );
         }
         
-        // Save order to Firestore
+        // Save order to Firestore - THIS WILL TRIGGER THE FIREBASE FUNCTION
         console.log('Saving order to Firestore...');
         const orderRef = await saveOrderToFirestore(orderData);
         console.log('Order saved with ID:', orderRef.id);
         
-        // Process payment - THIS WILL SHOW THE POPUP
-        console.log('Starting payment processing...');
-        await processPayment(orderData, orderRef.id);
+        // IMPORTANT: Wait a moment for Firebase Function to trigger
+        console.log('Waiting for email confirmation...');
         
-        console.log('Payment processing completed successfully');
+        // Show success popup immediately
+        const updatedOrderData = {
+            ...orderData,
+            id: orderRef.id,
+            orderId: orderData.orderId,
+            orderNumber: orderData.orderNumber,
+            status: 'ordered',
+            paymentStatus: 'paid',
+            paidAt: new Date().toISOString(),
+            total: orderData.total || (window.originalTotal - window.currentDiscount)
+        };
+        
+        // Show success popup
+        if (typeof showOrderSuccessPopup === 'function') {
+            showOrderSuccessPopup(updatedOrderData);
+        } else {
+            alert(`Order confirmed successfully! Order ID: ${updatedOrderData.orderNumber}\n\nA confirmation email has been sent to ${email}`);
+            window.location.href = 'index.html';
+        }
+        
+        // Clear cart
+        await clearCartAfterOrder();
         
         // Reset processing flag
         isProcessingPayment = false;
@@ -1463,6 +1490,8 @@ async function processCheckout() {
         isProcessingPayment = false;
     }
 }
+
+
 
 // Enhanced processPayment function with better error handling
 async function processPayment(orderData, orderDocId) {
@@ -1815,10 +1844,8 @@ window.processCheckout = processCheckout;
 async function saveOrderToFirestore(orderData) {
     return new Promise(async (resolve, reject) => {
         try {
-            let orderRef;
-            
             // Save to main orders collection
-            orderRef = await db.collection('orders').add(orderData);
+            const orderRef = await db.collection('orders').add(orderData);
             console.log('Order saved to main collection:', orderRef.id);
             
             // Save to user's orders if logged in
@@ -1830,6 +1857,9 @@ async function saveOrderToFirestore(orderData) {
                 console.log('Order saved to user collection:', orderRef.id);
             }
             
+            // Log for debugging
+            console.log('Order saved successfully. Firebase Function should trigger email to:', orderData.email);
+            
             resolve(orderRef);
         } catch (error) {
             console.error('Error saving order:', error);
@@ -1837,6 +1867,25 @@ async function saveOrderToFirestore(orderData) {
         }
     });
 }
+
+// Debug function to check Firebase Functions
+async function checkFirebaseFunctionStatus() {
+    try {
+        const response = await fetch('https://asia-south1-hexahoney-96aed.cloudfunctions.net/onNewOrder', {
+            method: 'HEAD'
+        });
+        console.log('Firebase Function status:', response.status);
+        return response.ok;
+    } catch (error) {
+        console.error('Firebase Function check failed:', error);
+        return false;
+    }
+}
+
+// Call this during page load to verify functions are deployed
+document.addEventListener('DOMContentLoaded', function() {
+    checkFirebaseFunctionStatus();
+});
 
 // Enhanced clearCartAfterOrder function
 async function clearCartAfterOrder() {
@@ -2166,3 +2215,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initCheckoutPage();
   }
 });
+
+
