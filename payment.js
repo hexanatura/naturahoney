@@ -2102,13 +2102,11 @@ async function initCheckoutPage() {
         }
     }
     
-    // Load user's default address if logged in
     if (currentUser) {
         loadUserDefaultAddress();
     }
 }
 
-// Make functions available globally
 window.updateCheckoutUI = updateCheckoutUI;
 window.loadUserDefaultAddress = loadUserDefaultAddress;
 window.updateOrderSummary = updateOrderSummary;
