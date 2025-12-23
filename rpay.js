@@ -3,7 +3,7 @@ async function initializeRazorpayPayment(orderData, amount) {
         console.log('Initializing Razorpay payment for amount:', amount);
         
         const options = {
-            key: "rzp_test_YOUR_KEY_ID",
+            key: "rzp_live_Rv4QzbScUtAjxZ",
             amount: amount * 100,
             currency: "INR",
             name: "Natura Honey",
