@@ -330,7 +330,6 @@ function loadPromoCodesFromFirebase() {
     });
 }
 
-// Apply promo code
 function applyPromoCode() {
     const promoInput = document.querySelector('.promo-input');
     const applyBtn = document.querySelector('.apply-btn');
@@ -386,13 +385,6 @@ function applyPromoCode() {
         
         if (used >= limit) {
             showPromoError('Promo usage limit reached');
-            
-            db.collection('activities').add({
-                type: 'PROMO_USAGE_LIMIT_REACHED',
-                promoCode: promoCode,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
             promoInput.value = '';
             refreshPromoCodes();
             return;
@@ -418,18 +410,8 @@ function applyPromoCode() {
     window.appliedPromoCode = promoCode;
     updateTotals();
     
-    db.collection('promoCodes').doc(promoCode).update({
-        usedCount: firebase.firestore.FieldValue.increment(1)
-    }).catch((err) => {
-        console.error('Failed to increment promo usage:', err);
-    });
-    
-    db.collection('activities').add({
-        type: 'PROMO_USED',
-        promoCode: promoCode,
-        discount: discountValue,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // REMOVED: Firestore update for promo usage
+    // REMOVED: Activity log
     
     refreshPromoCodes();
     
