@@ -297,8 +297,12 @@ body {
 }
 
 
-/* Blurred overlay */
-.cancelled-order::before {
+/* Blurred overlay - ONLY for order cards */
+.order-card.compact.cancelled-order {
+    position: relative;
+}
+
+.order-card.compact.cancelled-order::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -308,15 +312,15 @@ body {
     z-index: 1;
 }
 
-/* Lift the visible parts above blur */
-.cancelled-order .order-footer-compact,
-.cancelled-order .order-header-compact {
+/* Lift the visible parts above blur - ONLY for order cards */
+.order-card.compact.cancelled-order .order-footer-compact,
+.order-card.compact.cancelled-order .order-header-compact {
     position: relative;
     z-index: 2;
 }
 
-/* Strike the total */
-.cancelled-order .total-amount {
+/* Strike the total - ONLY for order cards */
+.order-card.compact.cancelled-order .total-amount {
     text-decoration: line-through;
     opacity: 0.6;
 }
