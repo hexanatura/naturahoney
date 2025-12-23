@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="btn-action btn-outline" onclick="window.print()">
           <i class="fas fa-print"></i> Print Invoice
         </button>
-        <button class="btn-action btn-primary" onclick="window.location.href='contact.html?orderId=${encodeURIComponent(order.id)}'">
+        <button class="btn-action btn-primary" onclick="window.location.href='contact.html'">
         <i class="fas fa-headset"></i> Contact Support
       </button>
     </div>
@@ -728,11 +728,6 @@ document.addEventListener('DOMContentLoaded', function() {
     trackError.classList.remove('active');
   }
 
-  // Global helper function for contact support
-window.contactSupport = function(orderId) {
-  // Redirect to contact.html page with order ID as a query parameter
-  window.location.href = `contact.html?orderId=${encodeURIComponent(orderId)}`;
-};
 
   // Handle window resize for timeline switching
   let resizeTimer;
