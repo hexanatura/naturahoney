@@ -11,10 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const orderStatus = document.getElementById('orderStatus');
   const orderStatusSection = document.querySelector('.order-status-section');
 
-  // Store current order globally for resize handling
   window.currentOrder = null;
 
-  // Timeline steps configuration
   const timelineSteps = [
     { id: 'ordered', label: 'Ordered', icon: 'fas fa-shopping-cart' },
     { id: 'confirmed', label: 'Confirmed', icon: 'fas fa-check-circle' },
@@ -23,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
     { id: 'delivered', label: 'Delivered', icon: 'fas fa-home' }
   ];
 
-  // Status mapping
   const statusMap = {
     'ordered': 0,
     'confirmed': 1,
