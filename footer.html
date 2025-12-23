@@ -1,4 +1,68 @@
 <style>
+
+.footer-watermark {
+    position: absolute !important;
+    bottom: 30px !important;
+    right: 20px !important;
+    left: auto !important;
+    opacity: 0.7 !important;
+    transition: opacity 0.25s ease !important;
+    z-index: 10 !important;
+}
+
+.footer-watermark:hover {
+    opacity: 1 !important;
+}
+
+.footer-watermark a {
+    display: inline-block !important;
+}
+
+.footer-watermark img {
+    width: 100px !important;
+    height: auto !important;
+    object-fit: contain !important;
+    filter: brightness(0) invert(1) !important;
+    transform-origin: right center !important;
+    transform: translateY(0) scale(1) !important;
+    transition: transform 0.25s ease !important;
+}
+
+.footer-watermark:hover img {
+    transform: translateY(-2px) scale(1.06) !important;
+}
+
+@media (max-width: 767px) {
+    .footer-watermark {
+        position: relative !important;
+        right: auto !important;
+        bottom: auto !important;
+        text-align: center !important;
+        margin: 20px auto 0 !important;
+        width: 100% !important;
+        opacity: 0.6 !important;
+    }
+
+    .footer-watermark img {
+        width: 80px !important;
+        max-height: none !important;
+        transform-origin: center !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .footer-watermark {
+        right: 15px !important;
+        bottom: 20px !important;
+    }
+
+    .footer-watermark img {
+        width: 90px !important;
+        max-height: none !important;
+    }
+}
+
+
 footer {
     background: #556b2f !important;
     color: white !important;
@@ -469,15 +533,21 @@ footer a:hover {
                         <a href="contact.html">Become Our Distributor</a>
                     </div>
                      <div class="footer-enquiry-item">
-<i class="fas fa-shipping-fast"></i>
-<a href="trackorder.html">Track Your Order</a>
+                        <i class="fas fa-shipping-fast"></i>
+                        <a href="trackorder.html">Track Your Order</a>
                     </div>
                 </div>
             </div>
         </div>
+    </div> 
+    
+    <div class="footer-watermark">
+        <a href="YOUR_LINK_HERE" target="_blank">
+            <img src="https://ik.imagekit.io/hexaanatura/ishan%20works" alt="Watermark">
+        </a>
+    </div>
 
-        <div class="footer-bottom">
-            <p>&copy; 2025 Hexa Apiarium Pvt. Ltd. All rights reserved.</p>
-        </div>
+    <div class="footer-bottom">
+        <p>&copy; 2025 Hexa Apiarium Pvt. Ltd. All rights reserved.</p>
     </div>
 </footer>
