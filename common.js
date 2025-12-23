@@ -1582,6 +1582,7 @@ profileLink.addEventListener('click', (e) => {
 logoutLink.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
+        userDropdown.classList.remove('active');
     auth.signOut().then(() => {
         alert('You have been logged out successfully!');
     }).catch((error) => {
@@ -2608,3 +2609,4 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
