@@ -1069,10 +1069,12 @@ async function initializeRazorpayPayment(orderData, amount) {
 async function createRazorpayOrder(amount, orderId) {
     console.log('Creating Razorpay order for amount:', amount, 'orderId:', orderId);
     
-    const createRazorpayOrder = firebase.functions().httpsCallable('createRazorpayOrder');
-    
     try {
-        const result = await createRazorpayOrder({
+        // Initialize with correct region
+        const functions = firebase.functions('asia-south1');
+        const createRazorpayOrderFn = functions.httpsCallable('createRazorpayOrder');
+        
+        const result = await createRazorpayOrderFn({
             amount: amount,
             currency: 'INR',
             receipt: `receipt_${Date.now()}`,
@@ -1086,7 +1088,15 @@ async function createRazorpayOrder(amount, orderId) {
         
     } catch (error) {
         console.error('Error creating Razorpay order:', error);
-        throw new Error(`Failed to create payment order: ${error.message}`);
+        
+        // More detailed error logging
+        if (error.code === 'functions/unavailable') {
+            throw new Error('Payment service is currently unavailable. Please try again.');
+        } else if (error.message.includes('CORS')) {
+            throw new Error('Cross-origin error. Please ensure functions are deployed with CORS enabled.');
+        } else {
+            throw new Error(`Failed to create payment order: ${error.message}`);
+        }
     }
 }
 
