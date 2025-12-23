@@ -1,7 +1,8 @@
+// payment.js - COMPLETE RAZORPAY INTEGRATION
+
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
 const functions = firebase.functions(app, 'asia-south1');
-
 
 // Initialize checkout page
 async function initCheckoutPage() {
@@ -12,17 +13,39 @@ async function initCheckoutPage() {
     setupCheckoutEventListeners();
     updateCheckoutUI();
     
-    // Preload Razorpay script
+    // Preload Razorpay script in background
     preloadRazorpayScript();
     
-    // Load promo codes
+    // Load promo codes with error handling
     try {
+        console.log('Loading promo codes...');
         await loadPromoCodesFromFirebase();
+        console.log('Promo codes loaded:', window.activePromoCodes);
+        
+        // Wait a bit for DOM to be fully ready
         setTimeout(() => {
             displayAvailablePromoCodes();
+            
+            // Add animation for promo cards
+            const promoCards = document.querySelectorAll('.promo-code-card');
+            promoCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate-fade-in');
+            });
         }, 500);
+        
     } catch (error) {
         console.error('Failed to load promo codes:', error);
+        showPromoError('Unable to load promo codes. Please try again later.');
+    }
+    
+    // Update UI based on cart state
+    if (cartProducts.length === 0) {
+        const checkoutBtn = document.querySelector('.checkout-btn');
+        if (checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = '0.7';
+        }
     }
     
     // Load user's default address if logged in
@@ -310,6 +333,7 @@ function loadPromoCodesFromFirebase() {
     });
 }
 
+// Apply promo code
 function applyPromoCode() {
     const promoInput = document.querySelector('.promo-input');
     const applyBtn = document.querySelector('.apply-btn');
@@ -365,6 +389,13 @@ function applyPromoCode() {
         
         if (used >= limit) {
             showPromoError('Promo usage limit reached');
+            
+            db.collection('activities').add({
+                type: 'PROMO_USAGE_LIMIT_REACHED',
+                promoCode: promoCode,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
             promoInput.value = '';
             refreshPromoCodes();
             return;
@@ -390,8 +421,18 @@ function applyPromoCode() {
     window.appliedPromoCode = promoCode;
     updateTotals();
     
-    // REMOVED: Firestore update for promo usage
-    // REMOVED: Activity log
+    db.collection('promoCodes').doc(promoCode).update({
+        usedCount: firebase.firestore.FieldValue.increment(1)
+    }).catch((err) => {
+        console.error('Failed to increment promo usage:', err);
+    });
+    
+    db.collection('activities').add({
+        type: 'PROMO_USED',
+        promoCode: promoCode,
+        discount: discountValue,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
     
     refreshPromoCodes();
     
@@ -1027,15 +1068,14 @@ async function initializeRazorpayPayment(orderData, amount) {
     }
 }
 
+// Create Razorpay order via Firebase Function
 async function createRazorpayOrder(amount, orderId) {
     console.log('Creating Razorpay order for amount:', amount, 'orderId:', orderId);
     
+    const createRazorpayOrder = firebase.functions().httpsCallable('createRazorpayOrder');
+    
     try {
-        // Get functions instance
-        const functions = getFunctionsInstance();
-        const createRazorpayOrderFn = functions.httpsCallable('createRazorpayOrder');
-        
-        const result = await createRazorpayOrderFn({
+        const result = await createRazorpayOrder({
             amount: amount,
             currency: 'INR',
             receipt: `receipt_${Date.now()}`,
@@ -1049,30 +1089,10 @@ async function createRazorpayOrder(amount, orderId) {
         
     } catch (error) {
         console.error('Error creating Razorpay order:', error);
-        
-        // Provide helpful error message
-        if (error.code === 'functions/unavailable') {
-            throw new Error('Payment service is currently unavailable. Please try again later.');
-        } else if (error.message.includes('internal')) {
-            // Check if function exists
-            console.error('Function internal error - checking if deployed...');
-            throw new Error('Payment gateway configuration error. Please contact support.');
-        } else {
-            throw new Error(`Failed to create payment order: ${error.message}`);
-        }
+        throw new Error(`Failed to create payment order: ${error.message}`);
     }
 }
 
-// Helper function to get functions instance
-function getFunctionsInstance() {
-    try {
-        // Try with region first
-        return firebase.functions(firebase.app(), 'asia-south1');
-    } catch (error) {
-        console.warn('Could not get functions with region, using default:', error);
-        return firebase.functions();
-    }
-}
 // Open Razorpay checkout modal
 async function openRazorpayCheckout(razorpayOrderId, razorpayKey, amount, orderData, orderDocId) {
     console.log('Opening Razorpay checkout with orderId:', razorpayOrderId);
