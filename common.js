@@ -11,18 +11,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const functions = getFirebaseFunctions();
 
-let functions;
-try {
-    if (firebase.functions) {
-        functions = firebase.functions();
-        console.log('Firebase Functions initialized successfully');
-    } else {
-        console.warn('Firebase Functions not available. Make sure firebase-functions-compat.js is loaded.');
-    }
-} catch (error) {
-    console.error('Error initializing Firebase Functions:', error);
-}
 
 let currentUser = null;
 let likedProducts = [];
@@ -2575,6 +2565,7 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
 
 
 
