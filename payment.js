@@ -1,5 +1,3 @@
-
-
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
 
