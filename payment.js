@@ -1,21 +1,7 @@
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
+const functions = firebase.functions(app, 'asia-south1');
 
-// Initialize Firebase Functions with correct region
-let functions;
-
-try {
-    // Get the default app
-    const app = firebase.app();
-    
-    // Initialize functions with region
-    functions = firebase.functions(app, 'asia-south1');
-    console.log('✅ Firebase Functions initialized for asia-south1 region');
-} catch (error) {
-    console.warn('⚠️ Could not initialize with region, using default:', error);
-    // Fallback to default (us-central1)
-    functions = firebase.functions();
-}
 
 // Initialize checkout page
 async function initCheckoutPage() {
