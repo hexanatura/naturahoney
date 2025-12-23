@@ -1,4 +1,5 @@
 
+
 function updateCheckoutUI() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
@@ -1329,7 +1330,6 @@ function validateCheckoutForm() {
     return isValid;
 }
 
-// Enhanced processCheckout function with proper order data
 async function processCheckout() {
     // Prevent double-click
     if (isProcessingPayment) {
@@ -1372,14 +1372,13 @@ async function processCheckout() {
         
         console.log('Form data collected:', { email, firstName, lastName, phone });
         
-        // Generate order ID and number
+        // Generate order ID - always use NA-XXXXX format
         const orderId = generateOrderId();
-        const orderNumber = `ORD-${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 100)}`;
         
         // Create order data with ALL required fields for email function
         const orderData = {
-            orderId: orderId,
-            orderNumber: orderNumber,
+            orderId: orderId,          // NA-XXXXX format
+            orderNumber: orderId,      // Same as orderId
             email: email,
             shippingAddress: {
                 firstName: firstName,
@@ -1448,15 +1447,12 @@ async function processCheckout() {
         const orderRef = await saveOrderToFirestore(orderData);
         console.log('Order saved with ID:', orderRef.id);
         
-        // IMPORTANT: Wait a moment for Firebase Function to trigger
-        console.log('Waiting for email confirmation...');
-        
         // Show success popup immediately
         const updatedOrderData = {
             ...orderData,
             id: orderRef.id,
-            orderId: orderData.orderId,
-            orderNumber: orderData.orderNumber,
+            orderId: orderData.orderId,  // This is the NA-XXXXX format
+            orderNumber: orderData.orderId,  // Same as orderId
             status: 'ordered',
             paymentStatus: 'paid',
             paidAt: new Date().toISOString(),
@@ -1467,7 +1463,7 @@ async function processCheckout() {
         if (typeof showOrderSuccessPopup === 'function') {
             showOrderSuccessPopup(updatedOrderData);
         } else {
-            alert(`Order confirmed successfully! Order ID: ${updatedOrderData.orderNumber}\n\nA confirmation email has been sent to ${email}`);
+            alert(`Order confirmed successfully! Order ID: ${updatedOrderData.orderId}\n\nA confirmation email has been sent to ${email}`);
             window.location.href = 'index.html';
         }
         
@@ -1490,8 +1486,6 @@ async function processCheckout() {
         isProcessingPayment = false;
     }
 }
-
-
 
 // Enhanced processPayment function with better error handling
 async function processPayment(orderData, orderDocId) {
@@ -1599,16 +1593,13 @@ async function processPayment(orderData, orderDocId) {
     });
 }
 
-// Enhanced showOrderSuccessPopup function with redirect on close
 function showOrderSuccessPopup(orderData) {
     console.log('showOrderSuccessPopup called with:', orderData);
     
     const modal = document.getElementById('orderSuccessModal');
     if (!modal) {
         console.error('Order success modal not found!');
-        // Create modal dynamically
         createOrderSuccessModal();
-        // Show modal after creation
         setTimeout(() => showOrderSuccessPopup(orderData), 100);
         return;
     }
@@ -1618,11 +1609,9 @@ function showOrderSuccessPopup(orderData) {
     const successOrderDate = document.getElementById('successOrderDate');
     const successOrderTotal = document.getElementById('successOrderTotal');
     
+    // Always use the NA-XXXXX format
     if (successOrderId) {
-        successOrderId.textContent = orderData.orderId || 
-                                    orderData.orderNumber || 
-                                    orderData.id || 
-                                    `NA-${Date.now().toString().slice(-8)}`;
+        successOrderId.textContent = orderData.orderId || orderData.id;
     }
     
     if (successOrderDate) {
@@ -1639,7 +1628,6 @@ function showOrderSuccessPopup(orderData) {
         const total = orderData.total || (window.originalTotal - window.currentDiscount);
         successOrderTotal.textContent = `₹${total.toFixed(2)}`;
     }
-    
     // Show modal with animation
     modal.classList.add('active');
     
@@ -2215,5 +2203,3 @@ document.addEventListener('DOMContentLoaded', function() {
     initCheckoutPage();
   }
 });
-
-
