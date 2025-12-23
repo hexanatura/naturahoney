@@ -1,3 +1,32 @@
+// Debug function to check Firebase initialization
+function debugFirebaseSetup() {
+    console.log('=== FIREBASE DEBUG INFO ===');
+    console.log('Firebase app initialized:', firebase.apps.length > 0);
+    console.log('Firebase app name:', firebase.apps[0]?.name || 'Not initialized');
+    console.log('Available Firebase modules:', {
+        auth: typeof firebase.auth,
+        firestore: typeof firebase.firestore,
+        functions: typeof firebase.functions,
+        app: typeof firebase.app
+    });
+    
+    if (typeof firebase.functions === 'function') {
+        try {
+            const functionsInstance = firebase.functions();
+            console.log('Functions instance created:', !!functionsInstance);
+            console.log('Functions region property:', functionsInstance.region);
+        } catch (e) {
+            console.error('Error creating functions instance:', e);
+        }
+    } else {
+        console.error('firebase.functions is not a function!');
+        console.error('Check: 1. compat SDK loaded, 2. Correct script order');
+    }
+}
+
+// Call this when page loads
+window.debugFirebaseSetup = debugFirebaseSetup;
+
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
     authDomain: "hexahoney-96aed.firebaseapp.com",
@@ -8,9 +37,25 @@ const firebaseConfig = {
     measurementId: "G-MQGKK9709H"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+
+// Initialize services
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Initialize Functions with proper configuration
+let functions;
+try {
+    functions = firebase.app().functions('asia-south1');
+    console.log('Firebase Functions initialized with region: asia-south1');
+} catch (error) {
+    console.error('Error initializing Firebase Functions:', error);
+    functions = null;
+}
+
+// Make functions available globally
+window.functions = functions;
 
 let currentUser = null;
 let likedProducts = [];
@@ -2563,8 +2608,3 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
-
-
-
-
-
