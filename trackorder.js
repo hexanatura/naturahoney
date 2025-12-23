@@ -729,9 +729,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Global helper function for contact support
-  window.contactSupport = function(orderId) {
-    alert(`Contacting support for order: ${orderId}\n\nIn a real application, this would:\n1. Open a chat window\n2. Pre-fill the order ID\n3. Connect you with a support agent`);
-  };
+window.contactSupport = function(orderId) {
+  // Redirect to contact.html page with order ID as a query parameter
+  window.location.href = `contact.html?orderId=${encodeURIComponent(orderId)}`;
+};
 
   // Handle window resize for timeline switching
   let resizeTimer;
@@ -770,6 +771,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
-
-
-
