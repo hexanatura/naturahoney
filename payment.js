@@ -1,6 +1,22 @@
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
 
+// Initialize Firebase Functions with correct region
+let functions;
+
+try {
+    // Get the default app
+    const app = firebase.app();
+    
+    // Initialize functions with region
+    functions = firebase.functions(app, 'asia-south1');
+    console.log('✅ Firebase Functions initialized for asia-south1 region');
+} catch (error) {
+    console.warn('⚠️ Could not initialize with region, using default:', error);
+    // Fallback to default (us-central1)
+    functions = firebase.functions();
+}
+
 // Initialize checkout page
 async function initCheckoutPage() {
     console.log('Initializing checkout page with Razorpay...');
@@ -10,39 +26,17 @@ async function initCheckoutPage() {
     setupCheckoutEventListeners();
     updateCheckoutUI();
     
-    // Preload Razorpay script in background
+    // Preload Razorpay script
     preloadRazorpayScript();
     
-    // Load promo codes with error handling
+    // Load promo codes
     try {
-        console.log('Loading promo codes...');
         await loadPromoCodesFromFirebase();
-        console.log('Promo codes loaded:', window.activePromoCodes);
-        
-        // Wait a bit for DOM to be fully ready
         setTimeout(() => {
             displayAvailablePromoCodes();
-            
-            // Add animation for promo cards
-            const promoCards = document.querySelectorAll('.promo-code-card');
-            promoCards.forEach((card, index) => {
-                card.style.animationDelay = `${index * 0.1}s`;
-                card.classList.add('animate-fade-in');
-            });
         }, 500);
-        
     } catch (error) {
         console.error('Failed to load promo codes:', error);
-        showPromoError('Unable to load promo codes. Please try again later.');
-    }
-    
-    // Update UI based on cart state
-    if (cartProducts.length === 0) {
-        const checkoutBtn = document.querySelector('.checkout-btn');
-        if (checkoutBtn) {
-            checkoutBtn.disabled = true;
-            checkoutBtn.style.opacity = '0.7';
-        }
     }
     
     // Load user's default address if logged in
@@ -1047,13 +1041,12 @@ async function initializeRazorpayPayment(orderData, amount) {
     }
 }
 
-// Create Razorpay order via Firebase Function
 async function createRazorpayOrder(amount, orderId) {
     console.log('Creating Razorpay order for amount:', amount, 'orderId:', orderId);
     
     try {
-        // Initialize with correct region
-        const functions = firebase.functions('asia-south1');
+        // Get functions instance
+        const functions = getFunctionsInstance();
         const createRazorpayOrderFn = functions.httpsCallable('createRazorpayOrder');
         
         const result = await createRazorpayOrderFn({
@@ -1071,17 +1064,29 @@ async function createRazorpayOrder(amount, orderId) {
     } catch (error) {
         console.error('Error creating Razorpay order:', error);
         
-        // More detailed error logging
+        // Provide helpful error message
         if (error.code === 'functions/unavailable') {
-            throw new Error('Payment service is currently unavailable. Please try again.');
-        } else if (error.message.includes('CORS')) {
-            throw new Error('Cross-origin error. Please ensure functions are deployed with CORS enabled.');
+            throw new Error('Payment service is currently unavailable. Please try again later.');
+        } else if (error.message.includes('internal')) {
+            // Check if function exists
+            console.error('Function internal error - checking if deployed...');
+            throw new Error('Payment gateway configuration error. Please contact support.');
         } else {
             throw new Error(`Failed to create payment order: ${error.message}`);
         }
     }
 }
 
+// Helper function to get functions instance
+function getFunctionsInstance() {
+    try {
+        // Try with region first
+        return firebase.functions(firebase.app(), 'asia-south1');
+    } catch (error) {
+        console.warn('Could not get functions with region, using default:', error);
+        return firebase.functions();
+    }
+}
 // Open Razorpay checkout modal
 async function openRazorpayCheckout(razorpayOrderId, razorpayKey, amount, orderData, orderDocId) {
     console.log('Opening Razorpay checkout with orderId:', razorpayOrderId);
