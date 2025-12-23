@@ -1,5 +1,9 @@
 // Track Order JavaScript
 document.addEventListener('DOMContentLoaded', function() {
+  // Use the global Firebase instances from common.js
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  
   // DOM Elements
   const trackBtn = document.getElementById('trackBtn');
   const orderIdInput = document.getElementById('orderId');
@@ -12,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const orderStatusSection = document.querySelector('.order-status-section');
 
   window.currentOrder = null;
-
+  
   const timelineSteps = [
     { id: 'ordered', label: 'Ordered', icon: 'fas fa-shopping-cart' },
     { id: 'confirmed', label: 'Confirmed', icon: 'fas fa-check-circle' },
@@ -40,6 +44,28 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Enter') trackOrder();
   });
 
+function checkFirebase() {
+  if (!firebase || !firebase.apps || !firebase.apps.length) {
+    console.error('Firebase not initialized!');
+    return false;
+  }
+  if (!firebase.auth) {
+    console.error('Firebase Auth not loaded!');
+    return false;
+  }
+  if (!firebase.firestore) {
+    console.error('Firebase Firestore not loaded!');
+    return false;
+  }
+  return true;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (!checkFirebase()) {
+    showError('Database not available. Please refresh the page.');
+    return;
+  }
+  
   // Track Order Function
   async function trackOrder() {
     const orderId = orderIdInput.value.trim();
@@ -770,20 +796,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
-
-const firebaseConfig = {
-    apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
-    projectId: "hexahoney-96aed",
-    storageBucket: "hexahoney-96aed.firebasestorage.app",
-    messagingSenderId: "700458850837",
-    appId: "1:700458850837:web:0eb4fca98a5f4acc2d0c1c",
-    measurementId: "G-MQGKK9709H"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
 
 let currentUser = null;
 let likedProducts = [];
