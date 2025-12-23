@@ -1,26 +1,41 @@
-// Razorpay Payment Initialization
 async function initializeRazorpayPayment(orderData, amount) {
     try {
         console.log('Initializing Razorpay payment for amount:', amount);
         
         const options = {
-            key: "rzp_test_YOUR_KEY_ID", 
-            amount: amount * 100, 
+            key: "rzp_test_YOUR_KEY_ID",
+            amount: amount * 100,
             currency: "INR",
             name: "Natura Honey",
             description: "Order Payment",
             image: "https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119",
-            order_id: null, 
+            order_id: null,
             handler: async function (response) {
                 console.log('Razorpay payment successful:', response);
                 
-                orderData.paymentStatus = 'paid';
-                orderData.razorpayPaymentId = response.razorpay_payment_id;
-                orderData.razorpayOrderId = response.razorpay_order_id;
-                orderData.razorpaySignature = response.razorpay_signature;
-                orderData.paidAt = new Date().toISOString();
+                // Show immediate success
+                showNotification('Payment successful! Confirmation email sent.', 'success');
                 
-                await saveOrderAndProcess(orderData);
+                // Show success popup with order details
+                const updatedOrderData = {
+                    ...orderData,
+                    orderId: orderData.orderId,
+                    paymentStatus: 'paid',
+                    razorpayPaymentId: response.razorpay_payment_id,
+                    razorpayOrderId: response.razorpay_order_id,
+                    paidAt: new Date().toISOString(),
+                    total: amount
+                };
+                
+                if (typeof showOrderSuccessPopup === 'function') {
+                    showOrderSuccessPopup(updatedOrderData);
+                }
+                
+                // Clear cart
+                await clearCartAfterOrder();
+                
+                // Reset processing flag
+                isProcessingPayment = false;
             },
             prefill: {
                 name: orderData.customerName,
@@ -28,7 +43,8 @@ async function initializeRazorpayPayment(orderData, amount) {
                 contact: orderData.customerPhone
             },
             notes: {
-                orderId: orderData.orderId
+                orderId: orderData.orderId,
+                customerEmail: orderData.customerEmail
             },
             theme: {
                 color: "#5f2b27"
@@ -36,9 +52,8 @@ async function initializeRazorpayPayment(orderData, amount) {
             modal: {
                 ondismiss: function() {
                     console.log('Payment cancelled by user');
-                    showNotification('Payment was cancelled. Please try again.', 'warning');
+                    showNotification('Payment cancelled. Please try again.', 'warning');
                     
-                    // Reset button state
                     const checkoutBtn = document.querySelector('.checkout-btn');
                     checkoutBtn.innerHTML = '<i class="fas fa-lock"></i> Pay Now';
                     checkoutBtn.disabled = false;
@@ -47,19 +62,62 @@ async function initializeRazorpayPayment(orderData, amount) {
             }
         };
         
-        // If you have a backend, fetch order_id from your server
-        // For now, we'll create a dummy order_id
-        if (!options.order_id) {
-            // Create a temporary order_id
-            options.order_id = 'order_' + Date.now();
+        // Create Razorpay order from Firebase function
+        try {
+            const createOrderFunction = firebase.functions().httpsCallable('createRazorpayOrder');
+            const result = await createOrderFunction({
+                amount: amount,
+                receipt: orderData.orderId,
+                notes: {
+                    orderId: orderData.orderId,
+                    customerEmail: orderData.customerEmail,
+                    customerName: orderData.customerName
+                }
+            });
+            
+            options.order_id = result.data.orderId;
+            console.log('Using server-generated Razorpay order:', options.order_id);
+            
+        } catch (error) {
+            console.log('Server order creation failed, using client-side:', error);
+            // Continue with client-side
         }
         
         const razorpay = new Razorpay(options);
+        
+        // Handle payment failure
+        razorpay.on('payment.failed', function(response) {
+            console.error('Payment failed:', response.error);
+            
+            const errorMsg = response.error.description || 'Payment failed. Please try again.';
+            showNotification(`Payment failed: ${errorMsg}`, 'error');
+            
+            // Reset button
+            const checkoutBtn = document.querySelector('.checkout-btn');
+            checkoutBtn.innerHTML = '<i class="fas fa-lock"></i> Pay Now';
+            checkoutBtn.disabled = false;
+            isProcessingPayment = false;
+            
+            // Mark order as failed in Firestore
+            if (orderData.id) {
+                db.collection('orders').doc(orderData.id).update({
+                    paymentStatus: 'failed',
+                    paymentError: response.error,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        });
+        
         razorpay.open();
         
     } catch (error) {
         console.error('Razorpay initialization error:', error);
-        throw error;
+        showNotification('Payment gateway error. Please try again.', 'error');
+        
+        const checkoutBtn = document.querySelector('.checkout-btn');
+        checkoutBtn.innerHTML = '<i class="fas fa-lock"></i> Pay Now';
+        checkoutBtn.disabled = false;
+        isProcessingPayment = false;
     }
 }
 
