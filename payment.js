@@ -1,5 +1,3 @@
-
-
 function updateCheckoutUI() {
     const emailInput = document.getElementById('email');
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
@@ -187,29 +185,6 @@ function getActivePromoCodes() {
 }
 
 
-// Select promo code with toggle behaviour
-function selectPromoCode(code) {
-    const promoInput = document.querySelector('.promo-input');
-    if (!promoInput) return;
-    
-    // If same code already applied → remove it
-    if (window.appliedPromoCode === code) {
-        removePromoCode();
-        return;
-    }
-    
-    // If same code is just selected → apply
-    if (promoInput.value.toUpperCase() === code && window.appliedPromoCode !== code) {
-        applyPromoCode();
-        return;
-    }
-    
-    // Otherwise select and auto-apply
-    promoInput.value = code;
-    refreshPromoCodes();
-    applyPromoCode();
-}
-
 // Load promo codes from Firebase
 function loadPromoCodesFromFirebase() {
     return new Promise((resolve) => {
@@ -258,37 +233,6 @@ function loadPromoCodesFromFirebase() {
     });
 }
 
-
-
-// Add this to your existing initCheckoutPage function:
-async function initCheckoutPage() {
-    console.log('Initializing checkout page...');
-    
-    // Initial updates
-    updateOrderSummary();
-    setupCheckoutEventListeners();
-    updateCheckoutUI();
-    
-    // Load promo codes
-    try {
-        await loadPromoCodesFromFirebase();
-        displayAvailablePromoCodes();
-    } catch (error) {
-        console.error('Failed to load promo codes:', error);
-    }
-    
-    // Load user's default address if logged in
-    if (currentUser) {
-        loadUserDefaultAddress();
-    }
-    
-    // Check if we're coming from a successful order
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('orderSuccess')) {
-        // You could show a simpler success message here if needed
-        console.log('Order was successful! Order ID:', urlParams.get('orderSuccess'));
-    }
-}
 
 // Apply promo code
 function applyPromoCode() {
@@ -418,102 +362,6 @@ function refreshPromoCodes() {
     if (document.getElementById('promoCodesGrid')) {
         displayAvailablePromoCodes();
     }
-}
-
-// Improved updateOrderSummary function
-function updateOrderSummary() {
-    const orderItems = document.getElementById('orderItems');
-    const emptyState = document.querySelector('.empty-order-state');
-    
-    if (!orderItems) return;
-    
-    orderItems.innerHTML = '';
-    let subtotal = 0;
-    
-    if (cartProducts.length === 0) {
-        if (!emptyState) {
-            const emptyMsg = document.createElement('div');
-            emptyMsg.className = 'empty-order-state';
-            emptyMsg.innerHTML = `
-                <div class="empty-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <h3>Your cart is empty</h3>
-                <p>Add some delicious honey products to get started</p>
-            `;
-            orderItems.appendChild(emptyMsg);
-        }
-        
-        // Hide promo section if cart is empty
-        const promoSection = document.querySelector('.promo-code-section');
-        if (promoSection) promoSection.style.display = 'none';
-        
-        // Disable checkout button
-        const checkoutBtn = document.getElementById('processCheckoutBtn');
-        if (checkoutBtn) {
-            checkoutBtn.disabled = true;
-            checkoutBtn.style.opacity = '0.7';
-        }
-        
-    } else {
-        // Show promo section
-        const promoSection = document.querySelector('.promo-code-section');
-        if (promoSection) promoSection.style.display = 'block';
-        
-        // Enable checkout button
-        const checkoutBtn = document.getElementById('processCheckoutBtn');
-        if (checkoutBtn) {
-            checkoutBtn.disabled = false;
-            checkoutBtn.style.opacity = '1';
-        }
-        
-        cartProducts.forEach(item => {
-            const product = products.find(p => p.id === item.id);
-            if (product) {
-                const itemTotal = product.price * item.quantity;
-                subtotal += itemTotal;
-                
-                const orderItem = document.createElement('div');
-                orderItem.className = 'order-item';
-                orderItem.innerHTML = `
-                    <div class="order-item-main">
-                        <div class="order-item-image-container">
-                            <img src="${product.image}" alt="${product.name}" 
-                                 class="order-product-img" 
-                                 onerror="this.src='https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119'">
-                        </div>
-                        <div class="order-item-content">
-                            <div class="order-item-header">
-                                <div class="order-item-info">
-                                    <div class="order-item-name">${product.name}</div>
-                                    <div class="order-item-weight">${product.weight}</div>
-                                </div>
-                                <div class="order-item-price">₹${itemTotal}</div>
-                            </div>
-                            <div class="order-item-footer">
-                                <div class="quantity-controls">
-                                    <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}">
-                                        <i class="fas fa-minus"></i>
-                                    </button>
-                                    <input type="number" class="quantity-input-checkout" 
-                                           value="${item.quantity}" min="1" max="10" 
-                                           data-id="${item.id}">
-                                    <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                orderItems.appendChild(orderItem);
-            }
-        });
-    }
-    
-    window.originalTotal = subtotal;
-    updateTotals();
-    refreshPromoCodes();
 }
 
 // Enhanced displayAvailablePromoCodes function
@@ -780,101 +628,6 @@ function validateIndianPhoneNumber(phone) {
     return phoneRegex.test(cleanedPhone);
 }
 
-// Validate entire checkout form
-function validateCheckoutForm() {
-    const requiredFields = [
-        'email', 'firstName', 'lastName', 'address', 
-        'city', 'state', 'zipCode', 'phone'
-    ];
-    
-    let isValid = true;
-    
-    document.querySelectorAll('.field-error').forEach(error => error.remove());
-    document.querySelectorAll('.error').forEach(field => field.classList.remove('error'));
-    
-    requiredFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field && !validateField({ target: field })) {
-            isValid = false;
-        }
-    });
-    
-    if (cartProducts.length === 0) {
-        alert('Your cart is empty. Please add items to proceed.');
-        isValid = false;
-    }
-    
-    return isValid;
-}
-
-// Process checkout
-function processCheckout() {
-    if (!validateCheckoutForm()) {
-        return;
-    }
-    
-    const email = document.getElementById('email').value;
-    const firstName = document.getElementById('firstName').value;
-    const lastName = document.getElementById('lastName').value;
-    const address = document.getElementById('address').value;
-    const apartment = document.getElementById('apartment').value;
-    const city = document.getElementById('city').value;
-    const state = document.getElementById('state').value;
-    const zipCode = document.getElementById('zipCode').value;
-    const phone = document.getElementById('phone').value;
-    const isDefaultAddress = document.getElementById('defaultAddress').checked;
-
-    const orderData = {
-        email: email,
-        shippingAddress: {
-            firstName: firstName,
-            lastName: lastName,
-            address: address,
-            apartment: apartment,
-            city: city,
-            state: state,
-            zipCode: zipCode,
-            phone: '+91 ' + phone,
-            country: 'India'
-        },
-        items: cartProducts.map(item => {
-            const product = products.find(p => p.id === item.id);
-            return {
-                productId: item.id,
-                name: product ? product.name : 'Unknown Product',
-                weight: product ? product.weight : '',
-                price: product ? product.price : 0,
-                quantity: item.quantity,
-                image: product ? product.image : ''
-            };
-        }),
-        subtotal: window.originalTotal,
-        discount: window.currentDiscount,
-        total: window.originalTotal - window.currentDiscount,
-        status: 'ordered',
-        createdAt: new Date().toISOString(),
-        paymentMethod: 'razorpay'
-    };
-    
-    if (window.appliedPromoCode) {
-        orderData.promoCode = window.appliedPromoCode;
-    }
-    
-    // Use the function from common.js
-    if (currentUser && isDefaultAddress) {
-        window.saveCheckoutAddressToProfile(firstName, lastName, address, city, state, zipCode, phone, isDefaultAddress);
-    }
-    
-    if (currentUser) {
-        orderData.userId = currentUser.uid;
-        orderData.userEmail = currentUser.email;
-        saveOrderToFirestore(orderData);
-    } else {
-        saveGuestOrder(orderData);
-    }
-    
-    processPayment(orderData);
-}
 
 // Save order to Firestore
 function saveOrderToFirestore(orderData) {
@@ -979,116 +732,7 @@ function processPayment(orderData) {
     }, 2000);
 }
 
-// Show order success message
-function showOrderSuccess(orderData) {
-    alert(`Order confirmed successfully! Order ID: ${orderData.id.substring(0, 8)}\n\nThank you for your purchase. You will receive an email confirmation shortly.`);
-    
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 3000);
-}
 
-// Setup event listeners for checkout page
-function setupCheckoutEventListeners() {
-    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
-    const applyPromoBtn = document.getElementById('applyPromoBtn');
-    const processCheckoutBtn = document.getElementById('processCheckoutBtn');
-    const promoCodeInput = document.getElementById('promoCodeInput');
-
-    // Login/Logout button
-    if (loginBtnCheckout) {
-        loginBtnCheckout.addEventListener('click', function() {
-            if (currentUser) {
-                if (confirm('Are you sure you want to logout? This will clear your cart.')) {
-                    auth.signOut().then(() => {
-                        window.location.reload();
-                    });
-                }
-            } else {
-                showLoginView();
-                loginModal.classList.add('active');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        });
-    }
-
-    // Apply promo button
-    if (applyPromoBtn) {
-        applyPromoBtn.addEventListener('click', applyPromoCode);
-    }
-
-    // Promo code input
-    if (promoCodeInput) {
-        promoCodeInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                applyPromoCode();
-            }
-        });
-        
-        promoCodeInput.addEventListener('input', function(e) {
-            const value = e.target.value.toUpperCase();
-            const promoMessage = document.getElementById('promoMessage');
-            if (promoMessage) {
-                promoMessage.style.display = 'none';
-            }
-            
-            // Highlight matching promo cards
-            const promoCards = document.querySelectorAll('.promo-code-card');
-            promoCards.forEach(card => {
-                const code = card.getAttribute('data-code');
-                if (code && code.startsWith(value)) {
-                    card.style.borderColor = '#5f2b27';
-                    card.style.boxShadow = '0 0 0 2px rgba(95, 43, 39, 0.1)';
-                } else {
-                    card.style.borderColor = '';
-                    card.style.boxShadow = '';
-                }
-            });
-        });
-        
-        promoCodeInput.addEventListener('focus', function() {
-            this.parentElement.style.borderColor = '#5f2b27';
-            this.parentElement.style.boxShadow = '0 0 0 2px rgba(95, 43, 39, 0.1)';
-        });
-        
-        promoCodeInput.addEventListener('blur', function() {
-            this.parentElement.style.borderColor = '#ddd';
-            this.parentElement.style.boxShadow = 'none';
-        });
-    }
-
-    // Process checkout button
-    if (processCheckoutBtn) {
-        processCheckoutBtn.addEventListener('click', processCheckout);
-    }
-
-    // Quantity controls
-    document.addEventListener('click', handleCheckoutQuantityChange);
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('quantity-input-checkout')) {
-            handleCheckoutQuantityInput(e);
-        }
-    });
-
-    // Form validation
-    const formInputs = document.querySelectorAll('.checkout-form input, .checkout-form select');
-    formInputs.forEach(input => {
-        input.addEventListener('blur', validateField);
-        input.addEventListener('input', clearFieldError);
-        input.addEventListener('focus', function() {
-            this.style.borderColor = '#5f2b27';
-        });
-        input.addEventListener('blur', function() {
-            if (!this.classList.contains('error')) {
-                this.style.borderColor = '#ddd';
-            }
-        });
-    });
-}
-
-// Initialize checkout page
-// Initialize checkout page
 async function initCheckoutPage() {
   console.log('Initializing checkout page...');
   
@@ -1375,7 +1019,7 @@ async function processCheckout() {
         // Generate order ID - always use NA-XXXXX format
         const orderId = generateOrderId();
         
-        // Create order data with ALL required fields for email function
+        // Create order data
         const orderData = {
             orderId: orderId,          // NA-XXXXX format
             orderNumber: orderId,      // Same as orderId
@@ -1413,7 +1057,6 @@ async function processCheckout() {
             orderDate: new Date(),
             paymentMethod: 'razorpay',
             paymentGateway: 'razorpay',
-            // Add customer details for email
             customerName: `${firstName} ${lastName}`,
             customerEmail: email,
             customerPhone: '+91 ' + phone
@@ -1432,9 +1075,9 @@ async function processCheckout() {
             orderData.userName = currentUser.displayName || `${firstName} ${lastName}`;
         }
         
-        console.log('Order data prepared for Firestore:', orderData);
+        console.log('Order data prepared:', orderData);
         
-        // Save address to profile if user is logged in and checkbox is checked
+        // Save address to profile if needed
         if (currentUser && isDefaultAddress) {
             console.log('Saving address to profile...');
             await window.saveCheckoutAddressToProfile(
@@ -1442,24 +1085,24 @@ async function processCheckout() {
             );
         }
         
-        // Save order to Firestore - THIS WILL TRIGGER THE FIREBASE FUNCTION
+        // Save order to Firestore
         console.log('Saving order to Firestore...');
         const orderRef = await saveOrderToFirestore(orderData);
         console.log('Order saved with ID:', orderRef.id);
         
-        // Show success popup immediately
+        // Prepare data for success popup
         const updatedOrderData = {
             ...orderData,
             id: orderRef.id,
-            orderId: orderData.orderId,  // This is the NA-XXXXX format
+            orderId: orderData.orderId,  // This is NA-XXXXX
             orderNumber: orderData.orderId,  // Same as orderId
             status: 'ordered',
             paymentStatus: 'paid',
             paidAt: new Date().toISOString(),
-            total: orderData.total || (window.originalTotal - window.currentDiscount)
+            total: orderData.total
         };
         
-        // Show success popup
+        // Show success popup with NA-XXXXX order ID
         if (typeof showOrderSuccessPopup === 'function') {
             showOrderSuccessPopup(updatedOrderData);
         } else {
@@ -1475,9 +1118,8 @@ async function processCheckout() {
         
     } catch (error) {
         console.error('Checkout error:', error);
-        console.error('Error stack:', error.stack);
         
-        // Show detailed error
+        // Show error
         showNotification(`Payment failed: ${error.message}`, 'error');
         
         // Reset button state
@@ -1609,10 +1251,10 @@ function showOrderSuccessPopup(orderData) {
     const successOrderDate = document.getElementById('successOrderDate');
     const successOrderTotal = document.getElementById('successOrderTotal');
     
-    // Always use the NA-XXXXX format
-    if (successOrderId) {
-        successOrderId.textContent = orderData.orderId || orderData.id;
-    }
+// Always use the NA-XXXXX format
+if (successOrderId) {
+    successOrderId.textContent = orderData.orderId || orderData.orderNumber || orderData.id;
+}
     
     if (successOrderDate) {
         successOrderDate.textContent = new Date().toLocaleString('en-IN', {
