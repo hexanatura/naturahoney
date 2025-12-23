@@ -1,8 +1,6 @@
-// payment.js - COMPLETE RAZORPAY INTEGRATION
-
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
-const functions = firebase.functions(app, 'asia-south1');
+
 
 // Initialize checkout page
 async function initCheckoutPage() {
