@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('Firebase Error:', error);
       return {
         success: false,
-        message: 'Error connecting to database. Please try again.'
+        message: 'No order found with the provided ID and email. Please check your details.'
       };
     }
   }
@@ -501,10 +501,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <button class="btn-action btn-outline" onclick="window.print()">
           <i class="fas fa-print"></i> Print Invoice
         </button>
-        <button class="btn-action btn-primary" onclick="contactSupport('${escapeHtml(order.id)}')">
-          <i class="fas fa-headset"></i> Contact Support
-        </button>
-      </div>
+        <button class="btn-action btn-primary" onclick="window.location.href='contact.html?orderId=${encodeURIComponent(order.id)}'">
+        <i class="fas fa-headset"></i> Contact Support
+      </button>
+    </div>
     `;
 
     // Add event listener to the Track Another button
@@ -770,3 +770,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+
+
