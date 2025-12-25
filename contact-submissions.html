@@ -1110,33 +1110,42 @@
         }
 
         // Authentication Handler
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (!user) {
-                window.location.href = 'dashboard.html';
-                return;
-            }
+// Authentication Handler
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) {
+        window.location.href = 'dashboard.html';
+        return;
+    }
 
-            try {
-                // Force token refresh to get latest claims
-                await user.getIdToken(true);
-                const tokenResult = await user.getIdTokenResult();
-                
-                if (!tokenResult.claims.admin) {
-                    alert("Access denied. Admin only.");
-                    window.location.href = 'dashboard.html';
-                    return;
-                }
-                
-                // User is authenticated as admin, initialize messages manager
-                window.messagesManager = new MessagesManager();
-                
-            } catch (error) {
-                console.error('Auth check failed:', error);
-                alert('Authentication error. Please try again.');
-                window.location.href = 'dashboard.html';
-            }
-        });
-
+    try {
+        // Check if user exists in admins collection
+        const adminDoc = await db.collection('admins').doc(user.uid).get();
+        
+        if (!adminDoc.exists) {
+            alert("Access denied. Admin only.");
+            window.location.href = 'dashboard.html';
+            return;
+        }
+        
+        // Get the admin data
+        const adminData = adminDoc.data();
+        
+        // Check if admin field is true
+        if (!adminData.admin) {
+            alert("Access denied. Admin only.");
+            window.location.href = 'dashboard.html';
+            return;
+        }
+        
+        // User is authenticated as admin, initialize messages manager
+        window.messagesManager = new MessagesManager();
+        
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        alert('Authentication error. Please try again.');
+        window.location.href = 'dashboard.html';
+    }
+});
         // Cleanup when leaving the page
         window.addEventListener('beforeunload', () => {
             if (window.messagesManager) {
