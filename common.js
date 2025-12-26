@@ -1627,7 +1627,7 @@ function updateLikeUI() {
                     <img src="${product.image}" alt="${product.name}">
                     <div class="like-item-details">
                         <div class="like-item-title">${product.name}</div>
-                        <div class="like-item-price">₹${product.price}</div>
+    <div class="like-item-price">₹${product.price.toFixed(2)}</div>
                         <div class="like-item-actions">
                             <button class="add-to-cart-btn" data-id="${product.id}">
                                 <i class="fas fa-cart-plus"></i> Add to Cart
