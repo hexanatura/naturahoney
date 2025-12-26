@@ -273,7 +273,7 @@ function updateTotals() {
         window.appliedPromoCode = null;
     }
     
-    totalElement.textContent = `₹${newTotal}`;
+totalElement.textContent = `₹${newTotal.toFixed(2)}`;
     refreshPromoCodes();
 }
 
@@ -778,8 +778,8 @@ function updateOrderSummary() {
                                     <div class="order-item-name">${product.name}</div>
                                     <div class="order-item-weight">${product.weight}</div>
                                 </div>
-                                <div class="order-item-price">₹${itemTotal}</div>
-                            </div>
+<div class="order-item-price">₹${itemTotal.toFixed(2)}</div>
+</div>
                             <div class="order-item-footer">
                                 <div class="quantity-controls">
                                     <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}">
