@@ -261,8 +261,7 @@ function updateTotals() {
     
     const newTotal = Math.max(0, window.originalTotal - window.currentDiscount);
     
-    subtotalElement.textContent = `₹${window.originalTotal}`;
-    
+subtotalElement.textContent = `₹${window.originalTotal.toFixed(2)}`;    
     if (window.currentDiscount > 0 && window.appliedPromoCode) {
         discountRow.style.display = 'flex';
         discountAmount.textContent = `-₹${window.currentDiscount}`;
