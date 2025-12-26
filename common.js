@@ -1759,8 +1759,8 @@ function updateCartUI() {
         const cartSubtotal = document.querySelector('.cart-subtotal span:last-child');
         const cartTotal = document.querySelector('.cart-total span:last-child');
         
-        if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal}`;
-        if (cartTotal) cartTotal.textContent = `₹${subtotal}`;
+      if (cartSubtotal) cartSubtotal.textContent = `₹${subtotal.toFixed(2)}`;
+if (cartTotal) cartTotal.textContent = `₹${subtotal.toFixed(2)}`;
         
         document.querySelectorAll('.quantity-btn.minus').forEach(button => {
             button.addEventListener('click', (e) => {
