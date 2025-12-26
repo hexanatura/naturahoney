@@ -485,11 +485,11 @@ function displayAvailablePromoCodes() {
     
     availableCodes.forEach(([code, details]) => {
         const discountText =
-            details.type === 'percentage'
-                ? `${details.value}% OFF`
-                : details.type === 'shipping'
-                ? 'FREE SHIPPING'
-                : `₹${details.value} OFF`;
+    details.type === 'percentage'
+        ? `${details.value}% OFF`
+        : details.type === 'shipping'
+        ? 'FREE SHIPPING'
+        : `₹${details.value.toFixed(2)} OFF`;
         
         const isApplicable = window.originalTotal >= (Number(details.minOrder) || 0);
         const isAlreadyApplied = window.appliedPromoCode === code;
