@@ -242,7 +242,7 @@ function initializeProductCards() {
                     quickViewImage.src = product.image;
                     quickViewImage.alt = product.name;
                     quickViewTitle.textContent = product.name;
-                    quickViewPrice.textContent = `₹${product.price}`;
+quickViewPrice.textContent = `₹${product.price.toFixed(2)}`;
                     quickViewWeight.textContent = product.weight;
                     
                     // Get rating from the product card
@@ -309,3 +309,4 @@ function initShopPage() {
 document.addEventListener('DOMContentLoaded', function() {
     initShopPage();
 });
+
