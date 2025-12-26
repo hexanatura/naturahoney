@@ -73,7 +73,7 @@ const products = [
     { 
         id: 1, 
         name: "Natura Agmark Honey", 
-        price: 249, 
+        price: 420.00, 
         weight: "1Kg",
         image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20500g?updatedAt=1766222498725",
         category: "crystal"
@@ -81,7 +81,7 @@ const products = [
     { 
         id: 2, 
         name: "Natura Agmark Honey", 
-        price: 449, 
+        price: 230.00, 
         weight: "500g",
         image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%201kg?updatedAt=1766222517443",
         category: "crystal"
@@ -89,7 +89,7 @@ const products = [
     { 
         id: 3, 
         name: "Natura Agmark Honey", 
-        price: 149, 
+        price: 65.00, 
         weight: "100g",
         image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20100g?updatedAt=1766222470748",
         category: "crystal"
@@ -97,7 +97,7 @@ const products = [
     { 
         id: 4, 
         name: "Natura Agmark Honey", 
-        price: 349, 
+        price: 40.00, 
         weight: "50g",
         image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%2050g?updatedAt=1766222568792",
         category: "crystal"
@@ -105,7 +105,7 @@ const products = [
     { 
         id: 5, 
         name: "Natura Agmark Honey", 
-        price: 199, 
+        price: 370.00, 
         weight: "1Kg",
         image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%201kg%20pet?updatedAt=1766222544459",
         category: "premium"
@@ -113,7 +113,7 @@ const products = [
     { 
         id: 6, 
         name: "Natura Agmark Honey", 
-        price: 329, 
+        price: 200.00, 
         weight: "500g",
         image: "https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20500g%20pet?updatedAt=1766223840598",
         category: "premium"
@@ -2609,4 +2609,3 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
-
