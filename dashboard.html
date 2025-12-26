@@ -3583,19 +3583,20 @@ function statusClass(s) {
             });
     }
 
-    function updatePendingOrdersCount() {
-        const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
-        if (!target) return;
+function updatePendingOrdersCount() {
+    const target = document.querySelector('.welcome-stats .welcome-stat:nth-child(2) .stat-number');
+    if (!target) return;
 
-        db.collection("orders")
-            .where("status", "==", "pending")
-            .onSnapshot(snapshot => {
-                target.textContent = snapshot.size;
-            }, (error) => {
-                console.error("Error fetching pending orders:", error);
-                target.textContent = "0";
-            });
-    }
+    db.collection("orders")
+        .where("status", "==", "ordered") // Changed from "pending"
+        .where("paymentStatus", "==", "paid") // Only count paid orders
+        .onSnapshot(snapshot => {
+            target.textContent = snapshot.size;
+        }, (error) => {
+            console.error("Error fetching pending orders:", error);
+            target.textContent = "0";
+        });
+}
 
     function updateStatsForDate(date) {
         selectedDate = new Date(date.getTime());
@@ -3763,10 +3764,11 @@ function loadDashboardRecentOrders() {
         window.dashboardOrdersListener();
     }
 
-    window.dashboardOrdersListener = db.collection("orders")
-        .orderBy("createdAt", "desc")
-        .limit(5)
-        .onSnapshot(snapshot => {
+window.dashboardOrdersListener = db.collection("orders")
+  .where("paymentStatus", "in", ["paid", "completed"]) // Only show paid orders
+  .orderBy("createdAt", "desc")
+  .limit(5)
+  .onSnapshot(snapshot => {
             if (snapshot.empty) {
                 renderDashboardEmptyOrders(list);
                 return;
