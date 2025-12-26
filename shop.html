@@ -4823,20 +4823,6 @@
       padding: 20px;
     }
 
-    .quick-view-content {
-      background: white;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 1000px;
-      max-height: 85vh;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      /* Hide scrollbar */
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
     .quick-view-content::-webkit-scrollbar {
       display: none;
     }
@@ -4849,32 +4835,6 @@
       cursor: pointer;
       padding: 15px;
       color: #333;
-    }
-
-    .quick-view-body {
-      display: flex;
-      padding: 0 30px 30px;
-      gap: 30px;
-    }
-
-    .quick-view-image {
-      flex: 1;
-      max-width: 400px;
-      border-radius: 15px;
-      overflow: hidden;
-    }
-
-    .quick-view-image img {
-      width: 100%;
-      height: auto;
-      display: block;
-      transform-origin: center center;
-    }
-
-    .quick-view-details {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
     }
 
     .quick-view-title {
@@ -4898,17 +4858,61 @@
       align-items: center;
       margin-bottom: 15px;
     }
+    
+    /* Quick View Modal - Updated for desktop */
+.quick-view-content {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 900px; /* Reduced from 1000px */
+    height: auto; /* Changed from max-height: 85vh */
+    max-height: none; /* Remove max-height constraint */
+    overflow: hidden; /* Changed from overflow-y: auto */
+    display: flex;
+    flex-direction: column;
+}
 
-    .quick-view-description {
-      font-family: 'Unbounded', sans-serif;
-      font-size: 16px;
-      color: #777;
-      line-height: 1.6;
-      margin-bottom: 20px;
-      /* Remove scrollbar */
-      overflow: visible;
-      max-height: none;
-    }
+.quick-view-body {
+    display: flex;
+    padding: 0 25px 25px; /* Reduced padding */
+    gap: 25px; /* Reduced gap */
+    max-height: 600px; /* Set a reasonable max height */
+}
+
+.quick-view-image {
+    flex: 1;
+    max-width: 350px; /* Reduced from 400px */
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quick-view-image img {
+    width: 100%;
+    height: auto;
+    max-height: 400px; /* Limit image height */
+    object-fit: contain;
+}
+
+.quick-view-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: visible; /* Ensure no scroll in details */
+}
+
+.quick-view-description {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 15px; /* Reduced from 16px */
+    color: #777;
+    line-height: 1.5; /* Reduced from 1.6 */
+    margin-bottom: 15px; /* Reduced from 20px */
+    overflow: visible;
+    max-height: none;
+    flex-grow: 0; /* Don't allow to grow too much */
+}
 
     .quick-view-weight {
       display: inline-block;
