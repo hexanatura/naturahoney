@@ -1141,7 +1141,7 @@ async function createRazorpayOrderDirect(amount, orderId) {
       orderId: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       amount: amount * 100,
       currency: 'INR',
-      razorpayKey: '  ' // Replace with your actual test key
+      razorpayKey: 'rzp_live_Rv4QzbScUtAjxZ' // Replace with your actual test key
     };
   }
 }
