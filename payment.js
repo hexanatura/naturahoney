@@ -1,4 +1,3 @@
-
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
 
@@ -250,21 +249,36 @@ function fillAddressForm(address) {
     }
 }
 
-// Update totals including discount
 function updateTotals() {
     const subtotalElement = document.getElementById('subtotal');
+    const shippingElement = document.getElementById('shipping');
     const totalElement = document.getElementById('total');
     const discountRow = document.getElementById('discountRow');
     const discountAmount = document.getElementById('discountAmount');
     
-    if (!subtotalElement || !totalElement || !discountRow || !discountAmount) return;
+    if (!subtotalElement || !shippingElement || !totalElement || !discountRow || !discountAmount) return;
     
+    // Calculate shipping
+    const subtotal = window.originalTotal - window.shippingCost; // Get pure subtotal
+    const shipping = window.shippingCost;
     const newTotal = Math.max(0, window.originalTotal - window.currentDiscount);
     
-subtotalElement.textContent = `₹${window.originalTotal.toFixed(2)}`;    
+    // Update display - show original subtotal
+    subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+    
+    // Update shipping display
+    if (shipping > 0) {
+        shippingElement.textContent = `₹${shipping.toFixed(2)}`;
+        shippingElement.style.color = '#e74c3c'; // Red color for shipping cost
+    } else {
+        shippingElement.textContent = 'FREE';
+        shippingElement.style.color = '#27ae60'; // Green for free shipping
+    }
+    
+    // Show discount if applied
     if (window.currentDiscount > 0 && window.appliedPromoCode) {
         discountRow.style.display = 'flex';
-        discountAmount.textContent = `-₹${window.currentDiscount}`;
+        discountAmount.textContent = `-₹${window.currentDiscount.toFixed(2)}`;
         discountAmount.style.color = '#27ae60';
     } else {
         discountRow.style.display = 'none';
@@ -272,8 +286,26 @@ subtotalElement.textContent = `₹${window.originalTotal.toFixed(2)}`;
         window.appliedPromoCode = null;
     }
     
-totalElement.textContent = `₹${newTotal.toFixed(2)}`;
+    // Show TOTAL amount (not subtotal)
+    totalElement.textContent = `₹${newTotal.toFixed(2)}`;
+    
+    // Also request the total amount to user (add a visual emphasis)
+    emphasizeTotalAmount(newTotal);
+    
     refreshPromoCodes();
+}
+
+// Add this new function to emphasize total amount
+function emphasizeTotalAmount(total) {
+    const totalElement = document.getElementById('total');
+    if (totalElement) {
+        totalElement.style.fontSize = '24px';
+        totalElement.style.fontWeight = '800';
+        totalElement.style.color = '#5f2b27';
+        
+        // Add a small animation
+        totalElement.classList.add('animate-total');
+    }
 }
 
 // PROMO CODE FUNCTIONALITY
@@ -806,9 +838,17 @@ function updateOrderSummary() {
         }
     }
     
-    window.originalTotal = subtotal;
+window.originalTotal = subtotal;
     updateTotals();
     refreshPromoCodes();
+    
+    let shipping = 0;
+if (subtotal < 599) {
+    shipping = 59;
+}
+window.shippingCost = shipping;
+window.originalTotal = subtotal + shipping;
+updateTotals();
 }
 
 // Enhanced validateCheckoutForm function
@@ -877,7 +917,7 @@ function validateCheckoutForm() {
     }
     
     if (!isValid && errorMessages.length > 0) {
-        showNotification('Please fix the errors in the form', 'error');
+        showNotification('Please fill in the form!', 'error');
     }
     
     return isValid;
