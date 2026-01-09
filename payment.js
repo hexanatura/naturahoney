@@ -787,6 +787,17 @@ function updateOrderSummary() {
             checkoutBtn.style.opacity = '0.5';
             checkoutBtn.style.cursor = 'not-allowed';
         }
+        
+      setTimeout(() => {
+            showNotification('Your cart is empty! Redirecting to Home...', 'info');
+            
+            // Redirect after 3 seconds
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 3000);
+        }, 1000);
+        
+        return; 
     } else {
         cartProducts.forEach(item => {
             const product = products.find(p => p.id === item.id);
