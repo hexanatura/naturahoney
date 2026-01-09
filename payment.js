@@ -854,7 +854,7 @@ window.originalTotal = subtotal;
     refreshPromoCodes();
     
     let shipping = 0;
-if (subtotal < 599) {
+if (subtotal < 299) {
     shipping = 59;
 }
 window.shippingCost = shipping;
