@@ -6881,16 +6881,20 @@ nav {
         <!-- Shipping Method -->
         <div class="form-section">
           <h2 class="section-title">Shipping Method</h2>
-          <div class="payment-method active" id="standard-shipping">
-            <div class="payment-icon">
-              <i class="fas fa-truck"></i>
-            </div>
-            <div class="payment-details">
-              <div class="payment-title">Standard Shipping</div>
-              <div class="payment-description">Delivery in 7-15 business days</div>
-            </div>
-            <div class="payment-price">FREE</div>
-          </div>
+<div class="payment-method active" id="standard-shipping">
+    <div class="payment-icon">
+        <i class="fas fa-truck"></i>
+    </div>
+    <div class="payment-details">
+        <div class="payment-title">Standard Shipping</div>
+        <div class="payment-description">
+            <span id="shipping-details">
+                Free shipping on orders above ₹599
+            </span>
+        </div>
+    </div>
+    <div class="payment-price" id="shipping-price">FREE</div>
+</div>
         </div>
         
         <!-- Payment Method -->
@@ -6948,22 +6952,22 @@ nav {
 
 <!-- Order Summary Details -->
 <div class="order-summary-details">
-  <div class="order-summary-row">
-    <span>Subtotal</span>
-    <span id="subtotal">₹0</span>
-  </div>
-  <div class="order-summary-row" id="discountRow" style="display: none;">
-    <span>Discount</span>
-    <span id="discountAmount">-₹0</span>
-  </div>
-  <div class="order-summary-row">
-    <span>Shipping</span>
-    <span>FREE</span>
-  </div>
-  <div class="order-summary-row total">
-    <span>Total</span>
-    <span id="total">₹0</span>
-  </div>
+    <div class="order-summary-row">
+        <span>Subtotal</span>
+        <span id="subtotal">₹0</span>
+    </div>
+    <div class="order-summary-row">
+        <span>Shipping</span>
+        <span id="shipping">₹0</span>
+    </div>
+    <div class="order-summary-row" id="discountRow" style="display: none;">
+        <span>Discount</span>
+        <span id="discountAmount">-₹0</span>
+    </div>
+    <div class="order-summary-row total">
+        <span>Total Amount</span>
+        <span id="total">₹0</span>
+    </div>
 </div>
         
         <!-- Checkout Button -->
