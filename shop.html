@@ -5376,6 +5376,40 @@
       background: #7a3731;
       transform: translateY(-2px);
     }
+    
+    .product-card[data-out-of-stock="true"] .add-to-cart-btn {
+    background: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.product-card[data-out-of-stock="true"] .add-to-cart-btn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: #ccc !important;
+}
+
+/* Quick View Out of Stock Button */
+.quick-view-modal .out-of-stock-btn {
+    background: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* Favorites sidebar out of stock button */
+.likes-items .add-to-cart-btn.out-of-stock-fav {
+    background: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.likes-items .add-to-cart-btn.out-of-stock-fav:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
 
     /* Likes Sidebar */
     .likes-sidebar {
@@ -6127,181 +6161,179 @@
     
     <!-- Products Grid View -->
     <div class="products-grid" id="productsGrid">
-      <!-- Product 1 -->
-      <div class="product-card" data-category="crystal" data-price="249" data-rating="4.5" data-weight="1kg" data-id="1">
-        <div class="product-image-container">
-              <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20500g?updatedAt=1766222498725" alt="Natura Agmark Honey" />
-          <div class="product-weight">1Kg</div>
-          <div class="overlay">Quick View</div>
-        </div>
-        <div class="product-details">
-          <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹420.00</div>
-          <div class="product-rating">
-            <div class="rating-stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star-half-alt"></i>
-            </div>
-            <span class="rating-count">(128)</span>
-          </div>
-          <div class="product-actions">
-            <button class="add-to-cart-btn">Add to Cart</button>
-            <button class="wishlist-btn">
-              <i class="far fa-heart"></i>
-            </button>
-          </div>
-        </div>
+     <!-- Product 1 -->
+<div class="product-card" data-category="crystal" data-price="249" data-rating="4.5" data-weight="1kg" data-id="1" data-out-of-stock="false">
+  <div class="product-image-container">
+    <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20500g?updatedAt=1766222498725" alt="Natura Agmark Honey" />
+    <div class="product-weight">1Kg</div>
+    <div class="overlay">Quick View</div>
+  </div>
+  <div class="product-details">
+    <h3 class="product-title">Natura Agmark Honey</h3>
+    <div class="product-price">₹420.00</div>
+    <div class="product-rating">
+      <div class="rating-stars">
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star-half-alt"></i>
       </div>
-      
-      <!-- Product 2 -->
-      <div class="product-card" data-category="crystal" data-price="449" data-rating="5" data-weight="500g" data-id="2">
-        <div class="product-image-container">
-              <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%201kg?updatedAt=1766222517443"  alt="Natura Agmark Honey" />
-          <div class="product-weight">500g</div>
-          <div class="overlay">Quick View</div>
-        </div>
-        <div class="product-details">
-          <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹230.00</div>
-          <div class="product-rating">
-            <div class="rating-stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-            </div>
-            <span class="rating-count">(95)</span>
-          </div>
-          <div class="product-actions">
-            <button class="add-to-cart-btn">Add to Cart</button>
-            <button class="wishlist-btn">
-              <i class="far fa-heart"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Product 3 -->
-      <div class="product-card" data-category="crystal" data-price="149" data-rating="4" data-weight="100g" data-id="3">
-        <div class="product-image-container">
-              <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20100g?updatedAt=1766222470748"  alt="Natura Agmark Honey" />
-          <div class="product-weight">100g</div>
-          <div class="overlay">Quick View</div>
-        </div>
-        <div class="product-details">
-          <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹65.00</div>
-          <div class="product-rating">
-            <div class="rating-stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="far fa-star"></i>
-            </div>
-            <span class="rating-count">(67)</span>
-          </div>
-          <div class="product-actions">
-            <button class="add-to-cart-btn">Add to Cart</button>
-            <button class="wishlist-btn">
-              <i class="far fa-heart"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Product 4 -->
-      <div class="product-card" data-category="crystal" data-price="349" data-rating="5" data-weight="50g" data-id="4">
-        <div class="product-image-container">
-              <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%2050g?updatedAt=1766222568792"  alt="Natura Agmark Honey" />
-          <div class="product-weight">50g</div>
-          <div class="overlay">Quick View</div>
-        </div>
-        <div class="product-details">
-          <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹40.00</div>
-          <div class="product-rating">
-            <div class="rating-stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-            </div>
-            <span class="rating-count">(42)</span>
-          </div>
-          <div class="product-actions">
-            <button class="add-to-cart-btn">Add to Cart</button>
-            <button class="wishlist-btn">
-              <i class="far fa-heart"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Product 5 -->
-      <div class="product-card" data-category="premium" data-price="199" data-rating="4.5" data-weight="1kg" data-id="5">
-        <div class="product-image-container">
-              <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%201kg%20pet?updatedAt=1766222544459"  alt="Natura Agmark Honey" />
-          <div class="product-weight">1Kg</div>
-          <div class="overlay">Quick View</div>
-        </div>
-        <div class="product-details">
-          <h3 class="product-title">Natura Agmark Honey</h3>
-          <div class="product-price">₹370.00</div>
-          <div class="product-rating">
-            <div class="rating-stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star-half-alt"></i>
-            </div>
-            <span class="rating-count">(56)</span>
-          </div>
-          <div class="product-actions">
-            <button class="add-to-cart-btn">Add to Cart</button>
-            <button class="wishlist-btn">
-              <i class="far fa-heart"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Product 6 -->
-      <div class="product-card" data-category="premium" data-price="329" data-rating="4" data-weight="500g" data-id="6">
-        <div class="product-image-container">
-              <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20500g%20pet?updatedAt=1766223840598"  alt="Natura Agmark Honey" />
-          <div class="product-weight">500g</div>
-          <div class="overlay">Quick View</div>
-        </div>
-        <div class="product-details">
-          <h3 class="product-title">Natura Agmark Honey - Premium Pet</h3>
-          <div class="product-price">₹200.00</div>
-          <div class="product-rating">
-            <div class="rating-stars">
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="fas fa-star"></i>
-              <i class="far fa-star"></i>
-            </div>
-            <span class="rating-count">(38)</span>
-          </div>
-          <div class="product-actions">
-            <button class="add-to-cart-btn">Add to Cart</button>
-            <button class="wishlist-btn">
-              <i class="far fa-heart"></i>
-            </button>
-          </div>
-        </div>
-      </div>
+      <span class="rating-count">(128)</span>
+    </div>
+    <div class="product-actions">
+      <button class="add-to-cart-btn">Add to Cart</button>
+      <button class="wishlist-btn">
+        <i class="far fa-heart"></i>
+      </button>
     </div>
   </div>
+</div>
+
+<!-- Product 2 -->
+<div class="product-card" data-category="crystal" data-price="449" data-rating="5" data-weight="500g" data-id="2" data-out-of-stock="false">
+  <div class="product-image-container">
+    <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%201kg?updatedAt=1766222517443" alt="Natura Agmark Honey" />
+    <div class="product-weight">500g</div>
+    <div class="overlay">Quick View</div>
+  </div>
+  <div class="product-details">
+    <h3 class="product-title">Natura Agmark Honey</h3>
+    <div class="product-price">₹230.00</div>
+    <div class="product-rating">
+      <div class="rating-stars">
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+      </div>
+      <span class="rating-count">(95)</span>
+    </div>
+    <div class="product-actions">
+      <button class="add-to-cart-btn">Add to Cart</button>
+      <button class="wishlist-btn">
+        <i class="far fa-heart"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Product 3 -->
+<div class="product-card" data-category="crystal" data-price="149" data-rating="4" data-weight="100g" data-id="3" data-out-of-stock="true">
+  <div class="product-image-container">
+    <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20100g?updatedAt=1766222470748" alt="Natura Agmark Honey" />
+    <div class="product-weight">100g</div>
+    <div class="overlay">Quick View</div>
+  </div>
+  <div class="product-details">
+    <h3 class="product-title">Natura Agmark Honey</h3>
+    <div class="product-price">₹65.00</div>
+    <div class="product-rating">
+      <div class="rating-stars">
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="far fa-star"></i>
+      </div>
+      <span class="rating-count">(67)</span>
+    </div>
+    <div class="product-actions">
+      <button class="add-to-cart-btn">Add to Cart</button>
+      <button class="wishlist-btn">
+        <i class="far fa-heart"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Product 4 -->
+<div class="product-card" data-category="crystal" data-price="349" data-rating="5" data-weight="50g" data-id="4" data-out-of-stock="false">
+  <div class="product-image-container">
+    <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%2050g?updatedAt=1766222568792" alt="Natura Agmark Honey" />
+    <div class="product-weight">50g</div>
+    <div class="overlay">Quick View</div>
+  </div>
+  <div class="product-details">
+    <h3 class="product-title">Natura Agmark Honey</h3>
+    <div class="product-price">₹40.00</div>
+    <div class="product-rating">
+      <div class="rating-stars">
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+      </div>
+      <span class="rating-count">(42)</span>
+    </div>
+    <div class="product-actions">
+      <button class="add-to-cart-btn">Add to Cart</button>
+      <button class="wishlist-btn">
+        <i class="far fa-heart"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Product 5 -->
+<div class="product-card" data-category="premium" data-price="199" data-rating="4.5" data-weight="1kg" data-id="5" data-out-of-stock="false">
+  <div class="product-image-container">
+    <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%201kg%20pet?updatedAt=1766222544459" alt="Natura Agmark Honey" />
+    <div class="product-weight">1Kg</div>
+    <div class="overlay">Quick View</div>
+  </div>
+  <div class="product-details">
+    <h3 class="product-title">Natura Agmark Honey</h3>
+    <div class="product-price">₹370.00</div>
+    <div class="product-rating">
+      <div class="rating-stars">
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star-half-alt"></i>
+      </div>
+      <span class="rating-count">(56)</span>
+    </div>
+    <div class="product-actions">
+      <button class="add-to-cart-btn">Add to Cart</button>
+      <button class="wishlist-btn">
+        <i class="far fa-heart"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Product 6 -->
+<div class="product-card" data-category="premium" data-price="329" data-rating="4" data-weight="500g" data-id="6" data-out-of-stock="true">
+  <div class="product-image-container">
+    <img src="https://ik.imagekit.io/hexaanatura/Natura%20Agmark%20Honey%20500g%20pet?updatedAt=1766223840598" alt="Natura Agmark Honey" />
+    <div class="product-weight">500g</div>
+    <div class="overlay">Quick View</div>
+  </div>
+  <div class="product-details">
+    <h3 class="product-title">Natura Agmark Honey</h3>
+    <div class="product-price">₹200.00</div>
+    <div class="product-rating">
+      <div class="rating-stars">
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="fas fa-star"></i>
+        <i class="far fa-star"></i>
+      </div>
+      <span class="rating-count">(38)</span>
+    </div>
+    <div class="product-actions">
+      <button class="add-to-cart-btn">Add to Cart</button>
+      <button class="wishlist-btn">
+        <i class="far fa-heart"></i>
+      </button>
+    </div>
+  </div>
+</div>
 
   <!-- Profile Page -->
   <div class="profile-page" id="profilePage">
