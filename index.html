@@ -39,8 +39,34 @@
     position: relative;
 }
 
-/* Add this CSS to your existing styles */
+/* Add these styles to your existing CSS */
+.like-item .out-of-stock-btn {
+    background: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
 
+.like-item .out-of-stock-btn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: #ccc !important;
+}
+
+/* Also update the existing product card out-of-stock button styles if needed */
+.add-to-cart-btn.out-of-stock-btn {
+    background: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+
+.add-to-cart-btn.out-of-stock-btn:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: #ccc !important;
+}
+  
 /* Quick View Modal - Compact Version */
 .quick-view-modal {
   display: none;
