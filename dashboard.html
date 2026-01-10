@@ -72,6 +72,8 @@ body {
     transition: all 0.1s ease;
 }
 
+
+
 /* Modern eye icon - floating circle */
 .eye-floating {
     position: absolute;
@@ -2216,6 +2218,12 @@ body {
     <span class="menu-count" id="countCustomers"></span>
 </div>
 
+<div class="menu-item" id="menuProducts">
+    <div class="menu-icon"><i class="fas fa-box-open"></i></div>
+    <div class="menu-text">Products</div>
+    <span class="menu-count" id="countProducts"></span>
+</div>
+
 <div class="menu-item" id="menuMessages">
     <div class="menu-icon"><i class="fas fa-envelope"></i></div>
     <div class="menu-text">Messages</div>
@@ -3140,7 +3148,9 @@ const LAST_OPEN = {
     customers: "lastOpenCustomers", 
     messages: "lastOpenMessages",
     reviews: "lastOpenReviews",
-    promo: "lastOpenPromo"
+    promo: "lastOpenPromo",
+    products: "lastOpenProducts"
+    
 };
 
     const menuListeners = {
@@ -3148,7 +3158,8 @@ const LAST_OPEN = {
     customers: null, 
     messages: null,
     reviews: null,
-    promo: null
+    promo: null,
+    products: null
 };
 
     // Review management variables
@@ -4051,6 +4062,7 @@ function closeMobileMenu() {
         checkNewItems("contactSubmissions", LAST_OPEN.messages, document.getElementById("countMessages"), "timestamp");
         checkNewItems("reviews", LAST_OPEN.reviews, document.getElementById("countReviews"), "createdAt");
           checkNewItems("promoCodes", LAST_OPEN.promo, document.getElementById("countPromo"), "createdAt");
+             checkNewItems("products", LAST_OPEN.products, document.getElementById("countProducts"), "createdAt");
     }
 
     function checkNewItems(collection, lastKey, badgeEl, field) {
@@ -4103,6 +4115,11 @@ function closeMobileMenu() {
                     updateBadge(document.getElementById("countCustomers"), 0);
                     loadCustomersPage();
                     break;
+                    case 'Products': // Add this case
+    localStorage.setItem(LAST_OPEN.products, Date.now());
+    updateBadge(document.getElementById("countProducts"), 0);
+    loadProductsPage();
+    break;
                 case 'Messages':
                     localStorage.setItem(LAST_OPEN.messages, Date.now());
                     updateBadge(document.getElementById("countMessages"), 0);
@@ -4155,6 +4172,15 @@ function closeMobileMenu() {
         if (createCancelBtn) createCancelBtn.addEventListener('click', closeCreateReviewModal);
         if (createSaveBtn) createSaveBtn.addEventListener('click', saveCreateReview);
     }
+    
+    function loadProductsPage() {
+    loadHTML("products.html").then(() => {
+       
+    });
+}
+
+if (!localStorage.getItem(LAST_OPEN.products)) localStorage.setItem(LAST_OPEN.products, Date.now());
+
 
     function initDashboard() {
         if (dashboardInitialized) return;
