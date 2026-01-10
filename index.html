@@ -39,6 +39,307 @@
     position: relative;
 }
 
+/* Add this CSS to your existing styles */
+
+/* Quick View Modal - Compact Version */
+.quick-view-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.quick-view-content {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 900px; /* Reduced from 1000px */
+  height: auto; /* Changed from max-height: 90vh */
+  max-height: none; /* Remove max-height constraint */
+  overflow: hidden; /* Changed from overflow-y: auto */
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-view-body {
+  display: flex;
+  padding: 0 25px 25px; /* Reduced padding */
+  gap: 25px; /* Reduced gap */
+  max-height: 600px; /* Set a reasonable max height */
+}
+
+.quick-view-image {
+  flex: 1;
+  max-width: 350px; /* Reduced from 400px */
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-view-image img {
+  width: 100%;
+  height: auto;
+  max-height: 400px; /* Limit image height */
+  object-fit: contain;
+}
+
+.quick-view-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; /* Ensure no scroll in details */
+}
+
+.quick-view-title {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 24px; /* Reduced from 28px */
+  color: #333;
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.quick-view-price {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 26px; /* Reduced from 28px */
+  color: #5f2b27;
+  margin-bottom: 15px;
+}
+
+.quick-view-description {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 15px; /* Reduced from 16px */
+  color: #777;
+  line-height: 1.5; /* Reduced from 1.6 */
+  margin-bottom: 15px; /* Reduced from 20px */
+  overflow: visible;
+  max-height: none;
+  flex-grow: 0; /* Don't allow to grow too much */
+}
+
+.quick-view-weight {
+  display: inline-block;
+  background: #FFD700;
+  color: #5f2b27;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border: 1px solid #5f2b27;
+}
+
+.quick-view-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.quick-view-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: auto;
+  margin-bottom: 20px;
+}
+
+.quick-view-add-to-cart {
+  background: #5f2b27;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex-grow: 1;
+}
+
+.quick-view-add-to-cart:hover {
+  background: #7a3731;
+}
+
+.quick-view-wishlist {
+  background: #f1f1f1;
+  color: #333;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.quick-view-wishlist:hover {
+  background: #FFD700;
+  color: #5f2b27;
+}
+
+.quick-view-close {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 15px;
+  color: #333;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 767px) {
+  .quick-view-content {
+    max-width: 90% !important;
+    max-height: 90vh !important;
+    margin: auto !important;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90% !important;
+    overflow: hidden !important;
+  }
+  
+  .quick-view-body {
+    flex-direction: column !important;
+    padding: 0 15px 15px !important;
+    gap: 15px;
+  }
+  
+  .quick-view-image {
+    max-width: 100% !important;
+    max-height: 300px !important;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .quick-view-image img {
+    max-height: 300px !important;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  
+  .quick-view-title {
+    font-size: 18px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .quick-view-price {
+    font-size: 20px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .quick-view-description {
+    font-size: 13px !important;
+    margin-bottom: 12px !important;
+    line-height: 1.4;
+  }
+  
+  .quick-view-actions {
+    flex-direction: row !important;
+    gap: 10px !important;
+    margin-top: 10px;
+  }
+  
+  .quick-view-add-to-cart {
+    padding: 10px 15px !important;
+    font-size: 14px !important;
+  }
+  
+  .quick-view-wishlist {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .quick-view-close {
+    padding: 10px 12px !important;
+    font-size: 20px !important;
+  }
+}
+
+/* Tablet Styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .quick-view-content {
+    max-width: 85% !important;
+    max-height: 80vh !important;
+  }
+  
+  .quick-view-body {
+    padding: 0 20px 20px !important;
+    gap: 20px;
+  }
+  
+  .quick-view-image {
+    max-width: 45% !important;
+  }
+  
+  .quick-view-details {
+    flex: 1;
+  }
+  
+  .quick-view-title {
+    font-size: 22px !important;
+  }
+  
+  .quick-view-price {
+    font-size: 24px !important;
+  }
+  
+  .quick-view-description {
+    font-size: 14px !important;
+  }
+}
+
+/* Desktop (Large Screens) */
+@media (min-width: 1024px) {
+  .quick-view-content {
+    max-width: 900px !important;
+  }
+  
+  .quick-view-body {
+    padding: 0 25px 25px !important;
+    gap: 25px;
+  }
+  
+  .quick-view-title {
+    font-size: 24px !important;
+  }
+  
+  .quick-view-price {
+    font-size: 26px !important;
+  }
+  
+  .quick-view-description {
+    font-size: 15px !important;
+  }
+}
+
+/* Hide scrollbars for quick view */
+.quick-view-content::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-view-content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 /* Blurred overlay */
 .cancelled-order::before {
     content: "";
