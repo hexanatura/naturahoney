@@ -1,5 +1,4 @@
-
-    <style>
+   <style>
     * {
       margin: 0;
       padding: 0;
@@ -935,10 +934,17 @@
 
   // Utility Functions
   function showToast(message, type = "success") {
+    if (!toast || !toastText) return;
+    
     toastText.textContent = message;
     toast.style.borderLeftColor = type === "success" ? "var(--success)" : "var(--danger)";
     toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3000);
+    
+    setTimeout(() => {
+      if (toast.classList.contains("show")) {
+        toast.classList.remove("show");
+      }
+    }, 3000);
   }
 
   function esc(text) {
@@ -968,6 +974,8 @@
   }
 
   function openImageZoom(imageSrc, altText) {
+    if (!imgZoomModal || !zoomedImage) return;
+    
     zoomedImage.src = imageSrc;
     imageCaption.textContent = altText || "Product Image";
     imgZoomModal.classList.add("show");
@@ -975,59 +983,77 @@
   }
 
   function closeImageZoom() {
+    if (!imgZoomModal) return;
     imgZoomModal.classList.remove("show");
     document.body.style.overflow = 'auto';
   }
 
   // Image Zoom Event Listeners
-  imgZoomModal.addEventListener('click', function (e) {
-    if (e.target === imgZoomModal || e.target.closest('#imageZoomClose')) {
-      closeImageZoom();
-    }
-  });
+  if (imgZoomModal) {
+    imgZoomModal.addEventListener('click', function (e) {
+      if (e.target === imgZoomModal || e.target.closest('#imageZoomClose')) {
+        closeImageZoom();
+      }
+    });
+  }
 
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && imgZoomModal.classList.contains('show')) {
+    if (e.key === 'Escape' && imgZoomModal && imgZoomModal.classList.contains('show')) {
       closeImageZoom();
     }
   });
 
   // Load Products
   function loadProducts() {
+    if (!tbody || !cards) return;
+    
     tbody.innerHTML = `<tr><td colspan="7" class="muted">Loading products…</td></tr>`;
     cards.innerHTML = `<div class="loading-state">
       <i class="fas fa-spinner fa-spin loading-spinner"></i>
       <p>Loading products...</p>
     </div>`;
 
-    // Set up real-time listener
-    if (productsListener) {
+    // Clean up previous listener
+    if (productsListener && typeof productsListener === 'function') {
       productsListener();
     }
 
-    productsListener = db.collection(PRODUCTS_COLLECTION)
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(snapshot => {
-        if (snapshot.empty) {
-          showEmptyState();
-          return;
-        }
+    try {
+      productsListener = db.collection(PRODUCTS_COLLECTION)
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+          if (snapshot.empty) {
+            showEmptyState();
+            return;
+          }
 
-        products = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt || firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: doc.data().updatedAt || firebase.firestore.FieldValue.serverTimestamp()
-        }));
+          products = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt || firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: doc.data().updatedAt || firebase.firestore.FieldValue.serverTimestamp()
+          }));
 
-        applyFilters();
-      }, error => {
-        console.error("Error loading products:", error);
-        showErrorState(error.message);
-      });
+          applyFilters();
+          
+          // Update shop page if it exists
+          if (window.updateShopProducts && typeof window.updateShopProducts === 'function') {
+            window.updateShopProducts(products);
+          }
+          
+        }, error => {
+          console.error("Error loading products:", error);
+          showErrorState(error.message);
+        });
+    } catch (error) {
+      console.error("Firestore error:", error);
+      showErrorState("Failed to connect to database");
+    }
   }
 
   function showEmptyState() {
+    if (!tbody || !cards) return;
+    
     tbody.innerHTML = `<tr><td colspan="7">
       <div class="empty-state">
         <i class="fas fa-box-open empty-icon"></i>
@@ -1044,6 +1070,8 @@
   }
 
   function showErrorState(message) {
+    if (!tbody || !cards) return;
+    
     tbody.innerHTML = `<tr><td colspan="7">
       <div class="error-state">
         <i class="fas fa-exclamation-triangle error-icon"></i>
@@ -1063,9 +1091,9 @@
   function applyFilters() {
     let filteredProducts = [...products];
     
-    const status = statusFilter.value;
-    const category = categoryFilter.value;
-    const search = searchInput.value.toLowerCase().trim();
+    const status = statusFilter ? statusFilter.value : 'all';
+    const category = categoryFilter ? categoryFilter.value : 'all';
+    const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
     // Filter by status
     if (status !== 'all') {
@@ -1087,11 +1115,10 @@
 
     // Filter by search
     if (search) {
-      filteredProducts = filteredProducts.filter(product =>
-        product.name.toLowerCase().includes(search) ||
-        product.sku?.toLowerCase().includes(search) ||
-        product.description?.toLowerCase().includes(search)
-      );
+      filteredProducts = filteredProducts.filter(product => {
+        const searchText = `${product.name || ''} ${product.sku || ''} ${product.description || ''}`.toLowerCase();
+        return searchText.includes(search);
+      });
     }
 
     filtered = filteredProducts;
@@ -1100,6 +1127,8 @@
 
   // Render Products
   function renderProducts(productsList) {
+    if (!tbody || !cards) return;
+    
     if (productsList.length === 0) {
       showEmptyState();
       return;
@@ -1609,25 +1638,29 @@
   // Event Listeners Setup
   function setupEventListeners() {
     // Modal controls
-    modalClose.onclick = closeModal;
-    modalCancel.onclick = closeModal;
-    modalSave.onclick = saveProduct;
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
+    if (modalClose) modalClose.onclick = closeModal;
+    if (modalCancel) modalCancel.onclick = closeModal;
+    if (modalSave) modalSave.onclick = saveProduct;
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
 
     // Filter controls
-    statusFilter.onchange = applyFilters;
-    categoryFilter.onchange = applyFilters;
-    searchInput.oninput = debounce(applyFilters, 300);
+    if (statusFilter) statusFilter.onchange = applyFilters;
+    if (categoryFilter) categoryFilter.onchange = applyFilters;
+    if (searchInput) searchInput.oninput = debounce(applyFilters, 300);
 
     // Button controls
-    refreshBtn.onclick = () => {
-      loadProducts();
-      showToast('Refreshing products...', 'info');
-    };
+    if (refreshBtn) {
+      refreshBtn.onclick = () => {
+        loadProducts();
+        showToast('Refreshing products...', 'info');
+      };
+    }
 
-    addBtn.onclick = () => openProductModal(null, true);
+    if (addBtn) addBtn.onclick = () => openProductModal(null, true);
   }
 
   // Debounce function
@@ -1645,6 +1678,13 @@
 
   // Initialize
   function init() {
+    // Check if Firebase is initialized
+    if (!firebase.apps.length) {
+      console.error('Firebase not initialized');
+      showErrorState('Firebase not initialized');
+      return;
+    }
+
     setupEventListeners();
     loadProducts();
     
@@ -1652,8 +1692,12 @@
     window.openImageZoom = openImageZoom;
   }
 
-  // Start the application
-  init();
+  // Start the application when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 
 })();
 </script>
