@@ -43,9 +43,18 @@ function closeQuickView() {
     document.body.style.overflow = 'auto';
 }
 
-// Quick View Add to Cart functionality
+// In the quick view initialization, update the add to cart button based on stock status
 quickViewAddToCartBtn.addEventListener('click', function() {
     if (currentQuickViewProductId) {
+        // Check if product is out of stock
+        const productCard = document.querySelector(`.product-card[data-id="${currentQuickViewProductId}"]`);
+        const isOutOfStock = productCard ? productCard.getAttribute('data-out-of-stock') === 'true' : false;
+        
+        if (isOutOfStock) {
+            alert('This product is currently out of stock!');
+            return;
+        }
+        
         // Add visual feedback
         this.classList.add('adding');
         
@@ -104,7 +113,38 @@ function updateProductCardWishlistButton(productId, isLiked) {
     }
 }
 
-// Initialize product cards with data-id attributes and event listeners
+// In index.js, update the addToCart function to check for out-of-stock status
+
+function addToCart(productId, quantity = 1) {
+    // Check if product is out of stock
+    const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+    const isOutOfStock = productCard ? productCard.getAttribute('data-out-of-stock') === 'true' : false;
+    
+    if (isOutOfStock) {
+        alert('This product is currently out of stock!');
+        return; // Don't add to cart if out of stock
+    }
+    
+    const existingItem = cartProducts.find(item => item.id === productId);
+    
+    if (existingItem) {
+        existingItem.quantity += quantity;
+    } else {
+        cartProducts.push({ id: productId, quantity });
+    }
+    
+    localStorage.setItem('guestCart', JSON.stringify(cartProducts));
+    
+    updateCartUI();
+    addCartVisualFeedback();
+    
+    closeAllSidebars();
+    cartSidebar.classList.add('active');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Also update the product initialization in initializeProductCards to handle out-of-stock buttons
 function initializeProductCards() {
     const productCards = document.querySelectorAll('.product-card');
     
@@ -123,21 +163,33 @@ function initializeProductCards() {
         
         card.setAttribute('data-id', productId);
         
+        // Check if product is out of stock
+        const isOutOfStock = card.getAttribute('data-out-of-stock') === 'true';
+        
         const addToCartBtn = card.querySelector('.add-to-cart-btn');
         
-        addToCartBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            addToCartBtn.classList.add('adding');
-            
-            // Add to cart (this will now auto-open the cart sidebar)
-            addToCart(productId, 1);
-            
-            setTimeout(() => {
-                addToCartBtn.classList.remove('adding');
-            }, 400);
-        });
+        if (!isOutOfStock) {
+            addToCartBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                addToCartBtn.classList.add('adding');
+                
+                // Add to cart (this will now auto-open the cart sidebar)
+                addToCart(productId, 1);
+                
+                setTimeout(() => {
+                    addToCartBtn.classList.remove('adding');
+                }, 400);
+            });
+        } else {
+            // Disable the button and change text for out of stock products
+            addToCartBtn.textContent = 'Out of Stock';
+            addToCartBtn.disabled = true;
+            addToCartBtn.style.background = '#ccc';
+            addToCartBtn.style.color = '#666';
+            addToCartBtn.style.cursor = 'not-allowed';
+        }
         
         const wishlistBtn = card.querySelector('.wishlist-btn');
         wishlistBtn.addEventListener('click', (e) => {
@@ -163,7 +215,7 @@ function initializeProductCards() {
                     quickViewImage.src = product.image;
                     quickViewImage.alt = product.name;
                     quickViewTitle.textContent = product.name;
-quickViewPrice.textContent = `₹${product.price.toFixed(2)}`;
+                    quickViewPrice.textContent = `₹${product.price.toFixed(2)}`;
                     quickViewWeight.textContent = product.weight;
                     
                     // Get rating from the product card
@@ -176,6 +228,23 @@ quickViewPrice.textContent = `₹${product.price.toFixed(2)}`;
                         </div>
                         <span class="rating-count">${ratingCount}</span>
                     `;
+                    
+                    // Update quick view add to cart button based on stock status
+                    if (isOutOfStock) {
+                        quickViewAddToCartBtn.textContent = 'Out of Stock';
+                        quickViewAddToCartBtn.classList.add('out-of-stock-btn');
+                        quickViewAddToCartBtn.disabled = true;
+                        quickViewAddToCartBtn.style.background = '#ccc';
+                        quickViewAddToCartBtn.style.color = '#666';
+                        quickViewAddToCartBtn.style.cursor = 'not-allowed';
+                    } else {
+                        quickViewAddToCartBtn.textContent = 'Add to Cart';
+                        quickViewAddToCartBtn.classList.remove('out-of-stock-btn');
+                        quickViewAddToCartBtn.disabled = false;
+                        quickViewAddToCartBtn.style.background = '';
+                        quickViewAddToCartBtn.style.color = '';
+                        quickViewAddToCartBtn.style.cursor = '';
+                    }
                     
                     // Set current product ID for quick view
                     currentQuickViewProductId = productId;
@@ -191,6 +260,80 @@ quickViewPrice.textContent = `₹${product.price.toFixed(2)}`;
         });
     });
 }
+
+// Function to mark product as out of stock on index page
+function setProductOutOfStockIndex(productId, isOutOfStock) {
+    const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+    if (productCard) {
+        productCard.setAttribute('data-out-of-stock', isOutOfStock.toString());
+        
+        const addToCartBtn = productCard.querySelector('.add-to-cart-btn');
+        if (isOutOfStock) {
+            addToCartBtn.textContent = 'Out of Stock';
+            addToCartBtn.classList.add('out-of-stock-btn');
+            addToCartBtn.disabled = true;
+            addToCartBtn.style.background = '#ccc';
+            addToCartBtn.style.color = '#666';
+            addToCartBtn.style.cursor = 'not-allowed';
+            addToCartBtn.onclick = null;
+        } else {
+            addToCartBtn.textContent = 'Add to Cart';
+            addToCartBtn.classList.remove('out-of-stock-btn');
+            addToCartBtn.disabled = false;
+            addToCartBtn.style.background = '';
+            addToCartBtn.style.color = '';
+            addToCartBtn.style.cursor = '';
+            
+            // Reattach click event
+            addToCartBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                addToCartBtn.classList.add('adding');
+                addToCart(productId, 1);
+                
+                setTimeout(() => {
+                    addToCartBtn.classList.remove('adding');
+                }, 400);
+            });
+        }
+    }
+    
+    // Also update the likes sidebar if this product is in favorites
+    const likeItemBtn = document.querySelector(`.like-item .add-to-cart-btn[data-id="${productId}"]`);
+    if (likeItemBtn) {
+        if (isOutOfStock) {
+            likeItemBtn.textContent = 'Out of Stock'; // Just text, no icon
+            likeItemBtn.classList.add('out-of-stock-btn');
+            likeItemBtn.disabled = true;
+            likeItemBtn.style.background = '#ccc';
+            likeItemBtn.style.color = '#666';
+            likeItemBtn.style.cursor = 'not-allowed';
+            
+            // Remove existing click event
+            const newBtn = likeItemBtn.cloneNode(true);
+            likeItemBtn.parentNode.replaceChild(newBtn, likeItemBtn);
+        } else {
+            likeItemBtn.textContent = 'Add to Cart'; // Just text, no icon
+            likeItemBtn.classList.remove('out-of-stock-btn');
+            likeItemBtn.disabled = false;
+            likeItemBtn.style.background = '';
+            likeItemBtn.style.color = '';
+            likeItemBtn.style.cursor = '';
+            
+            // Add click event
+            likeItemBtn.addEventListener('click', (e) => {
+                const productId = parseInt(e.currentTarget.getAttribute('data-id'));
+                addToCart(productId, 1);
+            });
+        }
+    }
+}
+
+// Make this function available globally
+window.setProductOutOfStockIndex = setProductOutOfStockIndex;
+
+
 
 // Category Filter Functionality
 const categoryBtns = document.querySelectorAll(".category-btn");
@@ -659,5 +802,3 @@ function initIndexPage() {
 document.addEventListener('DOMContentLoaded', function() {
     initIndexPage();
 });
-
-
