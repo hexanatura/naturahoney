@@ -1623,16 +1623,26 @@ function updateLikeUI() {
             if (product) {
                 const likeItem = document.createElement('div');
                 likeItem.className = 'like-item';
+                
+                // Check if product is out of stock
+                const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+                const isOutOfStock = productCard ? productCard.getAttribute('data-out-of-stock') === 'true' : false;
+                
+                // Determine button text and classes based on stock status
+                const addToCartText = isOutOfStock ? 'Out of Stock' : 'Add to Cart';
+                const addToCartClass = isOutOfStock ? 'add-to-cart-btn out-of-stock-btn' : 'add-to-cart-btn';
+                const addToCartDisabled = isOutOfStock ? 'disabled' : '';
+                
                 likeItem.innerHTML = `
                     <img src="${product.image}" alt="${product.name}">
                     <div class="like-item-details">
                         <div class="like-item-title">${product.name}</div>
-    <div class="like-item-price">₹${product.price.toFixed(2)}</div>
+                        <div class="like-item-price">₹${product.price.toFixed(2)}</div>
                         <div class="like-item-actions">
-                            <button class="add-to-cart-btn" data-id="${product.id}">
-                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            <button class="${addToCartClass}" data-id="${productId}" ${addToCartDisabled}>
+                                ${addToCartText} <!-- REMOVED: <i class="fas fa-cart-plus"></i> -->
                             </button>
-                            <button class="remove-like" data-id="${product.id}">
+                            <button class="remove-like" data-id="${productId}">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -1649,7 +1659,7 @@ function updateLikeUI() {
             });
         });
         
-        document.querySelectorAll('.likes-items .add-to-cart-btn').forEach(button => {
+        document.querySelectorAll('.likes-items .add-to-cart-btn:not(.out-of-stock-btn)').forEach(button => {
             button.addEventListener('click', (e) => {
                 const productId = parseInt(e.currentTarget.getAttribute('data-id'));
                 addToCart(productId, 1);
@@ -1801,7 +1811,21 @@ if (cartTotal) cartTotal.textContent = `₹${subtotal.toFixed(2)}`;
     }
 }
 
+// Find this function in common.js and update it:
 function addToCart(productId, quantity = 1) {
+    // Check if product is out of stock
+    const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+    const isOutOfStock = productCard ? productCard.getAttribute('data-out-of-stock') === 'true' : false;
+    
+    // Also check the likes sidebar for out-of-stock status
+    const likeItem = document.querySelector(`.like-item .add-to-cart-btn[data-id="${productId}"]`);
+    const isOutOfStockInLikes = likeItem ? likeItem.classList.contains('out-of-stock-btn') : false;
+    
+    if (isOutOfStock || isOutOfStockInLikes) {
+        alert('This product is currently out of stock!');
+        return; // Don't add to cart if out of stock
+    }
+    
     const existingItem = cartProducts.find(item => item.id === productId);
     
     if (existingItem) {
