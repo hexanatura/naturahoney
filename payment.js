@@ -1132,7 +1132,7 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
           receipt: `receipt_${Date.now()}`,
           notes: {
             orderId: orderId,
-            tempOrderId: tempOrderId, // Add temp order ID
+            tempOrderId: tempOrderId,
             source: 'direct_fallback'
           }
         }
@@ -1151,23 +1151,14 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
       orderId: data.result.orderId,
       amount: data.result.amount,
       currency: data.result.currency,
-      razorpayKey: data.result.razorpayKey || 'rzp_live_Rv4QzbScUtAjxZ'
+      razorpayKey: data.result.razorpayKey
     };
     
   } catch (error) {
     console.error('Direct API failed:', error);
-    
-    // Fallback for testing
-    return {
-      success: true,
-      orderId: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      amount: amount * 100,
-      currency: 'INR',
-      razorpayKey: 'rzp_live_Rv4QzbScUtAjxZ'
-    };
+    throw new Error('Payment service unavailable. Please try again.');
   }
 }
-
 async function openRazorpayCheckout(razorpayOrderId, razorpayKey, amount, orderData, tempOrderId) {
     console.log('Opening Razorpay checkout with temp order:', tempOrderId);
     
