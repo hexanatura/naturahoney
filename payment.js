@@ -1105,7 +1105,7 @@ async function initializeRazorpayPayment(orderData, amount, tempOrderId) {
         
         const options = {
             key: createOrderResponse.razorpayKey,
-            amount: amount * 100,
+amount: Math.round(amount * 100),
             currency: "INR",
             description: `Order ${orderData.orderId}`,
             order_id: createOrderResponse.orderId,
