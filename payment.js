@@ -1,4 +1,3 @@
-// your code goes here
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
 
