@@ -489,15 +489,18 @@ function applyPromoCode() {
     
     showPromoSuccess(successMessage);
     
-    if (applyBtn) {
-        applyBtn.disabled = true;
-        applyBtn.style.opacity = '0.6';
-        applyBtn.style.cursor = 'not-allowed';
-    }
+    // ✅ DON'T disable the input and button - allow user to edit/clear
+    // Just show success message but keep everything enabled
+    promoInput.value = promoCode; // Keep the code in input
+    promoInput.disabled = false; // Make sure it's enabled
+    promoInput.style.backgroundColor = ''; // Reset background
+    promoInput.style.cursor = ''; // Reset cursor
     
-    promoInput.disabled = true;
-    promoInput.style.backgroundColor = '#f5f5f5';
-    promoInput.style.cursor = 'not-allowed';
+    if (applyBtn) {
+        applyBtn.disabled = false; // Keep button enabled
+        applyBtn.style.opacity = '1'; // Reset opacity
+        applyBtn.style.cursor = 'pointer'; // Reset cursor
+    }
 }
 
 // Refresh promo cards when totals/cart change
@@ -601,17 +604,31 @@ function showPromoSuccess(message) {
     promoMessage.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;">
             <span>${message}</span>
-            ${window.appliedPromoCode ? 
-                '<button onclick="removePromoCode()" style="background:none;border:none;color:#155724;cursor:pointer;font-size:12px;text-decoration:underline;padding:0;">Remove</button>' : 
-                ''}
+            <button onclick="removePromoCode()" style="background:none;border:none;color:#155724;cursor:pointer;font-size:12px;text-decoration:underline;padding:0;margin-left:10px;">
+                Remove
+            </button>
         </div>
     `;
     
+    promoMessage.style.display = 'block';
+    
+    // Auto hide after 10 seconds but keep remove button visible
     setTimeout(() => {
-        if (!window.appliedPromoCode) {
+        if (window.appliedPromoCode) {
+            // Keep message visible but update text
+            const messageDiv = promoMessage.querySelector('div');
+            if (messageDiv) {
+                messageDiv.innerHTML = `
+                    <span>Promo code applied</span>
+                    <button onclick="removePromoCode()" style="background:none;border:none;color:#155724;cursor:pointer;font-size:12px;text-decoration:underline;padding:0;margin-left:10px;">
+                        Remove
+                    </button>
+                `;
+            }
+        } else {
             promoMessage.style.display = 'none';
         }
-    }, 5000);
+    }, 10000);
 }
 
 // Enhanced removePromoCode function
@@ -624,16 +641,16 @@ function removePromoCode() {
     const promoMessage = document.getElementById('promoMessage');
     
     if (promoInput) {
-        promoInput.value = '';
-        promoInput.disabled = false;
-        promoInput.style.backgroundColor = '';
-        promoInput.style.cursor = '';
+        promoInput.value = ''; // Clear the input
+        promoInput.disabled = false; // Ensure enabled
+        promoInput.style.backgroundColor = ''; // Reset background
+        promoInput.style.cursor = ''; // Reset cursor
     }
     
     if (applyBtn) {
-        applyBtn.disabled = false;
-        applyBtn.style.opacity = '1';
-        applyBtn.style.cursor = 'pointer';
+        applyBtn.disabled = false; // Enable button
+        applyBtn.style.opacity = '1'; // Reset opacity
+        applyBtn.style.cursor = 'pointer'; // Reset cursor
     }
     
     if (promoMessage) {
@@ -642,6 +659,8 @@ function removePromoCode() {
     
     updateTotals();
     refreshPromoCodes();
+    
+    showNotification('Promo code removed', 'info');
 }
 
 function showPromoError(message) {
