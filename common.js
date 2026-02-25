@@ -1083,6 +1083,7 @@ function updateUIForGuest() {
     if (userEmailElement) userEmailElement.textContent = 'user@example.com';
 }
 
+// UPDATED: Load user profile data with proper order ID handling
 function loadUserProfileData(userId) {
     loadUserAddresses(userId);
     EditProfile();
@@ -1109,6 +1110,12 @@ function loadUserProfileData(userId) {
                 querySnapshot.forEach((doc) => {
                     const order = doc.data();
                     order.id = doc.id;
+                    
+                    // Ensure orderId is set for display using the helper function
+                    if (!order.orderId) {
+                        order.orderId = getDisplayOrderId(order);
+                    }
+                    
                     userOrders.push(order);
                     displayOrder(order);
                 });
@@ -1127,6 +1134,7 @@ function loadUserProfileData(userId) {
     }
 }
 
+// UPDATED: Display order with proper order ID
 function displayOrder(order) {
     const ordersContainer = document.getElementById('orders-container');
     if (!ordersContainer) return;
@@ -1139,7 +1147,9 @@ function displayOrder(order) {
     const orderCard = document.createElement('div');
     orderCard.className = 'order-card compact';
     
-    const orderId = order.id || order.orderId;
+    // Use the helper function to get display order ID
+    const displayOrderId = getDisplayOrderId(order);
+    const orderId = order.id || order.orderId || order.orderNumber || displayOrderId;
     
     let status = order.status || 'ordered';
     let statusLower = status.toLowerCase();
@@ -1205,9 +1215,6 @@ function displayOrder(order) {
             `;
         }
     }
-    
-    // Use the helper function to get display order ID
-    const displayOrderId = getDisplayOrderId(order);
     
     // Create action buttons based on order status
     let actionButtonsHTML = '';
