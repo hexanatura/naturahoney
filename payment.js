@@ -260,9 +260,8 @@ function updateTotals() {
     
     if (!subtotalElement || !shippingElement || !totalElement || !discountRow || !discountAmount) return;
     
-    // Calculate shipping
-    const subtotal = window.originalTotal - window.shippingCost; // Get pure subtotal
-    const shipping = window.shippingCost;
+    // Calculate subtotal (without shipping)
+    const subtotal = window.originalTotal - (window.appliedPromoType === 'shipping' ? 0 : window.shippingCost);
     
     // Validate applied promo code before calculating total
     validateAppliedPromoCode();
@@ -272,27 +271,28 @@ function updateTotals() {
     // Update display - show original subtotal
     subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
     
-    // Update shipping display
-    if (shipping > 0) {
-        shippingElement.textContent = `₹${shipping.toFixed(2)}`;
+    // Update shipping display based on promo type
+    if (window.appliedPromoType === 'shipping') {
+        shippingElement.textContent = 'FREE';
+        shippingElement.style.color = '#27ae60'; // Green for free shipping
+    } else if (window.shippingCost > 0) {
+        shippingElement.textContent = `₹${window.shippingCost.toFixed(2)}`;
         shippingElement.style.color = '#e74c3c'; // Red color for shipping cost
     } else {
         shippingElement.textContent = 'FREE';
         shippingElement.style.color = '#27ae60'; // Green for free shipping
     }
     
-    // Show discount if applied
-    if (window.currentDiscount > 0 && window.appliedPromoCode) {
+    // Show discount if applied (but not for shipping type)
+    if (window.currentDiscount > 0 && window.appliedPromoCode && window.appliedPromoType !== 'shipping') {
         discountRow.style.display = 'flex';
         discountAmount.textContent = `-₹${window.currentDiscount.toFixed(2)}`;
         discountAmount.style.color = '#27ae60';
     } else {
         discountRow.style.display = 'none';
-        window.currentDiscount = 0;
-        window.appliedPromoCode = null;
     }
     
-    // Show TOTAL amount (not subtotal)
+    // Show TOTAL amount
     totalElement.textContent = `₹${newTotal.toFixed(2)}`;
     
     // Also request the total amount to user (add a visual emphasis)
@@ -476,7 +476,7 @@ function showPromoSuccessWithRemove(promoDetails, promoCode) {
 function applyPromoDiscount(promoDetails, promoCode) {
     let discountValue = 0;
     const promoType = promoDetails.type;
-    const total = window.originalTotal;
+    const total = window.originalTotal - window.shippingCost; // Subtotal without shipping
     
     if (promoType === 'percentage') {
         discountValue = Math.round(total * (promoDetails.value / 100));
@@ -487,7 +487,9 @@ function applyPromoDiscount(promoDetails, promoCode) {
     } else if (promoType === 'fixed') {
         discountValue = Math.min(promoDetails.value, total);
     } else if (promoType === 'shipping') {
-        discountValue = 0; // Free shipping - handled in updateTotals
+        discountValue = 0; // No discount on subtotal
+        window.shippingCost = 0; // Set shipping to FREE
+        window.originalTotal = total; // Recalculate total without shipping
     }
     
     // Apply the discount
@@ -527,11 +529,14 @@ function validatePromoCode(promoDetails, promoCode, isSilent = false) {
         }
     }
     
-    // Check minimum order
-    const minOrder = Number(promoDetails.minOrder) || 0;
-    if (window.originalTotal < minOrder) {
-        if (!isSilent) showPromoError(`Minimum order of ₹${minOrder.toFixed(2)} required`);
-        return false;
+    // For shipping promo, we don't check min order on subtotal
+    if (promoDetails.type !== 'shipping') {
+        // Check minimum order
+        const minOrder = Number(promoDetails.minOrder) || 0;
+        if (window.originalTotal < minOrder) {
+            if (!isSilent) showPromoError(`Minimum order of ₹${minOrder.toFixed(2)} required`);
+            return false;
+        }
     }
     
     // Check usage limit
@@ -688,6 +693,13 @@ function removePromoCode() {
     }
     
     console.log('Removing promo code:', window.appliedPromoCode);
+    
+    // If it was a shipping promo, restore shipping cost
+    if (window.appliedPromoType === 'shipping') {
+        const subtotal = window.originalTotal; // Current total includes only subtotal
+        window.shippingCost = subtotal > 0 ? 59 : 0; // Restore shipping
+        window.originalTotal = subtotal + window.shippingCost; // Recalculate total with shipping
+    }
     
     // Clear promo data
     window.currentDiscount = 0;
