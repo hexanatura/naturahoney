@@ -1151,7 +1151,7 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
       orderId: data.result.orderId,
       amount: data.result.amount,
       currency: data.result.currency,
-      razorpayKey: data.result.razorpayKey,
+      razorpayKey: 'rzp_live_SKGf8KU7czOSKl',
     };
     
   } catch (error) {
@@ -1164,7 +1164,7 @@ async function openRazorpayCheckout(razorpayOrderId, razorpayKey, amount, orderD
     
     return new Promise((resolve, reject) => {
         const options = {
-            key: razorpayKey,
+            key: 'rzp_live_SKGf8KU7czOSKl',
             amount: amount * 100,
             currency: "INR",
             name: "Natura Honey",
