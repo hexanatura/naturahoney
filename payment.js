@@ -392,12 +392,13 @@ function applyPromoCode() {
     
     hideAllPromoMessages();
     
+    // Check if code exists in activePromoCodes (ALL active codes, regardless of showOnCheckout)
     const matchingCode = Object.keys(window.activePromoCodes).find(
         (code) => code === promoCode
     );
     
     if (!matchingCode) {
-        showPromoError('Invalid promo code. Please select from available codes below.');
+        showPromoError('Invalid promo code. Please check the code and try again.');
         promoInput.value = '';
         refreshPromoCodes();
         return;
@@ -405,6 +406,7 @@ function applyPromoCode() {
     
     const promoDetails = window.activePromoCodes[matchingCode];
     
+    // Check if promo is active
     if (!promoDetails.active) {
         showPromoError('This promo code is no longer active');
         promoInput.value = '';
@@ -412,6 +414,7 @@ function applyPromoCode() {
         return;
     }
     
+    // Check if expired
     if (promoDetails.validUntil && new Date(promoDetails.validUntil) < new Date()) {
         showPromoError('This promo code has expired');
         promoInput.value = '';
@@ -419,6 +422,7 @@ function applyPromoCode() {
         return;
     }
     
+    // Check minimum order
     const minOrder = Number(promoDetails.minOrder) || 0;
     if (window.originalTotal < minOrder) {
         showPromoError(`Minimum order value of ₹${minOrder} required for this promo code`);
@@ -427,6 +431,7 @@ function applyPromoCode() {
         return;
     }
     
+    // Check usage limit
     if (typeof promoDetails.usageLimit === 'number' && promoDetails.usageLimit > 0) {
         const used = Number(promoDetails.usedCount) || 0;
         const limit = promoDetails.usageLimit;
@@ -434,11 +439,14 @@ function applyPromoCode() {
         if (used >= limit) {
             showPromoError('Promo usage limit reached');
             
-            db.collection('activities').add({
-                type: 'PROMO_USAGE_LIMIT_REACHED',
-                promoCode: promoCode,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            // Log activity if function exists
+            if (typeof db !== 'undefined' && db) {
+                db.collection('activities').add({
+                    type: 'PROMO_USAGE_LIMIT_REACHED',
+                    promoCode: promoCode,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(err => console.error('Failed to log activity:', err));
+            }
             
             promoInput.value = '';
             refreshPromoCodes();
@@ -446,6 +454,7 @@ function applyPromoCode() {
         }
     }
     
+    // Calculate discount
     let discountValue = 0;
     const promoType = promoDetails.type;
     const total = window.originalTotal;
@@ -461,25 +470,31 @@ function applyPromoCode() {
         discountValue = 0;
     }
     
+    // Apply discount
     window.currentDiscount = discountValue;
     window.appliedPromoCode = promoCode;
     updateTotals();
     
+    // Increment usage count (don't await, let it run in background)
     db.collection('promoCodes').doc(promoCode).update({
         usedCount: firebase.firestore.FieldValue.increment(1)
     }).catch((err) => {
         console.error('Failed to increment promo usage:', err);
     });
     
-    db.collection('activities').add({
-        type: 'PROMO_USED',
-        promoCode: promoCode,
-        discount: discountValue,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // Log activity
+    if (typeof db !== 'undefined' && db) {
+        db.collection('activities').add({
+            type: 'PROMO_USED',
+            promoCode: promoCode,
+            discount: discountValue,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error('Failed to log activity:', err));
+    }
     
     refreshPromoCodes();
     
+    // Show success message
     let successMessage = `Promo code "${promoCode}" applied successfully!`;
     if (promoType === 'shipping') {
         successMessage += ' Free shipping applied.';
@@ -489,6 +504,7 @@ function applyPromoCode() {
     
     showPromoSuccess(successMessage);
     
+    // Disable input and button
     if (applyBtn) {
         applyBtn.disabled = true;
         applyBtn.style.opacity = '0.6';
