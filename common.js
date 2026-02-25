@@ -29,7 +29,7 @@ window.debugFirebaseSetup = debugFirebaseSetup;
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
+    authDomain: "www.hexahoney.in",
     projectId: "hexahoney-96aed",
     storageBucket: "hexahoney-96aed.firebasestorage.app",
     messagingSenderId: "700458850837",
@@ -163,6 +163,18 @@ const forgotPassword = document.getElementById('forgotPassword');
 const signUp = document.getElementById('signUp');
 const loginFooter = document.getElementById('loginFooter');
 const termsCheckbox = document.getElementById('termsCheckbox');
+
+// Helper function to get display order ID (NA-xxxxx format)
+function getDisplayOrderId(order) {
+    // First try order.orderId (this is the NA-xxxxx from generateOrderId)
+    if (order.orderId) return order.orderId;
+    
+    // Then try order.id (Firestore document ID)
+    if (order.id) return order.id.substring(0, 8).toUpperCase();
+    
+    // Finally fallback to random
+    return `ORD${Math.floor(100000 + Math.random() * 900000)}`;
+}
 
 // Main auth state listener - UPDATED for checkout support
 auth.onAuthStateChanged((user) => {
@@ -746,6 +758,7 @@ function searchAllOrders(searchTerm) {
                 if (doc.id === searchTerm || 
                     doc.id.includes(searchTerm) ||
                     (orderData.orderNumber && orderData.orderNumber.includes(searchTerm)) ||
+                    (orderData.orderId && orderData.orderId.includes(searchTerm)) ||
                     (orderData.id && orderData.id === searchTerm)) {
                     
                     foundOrder = orderData;
@@ -799,13 +812,9 @@ function displayOrderTrackingData(orderData) {
     const orderDateElement = document.getElementById('tracking-order-date');
     const orderTotalElement = document.getElementById('tracking-order-total');
     
-    if (orderData.orderNumber) {
-        orderIdElement.textContent = `${orderData.orderNumber}`;
-    } else if (orderData.id) {
-        orderIdElement.textContent = `${orderData.id.substring(0, 8).toUpperCase()}`;
-    } else {
-        orderIdElement.textContent = `ORD${Math.floor(100000 + Math.random() * 900000)}`;
-    }
+    // Use the helper function to get display order ID
+    const displayOrderId = getDisplayOrderId(orderData);
+    orderIdElement.textContent = displayOrderId;
     
     let orderDate;
     if (orderData.createdAt) {
@@ -1197,7 +1206,8 @@ function displayOrder(order) {
         }
     }
     
-    const displayOrderId = order.orderNumber || `${orderId.substring(0, 8).toUpperCase()}`;
+    // Use the helper function to get display order ID
+    const displayOrderId = getDisplayOrderId(order);
     
     // Create action buttons based on order status
     let actionButtonsHTML = '';
@@ -1297,6 +1307,7 @@ function displayOrder(order) {
         }
     }, 100);
 }
+
 function reorderItems(items) {
     items.forEach(item => {
         addToCart(item.productId, item.quantity);
