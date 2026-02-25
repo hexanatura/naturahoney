@@ -491,13 +491,13 @@ function applyPromoCode() {
     
     if (applyBtn) {
         applyBtn.disabled = false;
-        applyBtn.style.opacity = '0.6';
+        applyBtn.style.opacity = '1';
         applyBtn.style.cursor = '';
     }
     
     promoInput.disabled = false;
     promoInput.style.backgroundColor = '#f5f5f5';
-    promoInput.style.cursor = 'pointer';
+    promoInput.style.cursor = '';
 }
 
 // Refresh promo cards when totals/cart change
