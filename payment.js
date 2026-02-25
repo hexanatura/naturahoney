@@ -377,7 +377,7 @@ function loadPromoCodesFromFirebase() {
     });
 }
 
-// Apply promo code
+// Apply promo code - FIXED VERSION
 function applyPromoCode() {
     const promoInput = document.querySelector('.promo-input');
     const applyBtn = document.querySelector('.apply-btn');
@@ -398,8 +398,15 @@ function applyPromoCode() {
     
     if (!matchingCode) {
         showPromoError('Invalid promo code. Please select from available codes below.');
-        promoInput.value = '';
+        promoInput.value = ''; // Clear the input
         refreshPromoCodes();
+        
+        // IMPORTANT: Remove any previously applied promo code
+        if (window.appliedPromoCode) {
+            window.currentDiscount = 0;
+            window.appliedPromoCode = null;
+            updateTotals();
+        }
         return;
     }
     
@@ -409,6 +416,13 @@ function applyPromoCode() {
         showPromoError('This promo code is no longer active');
         promoInput.value = '';
         refreshPromoCodes();
+        
+        // Remove previously applied promo code
+        if (window.appliedPromoCode) {
+            window.currentDiscount = 0;
+            window.appliedPromoCode = null;
+            updateTotals();
+        }
         return;
     }
     
@@ -416,6 +430,13 @@ function applyPromoCode() {
         showPromoError('This promo code has expired');
         promoInput.value = '';
         refreshPromoCodes();
+        
+        // Remove previously applied promo code
+        if (window.appliedPromoCode) {
+            window.currentDiscount = 0;
+            window.appliedPromoCode = null;
+            updateTotals();
+        }
         return;
     }
     
@@ -424,6 +445,13 @@ function applyPromoCode() {
         showPromoError(`Minimum order value of ₹${minOrder} required for this promo code`);
         promoInput.value = '';
         refreshPromoCodes();
+        
+        // Remove previously applied promo code
+        if (window.appliedPromoCode) {
+            window.currentDiscount = 0;
+            window.appliedPromoCode = null;
+            updateTotals();
+        }
         return;
     }
     
@@ -438,10 +466,17 @@ function applyPromoCode() {
                 type: 'PROMO_USAGE_LIMIT_REACHED',
                 promoCode: promoCode,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            }).catch(() => {}); // Non-blocking
             
             promoInput.value = '';
             refreshPromoCodes();
+            
+            // Remove previously applied promo code
+            if (window.appliedPromoCode) {
+                window.currentDiscount = 0;
+                window.appliedPromoCode = null;
+                updateTotals();
+            }
             return;
         }
     }
@@ -465,18 +500,20 @@ function applyPromoCode() {
     window.appliedPromoCode = promoCode;
     updateTotals();
     
+    // Increment usage count (non-blocking)
     db.collection('promoCodes').doc(promoCode).update({
         usedCount: firebase.firestore.FieldValue.increment(1)
     }).catch((err) => {
         console.error('Failed to increment promo usage:', err);
     });
     
+    // Log activity (non-blocking)
     db.collection('activities').add({
         type: 'PROMO_USED',
         promoCode: promoCode,
         discount: discountValue,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    }).catch(() => {});
     
     refreshPromoCodes();
     
