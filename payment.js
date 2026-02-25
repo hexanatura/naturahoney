@@ -377,7 +377,6 @@ function loadPromoCodesFromFirebase() {
     });
 }
 
-
 // Apply promo code
 function applyPromoCode() {
     const promoInput = document.querySelector('.promo-input');
