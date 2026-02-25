@@ -29,7 +29,7 @@ window.debugFirebaseSetup = debugFirebaseSetup;
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "hexahoney-96aed.firebaseapp.com",
+    authDomain: "www.hexahoney.in",
     projectId: "hexahoney-96aed",
     storageBucket: "hexahoney-96aed.firebasestorage.app",
     messagingSenderId: "700458850837",
