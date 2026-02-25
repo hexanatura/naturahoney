@@ -1048,8 +1048,12 @@ async function processCheckout() {
         
         console.log('Temp order created:', tempOrderId);
         
-        // 6. Initialize Razorpay payment with temp order ID
-        await initializeRazorpayPayment(tempOrderData, finalAmount, tempOrderId);
+ // Format amount to ensure 2 decimal places
+const finalAmountWithDecimals = Math.round(finalAmount * 100) / 100;
+console.log('Final amount with decimals:', finalAmountWithDecimals);
+
+// 6. Initialize Razorpay payment with temp order ID
+await initializeRazorpayPayment(tempOrderData, finalAmountWithDecimals, tempOrderId);
         
     } catch (error) {
         console.error('Checkout error:', error);
