@@ -1,6 +1,6 @@
-// your code goes here
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
+
 
 // Initialize checkout page
 async function initCheckoutPage() {
@@ -793,7 +793,7 @@ function validateIndianPhoneNumber(phone) {
     return phoneRegex.test(cleanedPhone);
 }
 
-// Generate order ID (NA-xxxxx format)
+// Generate order ID
 function generateOrderId() {
     const randomNumber = Math.floor(10000 + Math.random() * 90000);
     return `NA-${randomNumber}`;
@@ -1008,13 +1008,12 @@ async function processCheckout() {
             throw new Error('Order amount must be greater than 0');
         }
         
-        // 3. Generate order ID (NA-xxxxx format)
+        // 3. Generate order ID
         const orderId = generateOrderId();
         
         // 4. Create TEMPORARY ORDER (not final order)
         const tempOrderData = {
-            orderId: orderId, // This is the NA-xxxxx format
-            orderNumber: orderId, // Also set orderNumber for compatibility
+            orderId: orderId,
             email: email,
             customerName: `${firstName} ${lastName}`,
             customerEmail: email,
@@ -1233,21 +1232,18 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
     throw new Error('Payment service unavailable. Please try again.');
   }
 }
-// UPDATED: Process payment success with proper order ID handling and better error recovery
+
 async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     console.log('Processing payment success for temp order:', tempOrderId);
     
     try {
         // 1. Get the temp order
         const tempOrderDoc = await db.collection('tempOrders').doc(tempOrderId).get();
+        const tempOrderData = tempOrderDoc.data();
         
-        if (!tempOrderDoc.exists) {
-            console.error('Temp order not found:', tempOrderId);
-            // Try to recover - maybe use the orderData passed in
-            console.log('Attempting recovery with provided orderData');
+        if (!tempOrderData) {
+            throw new Error('Temp order not found');
         }
-        
-        const tempOrderData = tempOrderDoc.exists ? tempOrderDoc.data() : orderData;
         
         // 2. Create final order in Firestore
         const finalOrderData = {
@@ -1266,32 +1262,26 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
         
         console.log('Creating final order from temp order:', tempOrderId);
         
-        // 3. Create final order
+        // 3. Create final order (this will trigger onOrderCreated)
         const orderRef = await db.collection('orders').add(finalOrderData);
         const finalOrderId = orderRef.id;
         
         console.log('✅ Final order created:', finalOrderId);
         
-        // 4. Update user's orders if logged in - WITH PROPER ORDER ID FIELDS
+        // 4. Update user's orders if logged in - WITH ORDERID FIELD
         if (currentUser) {
-            const userOrderData = {
-                ...finalOrderData,
-                id: finalOrderId,
-                orderId: finalOrderData.orderId || finalOrderId,
-                orderNumber: finalOrderData.orderId || finalOrderId
-            };
-            
             await db.collection('users').doc(currentUser.uid)
-                .collection('orders').doc(finalOrderId).set(userOrderData, { merge: true });
-                
-            console.log('Order saved to user collection with orderId:', userOrderData.orderId);
+                .collection('orders').doc(finalOrderId).set({
+                    ...finalOrderData,
+                    id: finalOrderId,
+                    orderId: finalOrderData.orderId // THIS IS THE KEY LINE - SAVE THE NA-XXXXX ORDER ID
+                });
+            console.log('Order saved to user collection with orderId:', finalOrderData.orderId);
         }
         
-        // 5. Delete temp order (if it exists)
-        if (tempOrderDoc.exists) {
-            await db.collection('tempOrders').doc(tempOrderId).delete();
-            console.log('🗑️ Temp order deleted:', tempOrderId);
-        }
+        // 5. Delete temp order
+        await db.collection('tempOrders').doc(tempOrderId).delete();
+        console.log('🗑️ Temp order deleted:', tempOrderId);
         
         // 6. Clear cart
         await clearCartAfterOrder();
@@ -1299,70 +1289,39 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
         // 7. Reset payment processing flag
         isProcessingPayment = false;
         
-        // 8. Show success popup - IMPORTANT FIX: Check if function exists and call it
+        // 8. Show success popup
         const updatedOrderData = {
             ...finalOrderData,
             id: finalOrderId
         };
         
-        console.log('Attempting to show order success popup for order:', updatedOrderData.orderId);
-        
-        // Try multiple ways to show the success popup
-        if (typeof window.showOrderSuccessPopup === 'function') {
-            console.log('Calling window.showOrderSuccessPopup');
-            window.showOrderSuccessPopup(updatedOrderData);
-        } else if (typeof showOrderSuccessPopup === 'function') {
-            console.log('Calling showOrderSuccessPopup directly');
+        if (typeof showOrderSuccessPopup === 'function') {
             showOrderSuccessPopup(updatedOrderData);
         } else {
-            console.error('showOrderSuccessPopup function not found! Creating fallback...');
-            // Fallback: Create and show a simple alert and redirect
-            alert(`Order confirmed successfully! Order ID: ${updatedOrderData.orderId || 'NA-' + Math.floor(10000 + Math.random() * 90000)}`);
-            
-            // Try to create the modal dynamically
-            createOrderSuccessModal();
-            
-            // Try again after a short delay
-            setTimeout(() => {
-                if (typeof window.showOrderSuccessPopup === 'function') {
-                    window.showOrderSuccessPopup(updatedOrderData);
-                } else {
-                    // Ultimate fallback - just redirect to home
-                    window.location.href = 'index.html';
-                }
-            }, 500);
+            console.error('showOrderSuccessPopup function not found!');
+            alert(`Order confirmed successfully! Order ID: ${updatedOrderData.orderId}`);
+            window.location.href = 'index.html';
         }
         
     } catch (error) {
         console.error('Error processing payment success:', error);
         
-        // Update temp order with error if it exists
+        // Update temp order with error
         try {
-            if (tempOrderId && db) {
-                await db.collection('tempOrders').doc(tempOrderId).update({
-                    paymentStatus: 'failed',
-                    paymentError: error.message,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }
+            await db.collection('tempOrders').doc(tempOrderId).update({
+                paymentStatus: 'failed',
+                paymentError: error.message,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
         } catch (updateError) {
             console.error('Failed to update temp order:', updateError);
         }
         
-        // Show error to user
-        alert('Payment was successful but there was an error completing your order. Please contact support with your order details.');
         showNotification('Error completing order. Please contact support.', 'error');
-        
-        // Reset payment processing flag
         isProcessingPayment = false;
-        
-        // Redirect to home after a delay
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 5000);
+        throw error;
     }
 }
-
 async function handlePaymentFailure(response, tempOrderId) {
     console.error('Payment failed for temp order:', tempOrderId);
     
@@ -1435,7 +1394,7 @@ async function handlePaymentCancellation(tempOrderId) {
 }
 
 
-// UPDATED: Enhanced saveOrderToFirestore function
+// Enhanced saveOrderToFirestore function
 async function saveOrderToFirestore(orderData) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -1443,15 +1402,13 @@ async function saveOrderToFirestore(orderData) {
             const orderRef = await db.collection('orders').add(orderData);
             console.log('Order saved to main collection:', orderRef.id);
             
-            // Save to user's orders if logged in - with proper order ID fields
+            // Save to user's orders if logged in
             if (currentUser) {
                 await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderRef.id).set({
                     ...orderData,
-                    id: orderRef.id,
-                    orderId: orderData.orderId || orderRef.id, // Ensure orderId is set
-                    orderNumber: orderData.orderId || orderRef.id // Also set orderNumber
+                    id: orderRef.id
                 }, { merge: true });
-                console.log('Order saved to user collection with orderId:', orderData.orderId || orderRef.id);
+                console.log('Order saved to user collection:', orderRef.id);
             }
             
             resolve(orderRef);
@@ -1922,8 +1879,6 @@ window.processCheckout = processCheckout;
 window.showNotification = showNotification;
 window.showOrderSuccessPopup = showOrderSuccessPopup;
 window.closeOrderSuccessPopup = closeOrderSuccessPopup;
-window.createOrderSuccessModal = createOrderSuccessModal;
-
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
