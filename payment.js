@@ -1152,7 +1152,7 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
       orderId: data.result.orderId,
       amount: data.result.amount,
       currency: data.result.currency,
-      razorpayKey: data.result.razorpayKey || 'rzp_live_Rv4QzbScUtAjxZ'
+      razorpayKey: data.result.razorpayKey || 'rzp_live_SKGf8KU7czOSKl'
     };
     
   } catch (error) {
@@ -1164,7 +1164,7 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
       orderId: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       amount: amount * 100,
       currency: 'INR',
-      razorpayKey: 'rzp_live_Rv4QzbScUtAjxZ'
+      razorpayKey: 'rzp_live_SKGf8KU7czOSKl'
     };
   }
 }
