@@ -1073,7 +1073,7 @@ async function initializeRazorpayPayment(orderData, amount, tempOrderId) {
                 receipt: `receipt_${Date.now()}`,
                 notes: {
                     orderId: orderData.orderId,
-                    tempOrderId: tempOrderId, // Pass temp order ID
+                    tempOrderId: tempOrderId,
                     source: 'checkout'
                 }
             });
@@ -1094,17 +1094,17 @@ async function initializeRazorpayPayment(orderData, amount, tempOrderId) {
         // Update temp order with Razorpay order ID
         await db.collection('tempOrders').doc(tempOrderId).update({
             razorpayOrderId: createOrderResponse.orderId,
-            razorpayKey: createOrderResponse.razorpayKey,
+            razorpayKey: 'rzp_live_SKGf8KU7czOSKl', // ← Hardcode here too
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Initialize Razorpay checkout
+        // Initialize Razorpay checkout with hardcoded key
         await openRazorpayCheckout(
             createOrderResponse.orderId,
-            createOrderResponse.razorpayKey,
+            'rzp_live_SKGf8KU7czOSKl', // ← Hardcode here
             amount,
             orderData,
-            tempOrderId // Pass temp order ID
+            tempOrderId
         );
         
     } catch (error) {
