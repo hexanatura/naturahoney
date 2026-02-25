@@ -29,7 +29,7 @@ window.debugFirebaseSetup = debugFirebaseSetup;
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "www.hexahoney.in",
+    authDomain: "hexahoney-96aed.firebaseapp.com",
     projectId: "hexahoney-96aed",
     storageBucket: "hexahoney-96aed.firebasestorage.app",
     messagingSenderId: "700458850837",
@@ -1206,8 +1206,8 @@ function displayOrder(order) {
         }
     }
     
-    // ✅ FIXED: Use order.orderId (NA-xxxxx) first, then fallback
-    const displayOrderId = order.orderId || order.id || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+    // Use the helper function to get display order ID
+    const displayOrderId = getDisplayOrderId(order);
     
     // Create action buttons based on order status
     let actionButtonsHTML = '';
@@ -2644,4 +2644,3 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
-
