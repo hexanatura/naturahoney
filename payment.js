@@ -1,3 +1,4 @@
+// your code goes here
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
 
@@ -1233,6 +1234,7 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
   }
 }
 
+// FIXED: Process payment success with proper order ID handling
 async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     console.log('Processing payment success for temp order:', tempOrderId);
     
@@ -1306,22 +1308,12 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     } catch (error) {
         console.error('Error processing payment success:', error);
         
-        // Update temp order with error
-        try {
-            await db.collection('tempOrders').doc(tempOrderId).update({
-                paymentStatus: 'failed',
-                paymentError: error.message,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        } catch (updateError) {
-            console.error('Failed to update temp order:', updateError);
-        }
-        
+        // Show error to user but don't redirect
         showNotification('Error completing order. Please contact support.', 'error');
         isProcessingPayment = false;
-        throw error;
     }
 }
+
 async function handlePaymentFailure(response, tempOrderId) {
     console.error('Payment failed for temp order:', tempOrderId);
     
@@ -1406,7 +1398,8 @@ async function saveOrderToFirestore(orderData) {
             if (currentUser) {
                 await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderRef.id).set({
                     ...orderData,
-                    id: orderRef.id
+                    id: orderRef.id,
+                    orderId: orderData.orderId // THIS IS THE KEY LINE
                 }, { merge: true });
                 console.log('Order saved to user collection:', orderRef.id);
             }
