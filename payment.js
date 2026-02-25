@@ -491,7 +491,7 @@ function applyPromoCode() {
     
     if (applyBtn) {
         applyBtn.disabled = false;
-        applyBtn.style.opacity = '1';
+        applyBtn.style.opacity = '';
         applyBtn.style.cursor = '';
     }
     
