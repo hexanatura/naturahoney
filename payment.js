@@ -1151,7 +1151,7 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
       orderId: data.result.orderId,
       amount: data.result.amount,
       currency: data.result.currency,
-      razorpayKey: 'rzp_live_SKGf8KU7czOSKl',
+      razorpayKey: 'rzp_live_SKGf8KU7czOSKl'
     };
     
   } catch (error) {
