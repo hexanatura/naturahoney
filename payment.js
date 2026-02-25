@@ -794,7 +794,7 @@ function validateIndianPhoneNumber(phone) {
     return phoneRegex.test(cleanedPhone);
 }
 
-// Generate order ID
+// Generate order ID (NA-xxxxx format)
 function generateOrderId() {
     const randomNumber = Math.floor(10000 + Math.random() * 90000);
     return `NA-${randomNumber}`;
@@ -1009,12 +1009,13 @@ async function processCheckout() {
             throw new Error('Order amount must be greater than 0');
         }
         
-        // 3. Generate order ID
+        // 3. Generate order ID (NA-xxxxx format)
         const orderId = generateOrderId();
         
         // 4. Create TEMPORARY ORDER (not final order)
         const tempOrderData = {
-            orderId: orderId,
+            orderId: orderId, // This is the NA-xxxxx format
+            orderNumber: orderId, // Also set orderNumber for compatibility
             email: email,
             customerName: `${firstName} ${lastName}`,
             customerEmail: email,
@@ -1234,6 +1235,7 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
   }
 }
 
+// UPDATED: Process payment success with proper order ID handling
 async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     console.log('Processing payment success for temp order:', tempOrderId);
     
@@ -1269,13 +1271,16 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
         
         console.log('✅ Final order created:', finalOrderId);
         
-        // 4. Update user's orders if logged in
+        // 4. Update user's orders if logged in - WITH PROPER ORDER ID FIELDS
         if (currentUser) {
             await db.collection('users').doc(currentUser.uid)
                 .collection('orders').doc(finalOrderId).set({
                     ...finalOrderData,
-                    id: finalOrderId
+                    id: finalOrderId,
+                    orderId: finalOrderData.orderId || finalOrderId, // Ensure orderId is set
+                    orderNumber: finalOrderData.orderId || finalOrderId // Also set orderNumber for compatibility
                 });
+            console.log('Order saved to user collection with orderId:', finalOrderData.orderId || finalOrderId);
         }
         
         // 5. Delete temp order
@@ -1394,7 +1399,7 @@ async function handlePaymentCancellation(tempOrderId) {
 }
 
 
-// Enhanced saveOrderToFirestore function
+// UPDATED: Enhanced saveOrderToFirestore function
 async function saveOrderToFirestore(orderData) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -1402,13 +1407,15 @@ async function saveOrderToFirestore(orderData) {
             const orderRef = await db.collection('orders').add(orderData);
             console.log('Order saved to main collection:', orderRef.id);
             
-            // Save to user's orders if logged in
+            // Save to user's orders if logged in - with proper order ID fields
             if (currentUser) {
                 await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderRef.id).set({
                     ...orderData,
-                    id: orderRef.id
+                    id: orderRef.id,
+                    orderId: orderData.orderId || orderRef.id, // Ensure orderId is set
+                    orderNumber: orderData.orderId || orderRef.id // Also set orderNumber
                 }, { merge: true });
-                console.log('Order saved to user collection:', orderRef.id);
+                console.log('Order saved to user collection with orderId:', orderData.orderId || orderRef.id);
             }
             
             resolve(orderRef);
