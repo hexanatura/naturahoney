@@ -319,41 +319,54 @@ function getActivePromoCodes() {
 // Load promo codes from Firebase
 function loadPromoCodesFromFirebase() {
     return new Promise((resolve) => {
+        // Get current date for expiry check
+        const now = new Date();
+        
         db.collection('promoCodes')
             .where('active', '==', true)
             .get()
             .then((querySnapshot) => {
                 const promoCodes = {};
-                const now = new Date();
+                
+                if (querySnapshot.empty) {
+                    console.log('No promo codes found in Firebase');
+                    window.activePromoCodes = {};
+                    resolve({});
+                    return;
+                }
                 
                 querySnapshot.forEach((doc) => {
                     const promoData = doc.data() || {};
+                    const promoId = doc.id;
                     
-                    const isValid =
-                        !promoData.validUntil ||
-                        new Date(promoData.validUntil) >= now;
-                    const showOnCheckout = promoData.showOnCheckout !== false;
+                    // Check if promo code is valid (active and not expired)
+                    const isValid = promoData.active === true;
+                    const notExpired = !promoData.validUntil || new Date(promoData.validUntil) >= now;
                     
-                    if (isValid && showOnCheckout) {
-                        promoCodes[doc.id] = {
-                            ...promoData,
-                            id: doc.id,
+                    if (isValid && notExpired) {
+                        // Store ALL active promo codes regardless of showOnCheckout
+                        promoCodes[promoId] = {
+                            code: promoId,
+                            id: promoId,
+                            type: promoData.type || 'fixed',
                             value: Number(promoData.value) || 0,
+                            description: promoData.description || '',
                             minOrder: Number(promoData.minOrder) || 0,
-                            maxDiscount:
-                                promoData.maxDiscount == null
-                                    ? null
-                                    : Number(promoData.maxDiscount),
-                            usageLimit:
-                                promoData.usageLimit == null || promoData.usageLimit === 0
-                                    ? null
-                                    : Number(promoData.usageLimit),
-                            usedCount: Number(promoData.usedCount) || 0
+                            validUntil: promoData.validUntil || null,
+                            usageLimit: promoData.usageLimit || 0,
+                            usedCount: Number(promoData.usedCount) || 0,
+                            isPopular: promoData.isPopular || false,
+                            terms: promoData.terms || '',
+                            active: promoData.active !== false,
+                            showOnCheckout: promoData.showOnCheckout !== false // Store this setting
                         };
+                        
+                        console.log('Loaded promo code:', promoId, promoCodes[promoId]);
                     }
                 });
                 
                 window.activePromoCodes = promoCodes;
+                console.log('All promo codes loaded:', window.activePromoCodes);
                 resolve(promoCodes);
             })
             .catch((error) => {
