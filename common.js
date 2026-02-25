@@ -1206,8 +1206,8 @@ function displayOrder(order) {
         }
     }
     
-    // Use the helper function to get display order ID
-    const displayOrderId = getDisplayOrderId(order);
+    // ✅ FIXED: Use order.orderId (NA-xxxxx) first, then fallback
+    const displayOrderId = order.orderId || order.id || `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
     
     // Create action buttons based on order status
     let actionButtonsHTML = '';
@@ -2644,3 +2644,4 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
