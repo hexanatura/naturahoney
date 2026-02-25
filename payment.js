@@ -1,16 +1,51 @@
+// your code goes here
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
+
 
 // Initialize checkout page
 async function initCheckoutPage() {
     console.log('Initializing checkout page with Razorpay...');
     
-    // Basic updates
+    // Initial updates
     updateOrderSummary();
     setupCheckoutEventListeners();
+    updateCheckoutUI();
     
-    // Preload Razorpay script
+    // Preload Razorpay script in background
     preloadRazorpayScript();
+    
+    // Load promo codes with error handling
+    try {
+        console.log('Loading promo codes...');
+        await loadPromoCodesFromFirebase();
+        console.log('Promo codes loaded:', window.activePromoCodes);
+        
+        // Wait a bit for DOM to be fully ready
+        setTimeout(() => {
+            displayAvailablePromoCodes();
+            
+            // Add animation for promo cards
+            const promoCards = document.querySelectorAll('.promo-code-card');
+            promoCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate-fade-in');
+            });
+        }, 500);
+        
+    } catch (error) {
+        console.error('Failed to load promo codes:', error);
+        showPromoError('Unable to load promo codes. Please try again later.');
+    }
+    
+    // Update UI based on cart state
+    if (cartProducts.length === 0) {
+        const checkoutBtn = document.querySelector('.checkout-btn');
+        if (checkoutBtn) {
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = '0.7';
+        }
+    }
     
     // Load user's default address if logged in
     if (currentUser) {
@@ -45,6 +80,7 @@ async function ensureRazorpayLoaded() {
     }
     
     if (razorpayScriptLoaded) {
+        // Wait a bit more for script to initialize
         await new Promise(resolve => setTimeout(resolve, 500));
         return !!window.Razorpay;
     }
@@ -67,6 +103,62 @@ async function ensureRazorpayLoaded() {
     });
 }
 
+// Update checkout UI
+function updateCheckoutUI() {
+    const emailInput = document.getElementById('email');
+    const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+    
+    if (currentUser) {
+        if (emailInput) {
+            emailInput.value = currentUser.email;
+            emailInput.disabled = true;
+            emailInput.style.backgroundColor = '#f5f5f5';
+            emailInput.style.color = '#666';
+            emailInput.style.cursor = 'not-allowed';
+        }
+        
+        if (loginBtnCheckout) {
+            loginBtnCheckout.textContent = 'LOGOUT';
+            loginBtnCheckout.style.backgroundColor = 'transparent';
+            loginBtnCheckout.style.color = '#e74c3c';
+            loginBtnCheckout.style.textDecoration = 'none';
+            loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
+            loginBtnCheckout.style.fontWeight = '600';
+            loginBtnCheckout.style.textTransform = 'uppercase';
+            loginBtnCheckout.style.border = 'none';
+            loginBtnCheckout.style.cursor = 'pointer';
+            loginBtnCheckout.style.fontSize = '14px';
+            loginBtnCheckout.style.padding = '0';
+            loginBtnCheckout.style.margin = '0';
+        }
+        
+    } else {
+        // User is not logged in
+        if (emailInput) {
+            emailInput.value = '';
+            emailInput.disabled = false;
+            emailInput.style.backgroundColor = '';
+            emailInput.style.color = '';
+            emailInput.style.cursor = '';
+        }
+        
+        if (loginBtnCheckout) {
+            loginBtnCheckout.textContent = 'LOGIN';
+            loginBtnCheckout.style.backgroundColor = 'transparent';
+            loginBtnCheckout.style.color = '#3498db';
+            loginBtnCheckout.style.textDecoration = 'none';
+            loginBtnCheckout.style.fontFamily = "'Unbounded', sans-serif";
+            loginBtnCheckout.style.fontWeight = '600';
+            loginBtnCheckout.style.textTransform = 'uppercase';
+            loginBtnCheckout.style.border = 'none';
+            loginBtnCheckout.style.cursor = 'pointer';
+            loginBtnCheckout.style.fontSize = '14px';
+            loginBtnCheckout.style.padding = '0';
+            loginBtnCheckout.style.margin = '0';
+        }
+    }
+}
+
 // Load user's default address for auto-fill
 function loadUserDefaultAddress() {
     if (!currentUser || !db) return;
@@ -84,13 +176,16 @@ function loadUserDefaultAddress() {
         .onSnapshot((querySnapshot) => {
             if (!querySnapshot.empty && querySnapshot.docs.length > 0) {
                 const defaultAddress = querySnapshot.docs[0].data();
-                console.log('Default address found:', defaultAddress);
+                console.log('Default address found (real-time):', defaultAddress);
                 
+                // Add a small delay to ensure DOM is ready
                 setTimeout(() => {
                     fillAddressForm(defaultAddress);
                 }, 100);
+                
             } else {
                 console.log('No default address found for user');
+                // Check if user has any addresses (even without default)
                 db.collection('users').doc(currentUser.uid).collection('addresses')
                     .orderBy('createdAt', 'desc')
                     .limit(1)
@@ -137,7 +232,9 @@ function fillAddressForm(address) {
     
     const phoneField = document.getElementById('phone');
     if (phoneField && address.phone) {
-        let phoneNumber = address.phone.toString().replace(/\+91/g, '').replace(/\D/g, '');
+        let phoneNumber = address.phone.toString();
+        
+        phoneNumber = phoneNumber.replace(/\+91/g, '').replace(/\D/g, '');
         
         if (phoneNumber.length > 10) {
             phoneNumber = phoneNumber.substring(phoneNumber.length - 10);
@@ -153,7 +250,521 @@ function fillAddressForm(address) {
     }
 }
 
-// Update order summary
+function updateTotals() {
+    const subtotalElement = document.getElementById('subtotal');
+    const shippingElement = document.getElementById('shipping');
+    const totalElement = document.getElementById('total');
+    const discountRow = document.getElementById('discountRow');
+    const discountAmount = document.getElementById('discountAmount');
+    
+    if (!subtotalElement || !shippingElement || !totalElement || !discountRow || !discountAmount) return;
+    
+    // Calculate shipping
+    const subtotal = window.originalTotal - window.shippingCost; // Get pure subtotal
+    const shipping = window.shippingCost;
+    const newTotal = Math.max(0, window.originalTotal - window.currentDiscount);
+    
+    // Update display - show original subtotal
+    subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+    
+    // Update shipping display
+    if (shipping > 0) {
+        shippingElement.textContent = `₹${shipping.toFixed(2)}`;
+        shippingElement.style.color = '#e74c3c'; // Red color for shipping cost
+    } else {
+        shippingElement.textContent = 'FREE';
+        shippingElement.style.color = '#27ae60'; // Green for free shipping
+    }
+    
+    // Show discount if applied
+    if (window.currentDiscount > 0 && window.appliedPromoCode) {
+        discountRow.style.display = 'flex';
+        discountAmount.textContent = `-₹${window.currentDiscount.toFixed(2)}`;
+        discountAmount.style.color = '#27ae60';
+    } else {
+        discountRow.style.display = 'none';
+        window.currentDiscount = 0;
+        window.appliedPromoCode = null;
+    }
+    
+    // Show TOTAL amount (not subtotal)
+    totalElement.textContent = `₹${newTotal.toFixed(2)}`;
+    
+    // Also request the total amount to user (add a visual emphasis)
+    emphasizeTotalAmount(newTotal);
+    
+    refreshPromoCodes();
+}
+
+// Add this new function to emphasize total amount
+function emphasizeTotalAmount(total) {
+    const totalElement = document.getElementById('total');
+    if (totalElement) {
+        totalElement.style.fontSize = '24px';
+        totalElement.style.fontWeight = '800';
+        totalElement.style.color = '#5f2b27';
+        
+        // Add a small animation
+        totalElement.classList.add('animate-total');
+    }
+}
+
+// PROMO CODE FUNCTIONALITY
+
+// Get active promo codes
+function getActivePromoCodes() {
+    return window.activePromoCodes || {};
+}
+
+// Load promo codes from Firebase
+function loadPromoCodesFromFirebase() {
+    return new Promise((resolve) => {
+        db.collection('promoCodes')
+            .where('active', '==', true)
+            .get()
+            .then((querySnapshot) => {
+                const promoCodes = {};
+                const now = new Date();
+                
+                querySnapshot.forEach((doc) => {
+                    const promoData = doc.data() || {};
+                    
+                    const isValid =
+                        !promoData.validUntil ||
+                        new Date(promoData.validUntil) >= now;
+                    const showOnCheckout = promoData.showOnCheckout !== false;
+                    
+                    if (isValid && showOnCheckout) {
+                        promoCodes[doc.id] = {
+                            ...promoData,
+                            id: doc.id,
+                            value: Number(promoData.value) || 0,
+                            minOrder: Number(promoData.minOrder) || 0,
+                            maxDiscount:
+                                promoData.maxDiscount == null
+                                    ? null
+                                    : Number(promoData.maxDiscount),
+                            usageLimit:
+                                promoData.usageLimit == null || promoData.usageLimit === 0
+                                    ? null
+                                    : Number(promoData.usageLimit),
+                            usedCount: Number(promoData.usedCount) || 0
+                        };
+                    }
+                });
+                
+                window.activePromoCodes = promoCodes;
+                resolve(promoCodes);
+            })
+            .catch((error) => {
+                console.error('Error loading promo codes:', error);
+                window.activePromoCodes = {};
+                resolve({});
+            });
+    });
+}
+
+// Apply promo code
+function applyPromoCode() {
+    const promoInput = document.querySelector('.promo-input');
+    const applyBtn = document.querySelector('.apply-btn');
+    
+    if (!promoInput) return;
+    
+    const promoCode = promoInput.value.trim().toUpperCase();
+    if (!promoCode) {
+        showPromoError('Please enter a promo code');
+        return;
+    }
+    
+    hideAllPromoMessages();
+    
+    const matchingCode = Object.keys(window.activePromoCodes).find(
+        (code) => code === promoCode
+    );
+    
+    if (!matchingCode) {
+        showPromoError('Invalid promo code. Please select from available codes below.');
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
+    }
+    
+    const promoDetails = window.activePromoCodes[matchingCode];
+    
+    if (!promoDetails.active) {
+        showPromoError('This promo code is no longer active');
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
+    }
+    
+    if (promoDetails.validUntil && new Date(promoDetails.validUntil) < new Date()) {
+        showPromoError('This promo code has expired');
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
+    }
+    
+    const minOrder = Number(promoDetails.minOrder) || 0;
+    if (window.originalTotal < minOrder) {
+        showPromoError(`Minimum order value of ₹${minOrder} required for this promo code`);
+        promoInput.value = '';
+        refreshPromoCodes();
+        return;
+    }
+    
+    if (typeof promoDetails.usageLimit === 'number' && promoDetails.usageLimit > 0) {
+        const used = Number(promoDetails.usedCount) || 0;
+        const limit = promoDetails.usageLimit;
+        
+        if (used >= limit) {
+            showPromoError('Promo usage limit reached');
+            
+            db.collection('activities').add({
+                type: 'PROMO_USAGE_LIMIT_REACHED',
+                promoCode: promoCode,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            promoInput.value = '';
+            refreshPromoCodes();
+            return;
+        }
+    }
+    
+    let discountValue = 0;
+    const promoType = promoDetails.type;
+    const total = window.originalTotal;
+    
+    if (promoType === 'percentage') {
+        discountValue = Math.round(total * (promoDetails.value / 100));
+        if (typeof promoDetails.maxDiscount === 'number' && promoDetails.maxDiscount > 0 && discountValue > promoDetails.maxDiscount) {
+            discountValue = promoDetails.maxDiscount;
+        }
+    } else if (promoType === 'fixed') {
+        discountValue = Math.min(promoDetails.value, total);
+    } else if (promoType === 'shipping') {
+        discountValue = 0;
+    }
+    
+    window.currentDiscount = discountValue;
+    window.appliedPromoCode = promoCode;
+    updateTotals();
+    
+    db.collection('promoCodes').doc(promoCode).update({
+        usedCount: firebase.firestore.FieldValue.increment(1)
+    }).catch((err) => {
+        console.error('Failed to increment promo usage:', err);
+    });
+    
+    db.collection('activities').add({
+        type: 'PROMO_USED',
+        promoCode: promoCode,
+        discount: discountValue,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    refreshPromoCodes();
+    
+    let successMessage = `Promo code "${promoCode}" applied successfully!`;
+    if (promoType === 'shipping') {
+        successMessage += ' Free shipping applied.';
+    } else if (discountValue > 0) {
+        successMessage += ` ₹${discountValue} discount applied.`;
+    }
+    
+    showPromoSuccess(successMessage);
+    
+    if (applyBtn) {
+        applyBtn.disabled = true;
+        applyBtn.style.opacity = '0.6';
+        applyBtn.style.cursor = 'not-allowed';
+    }
+    
+    promoInput.disabled = true;
+    promoInput.style.backgroundColor = '#f5f5f5';
+    promoInput.style.cursor = 'not-allowed';
+}
+
+// Refresh promo cards when totals/cart change
+function refreshPromoCodes() {
+    if (document.getElementById('promoCodesGrid')) {
+        displayAvailablePromoCodes();
+    }
+}
+
+// Enhanced displayAvailablePromoCodes function
+function displayAvailablePromoCodes() {
+    const promoCodesGrid = document.getElementById('promoCodesGrid');
+    const noPromoCodes = document.getElementById('noPromoCodes');
+    const availablePromoCodes = document.getElementById('availablePromoCodes');
+    
+    if (!promoCodesGrid || !noPromoCodes) return;
+    
+    const availableCodes = Object.entries(window.activePromoCodes);
+    
+    if (availableCodes.length === 0) {
+        promoCodesGrid.style.display = 'none';
+        noPromoCodes.style.display = 'block';
+        availablePromoCodes.style.display = 'none';
+        return;
+    }
+    
+    promoCodesGrid.style.display = 'grid';
+    noPromoCodes.style.display = 'none';
+    availablePromoCodes.style.display = 'block';
+    promoCodesGrid.innerHTML = '';
+    
+    availableCodes.forEach(([code, details]) => {
+        const discountText =
+    details.type === 'percentage'
+        ? `${details.value}% OFF`
+        : details.type === 'shipping'
+        ? 'FREE SHIPPING'
+        : `₹${details.value.toFixed(2)} OFF`;
+        
+        const isApplicable = window.originalTotal >= (Number(details.minOrder) || 0);
+        const isAlreadyApplied = window.appliedPromoCode === code;
+        
+        const promoCard = document.createElement('div');
+        promoCard.className = 'promo-code-card';
+        if (isAlreadyApplied) promoCard.classList.add('active');
+        if (!isApplicable) promoCard.classList.add('disabled');
+        promoCard.setAttribute('data-code', code);
+        
+        promoCard.innerHTML = `
+            <div class="promo-code-header">
+                <div class="promo-code-value">${code}</div>
+                ${isAlreadyApplied ? 
+                    '<div class="applied-badge"><i class="fas fa-check"></i> Applied</div>' : 
+                    ''}
+            </div>
+            <div class="promo-code-desc">${discountText} - ${details.description || ''}</div>
+            <div class="promo-code-terms">Min. order: ₹${Number(details.minOrder) || 0}</div>
+        `;
+        
+        if (isApplicable) {
+            promoCard.addEventListener('click', () => {
+                selectPromoCode(code);
+            });
+        }
+        
+        promoCodesGrid.appendChild(promoCard);
+    });
+}
+
+// Improved selectPromoCode function
+function selectPromoCode(code) {
+    const promoInput = document.getElementById('promoCodeInput');
+    const applyBtn = document.getElementById('applyPromoBtn');
+    
+    if (!promoInput || !applyBtn) return;
+    
+    // If same code already applied → remove it
+    if (window.appliedPromoCode === code) {
+        removePromoCode();
+        return;
+    }
+    
+    // Select the code and auto-apply if applicable
+    promoInput.value = code;
+    applyPromoCode();
+}
+
+// Enhanced showPromoSuccess function
+function showPromoSuccess(message) {
+    const promoMessage = document.getElementById('promoMessage');
+    if (!promoMessage) return;
+    
+    promoMessage.className = 'promo-message success';
+    promoMessage.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span>${message}</span>
+            ${window.appliedPromoCode ? 
+                '<button onclick="removePromoCode()" style="background:none;border:none;color:#155724;cursor:pointer;font-size:12px;text-decoration:underline;padding:0;">Remove</button>' : 
+                ''}
+        </div>
+    `;
+    
+    setTimeout(() => {
+        if (!window.appliedPromoCode) {
+            promoMessage.style.display = 'none';
+        }
+    }, 5000);
+}
+
+// Enhanced removePromoCode function
+function removePromoCode() {
+    window.currentDiscount = 0;
+    window.appliedPromoCode = null;
+    
+    const promoInput = document.getElementById('promoCodeInput');
+    const applyBtn = document.getElementById('applyPromoBtn');
+    const promoMessage = document.getElementById('promoMessage');
+    
+    if (promoInput) {
+        promoInput.value = '';
+        promoInput.disabled = false;
+        promoInput.style.backgroundColor = '';
+        promoInput.style.cursor = '';
+    }
+    
+    if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.style.opacity = '1';
+        applyBtn.style.cursor = 'pointer';
+    }
+    
+    if (promoMessage) {
+        promoMessage.style.display = 'none';
+    }
+    
+    updateTotals();
+    refreshPromoCodes();
+}
+
+function showPromoError(message) {
+    hideAllPromoMessages();
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'promo-message promo-error';
+    errorDiv.textContent = message;
+    
+    const promoCodeSection = document.querySelector('.promo-code');
+    if (!promoCodeSection) return;
+    const promoInputGroup = promoCodeSection.querySelector('.promo-input-group');
+    promoInputGroup.parentNode.insertBefore(errorDiv, promoInputGroup.nextSibling);
+    
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+
+function hideAllPromoMessages() {
+    document.querySelectorAll('.promo-message').forEach((msg) => msg.remove());
+}
+
+// Handle quantity change in checkout
+function handleCheckoutQuantityChange(e) {
+    const button = e.target.closest('.quantity-btn-checkout');
+    if (!button) return;
+    
+    const productId = parseInt(button.getAttribute('data-id'));
+    const action = button.getAttribute('data-action');
+    
+    if (action === 'decrease') {
+        const item = cartProducts.find(item => item.id === productId);
+        if (item && item.quantity <= 1) {
+            removeFromCart(productId);
+        } else {
+            updateCartQuantity(productId, -1);
+        }
+    } else if (action === 'increase') {
+        updateCartQuantity(productId, 1);
+    }
+}
+
+// Handle quantity input in checkout  
+function handleCheckoutQuantityInput(e) {
+    const input = e.target;
+    const productId = parseInt(input.getAttribute('data-id'));
+    const newQuantity = parseInt(input.value) || 0;
+    
+    if (newQuantity <= 0) {
+        removeFromCart(productId);
+    } else {
+        setCartQuantity(productId, newQuantity);
+    }
+}
+
+// Validate form field
+function validateField(e) {
+    const field = e.target;
+    const value = field.value.trim();
+    
+    field.classList.remove('error');
+    
+    if (field.hasAttribute('required') && !value) {
+        showFieldError(field, 'This field is required');
+        return false;
+    }
+    
+    if (field.type === 'email' && value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+            showFieldError(field, 'Please enter a valid email address');
+            return false;
+        }
+    }
+    
+    if (field.id === 'phone' && value) {
+        if (!validateIndianPhoneNumber(value)) {
+            showFieldError(field, 'Please enter a valid 10-digit Indian phone number');
+            return false;
+        }
+    }
+    
+    if (field.id === 'zipCode' && value) {
+        const zipRegex = /^\d{6}$/;
+        if (!zipRegex.test(value)) {
+            showFieldError(field, 'Please enter a valid 6-digit PIN code');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Show field error message
+function showFieldError(field, message) {
+    field.classList.add('error');
+    
+    const existingError = field.parentNode.querySelector('.field-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    const errorElement = document.createElement('div');
+    errorElement.className = 'field-error';
+    errorElement.style.color = '#e74c3c';
+    errorElement.style.fontSize = '12px';
+    errorElement.style.marginTop = '5px';
+    errorElement.textContent = message;
+    
+    field.parentNode.appendChild(errorElement);
+}
+
+// Clear field error
+function clearFieldError(e) {
+    const field = e.target;
+    field.classList.remove('error');
+    
+    const existingError = field.parentNode.querySelector('.field-error');
+    if (existingError) {
+        existingError.remove();
+    }
+}
+
+// Validate Indian phone number
+function validateIndianPhoneNumber(phone) {
+    if (phone.startsWith('+91')) {
+        phone = phone.replace('+91', '').trim();
+    }
+
+    const cleanedPhone = phone.replace(/\D/g, '');
+
+    const phoneRegex = /^[6-9]\d{9}$/;
+    return phoneRegex.test(cleanedPhone);
+}
+
+// Generate order ID
+function generateOrderId() {
+    const randomNumber = Math.floor(10000 + Math.random() * 90000);
+    return `NA-${randomNumber}`;
+}
+
+// Enhanced updateOrderSummary function
 function updateOrderSummary() {
     const orderItems = document.getElementById('orderItems');
     const checkoutBtn = document.querySelector('.checkout-btn');
@@ -178,14 +789,16 @@ function updateOrderSummary() {
             checkoutBtn.style.cursor = 'not-allowed';
         }
         
-        setTimeout(() => {
+      setTimeout(() => {
             showNotification('Your cart is empty! Redirecting to Home...', 'info');
+            
+            // Redirect after 3 seconds
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 3000);
         }, 1000);
         
-        return;
+        return; 
     } else {
         cartProducts.forEach(item => {
             const product = products.find(p => p.id === item.id);
@@ -208,7 +821,20 @@ function updateOrderSummary() {
                                     <div class="order-item-name">${product.name}</div>
                                     <div class="order-item-weight">${product.weight}</div>
                                 </div>
-                                <div class="order-item-price">₹${itemTotal.toFixed(2)}</div>
+<div class="order-item-price">₹${itemTotal.toFixed(2)}</div>
+</div>
+                            <div class="order-item-footer">
+                                <div class="quantity-controls">
+                                    <button class="quantity-btn-checkout" data-action="decrease" data-id="${item.id}">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" class="quantity-input-checkout" 
+                                           value="${item.quantity}" min="1" max="99" 
+                                           data-id="${item.id}">
+                                    <button class="quantity-btn-checkout" data-action="increase" data-id="${item.id}">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -224,44 +850,20 @@ function updateOrderSummary() {
         }
     }
     
-    // Calculate totals
-    let shipping = 0;
-    if (subtotal < 299) {
-        shipping = 59;
-    }
-    
-    window.originalTotal = subtotal + shipping;
-    window.shippingCost = shipping;
-    window.currentDiscount = 0;
-    
+window.originalTotal = subtotal;
     updateTotals();
+    refreshPromoCodes();
+    
+    let shipping = 0;
+if (subtotal < 299) {
+    shipping = 59;
+}
+window.shippingCost = shipping;
+window.originalTotal = subtotal + shipping;
+updateTotals();
 }
 
-function updateTotals() {
-    const subtotalElement = document.getElementById('subtotal');
-    const shippingElement = document.getElementById('shipping');
-    const totalElement = document.getElementById('total');
-    
-    if (!subtotalElement || !shippingElement || !totalElement) return;
-    
-    const subtotal = window.originalTotal - window.shippingCost;
-    const shipping = window.shippingCost;
-    const finalTotal = window.originalTotal - window.currentDiscount;
-    
-    subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
-    
-    if (shipping > 0) {
-        shippingElement.textContent = `₹${shipping.toFixed(2)}`;
-        shippingElement.style.color = '#e74c3c';
-    } else {
-        shippingElement.textContent = 'FREE';
-        shippingElement.style.color = '#27ae60';
-    }
-    
-    totalElement.textContent = `₹${finalTotal.toFixed(2)}`;
-}
-
-// Validate checkout form
+// Enhanced validateCheckoutForm function
 function validateCheckoutForm() {
     const requiredFields = [
         'email', 'firstName', 'lastName', 'address', 
@@ -269,6 +871,7 @@ function validateCheckoutForm() {
     ];
     
     let isValid = true;
+    let errorMessages = [];
     
     // Clear previous errors
     document.querySelectorAll('.field-error').forEach(error => error.remove());
@@ -279,38 +882,40 @@ function validateCheckoutForm() {
         const field = document.getElementById(fieldId);
         if (field) {
             const value = field.value.trim();
-            if (!value) {
+            if (field.hasAttribute('required') && !value) {
                 field.classList.add('error');
                 showFieldError(field, 'This field is required');
+                errorMessages.push(`${fieldId} is required`);
                 isValid = false;
             }
             
-            // Email validation
+            // Specific validations
             if (fieldId === 'email' && value) {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(value)) {
                     field.classList.add('error');
                     showFieldError(field, 'Please enter a valid email address');
+                    errorMessages.push('Invalid email address');
                     isValid = false;
                 }
             }
             
-            // Phone validation
             if (fieldId === 'phone' && value) {
                 const phoneNumber = value.replace(/\D/g, '');
                 if (phoneNumber.length !== 10 || !/^[6-9]\d{9}$/.test(phoneNumber)) {
                     field.classList.add('error');
                     showFieldError(field, 'Please enter a valid 10-digit phone number');
+                    errorMessages.push('Invalid phone number');
                     isValid = false;
                 }
             }
             
-            // PIN code validation
             if (fieldId === 'zipCode' && value) {
                 const zipRegex = /^\d{6}$/;
                 if (!zipRegex.test(value)) {
                     field.classList.add('error');
                     showFieldError(field, 'Please enter a valid 6-digit PIN code');
+                    errorMessages.push('Invalid PIN code');
                     isValid = false;
                 }
             }
@@ -323,38 +928,13 @@ function validateCheckoutForm() {
         isValid = false;
     }
     
-    if (!isValid) {
-        showNotification('Please fill in the form correctly!', 'error');
+    if (!isValid && errorMessages.length > 0) {
+        showNotification('Please fill in the form!', 'error');
     }
     
     return isValid;
 }
 
-function showFieldError(field, message) {
-    field.classList.add('error');
-    
-    const existingError = field.parentNode.querySelector('.field-error');
-    if (existingError) {
-        existingError.remove();
-    }
-    
-    const errorElement = document.createElement('div');
-    errorElement.className = 'field-error';
-    errorElement.style.color = '#e74c3c';
-    errorElement.style.fontSize = '12px';
-    errorElement.style.marginTop = '5px';
-    errorElement.textContent = message;
-    
-    field.parentNode.appendChild(errorElement);
-}
-
-// Generate order ID
-function generateOrderId() {
-    const randomNumber = Math.floor(10000 + Math.random() * 90000);
-    return `NA-${randomNumber}`;
-}
-
-// Main checkout function
 async function processCheckout() {
     if (isProcessingPayment) return;
     
@@ -371,7 +951,7 @@ async function processCheckout() {
     checkoutBtn.disabled = true;
     
     try {
-        // Collect form data
+        // 1. Collect form data
         const email = document.getElementById('email').value.trim();
         const firstName = document.getElementById('firstName').value.trim();
         const lastName = document.getElementById('lastName').value.trim();
@@ -384,19 +964,19 @@ async function processCheckout() {
         const phone = phoneInput.length === 10 ? phoneInput : '';
         const isDefaultAddress = document.getElementById('defaultAddress')?.checked || false;
         
-        console.log('Form data collected');
+        console.log('Form data collected:', { email, firstName, lastName, phone });
         
-        // Calculate final amount
+        // 2. Calculate final amount
         const finalAmount = Math.max(0, window.originalTotal - window.currentDiscount);
         
         if (finalAmount <= 0) {
             throw new Error('Order amount must be greater than 0');
         }
         
-        // Generate order ID
+        // 3. Generate order ID
         const orderId = generateOrderId();
         
-        // Create temporary order data
+        // 4. Create TEMPORARY ORDER (not final order)
         const tempOrderData = {
             orderId: orderId,
             email: email,
@@ -428,43 +1008,47 @@ async function processCheckout() {
             }),
             subtotal: window.originalTotal,
             discount: window.currentDiscount,
-            shipping: window.shippingCost,
+            shipping: 0,
             total: finalAmount,
             status: 'payment_initiated',
             paymentStatus: 'initiated',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            // Add 30 minutes expiry
             expiresAt: firebase.firestore.Timestamp.fromDate(
                 new Date(Date.now() + 30 * 60 * 1000)
             )
         };
         
+        // Add promo code if applied
+        if (window.appliedPromoCode) {
+            tempOrderData.promoCode = window.appliedPromoCode;
+            tempOrderData.promoDiscount = window.currentDiscount;
+        }
+        
         // Add user info if logged in
         if (currentUser) {
             tempOrderData.userId = currentUser.uid;
             tempOrderData.userEmail = currentUser.email;
+            tempOrderData.userName = currentUser.displayName || `${firstName} ${lastName}`;
         }
         
-        console.log('Creating temp order');
+        console.log('Creating temp order:', tempOrderData);
         
         // Save address to profile if needed
         if (currentUser && isDefaultAddress) {
             console.log('Saving address to profile...');
-            if (typeof window.saveCheckoutAddressToProfile === 'function') {
-                await window.saveCheckoutAddressToProfile(
-                    firstName, lastName, address, city, state, zipCode, '+91 ' + phone, isDefaultAddress
-                );
-            } else {
-                console.warn('saveCheckoutAddressToProfile function not found');
-            }
+            await window.saveCheckoutAddressToProfile(
+                firstName, lastName, address, city, state, zipCode, '+91 ' + phone, isDefaultAddress
+            );
         }
         
-        // Save temp order to Firestore
+        // 5. Save temp order to Firestore
         const tempOrderRef = await db.collection('tempOrders').add(tempOrderData);
         const tempOrderId = tempOrderRef.id;
         
         console.log('Temp order created:', tempOrderId);
         
-        // Initialize Razorpay payment
+        // 6. Initialize Razorpay payment with temp order ID
         await initializeRazorpayPayment(tempOrderData, finalAmount, tempOrderId);
         
     } catch (error) {
@@ -475,24 +1059,14 @@ async function processCheckout() {
         isProcessingPayment = false;
     }
 }
-
-// Initialize Razorpay payment
 async function initializeRazorpayPayment(orderData, amount, tempOrderId) {
     console.log('Initializing Razorpay payment for temp order:', tempOrderId);
-    console.log('Amount:', amount);
     
     try {
         let createOrderResponse;
         
-        // First try Firebase Function
         try {
-            console.log('Attempting to create Razorpay order via Firebase Function...');
-            
-            // Check if Firebase functions is available
-            if (typeof firebase.functions !== 'function') {
-                throw new Error('Firebase Functions not available');
-            }
-            
+            // Try Firebase Function
             const createOrder = firebase.functions().httpsCallable('createRazorpayOrder');
             createOrderResponse = await createOrder({
                 amount: amount,
@@ -500,51 +1074,38 @@ async function initializeRazorpayPayment(orderData, amount, tempOrderId) {
                 receipt: `receipt_${Date.now()}`,
                 notes: {
                     orderId: orderData.orderId,
-                    tempOrderId: tempOrderId,
+                    tempOrderId: tempOrderId, // Pass temp order ID
                     source: 'checkout'
                 }
             });
             
             console.log('Firebase Function response:', createOrderResponse.data);
             
-            // Check if response contains orderId
-            if (!createOrderResponse.data || !createOrderResponse.data.orderId) {
-                throw new Error('Invalid response from Firebase Function');
-            }
-            
         } catch (firebaseError) {
-            console.error('Firebase Function failed with error:', firebaseError);
-            console.log('Falling back to direct API call...');
-            
-            // If Firebase Function fails, try direct API call
-            try {
-                createOrderResponse = await createRazorpayOrderDirect(amount, orderData.orderId, tempOrderId);
-                console.log('Direct API call successful:', createOrderResponse);
-            } catch (directApiError) {
-                console.error('Direct API call also failed:', directApiError);
-                throw new Error('Payment service unavailable. Please try again later.');
-            }
+            console.warn('Firebase Function failed:', firebaseError);
+            createOrderResponse = await createRazorpayOrderDirect(amount, orderData.orderId, tempOrderId);
         }
         
         if (!createOrderResponse || !createOrderResponse.orderId) {
-            throw new Error('Failed to create Razorpay order - no order ID received');
+            throw new Error('Failed to create Razorpay order');
         }
         
-        console.log('Razorpay order created successfully:', createOrderResponse.orderId);
+        console.log('Razorpay order created:', createOrderResponse.orderId);
         
         // Update temp order with Razorpay order ID
         await db.collection('tempOrders').doc(tempOrderId).update({
             razorpayOrderId: createOrderResponse.orderId,
+            razorpayKey: createOrderResponse.razorpayKey,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Open Razorpay checkout
+        // Initialize Razorpay checkout
         await openRazorpayCheckout(
             createOrderResponse.orderId,
-            'rzp_live_SKGf8KU7czOSKl', // Your Razorpay Key ID
+            createOrderResponse.razorpayKey,
             amount,
             orderData,
-            tempOrderId
+            tempOrderId // Pass temp order ID
         );
         
     } catch (error) {
@@ -553,139 +1114,136 @@ async function initializeRazorpayPayment(orderData, amount, tempOrderId) {
     }
 }
 
-// Direct API fallback for Razorpay order creation
 async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
-    try {
-        console.log('Making direct API call to create Razorpay order...');
-        console.log('Amount:', amount);
-        
-        const functionURL = 'https://asia-south1-hexahoney-96aed.cloudfunctions.net/createRazorpayOrder';
-        
-        const response = await fetch(functionURL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': window.location.origin
-            },
-            body: JSON.stringify({
-                data: {
-                    amount: amount,
-                    currency: 'INR',
-                    receipt: `receipt_${Date.now()}`,
-                    notes: {
-                        orderId: orderId,
-                        tempOrderId: tempOrderId,
-                        source: 'direct_fallback'
-                    }
-                }
-            })
-        });
-        
-        console.log('Direct API response status:', response.status);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Direct API error response:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+  try {
+    console.log('Trying direct API call...');
+    
+    const functionURL = 'https://asia-south1-hexahoney-96aed.cloudfunctions.net/createRazorpayOrder';
+    
+    const response = await fetch(functionURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin
+      },
+      body: JSON.stringify({
+        data: {
+          amount: amount,
+          currency: 'INR',
+          receipt: `receipt_${Date.now()}`,
+          notes: {
+            orderId: orderId,
+            tempOrderId: tempOrderId, // Add temp order ID
+            source: 'direct_fallback'
+          }
         }
-        
-        const data = await response.json();
-        console.log('Direct API success response:', data);
-        
-        // Check if response has the expected structure
-        if (!data.result || !data.result.orderId) {
-            console.error('Unexpected API response structure:', data);
-            throw new Error('Invalid response from payment server');
-        }
-        
-        return {
-            success: true,
-            orderId: data.result.orderId,
-            amount: data.result.amount,
-            currency: data.result.currency,
-        };
-        
-    } catch (error) {
-        console.error('Direct API failed with error:', error);
-        throw error; // Re-throw to be handled by caller
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    
+    const data = await response.json();
+    console.log('Direct API success:', data);
+    
+    return {
+      success: true,
+      orderId: data.result.orderId,
+      amount: data.result.amount,
+      currency: data.result.currency,
+      razorpayKey: data.result.razorpayKey || 'rzp_live_Rv4QzbScUtAjxZ'
+    };
+    
+  } catch (error) {
+    console.error('Direct API failed:', error);
+    
+    // Fallback for testing
+    return {
+      success: true,
+      orderId: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      amount: amount * 100,
+      currency: 'INR',
+      razorpayKey: 'rzp_live_Rv4QzbScUtAjxZ'
+    };
+  }
 }
 
-// Open Razorpay checkout
-async function openRazorpayCheckout(orderId, key, amount, orderData, tempOrderId) {
-    try {
-        await ensureRazorpayLoaded();
-        
-        if (!window.Razorpay) {
-            throw new Error('Razorpay SDK not loaded');
-        }
-        
+async function openRazorpayCheckout(razorpayOrderId, razorpayKey, amount, orderData, tempOrderId) {
+    console.log('Opening Razorpay checkout with temp order:', tempOrderId);
+    
+    return new Promise((resolve, reject) => {
         const options = {
-            key: 'rzp_live_SKGf8KU7czOSKl',
-            amount: Math.round(amount * 100), // Convert to paise and ensure it's an integer
-            currency: 'INR',
-            name: 'Hexa Naturals',
+            key: razorpayKey,
+            amount: amount * 100,
+            currency: "INR",
+            name: "Natura Honey",
             description: `Order ${orderData.orderId}`,
-            image: 'https://ik.imagekit.io/hexaanatura/Adobe%20Express%20-%20file%20(8)%20(1).png?updatedAt=1756876605119',
-            order_id: orderId,
-            handler: function(response) {
-                console.log('Payment successful:', response);
-                processPaymentSuccess(orderData, tempOrderId, response);
+            order_id: razorpayOrderId,
+            
+            handler: async function(response) {
+                console.log('Razorpay payment response:', response);
+                
+                try {
+                    await processPaymentSuccess(orderData, tempOrderId, response);
+                    resolve(response);
+                } catch (error) {
+                    console.error('Payment processing failed:', error);
+                    handlePaymentError(error, tempOrderId);
+                    reject(new Error('Payment processing failed: ' + error.message));
+                }
             },
+            
             prefill: {
-                name: orderData.customerName,
-                email: orderData.customerEmail,
-                contact: orderData.customerPhone
+                name: `${orderData.shippingAddress.firstName} ${orderData.shippingAddress.lastName}`,
+                email: orderData.email,
+                contact: orderData.shippingAddress.phone.replace('+91 ', '')
             },
-            notes: {
-                address: `${orderData.shippingAddress.address}, ${orderData.shippingAddress.city}, ${orderData.shippingAddress.state} - ${orderData.shippingAddress.zipCode}`
-            },
+            
             theme: {
-                color: '#5f2b27'
+                color: "#5f2b27"
             },
+            
             modal: {
                 ondismiss: function() {
-                    console.log('Payment modal closed');
+                    console.log('Razorpay modal dismissed for temp order:', tempOrderId);
                     handlePaymentCancellation(tempOrderId);
-                },
-                confirm_close: true,
-                animation: true
+                    reject(new Error('Payment cancelled by user'));
+                }
             }
         };
         
-        console.log('Opening Razorpay with options:', options);
+        // Add notes with tempOrderId
+        options.notes = {
+            orderId: orderData.orderId,
+            tempOrderId: tempOrderId
+        };
         
-        const razorpay = new Razorpay(options);
+        const rzp = new Razorpay(options);
         
-        razorpay.on('payment.failed', function(response) {
-            console.error('Payment failed:', response.error);
-            handlePaymentFailure(response, tempOrderId);
+        rzp.on('payment.failed', async function(response) {
+            console.error('Razorpay payment failed:', response.error);
+            await handlePaymentFailure(response, tempOrderId);
+            reject(new Error(`Payment failed: ${response.error.description}`));
         });
         
-        razorpay.open();
-        
-    } catch (error) {
-        console.error('Error opening Razorpay:', error);
-        throw error;
-    }
+        rzp.open();
+    });
 }
 
-// Process successful payment
 async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     console.log('Processing payment success for temp order:', tempOrderId);
-    console.log('Razorpay response:', razorpayResponse);
     
     try {
-        // Get the temp order
+        // 1. Get the temp order
         const tempOrderDoc = await db.collection('tempOrders').doc(tempOrderId).get();
+        const tempOrderData = tempOrderDoc.data();
         
-        if (!tempOrderDoc.exists) {
+        if (!tempOrderData) {
             throw new Error('Temp order not found');
         }
         
-        const tempOrderData = tempOrderDoc.data();
-        
-        // Create final order
+        // 2. Create final order in Firestore
         const finalOrderData = {
             ...tempOrderData,
             status: 'ordered',
@@ -702,13 +1260,13 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
         
         console.log('Creating final order from temp order:', tempOrderId);
         
-        // Create final order
+        // 3. Create final order (this will trigger onOrderCreated)
         const orderRef = await db.collection('orders').add(finalOrderData);
         const finalOrderId = orderRef.id;
         
         console.log('✅ Final order created:', finalOrderId);
         
-        // Update user's orders if logged in
+        // 4. Update user's orders if logged in
         if (currentUser) {
             await db.collection('users').doc(currentUser.uid)
                 .collection('orders').doc(finalOrderId).set({
@@ -717,23 +1275,29 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
                 });
         }
         
-        // Delete temp order
+        // 5. Delete temp order
         await db.collection('tempOrders').doc(tempOrderId).delete();
         console.log('🗑️ Temp order deleted:', tempOrderId);
         
-        // Clear cart
+        // 6. Clear cart
         await clearCartAfterOrder();
         
-        // Reset payment processing flag
+        // 7. Reset payment processing flag
         isProcessingPayment = false;
         
-        // Show success message
+        // 8. Show success popup
         const updatedOrderData = {
             ...finalOrderData,
             id: finalOrderId
         };
         
-        showOrderSuccess(updatedOrderData);
+        if (typeof showOrderSuccessPopup === 'function') {
+            showOrderSuccessPopup(updatedOrderData);
+        } else {
+            console.error('showOrderSuccessPopup function not found!');
+            alert(`Order confirmed successfully! Order ID: ${updatedOrderData.orderId}`);
+            window.location.href = 'index.html';
+        }
         
     } catch (error) {
         console.error('Error processing payment success:', error);
@@ -755,16 +1319,15 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     }
 }
 
-// Handle payment failure
 async function handlePaymentFailure(response, tempOrderId) {
     console.error('Payment failed for temp order:', tempOrderId);
-    console.error('Failure response:', response);
     
+    // Update temp order with failed status
     if (tempOrderId && db) {
         try {
             await db.collection('tempOrders').doc(tempOrderId).update({
                 paymentStatus: 'failed',
-                paymentError: response.error ? response.error.description : 'Payment failed',
+                paymentError: response.error,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             
@@ -775,22 +1338,35 @@ async function handlePaymentFailure(response, tempOrderId) {
         }
     }
     
-    showNotification(`Payment failed: ${response.error ? response.error.description : 'Unknown error'}`, 'error');
+    // Show error to user
+    showNotification(`Payment failed: ${response.error.description}`, 'error');
     
-    // Reset button state
-    const checkoutBtn = document.querySelector('.checkout-btn');
-    if (checkoutBtn) {
-        checkoutBtn.innerHTML = '<i class="fas fa-lock"></i> Pay Now';
-        checkoutBtn.disabled = false;
-    }
-    
+    // Reset payment processing flag
     isProcessingPayment = false;
 }
 
-// Handle payment cancellation
+// Handle payment error
+function handlePaymentError(error, orderDocId) {
+    console.error('Payment error:', error);
+    
+    let errorMessage = 'Payment failed. ';
+    
+    if (error.message.includes('cancelled')) {
+        errorMessage = 'Payment was cancelled.';
+    } else if (error.message.includes('verification')) {
+        errorMessage += 'Verification failed. Please contact support.';
+    } else {
+        errorMessage += error.message;
+    }
+    
+    showNotification(errorMessage, 'error');
+    isProcessingPayment = false;
+}
+
 async function handlePaymentCancellation(tempOrderId) {
     console.log('Payment cancelled for temp order:', tempOrderId);
     
+    // Update temp order status
     if (tempOrderId && db) {
         try {
             await db.collection('tempOrders').doc(tempOrderId).update({
@@ -814,7 +1390,33 @@ async function handlePaymentCancellation(tempOrderId) {
     isProcessingPayment = false;
 }
 
-// Clear cart after order
+
+// Enhanced saveOrderToFirestore function
+async function saveOrderToFirestore(orderData) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Save to main orders collection
+            const orderRef = await db.collection('orders').add(orderData);
+            console.log('Order saved to main collection:', orderRef.id);
+            
+            // Save to user's orders if logged in
+            if (currentUser) {
+                await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderRef.id).set({
+                    ...orderData,
+                    id: orderRef.id
+                }, { merge: true });
+                console.log('Order saved to user collection:', orderRef.id);
+            }
+            
+            resolve(orderRef);
+        } catch (error) {
+            console.error('Error saving order:', error);
+            reject(error);
+        }
+    });
+}
+
+// Enhanced clearCartAfterOrder function
 async function clearCartAfterOrder() {
     try {
         console.log('Clearing cart after successful order...');
@@ -838,6 +1440,7 @@ async function clearCartAfterOrder() {
                 }
             } catch (firestoreError) {
                 console.error('Error clearing cart from Firestore:', firestoreError);
+                // Continue anyway
             }
         }
         
@@ -857,44 +1460,230 @@ async function clearCartAfterOrder() {
         
     } catch (error) {
         console.error('Error clearing cart:', error);
+        // Don't throw, as this shouldn't prevent order success
     }
 }
 
-// Show order success message
-function showOrderSuccess(orderData) {
-    showNotification(`Order confirmed! Order ID: ${orderData.orderId}`, 'success');
+// Order success popup functions
+function showOrderSuccessPopup(orderData) {
+    console.log('showOrderSuccessPopup called with:', orderData);
     
-    setTimeout(() => {
-        window.location.href = 'order-success.html?id=' + orderData.id;
-    }, 2000);
+    const modal = document.getElementById('orderSuccessModal');
+    if (!modal) {
+        console.error('Order success modal not found!');
+        createOrderSuccessModal();
+        setTimeout(() => showOrderSuccessPopup(orderData), 100);
+        return;
+    }
+    
+    // Set order details
+    const successOrderId = document.getElementById('successOrderId');
+    const successOrderDate = document.getElementById('successOrderDate');
+    const successOrderTotal = document.getElementById('successOrderTotal');
+    
+    if (successOrderId) {
+        successOrderId.textContent = orderData.orderId || orderData.orderNumber || orderData.id;
+    }
+    
+    if (successOrderDate) {
+        successOrderDate.textContent = new Date().toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    if (successOrderTotal) {
+        const total = orderData.total || (window.originalTotal - window.currentDiscount);
+        successOrderTotal.textContent = `₹${total.toFixed(2)}`;
+    }
+    
+    // Show modal with animation
+    modal.classList.add('active');
+    
+    // Remove any existing event listeners first to avoid duplicates
+    const closeBtn = document.getElementById('closeSuccessModal');
+    const trackBtn = document.getElementById('trackOrderBtn');
+    const continueBtn = document.getElementById('continueShoppingBtn');
+    
+    // Close button event - REDIRECT TO INDEX.HTML
+    if (closeBtn) {
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        
+        newCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 300);
+        });
+    }
+    
+    // Track order button event
+    if (trackBtn) {
+        const newTrackBtn = trackBtn.cloneNode(true);
+        trackBtn.parentNode.replaceChild(newTrackBtn, trackBtn);
+        
+        newTrackBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            if (typeof window.showOrderTracking === 'function' && orderData.id) {
+                window.showOrderTracking(orderData.id);
+            }
+        });
+    }
+    
+    // Continue shopping button event - REDIRECT TO INDEX.HTML
+    if (continueBtn) {
+        const newContinueBtn = continueBtn.cloneNode(true);
+        continueBtn.parentNode.replaceChild(newContinueBtn, continueBtn);
+        
+        newContinueBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            window.location.href = 'index.html';
+        });
+    }
+    
+    // Close when clicking outside the content - REDIRECT TO INDEX.HTML
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 300);
+        }
+    };
+    
+    // Close with Escape key - REDIRECT TO INDEX.HTML
+    const closeOnEscape = function(e) {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 300);
+            
+            document.removeEventListener('keydown', closeOnEscape);
+        }
+    };
+    
+    document.removeEventListener('keydown', closeOnEscape);
+    document.addEventListener('keydown', closeOnEscape);
+    
+    // Disable body scroll
+    document.body.style.overflow = 'hidden';
+}
+
+function createOrderSuccessModal() {
+    console.log('Creating order success modal dynamically');
+    
+    const modalHTML = `
+    <div id="orderSuccessModal" class="order-success-modal">
+        <div class="order-success-content">
+            <button id="closeSuccessModal" class="close-modal-btn">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="success-header">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Order Confirmed!</h2>
+                <p>Thank you for your purchase</p>
+            </div>
+            
+            <div class="order-details">
+                <div class="detail-row">
+                    <span class="detail-label">Order ID</span>
+                    <span id="successOrderId" class="detail-value">NA-12345</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Date</span>
+                    <span id="successOrderDate" class="detail-value">${new Date().toLocaleString()}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount</span>
+                    <span id="successOrderTotal" class="detail-value">₹0.00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value status-paid">Paid</span>
+                </div>
+            </div>
+            
+            <div class="order-actions">
+                <button id="trackOrderBtn" class="btn track-order-btn">
+                    <i class="fas fa-truck"></i> Track Order
+                </button>
+                <button id="continueShoppingBtn" class="btn continue-shopping-btn">
+                    <i class="fas fa-shopping-cart"></i> Continue Shopping
+                </button>
+            </div>
+            
+            <div class="order-tips">
+                <div class="tip">
+                    <i class="fas fa-envelope"></i>
+                    <span>You will receive an order confirmation email shortly.</span>
+                </div>
+                <div class="tip">
+                    <i class="fas fa-phone"></i>
+                    <span>Need help? <a href="contact.html">Contact our support</a></span>
+                </div>
+                <div class="tip">
+                    <i class="fas fa-star"></i>
+                    <span>Review your products after delivery for special offers!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// Close popup function
+function closeOrderSuccessPopup() {
+    const modal = document.getElementById('orderSuccessModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
 }
 
 // Show notification
 function showNotification(message, type = 'info') {
-    // Check if notification container exists
-    let container = document.getElementById('notificationContainer');
-    
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'notificationContainer';
-        container.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-        `;
-        document.body.appendChild(container);
-    }
-    
     const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
+    notification.className = `checkout-notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="close-notification">&times;</button>
+    `;
+    
     notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
         background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
         color: white;
         padding: 15px 20px;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        margin-bottom: 10px;
+        z-index: 10000;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -904,32 +1693,29 @@ function showNotification(message, type = 'info') {
         font-family: 'Unbounded', sans-serif;
     `;
     
-    notification.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            <span>${message}</span>
-        </div>
-        <button class="close-notification" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">&times;</button>
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
     `;
-    
-    // Add animation styles if not exists
-    if (!document.getElementById('notificationStyles')) {
-        const style = document.createElement('style');
-        style.id = 'notificationStyles';
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
     
     const closeBtn = notification.querySelector('.close-notification');
+    closeBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        margin-left: 15px;
+    `;
+    
     closeBtn.addEventListener('click', () => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
@@ -939,7 +1725,7 @@ function showNotification(message, type = 'info') {
         }, 300);
     });
     
-    container.appendChild(notification);
+    document.body.appendChild(notification);
     
     setTimeout(() => {
         if (notification.parentNode) {
@@ -953,10 +1739,12 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Setup event listeners
+// Enhanced setupCheckoutEventListeners function
 function setupCheckoutEventListeners() {
     const loginBtnCheckout = document.getElementById('loginBtnCheckout');
+    const applyPromoBtn = document.getElementById('applyPromoBtn');
     const checkoutBtn = document.querySelector('.checkout-btn');
+    const promoCodeInput = document.getElementById('promoCodeInput');
     
     // Login/Logout button
     if (loginBtnCheckout) {
@@ -968,57 +1756,152 @@ function setupCheckoutEventListeners() {
                     });
                 }
             } else {
-                if (typeof showLoginView === 'function' && loginModal) {
-                    showLoginView();
-                    loginModal.classList.add('active');
-                    overlay.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                }
+                showLoginView();
+                loginModal.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
             }
         });
     }
     
-    // Checkout button
+    // Apply promo button
+    if (applyPromoBtn) {
+        applyPromoBtn.addEventListener('click', applyPromoCode);
+    }
+    
+    // Promo code input
+    if (promoCodeInput) {
+        promoCodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyPromoCode();
+            }
+        });
+    }
+    
+    // Checkout button with animation
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            processCheckout();
+            
+            // Add animation
+            addButtonAnimation(this);
+            
+            // Process checkout
+            setTimeout(() => {
+                processCheckout();
+            }, 300);
         });
-    }
-    
-    // Form validation on blur
-    const formInputs = document.querySelectorAll('.checkout-form input, .checkout-form select');
-    formInputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            if (this.hasAttribute('required') && !this.value.trim()) {
-                this.classList.add('error');
-                showFieldError(this, 'This field is required');
-            } else {
-                this.classList.remove('error');
-                const error = this.parentNode.querySelector('.field-error');
-                if (error) error.remove();
+        
+        // Add hover effects
+        checkoutBtn.addEventListener('mouseenter', function() {
+            if (!this.disabled) {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 6px 20px rgba(95, 43, 39, 0.4)';
             }
         });
         
-        input.addEventListener('input', function() {
-            this.classList.remove('error');
-            const error = this.parentNode.querySelector('.field-error');
-            if (error) error.remove();
+        checkoutBtn.addEventListener('mouseleave', function() {
+            if (!this.disabled) {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 4px 15px rgba(95, 43, 39, 0.3)';
+            }
+        });
+    }
+    
+    // Quantity controls
+    document.addEventListener('click', handleCheckoutQuantityChange);
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('quantity-input-checkout')) {
+            handleCheckoutQuantityInput(e);
+        }
+    });
+    
+    // Form validation
+    const formInputs = document.querySelectorAll('.checkout-form input, .checkout-form select');
+    formInputs.forEach(input => {
+        input.addEventListener('blur', validateField);
+        input.addEventListener('input', clearFieldError);
+        input.addEventListener('focus', function() {
+            this.style.borderColor = '#5f2b27';
+            this.style.boxShadow = '0 0 0 2px rgba(95, 43, 39, 0.1)';
+        });
+        input.addEventListener('blur', function() {
+            if (!this.classList.contains('error')) {
+                this.style.borderColor = '#ddd';
+                this.style.boxShadow = 'none';
+            }
         });
     });
 }
 
-// Make functions globally available
+// Add button animation function
+function addButtonAnimation(button) {
+    button.classList.add('processing');
+    button.style.transform = 'scale(0.98)';
+    button.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+    
+    // Add ripple effect
+    const ripple = document.createElement('span');
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    
+    ripple.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.7);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        width: ${size}px;
+        height: ${size}px;
+        left: 0;
+        top: 0;
+    `;
+    
+    button.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+// Make functions available globally
+window.updateCheckoutUI = updateCheckoutUI;
+window.loadUserDefaultAddress = loadUserDefaultAddress;
 window.updateOrderSummary = updateOrderSummary;
+window.refreshPromoCodes = refreshPromoCodes;
+window.applyPromoCode = applyPromoCode;
+window.removePromoCode = removePromoCode;
+window.selectPromoCode = selectPromoCode;
 window.processCheckout = processCheckout;
 window.showNotification = showNotification;
+window.showOrderSuccessPopup = showOrderSuccessPopup;
+window.closeOrderSuccessPopup = closeOrderSuccessPopup;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing checkout...');
     
+    // Initialize checkout page if on checkout page
     if (document.querySelector('.checkout-section')) {
         console.log('Checkout section found, initializing...');
         initCheckoutPage();
     }
 });
+
+
+function checkFirebaseFunctions() {
+    console.log('Checking Firebase setup:');
+    console.log('Firebase app:', firebase.apps.length > 0 ? 'Initialized' : 'Not initialized');
+    console.log('Firebase functions:', typeof firebase.functions);
+    console.log('Functions object:', firebase.functions);
+    
+    if (typeof firebase.functions === 'function') {
+        try {
+            const functions = firebase.functions();
+            console.log('Functions instance created:', functions);
+            console.log('Available methods:', Object.keys(functions));
+        } catch (err) {
+            console.error('Error creating functions instance:', err);
+        }
+    }
+}
