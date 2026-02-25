@@ -1,3 +1,4 @@
+
 let isProcessingPayment = false;
 let razorpayScriptLoaded = false;
 
@@ -318,54 +319,41 @@ function getActivePromoCodes() {
 // Load promo codes from Firebase
 function loadPromoCodesFromFirebase() {
     return new Promise((resolve) => {
-        // Get current date for expiry check
-        const now = new Date();
-        
         db.collection('promoCodes')
             .where('active', '==', true)
             .get()
             .then((querySnapshot) => {
                 const promoCodes = {};
-                
-                if (querySnapshot.empty) {
-                    console.log('No promo codes found in Firebase');
-                    window.activePromoCodes = {};
-                    resolve({});
-                    return;
-                }
+                const now = new Date();
                 
                 querySnapshot.forEach((doc) => {
                     const promoData = doc.data() || {};
-                    const promoId = doc.id;
                     
-                    // Check if promo code is valid (active and not expired)
-                    const isValid = promoData.active === true;
-                    const notExpired = !promoData.validUntil || new Date(promoData.validUntil) >= now;
+                    const isValid =
+                        !promoData.validUntil ||
+                        new Date(promoData.validUntil) >= now;
+                    const showOnCheckout = promoData.showOnCheckout !== false;
                     
-                    if (isValid && notExpired) {
-                        // Store ALL active promo codes regardless of showOnCheckout
-                        promoCodes[promoId] = {
-                            code: promoId,
-                            id: promoId,
-                            type: promoData.type || 'fixed',
+                    if (isValid && showOnCheckout) {
+                        promoCodes[doc.id] = {
+                            ...promoData,
+                            id: doc.id,
                             value: Number(promoData.value) || 0,
-                            description: promoData.description || '',
                             minOrder: Number(promoData.minOrder) || 0,
-                            validUntil: promoData.validUntil || null,
-                            usageLimit: promoData.usageLimit || 0,
-                            usedCount: Number(promoData.usedCount) || 0,
-                            isPopular: promoData.isPopular || false,
-                            terms: promoData.terms || '',
-                            active: promoData.active !== false,
-                            showOnCheckout: promoData.showOnCheckout !== false // Store this setting
+                            maxDiscount:
+                                promoData.maxDiscount == null
+                                    ? null
+                                    : Number(promoData.maxDiscount),
+                            usageLimit:
+                                promoData.usageLimit == null || promoData.usageLimit === 0
+                                    ? null
+                                    : Number(promoData.usageLimit),
+                            usedCount: Number(promoData.usedCount) || 0
                         };
-                        
-                        console.log('Loaded promo code:', promoId, promoCodes[promoId]);
                     }
                 });
                 
                 window.activePromoCodes = promoCodes;
-                console.log('All promo codes loaded:', window.activePromoCodes);
                 resolve(promoCodes);
             })
             .catch((error) => {
@@ -391,13 +379,12 @@ function applyPromoCode() {
     
     hideAllPromoMessages();
     
-    // Check if code exists in activePromoCodes (ALL active codes, regardless of showOnCheckout)
     const matchingCode = Object.keys(window.activePromoCodes).find(
         (code) => code === promoCode
     );
     
     if (!matchingCode) {
-        showPromoError('Invalid promo code. Please check the code and try again.');
+        showPromoError('Invalid promo code. Please select from available codes below.');
         promoInput.value = '';
         refreshPromoCodes();
         return;
@@ -405,7 +392,6 @@ function applyPromoCode() {
     
     const promoDetails = window.activePromoCodes[matchingCode];
     
-    // Check if promo is active
     if (!promoDetails.active) {
         showPromoError('This promo code is no longer active');
         promoInput.value = '';
@@ -413,7 +399,6 @@ function applyPromoCode() {
         return;
     }
     
-    // Check if expired
     if (promoDetails.validUntil && new Date(promoDetails.validUntil) < new Date()) {
         showPromoError('This promo code has expired');
         promoInput.value = '';
@@ -421,7 +406,6 @@ function applyPromoCode() {
         return;
     }
     
-    // Check minimum order
     const minOrder = Number(promoDetails.minOrder) || 0;
     if (window.originalTotal < minOrder) {
         showPromoError(`Minimum order value of ₹${minOrder} required for this promo code`);
@@ -430,7 +414,6 @@ function applyPromoCode() {
         return;
     }
     
-    // Check usage limit
     if (typeof promoDetails.usageLimit === 'number' && promoDetails.usageLimit > 0) {
         const used = Number(promoDetails.usedCount) || 0;
         const limit = promoDetails.usageLimit;
@@ -438,14 +421,11 @@ function applyPromoCode() {
         if (used >= limit) {
             showPromoError('Promo usage limit reached');
             
-            // Log activity if function exists
-            if (typeof db !== 'undefined' && db) {
-                db.collection('activities').add({
-                    type: 'PROMO_USAGE_LIMIT_REACHED',
-                    promoCode: promoCode,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(err => console.error('Failed to log activity:', err));
-            }
+            db.collection('activities').add({
+                type: 'PROMO_USAGE_LIMIT_REACHED',
+                promoCode: promoCode,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
             
             promoInput.value = '';
             refreshPromoCodes();
@@ -453,7 +433,6 @@ function applyPromoCode() {
         }
     }
     
-    // Calculate discount
     let discountValue = 0;
     const promoType = promoDetails.type;
     const total = window.originalTotal;
@@ -469,31 +448,25 @@ function applyPromoCode() {
         discountValue = 0;
     }
     
-    // Apply discount
     window.currentDiscount = discountValue;
     window.appliedPromoCode = promoCode;
     updateTotals();
     
-    // Increment usage count (don't await, let it run in background)
     db.collection('promoCodes').doc(promoCode).update({
         usedCount: firebase.firestore.FieldValue.increment(1)
     }).catch((err) => {
         console.error('Failed to increment promo usage:', err);
     });
     
-    // Log activity
-    if (typeof db !== 'undefined' && db) {
-        db.collection('activities').add({
-            type: 'PROMO_USED',
-            promoCode: promoCode,
-            discount: discountValue,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(err => console.error('Failed to log activity:', err));
-    }
+    db.collection('activities').add({
+        type: 'PROMO_USED',
+        promoCode: promoCode,
+        discount: discountValue,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
     
     refreshPromoCodes();
     
-    // Show success message
     let successMessage = `Promo code "${promoCode}" applied successfully!`;
     if (promoType === 'shipping') {
         successMessage += ' Free shipping applied.';
@@ -503,7 +476,6 @@ function applyPromoCode() {
     
     showPromoSuccess(successMessage);
     
-    // Disable input and button
     if (applyBtn) {
         applyBtn.disabled = true;
         applyBtn.style.opacity = '0.6';
@@ -530,34 +502,27 @@ function displayAvailablePromoCodes() {
     
     if (!promoCodesGrid || !noPromoCodes) return;
     
-    // Filter to ONLY show codes with showOnCheckout = true
-    const availableCodes = Object.entries(window.activePromoCodes).filter(
-        ([code, details]) => details.showOnCheckout === true
-    );
-    
-    console.log('Displaying promo codes (visible only):', availableCodes);
-    console.log('Hidden active codes:', Object.entries(window.activePromoCodes).filter(
-        ([code, details]) => details.showOnCheckout === false
-    ));
+    const availableCodes = Object.entries(window.activePromoCodes);
     
     if (availableCodes.length === 0) {
         promoCodesGrid.style.display = 'none';
         noPromoCodes.style.display = 'block';
-        if (availablePromoCodes) availablePromoCodes.style.display = 'none';
+        availablePromoCodes.style.display = 'none';
         return;
     }
     
     promoCodesGrid.style.display = 'grid';
     noPromoCodes.style.display = 'none';
-    if (availablePromoCodes) availablePromoCodes.style.display = 'block';
+    availablePromoCodes.style.display = 'block';
     promoCodesGrid.innerHTML = '';
     
     availableCodes.forEach(([code, details]) => {
-        const discountText = details.type === 'percentage'
-            ? `${details.value}% OFF`
-            : details.type === 'shipping'
-            ? 'FREE SHIPPING'
-            : `₹${details.value.toFixed(2)} OFF`;
+        const discountText =
+    details.type === 'percentage'
+        ? `${details.value}% OFF`
+        : details.type === 'shipping'
+        ? 'FREE SHIPPING'
+        : `₹${details.value.toFixed(2)} OFF`;
         
         const isApplicable = window.originalTotal >= (Number(details.minOrder) || 0);
         const isAlreadyApplied = window.appliedPromoCode === code;
@@ -1233,7 +1198,6 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
   }
 }
 
-// FIXED: Process payment success with proper order ID handling
 async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     console.log('Processing payment success for temp order:', tempOrderId);
     
@@ -1269,15 +1233,13 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
         
         console.log('✅ Final order created:', finalOrderId);
         
-        // 4. Update user's orders if logged in - WITH ORDERID FIELD
+        // 4. Update user's orders if logged in
         if (currentUser) {
             await db.collection('users').doc(currentUser.uid)
                 .collection('orders').doc(finalOrderId).set({
                     ...finalOrderData,
-                    id: finalOrderId,
-                    orderId: finalOrderData.orderId // THIS IS THE KEY LINE - SAVE THE NA-XXXXX ORDER ID
+                    id: finalOrderId
                 });
-            console.log('Order saved to user collection with orderId:', finalOrderData.orderId);
         }
         
         // 5. Delete temp order
@@ -1307,9 +1269,20 @@ async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     } catch (error) {
         console.error('Error processing payment success:', error);
         
-        // Show error to user but don't redirect
+        // Update temp order with error
+        try {
+            await db.collection('tempOrders').doc(tempOrderId).update({
+                paymentStatus: 'failed',
+                paymentError: error.message,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (updateError) {
+            console.error('Failed to update temp order:', updateError);
+        }
+        
         showNotification('Error completing order. Please contact support.', 'error');
         isProcessingPayment = false;
+        throw error;
     }
 }
 
@@ -1397,8 +1370,7 @@ async function saveOrderToFirestore(orderData) {
             if (currentUser) {
                 await db.collection('users').doc(currentUser.uid).collection('orders').doc(orderRef.id).set({
                     ...orderData,
-                    id: orderRef.id,
-                    orderId: orderData.orderId // THIS IS THE KEY LINE
+                    id: orderRef.id
                 }, { merge: true });
                 console.log('Order saved to user collection:', orderRef.id);
             }
