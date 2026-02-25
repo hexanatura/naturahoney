@@ -250,6 +250,7 @@ function fillAddressForm(address) {
     }
 }
 
+// Modified updateTotals to validate applied promo code
 function updateTotals() {
     const subtotalElement = document.getElementById('subtotal');
     const shippingElement = document.getElementById('shipping');
@@ -262,6 +263,10 @@ function updateTotals() {
     // Calculate shipping
     const subtotal = window.originalTotal - window.shippingCost; // Get pure subtotal
     const shipping = window.shippingCost;
+    
+    // Validate applied promo code before calculating total
+    validateAppliedPromoCode();
+    
     const newTotal = Math.max(0, window.originalTotal - window.currentDiscount);
     
     // Update display - show original subtotal
@@ -501,11 +506,11 @@ function applyPromoDiscount(promoDetails, promoCode) {
     }
 }
 
-// Validate promo code against all criteria
-function validatePromoCode(promoDetails, promoCode) {
+// Modified validatePromoCode to handle silent validation
+function validatePromoCode(promoDetails, promoCode, isSilent = false) {
     // Check active status
     if (!promoDetails.active) {
-        showPromoError('This promo code is no longer active');
+        if (!isSilent) showPromoError('This promo code is no longer active');
         return false;
     }
     
@@ -517,7 +522,7 @@ function validatePromoCode(promoDetails, promoCode) {
         today.setHours(0, 0, 0, 0);
         
         if (expiryDate < today) {
-            showPromoError('This promo code has expired');
+            if (!isSilent) showPromoError('This promo code has expired');
             return false;
         }
     }
@@ -525,7 +530,7 @@ function validatePromoCode(promoDetails, promoCode) {
     // Check minimum order
     const minOrder = Number(promoDetails.minOrder) || 0;
     if (window.originalTotal < minOrder) {
-        showPromoError(`Minimum order of ₹${minOrder.toFixed(2)} required`);
+        if (!isSilent) showPromoError(`Minimum order of ₹${minOrder.toFixed(2)} required`);
         return false;
     }
     
@@ -535,7 +540,7 @@ function validatePromoCode(promoDetails, promoCode) {
         const limit = promoDetails.usageLimit;
         
         if (used >= limit) {
-            showPromoError('Promo usage limit reached');
+            if (!isSilent) showPromoError('Promo usage limit reached');
             return false;
         }
     }
@@ -617,6 +622,7 @@ function displayAvailablePromoCodes() {
     });
 }
 
+
 // Select promo code from available cards
 function selectPromoCode(code) {
     const promoInput = document.getElementById('promoCodeInput');
@@ -632,7 +638,7 @@ function selectPromoCode(code) {
     const promoDetails = window.activePromoCodes[code];
     
     // Validate the code first
-    if (!validatePromoCode(promoDetails, code)) {
+    if (!validatePromoCode(promoDetails, code, false)) {
         return;
     }
     
@@ -680,6 +686,8 @@ function removePromoCode() {
         showNotification('No promo code applied', 'info');
         return;
     }
+    
+    console.log('Removing promo code:', window.appliedPromoCode);
     
     // Clear promo data
     window.currentDiscount = 0;
@@ -792,6 +800,9 @@ function handleCheckoutQuantityInput(e) {
     } else {
         setCartQuantity(productId, newQuantity);
     }
+    
+    // Validate promo code after quantity change
+    setTimeout(validateAppliedPromoCode, 100);
 }
 
 // Validate form field
@@ -971,7 +982,7 @@ window.originalTotal = subtotal;
     refreshPromoCodes();
     
     let shipping = 0;
-if (subtotal = 1) {
+if (subtotal > 0 ) {
     shipping = 59;
 }
 window.shippingCost = shipping;
@@ -1970,6 +1981,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Auto-validate currently applied promo code
+function validateAppliedPromoCode() {
+    // If no promo applied, nothing to validate
+    if (!window.appliedPromoCode) return false;
+    
+    const promoCode = window.appliedPromoCode;
+    const promoDetails = window.activePromoCodes[promoCode];
+    
+    // If promo no longer exists in active promos
+    if (!promoDetails) {
+        console.log('Applied promo code no longer exists, removing...');
+        removePromoCode();
+        showNotification('Promo code no longer available', 'info');
+        return false;
+    }
+    
+    // Validate the promo code with current cart state
+    if (!validatePromoCode(promoDetails, promoCode, true)) {
+        console.log('Applied promo code is no longer valid, removing...');
+        removePromoCode();
+        showNotification('Promo code conditions no longer met', 'info');
+        return false;
+    }
+    
+    return true;
+}
 
 function checkFirebaseFunctions() {
     console.log('Checking Firebase setup:');
