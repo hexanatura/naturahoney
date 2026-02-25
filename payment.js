@@ -515,27 +515,34 @@ function displayAvailablePromoCodes() {
     
     if (!promoCodesGrid || !noPromoCodes) return;
     
-    const availableCodes = Object.entries(window.activePromoCodes);
+    // Filter to ONLY show codes with showOnCheckout = true
+    const availableCodes = Object.entries(window.activePromoCodes).filter(
+        ([code, details]) => details.showOnCheckout === true
+    );
+    
+    console.log('Displaying promo codes (visible only):', availableCodes);
+    console.log('Hidden active codes:', Object.entries(window.activePromoCodes).filter(
+        ([code, details]) => details.showOnCheckout === false
+    ));
     
     if (availableCodes.length === 0) {
         promoCodesGrid.style.display = 'none';
         noPromoCodes.style.display = 'block';
-        availablePromoCodes.style.display = 'none';
+        if (availablePromoCodes) availablePromoCodes.style.display = 'none';
         return;
     }
     
     promoCodesGrid.style.display = 'grid';
     noPromoCodes.style.display = 'none';
-    availablePromoCodes.style.display = 'block';
+    if (availablePromoCodes) availablePromoCodes.style.display = 'block';
     promoCodesGrid.innerHTML = '';
     
     availableCodes.forEach(([code, details]) => {
-        const discountText =
-    details.type === 'percentage'
-        ? `${details.value}% OFF`
-        : details.type === 'shipping'
-        ? 'FREE SHIPPING'
-        : `₹${details.value.toFixed(2)} OFF`;
+        const discountText = details.type === 'percentage'
+            ? `${details.value}% OFF`
+            : details.type === 'shipping'
+            ? 'FREE SHIPPING'
+            : `₹${details.value.toFixed(2)} OFF`;
         
         const isApplicable = window.originalTotal >= (Number(details.minOrder) || 0);
         const isAlreadyApplied = window.appliedPromoCode === code;
