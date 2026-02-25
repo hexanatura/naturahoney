@@ -580,7 +580,7 @@ async function openRazorpayCheckout(orderId, key, amount, orderData, tempOrderId
         await ensureRazorpayLoaded();
         
         const options = {
-            key: key,
+            key: 'rzp_live_SKGf8KU7czOSKl',
             amount: amount * 100, // Convert to paise
             currency: 'INR',
             name: 'Hexa Naturals',
