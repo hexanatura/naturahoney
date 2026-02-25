@@ -1105,7 +1105,7 @@ async function initializeRazorpayPayment(orderData, amount, tempOrderId) {
         
         const options = {
             key: createOrderResponse.razorpayKey,
-amount: Math.round(amount * 100),
+            amount: Math.round(amount * 100), // FIX 1: Proper rounding for decimals
             currency: "INR",
             description: `Order ${orderData.orderId}`,
             order_id: createOrderResponse.orderId,
@@ -1121,10 +1121,10 @@ amount: Math.round(amount * 100),
                 contact: orderData.shippingAddress.phone.replace('+91 ', '')
             },
             
-
             modal: {
                 ondismiss: function() {
                     console.log('Payment cancelled for temp order:', tempOrderId);
+                    showNotification('Payment was cancelled', 'info'); // FIX 2: Show cancellation message
                     handlePaymentCancellation(tempOrderId);
                 }
             },
