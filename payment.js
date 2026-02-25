@@ -1159,67 +1159,6 @@ async function createRazorpayOrderDirect(amount, orderId, tempOrderId) {
     throw new Error('Payment service unavailable. Please try again.');
   }
 }
-async function openRazorpayCheckout(razorpayOrderId, razorpayKey, amount, orderData, tempOrderId) {
-    console.log('Opening Razorpay checkout with temp order:', tempOrderId);
-    
-    return new Promise((resolve, reject) => {
-        const options = {
-            key: razorpayKey,
-            amount: amount * 100,
-            currency: "INR",
-            name: "Natura Honey",
-            description: `Order ${orderData.orderId}`,
-            order_id: razorpayOrderId,
-            
-            handler: async function(response) {
-                console.log('Razorpay payment response:', response);
-                
-                try {
-                    await processPaymentSuccess(orderData, tempOrderId, response);
-                    resolve(response);
-                } catch (error) {
-                    console.error('Payment processing failed:', error);
-                    handlePaymentError(error, tempOrderId);
-                    reject(new Error('Payment processing failed: ' + error.message));
-                }
-            },
-            
-            prefill: {
-                name: `${orderData.shippingAddress.firstName} ${orderData.shippingAddress.lastName}`,
-                email: orderData.email,
-                contact: orderData.shippingAddress.phone.replace('+91 ', '')
-            },
-            
-            theme: {
-                color: "#5f2b27"
-            },
-            
-            modal: {
-                ondismiss: function() {
-                    console.log('Razorpay modal dismissed for temp order:', tempOrderId);
-                    handlePaymentCancellation(tempOrderId);
-                    reject(new Error('Payment cancelled by user'));
-                }
-            }
-        };
-        
-        // Add notes with tempOrderId
-        options.notes = {
-            orderId: orderData.orderId,
-            tempOrderId: tempOrderId
-        };
-        
-        const rzp = new Razorpay(options);
-        
-        rzp.on('payment.failed', async function(response) {
-            console.error('Razorpay payment failed:', response.error);
-            await handlePaymentFailure(response, tempOrderId);
-            reject(new Error(`Payment failed: ${response.error.description}`));
-        });
-        
-        rzp.open();
-    });
-}
 
 async function processPaymentSuccess(orderData, tempOrderId, razorpayResponse) {
     console.log('Processing payment success for temp order:', tempOrderId);
