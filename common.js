@@ -29,7 +29,7 @@ window.debugFirebaseSetup = debugFirebaseSetup;
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuF6bdqprddsE871GuOablXPYqXI_HJxc",
-    authDomain: "www.hexahoney.in",
+    authDomain: "hexahoney-96aed.firebaseapp.com",
     projectId: "hexahoney-96aed",
     storageBucket: "hexahoney-96aed.firebasestorage.app",
     messagingSenderId: "700458850837",
@@ -2644,3 +2644,4 @@ function debugOrderData() {
 }
 
 window.debugOrderData = debugOrderData;
+
